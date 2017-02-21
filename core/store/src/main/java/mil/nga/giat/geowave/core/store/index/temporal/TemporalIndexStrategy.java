@@ -9,6 +9,8 @@ import java.util.Set;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.index.IndexMetaData;
+import mil.nga.giat.geowave.core.index.InsertionIds;
+import mil.nga.giat.geowave.core.index.QueryRanges;
 import mil.nga.giat.geowave.core.index.lexicoder.Lexicoders;
 import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo.FieldInfo;
 import mil.nga.giat.geowave.core.store.index.FieldIndexStrategy;
@@ -20,45 +22,6 @@ public class TemporalIndexStrategy implements
 
 	public TemporalIndexStrategy() {
 		super();
-	}
-
-	@Override
-	public List<ByteArrayRange> getQueryRanges(
-			final TemporalQueryConstraint indexedRange,
-			final IndexMetaData... hints ) {
-		return indexedRange.getRange();
-	}
-
-	@Override
-	public List<ByteArrayRange> getQueryRanges(
-			final TemporalQueryConstraint indexedRange,
-			final int maxEstimatedRangeDecomposition,
-			final IndexMetaData... hints ) {
-		return getQueryRanges(indexedRange);
-	}
-
-	@Override
-	public List<ByteArrayId> getInsertionIds(
-			final List<FieldInfo<Date>> indexedData ) {
-		final List<ByteArrayId> insertionIds = new ArrayList<>();
-		for (final FieldInfo<Date> fieldInfo : indexedData) {
-			insertionIds.add(new ByteArrayId(
-					toIndexByte(fieldInfo.getDataValue().getValue())));
-		}
-		return insertionIds;
-	}
-
-	@Override
-	public List<ByteArrayId> getInsertionIds(
-			final List<FieldInfo<Date>> indexedData,
-			final int maxEstimatedDuplicateIds ) {
-		return getInsertionIds(indexedData);
-	}
-
-	@Override
-	public List<FieldInfo<Date>> getRangeForId(
-			final ByteArrayId insertionId ) {
-		return Collections.emptyList();
 	}
 
 	@Override
@@ -80,13 +43,49 @@ public class TemporalIndexStrategy implements
 		return Lexicoders.LONG.toByteArray(date.getTime());
 	}
 
-	@Override
-	public Set<ByteArrayId> getNaturalSplits() {
-		return null;
-	}
 
 	@Override
 	public List<IndexMetaData> createMetaData() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public QueryRanges getQueryRanges(
+			TemporalQueryConstraint indexedRange,
+			IndexMetaData... hints ) {
+		return indexedRange.getQueryRanges();
+	}
+
+	@Override
+	public QueryRanges getQueryRanges(
+			TemporalQueryConstraint indexedRange,
+			int maxEstimatedRangeDecomposition,
+			IndexMetaData... hints ) {
+		return getQueryRanges(indexedRange);
+	}
+
+	@Override
+	public InsertionIds getInsertionIds(
+			List<FieldInfo<Date>> indexedData ) {
+		final List<ByteArrayId> sortKeys = new ArrayList<>();
+		for (final FieldInfo<Date> fieldInfo : indexedData) {
+			sortKeys.add(new ByteArrayId(
+					toIndexByte(fieldInfo.getDataValue().getValue())));
+		}
+		return new InsertionIds(sortKeys);
+	}
+
+	@Override
+	public InsertionIds getInsertionIds(
+			List<FieldInfo<Date>> indexedData,
+			int maxEstimatedDuplicateIds ) {
+		return getInsertionIds(indexedData);
+	}
+
+	@Override
+	public List<FieldInfo<Date>> getRangeForId(
+			ByteArrayId partitionKey,
+			ByteArrayId sortKey ) {
 		return Collections.emptyList();
 	}
 

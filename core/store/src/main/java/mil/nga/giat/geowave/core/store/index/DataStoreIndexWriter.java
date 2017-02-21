@@ -3,12 +3,15 @@ package mil.nga.giat.geowave.core.store.index;
 import java.io.Closeable;
 import java.io.Flushable;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.index.InsertionIds;
+import mil.nga.giat.geowave.core.index.SinglePartitionInsertionIds;
 import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo;
 import mil.nga.giat.geowave.core.store.DataStoreOperations;
 import mil.nga.giat.geowave.core.store.DataStoreOptions;
@@ -28,7 +31,8 @@ import mil.nga.giat.geowave.core.store.util.DataStoreUtils;
 public abstract class DataStoreIndexWriter<T, MutationType> implements
 		IndexWriter<T>
 {
-	private final static Logger LOGGER = Logger.getLogger(DataStoreIndexWriter.class);
+	private final static Logger LOGGER = Logger.getLogger(
+			DataStoreIndexWriter.class);
 	protected final PrimaryIndex index;
 	protected final DataStoreOperations operations;
 	protected final DataStoreOptions options;
@@ -77,7 +81,7 @@ public abstract class DataStoreIndexWriter<T, MutationType> implements
 	}
 
 	@Override
-	public List<ByteArrayId> write(
+	public InsertionIds write(
 			final T entry ) {
 		return write(
 				entry,
@@ -85,7 +89,7 @@ public abstract class DataStoreIndexWriter<T, MutationType> implements
 	}
 
 	@Override
-	public List<ByteArrayId> write(
+	public InsertionIds write(
 			final T entry,
 			final VisibilityWriter<T> fieldVisibilityWriter ) {
 
@@ -94,19 +98,19 @@ public abstract class DataStoreIndexWriter<T, MutationType> implements
 
 			ensureOpen();
 			if (writer == null) {
-				return Collections.emptyList();
+				return new InsertionIds();
 			}
 			entryInfo = getEntryInfo(
 					entry,
 					fieldVisibilityWriter);
 			if (entryInfo == null) {
-				return Collections.emptyList();
+				return new InsertionIds();
 			}
 			callback.entryIngested(
 					entryInfo,
 					entry);
 		}
-		return entryInfo.getRowIds();
+		return entryInfo.getInsertionIds();
 	}
 
 	protected abstract void ensureOpen();

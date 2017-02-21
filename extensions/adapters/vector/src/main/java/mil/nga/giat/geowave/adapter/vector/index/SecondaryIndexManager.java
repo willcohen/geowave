@@ -146,6 +146,7 @@ public class SecondaryIndexManager implements
 			statsManager.addStats(
 					statistic,
 					new FieldIdStatisticVisibility<SimpleFeature>(
+							//TODO, statistic ID and field ID are different things, is this correct?
 							statistic.getStatisticsId()));
 		}
 	}

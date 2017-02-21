@@ -4,7 +4,8 @@ import java.util.Comparator;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo.FieldInfo;
+import mil.nga.giat.geowave.core.store.base.IntermediaryWriteEntryInfo;
+import mil.nga.giat.geowave.core.store.base.IntermediaryWriteEntryInfo.FieldInfo;
 
 /**
  * Comparator to sort FieldInfo's accordingly. Assumes

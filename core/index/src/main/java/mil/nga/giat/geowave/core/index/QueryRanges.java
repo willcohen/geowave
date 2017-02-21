@@ -2,11 +2,17 @@ package mil.nga.giat.geowave.core.index;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
+
+import mil.nga.giat.geowave.core.index.ByteArrayRange.MergeOperation;
 
 public class QueryRanges
 {
@@ -57,8 +63,53 @@ public class QueryRanges
 	}
 
 	public QueryRanges(
+			final List<QueryRanges> queryRangesList ) {
+		// group by partition
+		final Map<ByteArrayId, List<ByteArrayRange>> sortRangesPerPartition = new HashMap<>();
+		for (final QueryRanges qr : queryRangesList) {
+			for (final SinglePartitionQueryRanges r : qr.getPartitionQueryRanges()) {
+				final List<ByteArrayRange> ranges = sortRangesPerPartition.get(
+						r.getPartitionKey());
+				if (ranges == null) {
+					sortRangesPerPartition.put(
+							r.getPartitionKey(),
+							r.getSortKeyRanges());
+				}
+				else {
+					ranges.addAll(
+							r.getSortKeyRanges());
+				}
+			}
+		}
+		partitionRanges = new ArrayList<>(
+				sortRangesPerPartition.size());
+		for (final Entry<ByteArrayId, List<ByteArrayRange>> e : sortRangesPerPartition.entrySet()) {
+			List<ByteArrayRange> mergedRanges;
+			if (e.getValue() != null) {
+				mergedRanges = ByteArrayRange.mergeIntersections(
+						e.getValue(),
+						MergeOperation.UNION);
+			}
+			else {
+				mergedRanges = null;
+			}
+			partitionRanges.add(
+					new SinglePartitionQueryRanges(
+							e.getKey(),
+							mergedRanges));
+		}
+	}
+
+	public QueryRanges(
 			final Collection<SinglePartitionQueryRanges> partitionRanges ) {
 		this.partitionRanges = partitionRanges;
+	}
+
+	public QueryRanges(
+			final ByteArrayRange singleSortKeyRange ) {
+		partitionRanges = Collections.singletonList(
+				new SinglePartitionQueryRanges(
+						singleSortKeyRange));
 	}
 
 	public QueryRanges(
@@ -77,7 +128,7 @@ public class QueryRanges
 				new Function<ByteArrayId, SinglePartitionQueryRanges>() {
 					@Override
 					public SinglePartitionQueryRanges apply(
-							ByteArrayId input ) {
+							final ByteArrayId input ) {
 						return new SinglePartitionQueryRanges(
 								input);
 					}
@@ -132,5 +183,22 @@ public class QueryRanges
 
 		compositeQueryRanges = internalQueryRanges;
 		return compositeQueryRanges;
+	}
+
+	public boolean isMultiRange() {
+		if (compositeQueryRanges != null) {
+			return compositeQueryRanges.size() >= 2;
+		}
+		if (partitionRanges.isEmpty()) {
+			return false;
+		}
+		if (partitionRanges.size() > 1) {
+			return true;
+		}
+		final SinglePartitionQueryRanges partition = partitionRanges.iterator().next();
+		if ((partition.getSortKeyRanges() != null) && (partition.getSortKeyRanges().size() <= 1)) {
+			return false;
+		}
+		return true;
 	}
 }

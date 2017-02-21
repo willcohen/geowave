@@ -10,6 +10,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.index.InsertionIds;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.IndexedAdapterPersistenceEncoding;
 import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
@@ -110,9 +111,10 @@ public class MemoryStoreUtils
 			final T entry,
 			final DataStoreEntryInfo ingestInfo ) {
 		final List<MemoryEntryRow> rows = new ArrayList<MemoryEntryRow>();
-		for (final ByteArrayId rowId : ingestInfo.getRowIds()) {
+		InsertionIds insertionIds = ingestInfo.getInsertionIds();
+		for (final ByteArrayId compositeInsertionId : insertionIds.getCompositeInsertionIds()) {
 			rows.add(new MemoryEntryRow(
-					rowId,
+					compositeInsertionId,
 					entry,
 					ingestInfo));
 		}

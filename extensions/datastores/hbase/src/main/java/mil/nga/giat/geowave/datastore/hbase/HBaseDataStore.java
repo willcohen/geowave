@@ -44,12 +44,12 @@ import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DuplicateEntryCount;
 import mil.nga.giat.geowave.core.store.base.BaseDataStore;
 import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo;
+import mil.nga.giat.geowave.core.store.base.IntermediaryReadEntryInfo;
 import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo.FieldInfo;
 import mil.nga.giat.geowave.core.store.base.Deleter;
 import mil.nga.giat.geowave.core.store.base.Writer;
 import mil.nga.giat.geowave.core.store.callback.IngestCallback;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
-import mil.nga.giat.geowave.core.store.data.DecodePackage;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.filter.DedupeFilter;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
@@ -731,7 +731,7 @@ public class HBaseDataStore extends
 					hbaseRow.getAdapterId());
 		}
 
-		DecodePackage decodePackage = new DecodePackage(
+		IntermediaryReadEntryInfo decodePackage = new IntermediaryReadEntryInfo(
 				index,
 				decodeRow);
 

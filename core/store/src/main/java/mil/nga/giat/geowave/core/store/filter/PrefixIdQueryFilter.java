@@ -12,36 +12,36 @@ import mil.nga.giat.geowave.core.store.index.CommonIndexModel;
 public class PrefixIdQueryFilter implements
 		DistributableQueryFilter
 {
-	private ByteArrayId rowPrefix;
+	private ByteArrayId sortKeyPrefix;
 
 	protected PrefixIdQueryFilter() {}
 
 	public PrefixIdQueryFilter(
-			final ByteArrayId rowPrefix ) {
-		this.rowPrefix = rowPrefix;
+			final ByteArrayId sortKeyPrefix ) {
+		this.sortKeyPrefix = sortKeyPrefix;
 	}
 
 	@Override
 	public boolean accept(
 			final CommonIndexModel indexModel,
 			final IndexedPersistenceEncoding persistenceEncoding ) {
-		ByteArrayId rowId = persistenceEncoding.getIndexInsertionId();
+		ByteArrayId sortKey = persistenceEncoding.getInsertionSortKey();
 		return (Arrays.equals(
-				rowPrefix.getBytes(),
+				sortKeyPrefix.getBytes(),
 				Arrays.copyOf(
-						rowId.getBytes(),
-						rowId.getBytes().length)));
+						sortKey.getBytes(),
+						sortKeyPrefix.getBytes().length)));
 	}
 
 	@Override
 	public byte[] toBinary() {
-		return rowPrefix.getBytes();
+		return sortKeyPrefix.getBytes();
 	}
 
 	@Override
 	public void fromBinary(
 			final byte[] bytes ) {
-		rowPrefix = new ByteArrayId(
+		sortKeyPrefix = new ByteArrayId(
 				bytes);
 	}
 

@@ -1,18 +1,15 @@
-package mil.nga.giat.geowave.core.store.data;
+package mil.nga.giat.geowave.core.store.base;
 
-import java.util.ArrayList;
-import java.util.List;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
-import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo.FieldInfo;
+import mil.nga.giat.geowave.core.store.data.PersistentDataset;
 import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
-public class DecodePackage
+public class IntermediaryReadEntryInfo<T>
 {
-	private final List<FieldInfo<?>> fieldInfoList = new ArrayList<FieldInfo<?>>();
 	private final PersistentDataset<CommonIndexValue> indexData = new PersistentDataset<CommonIndexValue>();
 	private final PersistentDataset<Object> extendedData = new PersistentDataset<Object>();
 	private final PersistentDataset<byte[]> unknownData = new PersistentDataset<byte[]>();
@@ -20,10 +17,10 @@ public class DecodePackage
 	private final boolean decodeRow;
 	private final PrimaryIndex index;
 
-	private DataAdapter dataAdapter;
+	private DataAdapter<T> dataAdapter;
 	boolean adapterVerified;
 
-	public DecodePackage(
+	public IntermediaryReadEntryInfo(
 			PrimaryIndex index,
 			boolean decodeRow ) {
 		this.index = index;
@@ -41,7 +38,7 @@ public class DecodePackage
 	// Adapter is set either by the user or from the data
 	// If null, expect it from data, so no verify needed
 	public boolean setDataAdapter(
-			DataAdapter dataAdapter,
+			DataAdapter<T> dataAdapter,
 			boolean fromData ) {
 		this.dataAdapter = dataAdapter;
 		this.adapterVerified = fromData ? true : (dataAdapter == null);
@@ -60,7 +57,7 @@ public class DecodePackage
 	}
 
 	public boolean setOrRetrieveAdapter(
-			DataAdapter adapter,
+			DataAdapter<T> adapter,
 			ByteArrayId adapterId,
 			AdapterStore adapterStore ) {
 		// Verify the current data adapter
@@ -77,7 +74,7 @@ public class DecodePackage
 
 		// Try to retrieve the adapter from the store
 		if (setDataAdapter(
-				adapterStore.getAdapter(adapterId),
+				(DataAdapter<T>) adapterStore.getAdapter(adapterId),
 				true)) {
 			return true;
 		}
@@ -94,7 +91,7 @@ public class DecodePackage
 		return this.dataAdapter != null;
 	}
 
-	public DataAdapter getDataAdapter() {
+	public DataAdapter<T> getDataAdapter() {
 		return dataAdapter;
 	}
 
@@ -104,10 +101,6 @@ public class DecodePackage
 		}
 
 		return null;
-	}
-
-	public List<FieldInfo<?>> getFieldInfo() {
-		return fieldInfoList;
 	}
 
 	public PersistentDataset<CommonIndexValue> getIndexData() {

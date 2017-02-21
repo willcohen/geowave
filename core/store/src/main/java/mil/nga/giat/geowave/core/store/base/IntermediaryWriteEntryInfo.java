@@ -3,9 +3,18 @@ package mil.nga.giat.geowave.core.store.base;
 import java.util.List;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.index.InsertionIds;
 import mil.nga.giat.geowave.core.store.data.PersistentValue;
 
-public class DataStoreEntryInfo
+/**
+ * There is a single intermediate row per original entry passed into a write
+ * operation. This offers a higher level abstraction from the raw key-value
+ * pairs in geowave (can be multiple per original entry). A datastore is
+ * responsible for translating from this intermediary representation of rows to
+ * key-value rows.
+ *
+ */
+public class IntermediaryWriteEntryInfo
 {
 	public static class FieldInfo<T>
 	{
@@ -36,18 +45,18 @@ public class DataStoreEntryInfo
 	}
 
 	private final byte[] dataId;
-	private final List<ByteArrayId> rowIds;
-	private final List<ByteArrayId> insertionIds;
+	private final byte[] adapterId;
+	private final InsertionIds insertionIds;
 	private final List<FieldInfo<?>> fieldInfo;
 
-	public DataStoreEntryInfo(
+	public IntermediaryWriteEntryInfo(
 			final byte[] dataId,
-			final List<ByteArrayId> insertionIds,
-			final List<ByteArrayId> rowIds,
+			final byte[] adapterId,
+			final InsertionIds insertionIds,
 			final List<FieldInfo<?>> fieldInfo ) {
 		this.dataId = dataId;
+		this.adapterId = adapterId;
 		this.insertionIds = insertionIds;
-		this.rowIds = rowIds;
 		this.fieldInfo = fieldInfo;
 	}
 
@@ -57,7 +66,11 @@ public class DataStoreEntryInfo
 				dataId).getString();
 	}
 
-	public List<ByteArrayId> getInsertionIds() {
+	public byte[] getAdapterId() {
+		return adapterId;
+	}
+
+	public InsertionIds getInsertionIds() {
 		return insertionIds;
 	}
 
@@ -65,11 +78,8 @@ public class DataStoreEntryInfo
 		return dataId;
 	}
 
-	public List<ByteArrayId> getRowIds() {
-		return rowIds;
-	}
-
 	public List<FieldInfo<?>> getFieldInfo() {
 		return fieldInfo;
 	}
+
 }

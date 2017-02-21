@@ -8,6 +8,10 @@ import java.util.UUID;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
+import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.index.InsertionIds;
+import mil.nga.giat.geowave.core.store.adapter.AdapterPersistenceEncoding;
+import mil.nga.giat.geowave.core.store.adapter.IndexedAdapterPersistenceEncoding;
 import mil.nga.giat.geowave.core.store.filter.DistributableFilterList;
 import mil.nga.giat.geowave.core.store.filter.DistributableQueryFilter;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
@@ -85,12 +89,31 @@ public class CQLQueryFilterTest
 
 		assertTrue(dFilterList.accept(
 				spatialIndex.getIndexModel(),
-				DataStoreUtils.getEncodings(
+				getEncodings(
 						spatialIndex,
 						adapter.encode(
 								createFeature(),
 								spatialIndex.getIndexModel())).get(
 						0)));
+	}
+	
+
+	private static List<IndexedAdapterPersistenceEncoding> getEncodings(
+			final PrimaryIndex index,
+			final AdapterPersistenceEncoding encoding ) {
+		final InsertionIds ids = encoding.getInsertionIds(index);
+		final ArrayList<IndexedAdapterPersistenceEncoding> encodings = new ArrayList<IndexedAdapterPersistenceEncoding>();
+		for (final ByteArrayId id : ids) {
+			encodings.add(new IndexedAdapterPersistenceEncoding(
+					encoding.getAdapterId(),
+					encoding.getDataId(),
+					id,
+					ids.size(),
+					encoding.getCommonData(),
+					encoding.getUnknownData(),
+					encoding.getAdapterExtendedData()));
+		}
+		return encodings;
 	}
 
 	private SimpleFeature createFeature() {

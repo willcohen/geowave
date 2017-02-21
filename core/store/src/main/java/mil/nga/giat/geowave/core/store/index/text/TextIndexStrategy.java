@@ -8,6 +8,8 @@ import java.util.Set;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.index.IndexMetaData;
+import mil.nga.giat.geowave.core.index.InsertionIds;
+import mil.nga.giat.geowave.core.index.QueryRanges;
 import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo.FieldInfo;
 import mil.nga.giat.geowave.core.store.index.FieldIndexStrategy;
 
@@ -30,58 +32,54 @@ public class TextIndexStrategy implements
 			final byte[] bytes ) {}
 
 	@Override
-	public List<ByteArrayRange> getQueryRanges(
-			final TextQueryConstraint indexedRange,
-			final IndexMetaData... hints ) {
-		return indexedRange.getRange();
+	public String getId() {
+		return ID;
 	}
 
 	@Override
-	public List<ByteArrayRange> getQueryRanges(
-			final TextQueryConstraint indexedRange,
-			final int maxEstimatedRangeDecomposition,
-			final IndexMetaData... hints ) {
+	public List<IndexMetaData> createMetaData() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public QueryRanges getQueryRanges(
+			TextQueryConstraint indexedRange,
+			IndexMetaData... hints ) {
+		return indexedRange.getQueryRanges();
+	}
+
+	@Override
+	public QueryRanges getQueryRanges(
+			TextQueryConstraint indexedRange,
+			int maxEstimatedRangeDecomposition,
+			IndexMetaData... hints ) {
 		return getQueryRanges(
 				indexedRange,
 				hints);
 	}
 
 	@Override
-	public List<ByteArrayId> getInsertionIds(
-			final List<FieldInfo<String>> indexedData ) {
-		final List<ByteArrayId> insertionIds = new ArrayList<>();
+	public InsertionIds getInsertionIds(
+			List<FieldInfo<String>> indexedData ) {
+		final List<ByteArrayId> sortKeys = new ArrayList<>();
 		for (FieldInfo<String> fieldInfo : indexedData) {
-			insertionIds.add(new ByteArrayId(
+			sortKeys.add(new ByteArrayId(
 					fieldInfo.getDataValue().getValue()));
 		}
-		return insertionIds;
+		return new InsertionIds(null, sortKeys);
 	}
 
 	@Override
-	public List<ByteArrayId> getInsertionIds(
-			final List<FieldInfo<String>> indexedData,
-			final int maxEstimatedDuplicateIds ) {
+	public InsertionIds getInsertionIds(
+			List<FieldInfo<String>> indexedData,
+			int maxEstimatedDuplicateIds ) {
 		return getInsertionIds(indexedData);
 	}
 
 	@Override
 	public List<FieldInfo<String>> getRangeForId(
-			final ByteArrayId insertionId ) {
-		return Collections.emptyList();
-	}
-
-	@Override
-	public String getId() {
-		return ID;
-	}
-
-	@Override
-	public Set<ByteArrayId> getNaturalSplits() {
-		return null;
-	}
-
-	@Override
-	public List<IndexMetaData> createMetaData() {
+			ByteArrayId partitionKey,
+			ByteArrayId sortKey ) {
 		return Collections.emptyList();
 	}
 }

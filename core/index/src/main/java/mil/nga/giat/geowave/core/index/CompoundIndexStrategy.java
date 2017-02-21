@@ -161,8 +161,7 @@ public class CompoundIndexStrategy implements
 		if ((insertionIds == null) || (insertionIds.getPartitionKeys() == null)
 				|| insertionIds.getPartitionKeys().isEmpty()) {
 			if (partitionKeysEmpty) {
-				return new InsertionIds(
-						new ArrayList<SinglePartitionInsertionIds>());
+				return new InsertionIds();
 			}
 			else {
 				return new InsertionIds(

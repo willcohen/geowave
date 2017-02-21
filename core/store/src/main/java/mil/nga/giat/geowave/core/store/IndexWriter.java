@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.util.List;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.index.InsertionIds;
 import mil.nga.giat.geowave.core.store.data.VisibilityWriter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
@@ -18,10 +19,10 @@ public interface IndexWriter<T> extends
 	 * @param entry
 	 * @return
 	 */
-	public List<ByteArrayId> write(
+	public InsertionIds write(
 			final T entry );
 
-	public List<ByteArrayId> write(
+	public InsertionIds write(
 			final T entry,
 			final VisibilityWriter<T> fieldVisibilityWriter );
 

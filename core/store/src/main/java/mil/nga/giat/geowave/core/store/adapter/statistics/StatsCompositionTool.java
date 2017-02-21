@@ -9,29 +9,32 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
-import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo;
+import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.callback.DeleteCallback;
 import mil.nga.giat.geowave.core.store.callback.IngestCallback;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
 /**
- * 
+ *
  * This tool does not react to callbacks if the provided statistics store is
  * null or the provided data adapter does not implement
  * {@link DataStatisticsStore}.
- * 
+ *
  * @param <T>
  *            Entry type
  */
 public class StatsCompositionTool<T> implements
-		IngestCallback<T>,
-		ScanCallback<T, Object>,
-		DeleteCallback<T>,
+		IngestCallback<T, GeoWaveRow>,
+		ScanCallback<T, GeoWaveRow>,
+		DeleteCallback<T, GeoWaveRow>,
 		AutoCloseable,
 		Closeable,
 		Flushable
 {
-	private final static Logger LOGGER = Logger.getLogger(StatsCompositionTool.class);
+	private final static Logger LOGGER = Logger.getLogger(
+			StatsCompositionTool.class);
 	public static final int FLUSH_STATS_THRESHOLD = 16384;
 
 	int updateCount = 0;
@@ -40,35 +43,41 @@ public class StatsCompositionTool<T> implements
 	final Object MUTEX = new Object();
 	protected boolean skipFlush = false;
 
-	public StatsCompositionTool() {
-		statisticsStore = null;
-	}
-
 	public StatsCompositionTool(
-			final StatisticsProvider<T> statisticsProvider ) {
+			final StatisticsProvider<T> statisticsProvider,
+			final PrimaryIndex index,
+			final DataAdapter<T> adapter) {
 		this.statisticsStore = null;
-		this.init(statisticsProvider);
+		this.init(index,adapter,
+				statisticsProvider);
 	}
 
 	public StatsCompositionTool(
 			final StatisticsProvider<T> statisticsProvider,
-			final DataStatisticsStore statisticsStore ) {
+			final DataStatisticsStore statisticsStore,
+			final PrimaryIndex index,
+			final DataAdapter<T> adapter ) {
 		this.statisticsStore = statisticsStore;
-		this.init(statisticsProvider);
+		this.init(index,adapter,
+				statisticsProvider);
 	}
 
 	private void init(
-			final StatisticsProvider<T> statisticsProvider ) {
+			final PrimaryIndex index,
+			final DataAdapter<T> adapter,
+			final StatisticsProvider<T> statisticsProvider) {
 		final ByteArrayId[] statisticsIds = statisticsProvider.getSupportedStatisticsIds();
 		statisticsBuilders = new ArrayList<DataStatisticsBuilder<T>>(
 				statisticsIds.length);
 		for (final ByteArrayId id : statisticsIds) {
-			statisticsBuilders.add(new DataStatisticsBuilder<T>(
-					statisticsProvider,
-					id));
+			statisticsBuilders.add(
+					new DataStatisticsBuilder<T>(index,adapter,
+							statisticsProvider,
+							id));
 		}
 		try {
-			final Object v = System.getProperty("StatsCompositionTool.skipFlush");
+			final Object v = System.getProperty(
+					"StatsCompositionTool.skipFlush");
 			skipFlush = ((v != null) && v.toString().equalsIgnoreCase(
 					"true"));
 		}
@@ -81,16 +90,16 @@ public class StatsCompositionTool<T> implements
 
 	@Override
 	public void entryDeleted(
-			final DataStoreEntryInfo entryInfo,
-			final T entry ) {
+			final T entry,
+			final GeoWaveRow... kvs ) {
 		if (statisticsBuilders == null) {
 			return;
 		}
 		synchronized (MUTEX) {
 			for (final DataStatisticsBuilder<T> builder : statisticsBuilders) {
 				builder.entryDeleted(
-						entryInfo,
-						entry);
+						entry,
+						kvs);
 			}
 			updateCount++;
 			checkStats();
@@ -100,9 +109,8 @@ public class StatsCompositionTool<T> implements
 
 	@Override
 	public void entryScanned(
-			final DataStoreEntryInfo entryInfo,
-			Object nativeDataStoreObj,
-			final T entry ) {
+			final T entry,
+			final GeoWaveRow kv ) {
 		if (statisticsBuilders == null) {
 			return;
 		}
@@ -110,9 +118,8 @@ public class StatsCompositionTool<T> implements
 		synchronized (MUTEX) {
 			for (final DataStatisticsBuilder<T> builder : statisticsBuilders) {
 				builder.entryScanned(
-						entryInfo,
-						nativeDataStoreObj,
-						entry);
+						entry,
+						kv);
 			}
 			updateCount++;
 			checkStats();
@@ -133,7 +140,8 @@ public class StatsCompositionTool<T> implements
 			for (final DataStatisticsBuilder<T> builder : statisticsBuilders) {
 				final Collection<DataStatistics<T>> statistics = builder.getStatistics();
 				for (final DataStatistics<T> s : statistics) {
-					statisticsStore.incorporateStatistics(s);
+					statisticsStore.incorporateStatistics(
+							s);
 				}
 				statistics.clear();
 			}
@@ -158,8 +166,8 @@ public class StatsCompositionTool<T> implements
 
 	@Override
 	public void entryIngested(
-			final DataStoreEntryInfo entryInfo,
-			final T entry ) {
+			final T entry,
+			final GeoWaveRow... kvs ) {
 		if (statisticsBuilders == null) {
 			return;
 		}
@@ -167,8 +175,8 @@ public class StatsCompositionTool<T> implements
 		synchronized (MUTEX) {
 			for (final DataStatisticsBuilder<T> builder : statisticsBuilders) {
 				builder.entryIngested(
-						entryInfo,
-						entry);
+						entry,
+						kvs);
 			}
 			updateCount++;
 			checkStats();
@@ -181,7 +189,7 @@ public class StatsCompositionTool<T> implements
 	}
 
 	public void setStatisticsStore(
-			DataStatisticsStore statisticsStore ) {
+			final DataStatisticsStore statisticsStore ) {
 		this.statisticsStore = statisticsStore;
 	}
 

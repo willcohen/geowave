@@ -6,6 +6,7 @@ import java.util.List;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
+import mil.nga.giat.geowave.core.index.QueryRanges;
 import mil.nga.giat.geowave.core.store.filter.DistributableQueryFilter;
 import mil.nga.giat.geowave.core.store.index.FilterableConstraints;
 
@@ -39,8 +40,8 @@ public class TemporalQueryConstraint implements
 			final ByteArrayId fieldId,
 			final Date start,
 			final Date end,
-			boolean inclusiveLow,
-			boolean inclusiveHigh ) {
+			final boolean inclusiveLow,
+			final boolean inclusiveHigh ) {
 		super();
 		this.fieldId = fieldId;
 		this.start = start;
@@ -69,8 +70,8 @@ public class TemporalQueryConstraint implements
 				inclusiveHigh);
 	}
 
-	public List<ByteArrayRange> getRange() {
-		return Collections.singletonList(new ByteArrayRange(
+	public QueryRanges getQueryRanges() {
+		return new QueryRanges(new ByteArrayRange(
 				new ByteArrayId(
 						TemporalIndexStrategy.toIndexByte(start)),
 				new ByteArrayId(
@@ -79,18 +80,25 @@ public class TemporalQueryConstraint implements
 
 	@Override
 	public FilterableConstraints intersect(
-			FilterableConstraints constraints ) {
+			final FilterableConstraints constraints ) {
 		if (constraints instanceof TemporalQueryConstraint) {
-			TemporalQueryConstraint filterConstraints = (TemporalQueryConstraint) constraints;
-			if (fieldId.equals(filterConstraints.fieldId)) {
-				final boolean lowEquals = start.equals(filterConstraints.start);
-				final boolean upperEquals = end.equals(filterConstraints.end);
-				final boolean replaceMin = start.compareTo(filterConstraints.start) < 0;
-				final boolean replaceMax = end.compareTo(filterConstraints.end) > 0;
+			final TemporalQueryConstraint filterConstraints = (TemporalQueryConstraint) constraints;
+			if (fieldId.equals(
+					filterConstraints.fieldId)) {
+				final boolean lowEquals = start.equals(
+						filterConstraints.start);
+				final boolean upperEquals = end.equals(
+						filterConstraints.end);
+				final boolean replaceMin = start.compareTo(
+						filterConstraints.start) < 0;
+				final boolean replaceMax = end.compareTo(
+						filterConstraints.end) > 0;
 				return new TemporalQueryConstraint(
 						fieldId,
-						start.compareTo(filterConstraints.start) < 0 ? filterConstraints.start : start,
-						end.compareTo(filterConstraints.end) > 0 ? filterConstraints.end : end,
+						start.compareTo(
+								filterConstraints.start) < 0 ? filterConstraints.start : start,
+						end.compareTo(
+								filterConstraints.end) > 0 ? filterConstraints.end : end,
 						lowEquals ? filterConstraints.inclusiveLow & inclusiveLow
 								: (replaceMin ? filterConstraints.inclusiveLow : inclusiveLow),
 						upperEquals ? filterConstraints.inclusiveHigh & inclusiveHigh
@@ -102,18 +110,25 @@ public class TemporalQueryConstraint implements
 
 	@Override
 	public FilterableConstraints union(
-			FilterableConstraints constraints ) {
+			final FilterableConstraints constraints ) {
 		if (constraints instanceof TemporalQueryConstraint) {
-			TemporalQueryConstraint filterConstraints = (TemporalQueryConstraint) constraints;
-			if (fieldId.equals(filterConstraints.fieldId)) {
-				final boolean lowEquals = start.equals(filterConstraints.start);
-				final boolean upperEquals = end.equals(filterConstraints.end);
-				final boolean replaceMin = start.compareTo(filterConstraints.start) > 0;
-				final boolean replaceMax = end.compareTo(filterConstraints.end) < 0;
+			final TemporalQueryConstraint filterConstraints = (TemporalQueryConstraint) constraints;
+			if (fieldId.equals(
+					filterConstraints.fieldId)) {
+				final boolean lowEquals = start.equals(
+						filterConstraints.start);
+				final boolean upperEquals = end.equals(
+						filterConstraints.end);
+				final boolean replaceMin = start.compareTo(
+						filterConstraints.start) > 0;
+				final boolean replaceMax = end.compareTo(
+						filterConstraints.end) < 0;
 				return new TemporalQueryConstraint(
 						fieldId,
-						start.compareTo(filterConstraints.start) > 0 ? filterConstraints.start : start,
-						end.compareTo(filterConstraints.end) < 0 ? filterConstraints.end : end,
+						start.compareTo(
+								filterConstraints.start) > 0 ? filterConstraints.start : start,
+						end.compareTo(
+								filterConstraints.end) < 0 ? filterConstraints.end : end,
 						lowEquals ? filterConstraints.inclusiveLow | inclusiveLow
 								: (replaceMin ? filterConstraints.inclusiveLow : inclusiveLow),
 						upperEquals ? filterConstraints.inclusiveHigh | inclusiveHigh

@@ -104,6 +104,27 @@ public class BitmaskUtils
 			currentByte++;
 		}
 		return fieldPositions;
+	}	
+	/**
+	 * Iterates the set (true) bits within the given composite bitmask and
+	 * generates a list of field positions.
+	 *
+	 * @param compositeBitmask
+	 *            the composite bitmask
+	 * @return a list of field positions
+	 */
+	public static int getLowestFieldPosition(
+			final byte[] bitmask ) {
+		int currentByte = 0;
+		for (final byte singleByteBitMask : bitmask) {
+			for (int bit = 0; bit < 8; ++bit) {
+				if (((singleByteBitMask >>> bit) & 0x1) == 1) {
+					return (currentByte * 8) + bit;
+				}
+			}
+			currentByte++;
+		}
+		return Integer.MAX_VALUE;
 	}
 
 	/**

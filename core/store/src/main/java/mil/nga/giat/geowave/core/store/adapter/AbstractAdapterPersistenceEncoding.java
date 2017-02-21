@@ -18,7 +18,8 @@ public abstract class AbstractAdapterPersistenceEncoding extends
 	public AbstractAdapterPersistenceEncoding(
 			final ByteArrayId adapterId,
 			final ByteArrayId dataId,
-			final ByteArrayId indexInsertionId,
+			final ByteArrayId sortKey,
+			final ByteArrayId partitionKey,
 			final int duplicateCount,
 			final PersistentDataset<CommonIndexValue> commonData,
 			final PersistentDataset<byte[]> unknownData,
@@ -26,7 +27,8 @@ public abstract class AbstractAdapterPersistenceEncoding extends
 		super(
 				adapterId,
 				dataId,
-				indexInsertionId,
+				partitionKey,
+				sortKey,
 				duplicateCount,
 				commonData,
 				unknownData);

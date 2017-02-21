@@ -10,6 +10,7 @@ import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.index.IndexMetaData;
 import mil.nga.giat.geowave.core.index.MultiDimensionalCoordinateRangesArray;
 import mil.nga.giat.geowave.core.index.NumericIndexStrategy;
+import mil.nga.giat.geowave.core.index.QueryRanges;
 import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DuplicateEntryCount;
@@ -45,7 +46,8 @@ public class ConstraintsQuery
 		this.aggregation = aggregation;
 		this.indexMetaData = indexMetaData != null ? indexMetaData : new IndexMetaData[] {};
 		this.index = index;
-		final SplitFilterLists lists = splitList(queryFilters);
+		final SplitFilterLists lists = splitList(
+				queryFilters);
 		final List<QueryFilter> clientFilters = lists.clientFilters;
 		if ((duplicateCounts != null) && !duplicateCounts.isAnyEntryHaveDuplicates()) {
 			clientDedupeFilter = null;
@@ -58,9 +60,10 @@ public class ConstraintsQuery
 					0,
 					clientDedupeFilter);
 		}
-		parentQuery.setClientFilters(clientFilters);
+		parentQuery.setClientFilters(
+				clientFilters);
 		distributableFilters = lists.distributableFilters;
-		if (!distributableFilters.isEmpty() && clientDedupeFilter != null) {
+		if (!distributableFilters.isEmpty() && (clientDedupeFilter != null)) {
 			distributableFilters.add(
 					0,
 					clientDedupeFilter);
@@ -79,57 +82,33 @@ public class ConstraintsQuery
 			final NumericIndexStrategy indexStrategy = index.getIndexStrategy();
 			final List<MultiDimensionalCoordinateRangesArray> ranges = new ArrayList<MultiDimensionalCoordinateRangesArray>();
 			for (final MultiDimensionalNumericData nd : constraints) {
-				ranges.add(new MultiDimensionalCoordinateRangesArray(
-						indexStrategy.getCoordinateRangesPerDimension(
-								nd,
-								indexMetaData)));
+				ranges.add(
+						new MultiDimensionalCoordinateRangesArray(
+								indexStrategy.getCoordinateRangesPerDimension(
+										nd,
+										indexMetaData)));
 			}
 			return ranges;
 		}
 	}
 
-	public List<ByteArrayRange> getRanges() {
+	public QueryRanges getRanges() {
 		if (isAggregation()) {
-			final List<ByteArrayRange> ranges = DataStoreUtils.constraintsToByteArrayRanges(
+			final QueryRanges ranges = DataStoreUtils.constraintsToQueryRanges(
 					constraints,
 					index.getIndexStrategy(),
 					AGGREGATION_RANGE_DECOMPOSITION,
 					indexMetaData);
-			if ((ranges == null) || (ranges.size() < 2)) {
-				return ranges;
-			}
-
-			final List<ByteArrayRange> retVal = new ArrayList<ByteArrayRange>();
-			retVal.add(getSingleRange(ranges));
-			return retVal;
+			
+			return ranges;
 		}
 		else {
 			return getAllRanges();
 		}
 	}
 
-	private ByteArrayRange getSingleRange(
-			List<ByteArrayRange> ranges ) {
-		ByteArrayId start = null;
-		ByteArrayId end = null;
-
-		for (final ByteArrayRange range : ranges) {
-			if ((start == null) || (range.getStart().compareTo(
-					start) < 0)) {
-				start = range.getStart();
-			}
-			if ((end == null) || (range.getEnd().compareTo(
-					end) > 0)) {
-				end = range.getEnd();
-			}
-		}
-		return new ByteArrayRange(
-				start,
-				end);
-	}
-
-	public List<ByteArrayRange> getAllRanges() {
-		return DataStoreUtils.constraintsToByteArrayRanges(
+	public QueryRanges getAllRanges() {
+		return DataStoreUtils.constraintsToQueryRanges(
 				constraints,
 				index.getIndexStrategy(),
 				MAX_RANGE_DECOMPOSITION,
@@ -147,10 +126,12 @@ public class ConstraintsQuery
 		}
 		for (final QueryFilter filter : allFilters) {
 			if (filter instanceof DistributableQueryFilter) {
-				distributableFilters.add((DistributableQueryFilter) filter);
+				distributableFilters.add(
+						(DistributableQueryFilter) filter);
 			}
 			else {
-				clientFilters.add(filter);
+				clientFilters.add(
+						filter);
 			}
 		}
 		return new SplitFilterLists(

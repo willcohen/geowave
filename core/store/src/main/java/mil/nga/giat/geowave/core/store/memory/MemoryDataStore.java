@@ -18,6 +18,7 @@ import org.apache.log4j.Logger;
 import com.google.common.collect.Iterators;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.index.InsertionIds;
 import mil.nga.giat.geowave.core.store.AdapterToIndexMapping;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
@@ -143,7 +144,7 @@ public class MemoryDataStore implements
 		}
 
 		@Override
-		public List<ByteArrayId> write(
+		public InsertionIds write(
 				final T entry ) {
 			return write(
 					entry,
@@ -151,7 +152,7 @@ public class MemoryDataStore implements
 		}
 
 		@Override
-		public List<ByteArrayId> write(
+		public InsertionIds write(
 				final T entry,
 				final VisibilityWriter<T> fieldVisibilityWriter ) {
 			final List<ByteArrayId> ids = new ArrayList<ByteArrayId>();

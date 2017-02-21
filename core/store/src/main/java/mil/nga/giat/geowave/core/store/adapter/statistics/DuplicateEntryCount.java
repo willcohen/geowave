@@ -7,13 +7,13 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.Mergeable;
-import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo;
 import mil.nga.giat.geowave.core.store.callback.DeleteCallback;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
 public class DuplicateEntryCount<T> extends
 		AbstractDataStatistics<T> implements
-		DeleteCallback<T>
+		DeleteCallback<T, GeoWaveRow>
 {
 	public static final ByteArrayId STATS_ID = new ByteArrayId(
 			"DUPLICATE_ENTRY_COUNT");
@@ -51,7 +51,8 @@ public class DuplicateEntryCount<T> extends
 			final ByteArrayId indexId ) {
 		super(
 				dataAdapterId,
-				composeId(indexId));
+				composeId(
+						indexId));
 	}
 
 	public static ByteArrayId composeId(
@@ -72,33 +73,42 @@ public class DuplicateEntryCount<T> extends
 
 	@Override
 	public byte[] toBinary() {
-		final ByteBuffer buf = super.binaryBuffer(8);
-		buf.putLong(entriesWithDuplicates);
+		final ByteBuffer buf = super.binaryBuffer(
+				8);
+		buf.putLong(
+				entriesWithDuplicates);
 		return buf.array();
 	}
 
 	@Override
 	public void fromBinary(
 			final byte[] bytes ) {
-		final ByteBuffer buf = super.binaryBuffer(bytes);
+		final ByteBuffer buf = super.binaryBuffer(
+				bytes);
 		entriesWithDuplicates = buf.getLong();
 	}
 
 	@Override
 	public void entryIngested(
-			final DataStoreEntryInfo entryInfo,
-			final T entry ) {
-		if (entryHasDuplicates(entryInfo)) {
-			entriesWithDuplicates++;
+			final T entry,
+			final GeoWaveRow... kvs ) {
+		if (kvs.length > 0) {
+			if (entryHasDuplicates(
+					kvs[0])) {
+				entriesWithDuplicates++;
+			}
 		}
 	}
 
 	@Override
 	public void entryDeleted(
-			final DataStoreEntryInfo entryInfo,
-			final T entry ) {
-		if (entryHasDuplicates(entryInfo)) {
-			entriesWithDuplicates--;
+			final T entry,
+			final GeoWaveRow... kvs ) {
+		if (kvs.length > 0) {
+			if (entryHasDuplicates(
+					kvs[0])) {
+				entriesWithDuplicates--;
+			}
 		}
 	}
 
@@ -111,11 +121,8 @@ public class DuplicateEntryCount<T> extends
 	}
 
 	private static boolean entryHasDuplicates(
-			final DataStoreEntryInfo entryInfo ) {
-		if ((entryInfo != null) && (entryInfo.getRowIds() != null)) {
-			return entryInfo.getRowIds().size() > 1;
-		}
-		return false;
+			final GeoWaveRow kv ) {
+		return kv.getNumberOfDuplicates() > 0;
 	}
 
 	public static DuplicateEntryCount getDuplicateCounts(
@@ -127,13 +134,15 @@ public class DuplicateEntryCount<T> extends
 		for (final ByteArrayId adapterId : adapterIdsToQuery) {
 			final DuplicateEntryCount adapterVisibilityCount = (DuplicateEntryCount) statisticsStore.getDataStatistics(
 					adapterId,
-					DuplicateEntryCount.composeId(index.getId()),
+					DuplicateEntryCount.composeId(
+							index.getId()),
 					authorizations);
 			if (combinedDuplicateCount == null) {
 				combinedDuplicateCount = adapterVisibilityCount;
 			}
 			else {
-				combinedDuplicateCount.merge(adapterVisibilityCount);
+				combinedDuplicateCount.merge(
+						adapterVisibilityCount);
 			}
 		}
 		return combinedDuplicateCount;

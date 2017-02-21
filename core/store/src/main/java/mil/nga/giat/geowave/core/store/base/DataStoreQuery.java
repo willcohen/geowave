@@ -7,6 +7,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
+import mil.nga.giat.geowave.core.index.QueryRanges;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.data.visibility.DifferingFieldVisibilityEntryCount;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
@@ -42,7 +43,7 @@ public abstract class DataStoreQuery
 		this.authorizations = authorizations;
 	}
 
-	abstract protected List<ByteArrayRange> getRanges();
+	abstract protected QueryRanges getRanges();
 
 	protected boolean isAggregation() {
 		return false;

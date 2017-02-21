@@ -14,7 +14,6 @@ import org.junit.Test;
 import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo.FieldInfo;
 import mil.nga.giat.geowave.core.store.data.PersistentValue;
 import mil.nga.giat.geowave.core.store.flatten.BitmaskUtils;
-import mil.nga.giat.geowave.core.store.flatten.BitmaskedFieldInfoComparator;
 
 public class BitmaskUtilsTest
 {

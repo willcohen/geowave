@@ -34,7 +34,7 @@ public class NumericFieldIndexStrategy implements
 	public QueryRanges getQueryRanges(
 			final NumericQueryConstraint indexedRange,
 			final IndexMetaData... hints ) {
-		return indexedRange.getRange();
+		return indexedRange.getQueryRanges();
 	}
 
 	@Override
@@ -75,12 +75,6 @@ public class NumericFieldIndexStrategy implements
 				indexedData);
 	}
 
-	@Override
-	public List<FieldInfo<Number>> getRangeForId(
-			final InsertionIds insertionId ) {
-		return Collections.emptyList();
-	}
-
 	public static final byte[] toIndexByte(
 			final Number number ) {
 		return Lexicoders.DOUBLE.toByteArray(
@@ -89,6 +83,13 @@ public class NumericFieldIndexStrategy implements
 
 	@Override
 	public List<IndexMetaData> createMetaData() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public List<FieldInfo<Number>> getRangeForId(
+			ByteArrayId partitionKey,
+			ByteArrayId sortKey ) {
 		return Collections.emptyList();
 	}
 

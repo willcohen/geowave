@@ -1,12 +1,12 @@
 package mil.nga.giat.geowave.core.store.base;
 
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 
-public interface Deleter<N> extends
+public interface Deleter<R extends GeoWaveRow> extends
 		AutoCloseable
 {
 	public void delete(
-			DataStoreEntryInfo entry,
-			N nativeRow,
+			R row,
 			DataAdapter<?> adapter );
 }

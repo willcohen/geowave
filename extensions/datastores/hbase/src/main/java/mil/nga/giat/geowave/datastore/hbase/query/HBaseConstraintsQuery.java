@@ -21,6 +21,7 @@ import mil.nga.giat.geowave.core.index.IndexMetaData;
 import mil.nga.giat.geowave.core.index.Mergeable;
 import mil.nga.giat.geowave.core.index.MultiDimensionalCoordinateRangesArray;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
+import mil.nga.giat.geowave.core.index.QueryRanges;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
@@ -124,7 +125,7 @@ public class HBaseConstraintsQuery extends
 	}
 
 	@Override
-	protected List<ByteArrayRange> getRanges() {
+	protected QueryRanges getRanges() {
 		return base.getRanges();
 	}
 

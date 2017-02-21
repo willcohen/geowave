@@ -15,10 +15,12 @@ import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
 import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo;
 import mil.nga.giat.geowave.core.store.callback.DeleteCallback;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 
 public class IndexMetaDataSet<T> extends
 		AbstractDataStatistics<T> implements
-		DeleteCallback<T>
+		DeleteCallback<T,
+		GeoWaveRow>
 {
 	private List<IndexMetaData> metaData;
 	public static final ByteArrayId STATS_ID = new ByteArrayId(
@@ -103,8 +105,8 @@ public class IndexMetaDataSet<T> extends
 
 	@Override
 	public void entryIngested(
-			final DataStoreEntryInfo entryInfo,
-			final T entry ) {
+			final T entry,
+			GeoWaveRow... kvs) {
 		for (final IndexMetaData imd : this.metaData) {
 			imd.insertionIdsAdded(entryInfo.getInsertionIds());
 		}
@@ -112,8 +114,8 @@ public class IndexMetaDataSet<T> extends
 
 	@Override
 	public void entryDeleted(
-			final DataStoreEntryInfo entryInfo,
-			final T entry ) {
+			final T entry ,
+			GeoWaveRow kv) {
 		for (final IndexMetaData imd : this.metaData) {
 			imd.insertionIdsRemoved(entryInfo.getInsertionIds());
 		}

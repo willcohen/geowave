@@ -1,14 +1,18 @@
 package mil.nga.giat.geowave.core.index;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class SinglePartitionInsertionIds
+public class SinglePartitionInsertionIds implements
+		Persistable
 {
 	private List<ByteArrayId> compositeInsertionIds;
-	private final ByteArrayId partitionKey;
+	private ByteArrayId partitionKey;
 	private List<ByteArrayId> sortKeys;
+
+	public SinglePartitionInsertionIds() {}
 
 	public SinglePartitionInsertionIds(
 			final ByteArrayId partitionKey ) {
@@ -149,6 +153,84 @@ public class SinglePartitionInsertionIds
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	public byte[] toBinary() {
+		int pLength;
+		if (partitionKey == null) {
+			pLength = 0;
+		}
+		else {
+			pLength = partitionKey.getBytes().length;
+		}
+		int sSize;
+		int byteBufferSize = 8 + pLength;
+		if (sortKeys == null) {
+			sSize = 0;
+		}
+		else {
+			sSize = sortKeys.size();
+			byteBufferSize += (4 * sSize);
+			for (final ByteArrayId sKey : sortKeys) {
+				byteBufferSize += sKey.getBytes().length;
+			}
+		}
+		final ByteBuffer buf = ByteBuffer.allocate(
+				byteBufferSize);
+		buf.putInt(
+				pLength);
+		if (pLength > 0) {
+			buf.put(
+					partitionKey.getBytes());
+		}
+		buf.putInt(
+				sSize);
+
+		if (sSize > 0) {
+			for (final ByteArrayId sKey : sortKeys) {
+				buf.putInt(
+						sKey.getBytes().length);
+				buf.put(
+						sKey.getBytes());
+			}
+		}
+		return buf.array();
+	}
+
+	@Override
+	public void fromBinary(
+			final byte[] bytes ) {
+		final ByteBuffer buf = ByteBuffer.wrap(
+				bytes);
+		final int pLength = buf.getInt();
+		if (pLength > 0) {
+			final byte[] pBytes = new byte[pLength];
+			buf.get(
+					pBytes);
+			partitionKey = new ByteArrayId(
+					pBytes);
+		}
+		else {
+			partitionKey = null;
+		}
+		final int sSize = buf.getInt();
+		if (sSize > 0) {
+			sortKeys = new ArrayList<>(
+					sSize);
+			for (int i = 0; i < sSize; i++) {
+				final int keyLength = buf.getInt();
+				final byte[] sortKey = new byte[keyLength];
+				buf.get(
+						sortKey);
+				sortKeys.add(
+						new ByteArrayId(
+								sortKey));
+			}
+		}
+		else {
+			sortKeys = null;
+		}
 	}
 
 }

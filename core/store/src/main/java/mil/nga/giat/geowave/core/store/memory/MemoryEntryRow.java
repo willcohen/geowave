@@ -15,12 +15,12 @@ public class MemoryEntryRow implements
 	final Object entry;
 
 	public MemoryEntryRow(
-			final ByteArrayId rowId,
+			final ByteArrayId compositeInsertionId,
 			final Object entry,
 			final DataStoreEntryInfo info ) {
 		super();
 		this.rowId = new EntryRowID(
-				rowId.getBytes());
+				compositeInsertionId.getBytes());
 		this.entry = entry;
 		this.info = info;
 	}

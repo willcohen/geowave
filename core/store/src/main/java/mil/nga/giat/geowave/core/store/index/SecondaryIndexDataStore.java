@@ -6,7 +6,7 @@ import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
-import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo.FieldInfo;
+import mil.nga.giat.geowave.core.store.base.IntermediaryWriteEntryInfo.FieldInfo;
 import mil.nga.giat.geowave.core.store.query.DistributableQuery;
 
 /**
@@ -30,8 +30,8 @@ public interface SecondaryIndexDataStore
 	 * @param indexedAttributeValue
 	 * @param adapterId
 	 * @param indexedAttributeFieldId
-	 * @param primaryIndexId
-	 * @param primaryIndexRowId
+	 * @param primaryIndexPartitionKey
+	 * @param primaryIndexSortKey
 	 * @param attributeVisibility
 	 */
 	public void storeJoinEntry(
@@ -39,8 +39,8 @@ public interface SecondaryIndexDataStore
 			ByteArrayId indexedAttributeValue,
 			ByteArrayId adapterId,
 			ByteArrayId indexedAttributeFieldId,
-			ByteArrayId primaryIndexId,
-			ByteArrayId primaryIndexRowId,
+			ByteArrayId primaryIndexPartitionKey,
+			ByteArrayId primaryIndexSortKey,
 			ByteArrayId attributeVisibility );
 
 	/**
@@ -88,8 +88,8 @@ public interface SecondaryIndexDataStore
 			final ByteArrayId indexedAttributeValue,
 			final ByteArrayId adapterId,
 			final ByteArrayId indexedAttributeFieldId,
-			final ByteArrayId primaryIndexId,
-			final ByteArrayId primaryIndexRowId );
+			final ByteArrayId primaryIndexPartitionKey,
+			final ByteArrayId primaryIndexSortKey );
 
 	public void deleteEntry(
 			final ByteArrayId secondaryIndexId,

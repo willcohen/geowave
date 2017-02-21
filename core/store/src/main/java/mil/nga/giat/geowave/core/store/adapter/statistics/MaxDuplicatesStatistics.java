@@ -6,7 +6,7 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.Mergeable;
-import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 
 public class MaxDuplicatesStatistics<T> extends
 		AbstractDataStatistics<T>
@@ -43,7 +43,8 @@ public class MaxDuplicatesStatistics<T> extends
 			final ByteArrayId indexId ) {
 		super(
 				dataAdapterId,
-				composeId(indexId));
+				composeId(
+						indexId));
 	}
 
 	public static ByteArrayId composeId(
@@ -64,25 +65,30 @@ public class MaxDuplicatesStatistics<T> extends
 
 	@Override
 	public byte[] toBinary() {
-		final ByteBuffer buf = super.binaryBuffer(8);
-		buf.putInt(maxDuplicates);
+		final ByteBuffer buf = super.binaryBuffer(
+				8);
+		buf.putInt(
+				maxDuplicates);
 		return buf.array();
 	}
 
 	@Override
 	public void fromBinary(
 			final byte[] bytes ) {
-		final ByteBuffer buf = super.binaryBuffer(bytes);
+		final ByteBuffer buf = super.binaryBuffer(
+				bytes);
 		maxDuplicates = buf.getInt();
 	}
 
 	@Override
 	public void entryIngested(
-			final DataStoreEntryInfo entryInfo,
-			final T entry ) {
-		maxDuplicates = Math.max(
-				maxDuplicates,
-				entryInfo.getRowIds().size() - 1);
+			final T entry,
+			final GeoWaveRow... kvs ) {
+		for (final GeoWaveRow kv : kvs) {
+			maxDuplicates = Math.max(
+					maxDuplicates,
+					kv.getNumberOfDuplicates());
+		}
 	}
 
 	@Override

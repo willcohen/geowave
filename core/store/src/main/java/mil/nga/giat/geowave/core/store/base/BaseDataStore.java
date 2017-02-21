@@ -2,8 +2,8 @@ package mil.nga.giat.geowave.core.store.base;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -16,6 +16,7 @@ import org.apache.log4j.Logger;
 import com.google.common.collect.Iterators;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.index.InsertionIds;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.AdapterToIndexMapping;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
@@ -25,6 +26,7 @@ import mil.nga.giat.geowave.core.store.DataStoreOperations;
 import mil.nga.giat.geowave.core.store.DataStoreOptions;
 import mil.nga.giat.geowave.core.store.IndexWriter;
 import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
+import mil.nga.giat.geowave.core.store.adapter.AdapterPersistenceEncoding;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.IndexDependentDataAdapter;
@@ -34,19 +36,23 @@ import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.exceptions.MismatchedIndexToAdapterMapping;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
-import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo.FieldInfo;
+import mil.nga.giat.geowave.core.store.base.IntermediaryWriteEntryInfo.FieldInfo;
 import mil.nga.giat.geowave.core.store.callback.IngestCallback;
 import mil.nga.giat.geowave.core.store.callback.IngestCallbackList;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
-import mil.nga.giat.geowave.core.store.data.DecodePackage;
+import mil.nga.giat.geowave.core.store.data.DataWriter;
+import mil.nga.giat.geowave.core.store.data.PersistentDataset;
 import mil.nga.giat.geowave.core.store.data.PersistentValue;
 import mil.nga.giat.geowave.core.store.data.VisibilityWriter;
 import mil.nga.giat.geowave.core.store.data.field.FieldReader;
+import mil.nga.giat.geowave.core.store.data.field.FieldVisibilityHandler;
+import mil.nga.giat.geowave.core.store.data.field.FieldWriter;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.filter.DedupeFilter;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.flatten.BitmaskUtils;
 import mil.nga.giat.geowave.core.store.flatten.FlattenedFieldInfo;
+import mil.nga.giat.geowave.core.store.index.CommonIndexModel;
 import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
@@ -62,10 +68,11 @@ import mil.nga.giat.geowave.core.store.query.QueryOptions;
 import mil.nga.giat.geowave.core.store.query.RowIdQuery;
 import mil.nga.giat.geowave.core.store.util.DataStoreUtils;
 
-public abstract class BaseDataStore implements
+public abstract class BaseDataStore<R extends GeoWaveRow> implements
 		DataStore
 {
-	private final static Logger LOGGER = Logger.getLogger(BaseDataStore.class);
+	private final static Logger LOGGER = Logger.getLogger(
+			BaseDataStore.class);
 
 	protected static final String ALT_INDEX_TABLE = "_GEOWAVE_ALT_INDEX";
 
@@ -97,15 +104,19 @@ public abstract class BaseDataStore implements
 
 	public void store(
 			final PrimaryIndex index ) {
-		if (baseOptions.isPersistIndex() && !indexStore.indexExists(index.getId())) {
-			indexStore.addIndex(index);
+		if (baseOptions.isPersistIndex() && !indexStore.indexExists(
+				index.getId())) {
+			indexStore.addIndex(
+					index);
 		}
 	}
 
 	protected synchronized void store(
 			final DataAdapter<?> adapter ) {
-		if (baseOptions.isPersistAdapter() && !adapterStore.adapterExists(adapter.getAdapterId())) {
-			adapterStore.addAdapter(adapter);
+		if (baseOptions.isPersistAdapter() && !adapterStore.adapterExists(
+				adapter.getAdapterId())) {
+			adapterStore.addAdapter(
+					adapter);
 		}
 	}
 
@@ -113,12 +124,14 @@ public abstract class BaseDataStore implements
 	public <T> IndexWriter<T> createWriter(
 			final DataAdapter<T> adapter,
 			final PrimaryIndex... indices )
-			throws MismatchedIndexToAdapterMapping {
-		store(adapter);
+					throws MismatchedIndexToAdapterMapping {
+		store(
+				adapter);
 
-		indexMappingStore.addAdapterIndexMapping(new AdapterToIndexMapping(
-				adapter.getAdapterId(),
-				indices));
+		indexMappingStore.addAdapterIndexMapping(
+				new AdapterToIndexMapping(
+						adapter.getAdapterId(),
+						indices));
 
 		final IndexWriter<T>[] writers = new IndexWriter[indices.length];
 
@@ -129,11 +142,13 @@ public abstract class BaseDataStore implements
 					secondaryIndexDataStore,
 					i == 0);
 
-			callbackManager.setPersistStats(baseOptions.isPersistDataStatistics());
+			callbackManager.setPersistStats(
+					baseOptions.isPersistDataStatistics());
 
-			final List<IngestCallback<T>> callbacks = new ArrayList<IngestCallback<T>>();
+			final List<IngestCallback<T, R>> callbacks = new ArrayList<IngestCallback<T, R>>();
 
-			store(index);
+			store(
+					index);
 
 			final String indexName = index.getId().getString();
 
@@ -146,15 +161,16 @@ public abstract class BaseDataStore implements
 							index.getId());
 				}
 			}
-			callbacks.add(callbackManager.getIngestCallback(
-					(WritableDataAdapter<T>) adapter,
-					index));
+			callbacks.add((IngestCallback<T, R>)
+					callbackManager.getIngestCallback(
+							(WritableDataAdapter<T>) adapter,
+							index));
 
 			initOnIndexWriterCreate(
 					adapter,
 					index);
 
-			final IngestCallbackList<T> callbacksList = new IngestCallbackList<T>(
+			final IngestCallbackList<T, R> callbacksList = new IngestCallbackList<T, R>(
 					callbacks);
 			writers[i] = createIndexWriter(
 					adapter,
@@ -180,9 +196,9 @@ public abstract class BaseDataStore implements
 	/*
 	 * Since this general-purpose method crosses multiple adapters, the type of
 	 * result cannot be assumed.
-	 * 
+	 *
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * mil.nga.giat.geowave.core.store.DataStore#query(mil.nga.giat.geowave.
 	 * core.store.query.QueryOptions,
@@ -203,63 +219,70 @@ public abstract class BaseDataStore implements
 		MemoryAdapterStore tempAdapterStore;
 		try {
 			tempAdapterStore = new MemoryAdapterStore(
-					sanitizedQueryOptions.getAdaptersArray(adapterStore));
+					sanitizedQueryOptions.getAdaptersArray(
+							adapterStore));
 
-			for (final Pair<PrimaryIndex, List<DataAdapter<Object>>> indexAdapterPair : sanitizedQueryOptions
-					.getAdaptersWithMinimalSetOfIndices(
-							tempAdapterStore,
-							indexMappingStore,
-							indexStore)) {
+			for (final Pair<PrimaryIndex, List<DataAdapter<Object>>> indexAdapterPair : sanitizedQueryOptions.getAdaptersWithMinimalSetOfIndices(
+					tempAdapterStore,
+					indexMappingStore,
+					indexStore)) {
 				final List<ByteArrayId> adapterIdsToQuery = new ArrayList<>();
 				for (final DataAdapter<Object> adapter : indexAdapterPair.getRight()) {
 					if (sanitizedQuery instanceof RowIdQuery) {
-						sanitizedQueryOptions.setLimit(-1);
-						results.add(queryRowIds(
-								adapter,
-								indexAdapterPair.getLeft(),
-								((RowIdQuery) sanitizedQuery).getRowIds(),
-								filter,
-								sanitizedQueryOptions,
-								tempAdapterStore));
+						sanitizedQueryOptions.setLimit(
+								-1);
+						results.add(
+								queryRowIds(
+										adapter,
+										indexAdapterPair.getLeft(),
+										((RowIdQuery) sanitizedQuery).getRowIds(),
+										filter,
+										sanitizedQueryOptions,
+										tempAdapterStore));
 						continue;
 					}
 					else if (sanitizedQuery instanceof DataIdQuery) {
 						final DataIdQuery idQuery = (DataIdQuery) sanitizedQuery;
 						if (idQuery.getAdapterId().equals(
 								adapter.getAdapterId())) {
-							results.add(getEntries(
-									indexAdapterPair.getLeft(),
-									idQuery.getDataIds(),
-									(DataAdapter<Object>) adapterStore.getAdapter(idQuery.getAdapterId()),
-									filter,
-									(ScanCallback<Object, Object>) sanitizedQueryOptions.getScanCallback(),
-									sanitizedQueryOptions.getAuthorizations(),
-									sanitizedQueryOptions.getMaxResolutionSubsamplingPerDimension()));
+							results.add(
+									getEntries(
+											indexAdapterPair.getLeft(),
+											idQuery.getDataIds(),
+											(DataAdapter<Object>) adapterStore.getAdapter(
+													idQuery.getAdapterId()),
+											filter,
+											(ScanCallback<Object, R>) sanitizedQueryOptions.getScanCallback(),
+											sanitizedQueryOptions.getAuthorizations(),
+											sanitizedQueryOptions.getMaxResolutionSubsamplingPerDimension()));
 						}
 						continue;
 					}
 					else if (sanitizedQuery instanceof PrefixIdQuery) {
 						final PrefixIdQuery prefixIdQuery = (PrefixIdQuery) sanitizedQuery;
-						results.add(queryRowPrefix(
-								indexAdapterPair.getLeft(),
-								prefixIdQuery.getRowPrefix(),
-								sanitizedQueryOptions,
-								tempAdapterStore,
-								adapterIdsToQuery));
+						results.add(
+								queryRowPrefix(
+										indexAdapterPair.getLeft(),
+										prefixIdQuery.getRowPrefix(),
+										sanitizedQueryOptions,
+										tempAdapterStore,
+										adapterIdsToQuery));
 						continue;
 					}
-					adapterIdsToQuery.add(adapter.getAdapterId());
+					adapterIdsToQuery.add(
+							adapter.getAdapterId());
 				}
 				// supports querying multiple adapters in a single index
 				// in one query instance (one scanner) for efficiency
 				if (adapterIdsToQuery.size() > 0) {
-					results.add(queryConstraints(
-							adapterIdsToQuery,
-							indexAdapterPair.getLeft(),
-							sanitizedQuery,
-							filter,
-							sanitizedQueryOptions,
-							tempAdapterStore));
+					results.add(
+							queryConstraints(
+									adapterIdsToQuery,
+									indexAdapterPair.getLeft(),
+									sanitizedQuery,
+									filter,
+									sanitizedQueryOptions,
+									tempAdapterStore));
 				}
 			}
 
@@ -281,8 +304,9 @@ public abstract class BaseDataStore implements
 						}
 					}
 				},
-				Iterators.concat(new CastIterator<T>(
-						results.iterator())));
+				Iterators.concat(
+						new CastIterator<T>(
+								results.iterator())));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -291,10 +315,10 @@ public abstract class BaseDataStore implements
 			final List<ByteArrayId> dataIds,
 			final DataAdapter<Object> adapter,
 			final DedupeFilter dedupeFilter,
-			final ScanCallback<Object, Object> callback,
+			final ScanCallback<Object, R> callback,
 			final String[] authorizations,
 			final double[] maxResolutionSubsamplingPerDimension )
-			throws IOException {
+					throws IOException {
 		final String altIdxTableName = index.getId().getString() + ALT_INDEX_TABLE;
 
 		MemoryAdapterStore tempAdapterStore;
@@ -302,21 +326,26 @@ public abstract class BaseDataStore implements
 		tempAdapterStore = new MemoryAdapterStore(
 				new DataAdapter[] {
 					adapter
-				});
+		});
 
-		if (baseOptions.isUseAltIndex() && baseOperations.tableExists(altIdxTableName)) {
-			final List<ByteArrayId> rowIds = getAltIndexRowIds(
+		if (baseOptions.isUseAltIndex() && baseOperations.tableExists(
+				altIdxTableName)) {
+			final InsertionIds rowIds = getAltIndexInsertionIds(
 					altIdxTableName,
 					dataIds,
 					adapter.getAdapterId());
 
-			if (rowIds.size() > 0) {
+			if (!rowIds.isEmpty()) {
 
 				final QueryOptions options = new QueryOptions();
-				options.setScanCallback(callback);
-				options.setAuthorizations(authorizations);
-				options.setMaxResolutionSubsamplingPerDimension(maxResolutionSubsamplingPerDimension);
-				options.setLimit(-1);
+				options.setScanCallback(
+						callback);
+				options.setAuthorizations(
+						authorizations);
+				options.setMaxResolutionSubsamplingPerDimension(
+						maxResolutionSubsamplingPerDimension);
+				options.setLimit(
+						-1);
 
 				return queryRowIds(
 						adapter,
@@ -374,11 +403,10 @@ public abstract class BaseDataStore implements
 		final Set<ByteArrayId> queriedAdapters = new HashSet<ByteArrayId>();
 		Deleter idxDeleter = null, altIdxDeleter = null;
 		try {
-			for (final Pair<PrimaryIndex, List<DataAdapter<Object>>> indexAdapterPair : queryOptions
-					.getIndicesForAdapters(
-							adapterStore,
-							indexMappingStore,
-							indexStore)) {
+			for (final Pair<PrimaryIndex, List<DataAdapter<Object>>> indexAdapterPair : queryOptions.getIndicesForAdapters(
+					adapterStore,
+					indexMappingStore,
+					indexStore)) {
 				final PrimaryIndex index = indexAdapterPair.getLeft();
 				if (index == null) {
 					continue;
@@ -391,20 +419,24 @@ public abstract class BaseDataStore implements
 						false,
 						queryOptions.getAuthorizations());
 
-				altIdxDeleter = baseOptions.isUseAltIndex() && baseOperations.tableExists(altIdxTableName) ? createIndexDeleter(
-						altIdxTableName,
-						true,
-						queryOptions.getAuthorizations())
-						: null;
+				altIdxDeleter = baseOptions.isUseAltIndex() && baseOperations.tableExists(
+						altIdxTableName)
+								? createIndexDeleter(
+										altIdxTableName,
+										true,
+										queryOptions.getAuthorizations())
+								: null;
 
 				for (final DataAdapter<Object> adapter : indexAdapterPair.getRight()) {
 
 					final DataStoreCallbackManager callbackCache = new DataStoreCallbackManager(
 							statisticsStore,
 							secondaryIndexDataStore,
-							queriedAdapters.add(adapter.getAdapterId()));
+							queriedAdapters.add(
+									adapter.getAdapterId()));
 
-					callbackCache.setPersistStats(baseOptions.isPersistDataStatistics());
+					callbackCache.setPersistStats(
+							baseOptions.isPersistDataStatistics());
 
 					if (query instanceof EverythingQuery) {
 						deleteEntries(
@@ -415,26 +447,23 @@ public abstract class BaseDataStore implements
 					}
 					final Deleter internalIdxDeleter = idxDeleter;
 					final Deleter internalAltIdxDeleter = altIdxDeleter;
-					final ScanCallback<Object, Object> callback = new ScanCallback<Object, Object>() {
+					final ScanCallback<Object, R> callback = new ScanCallback<Object, R>() {
 						@Override
 						public void entryScanned(
-								final DataStoreEntryInfo entryInfo,
-								final Object nativeDataStoreEntry,
-								final Object entry ) {
+								final Object entry,
+								final R row ) {
 							callbackCache.getDeleteCallback(
 									(WritableDataAdapter<Object>) adapter,
 									index).entryDeleted(
-									entryInfo,
-									entry);
+											entry,
+											row);
 							try {
 								internalIdxDeleter.delete(
-										entryInfo,
-										nativeDataStoreEntry,
+										row,
 										adapter);
 								if (internalAltIdxDeleter != null) {
 									internalAltIdxDeleter.delete(
-											entryInfo,
-											nativeDataStoreEntry,
+											row,
 											adapter);
 								}
 							}
@@ -442,16 +471,20 @@ public abstract class BaseDataStore implements
 								LOGGER.error(
 										"Failed deletion",
 										e);
-								aOk.set(false);
+								aOk.set(
+										false);
 							}
 						}
 					};
 
 					CloseableIterator<?> dataIt = null;
-					queryOptions.setScanCallback(callback);
-					final List<ByteArrayId> adapterIds = Collections.singletonList(adapter.getAdapterId());
+					queryOptions.setScanCallback(
+							callback);
+					final List<ByteArrayId> adapterIds = Collections.singletonList(
+							adapter.getAdapterId());
 					if (query instanceof RowIdQuery) {
-						queryOptions.setLimit(-1);
+						queryOptions.setLimit(
+								-1);
 						dataIt = queryRowIds(
 								adapter,
 								index,
@@ -534,12 +567,14 @@ public abstract class BaseDataStore implements
 			final DataAdapter<T> adapter,
 			final PrimaryIndex index,
 			final String... additionalAuthorizations )
-			throws IOException {
+					throws IOException {
 		final String tableName = index.getId().getString();
 		final String altIdxTableName = tableName + ALT_INDEX_TABLE;
-		final String adapterId = StringUtils.stringFromBinary(adapter.getAdapterId().getBytes());
+		final String adapterId = StringUtils.stringFromBinary(
+				adapter.getAdapterId().getBytes());
 
-		try (final CloseableIterator<DataStatistics<?>> it = statisticsStore.getDataStatistics(adapter.getAdapterId())) {
+		try (final CloseableIterator<DataStatistics<?>> it = statisticsStore.getDataStatistics(
+				adapter.getAdapterId())) {
 
 			while (it.hasNext()) {
 				final DataStatistics<?> stats = it.next();
@@ -557,7 +592,8 @@ public abstract class BaseDataStore implements
 				tableName,
 				adapterId,
 				additionalAuthorizations);
-		if (baseOptions.isUseAltIndex() && baseOperations.tableExists(altIdxTableName)) {
+		if (baseOptions.isUseAltIndex() && baseOperations.tableExists(
+				altIdxTableName)) {
 			deleteAll(
 					altIdxTableName,
 					adapterId,
@@ -570,13 +606,13 @@ public abstract class BaseDataStore implements
 			final String columnFamily,
 			final String... additionalAuthorizations );
 
-	protected abstract Deleter createIndexDeleter(
+	protected abstract Deleter<R> createIndexDeleter(
 			String indexTableName,
 			boolean altIndex,
 			String... authorizations )
-			throws Exception;
+					throws Exception;
 
-	protected abstract List<ByteArrayId> getAltIndexRowIds(
+	protected abstract InsertionIds getAltIndexInsertionIds(
 			final String altIdxTableName,
 			final List<ByteArrayId> dataIds,
 			final ByteArrayId adapterId,
@@ -587,7 +623,7 @@ public abstract class BaseDataStore implements
 			final AdapterStore tempAdapterStore,
 			final List<ByteArrayId> dataIds,
 			final DataAdapter<?> adapter,
-			final ScanCallback<Object, Object> callback,
+			final ScanCallback<Object, R> callback,
 			final DedupeFilter dedupeFilter,
 			final String... authorizations );
 
@@ -601,7 +637,7 @@ public abstract class BaseDataStore implements
 
 	protected abstract CloseableIterator<Object> queryRowPrefix(
 			PrimaryIndex index,
-			ByteArrayId rowPrefix,
+			ByteArrayId sortPrefix,
 			QueryOptions sanitizedQueryOptions,
 			AdapterStore tempAdapterStore,
 			List<ByteArrayId> adapterIdsToQuery );
@@ -609,59 +645,50 @@ public abstract class BaseDataStore implements
 	protected abstract CloseableIterator<Object> queryRowIds(
 			DataAdapter<Object> adapter,
 			PrimaryIndex index,
-			List<ByteArrayId> rowIds,
+			InsertionIds rowIds,
 			DedupeFilter filter,
 			QueryOptions sanitizedQueryOptions,
 			AdapterStore tempAdapterStore );
 
 	protected abstract <T> void addAltIndexCallback(
-			List<IngestCallback<T>> callbacks,
+			List<IngestCallback<T, R>> callbacks,
 			String indexName,
 			DataAdapter<T> adapter,
 			ByteArrayId primaryIndexId );
 
-	protected abstract IndexWriter createIndexWriter(
-			DataAdapter adapter,
+	protected abstract <T> IndexWriter<T> createIndexWriter(
+			DataAdapter<T> adapter,
 			PrimaryIndex index,
 			DataStoreOperations baseOperations,
 			DataStoreOptions baseOptions,
-			final IngestCallback callback,
+			final IngestCallback<T, R> callback,
 			final Closeable closable );
 
-	protected abstract void initOnIndexWriterCreate(
-			final DataAdapter adapter,
+	protected abstract <T> void initOnIndexWriterCreate(
+			final DataAdapter<T> adapter,
 			final PrimaryIndex index );
 
 	/**
 	 * General-purpose entry ingest
 	 */
-	public <T, R> DataStoreEntryInfo write(
+	public <T> R[] write(
 			final WritableDataAdapter<T> writableAdapter,
 			final PrimaryIndex index,
 			final T entry,
-			final Writer writer,
+			final Writer<T> writer,
 			final VisibilityWriter<T> customFieldVisibilityWriter ) {
 
-		final DataStoreEntryInfo ingestInfo = DataStoreUtils.getIngestInfo(
+		final R[] rows = toGeoWaveRows(
 				writableAdapter,
 				index,
 				entry,
 				customFieldVisibilityWriter);
 
-		verifyVisibility(
-				customFieldVisibilityWriter,
-				ingestInfo);
-
-		final Iterable<GeoWaveRow> rows = toGeoWaveRows(
-				writableAdapter,
-				index,
-				ingestInfo);
-
 		try {
 			write(
 					writer,
-					rows,
-					writableAdapter.getAdapterId().getString());
+					writableAdapter.getAdapterId(),
+					rows);
 		}
 		catch (final Exception e) {
 			LOGGER.warn(
@@ -669,60 +696,180 @@ public abstract class BaseDataStore implements
 					e);
 		}
 
-		return ingestInfo;
-	}
-
-	protected void verifyVisibility(
-			VisibilityWriter customFieldVisibilityWriter,
-			DataStoreEntryInfo ingestInfo ) {
-		// TODO: Implement/override vis for all datastore types
+		return rows;
 	}
 
 	/**
 	 * DataStore-agnostic method to accept ingest info and return generic
 	 * geowave rows
-	 * 
+	 *
 	 * @param writableAdapter
 	 * @param index
 	 * @param ingestInfo
-	 * 
+	 *
 	 * @return list of GeoWaveRow
 	 */
-	public <T> Iterable<GeoWaveRow> toGeoWaveRows(
+	public <T> R[] toGeoWaveRows(
 			final WritableDataAdapter<T> writableAdapter,
 			final PrimaryIndex index,
-			final DataStoreEntryInfo ingestInfo ) {
-		final List<FieldInfo<?>> fieldInfoList = DataStoreUtils.composeFlattenedFields(
-				ingestInfo.getFieldInfo(),
+			final T entry,
+			final VisibilityWriter<T> customFieldVisibilityWriter ) {
+
+		final CommonIndexModel indexModel = index.getIndexModel();
+
+		final AdapterPersistenceEncoding encodedData = writableAdapter.encode(
+				entry,
+				indexModel);
+		final InsertionIds insertionIds = encodedData.getInsertionIds(
+				index);
+		final PersistentDataset extendedData = encodedData.getAdapterExtendedData();
+		final PersistentDataset indexedData = encodedData.getCommonData();
+		final List<PersistentValue> extendedValues = extendedData.getValues();
+		final List<PersistentValue> commonValues = indexedData.getValues();
+
+		List<FieldInfo<?>> fieldInfoList = new ArrayList<FieldInfo<?>>();
+
+		final byte[] dataId = writableAdapter.getDataId(
+				entry).getBytes();
+		final byte[] adapterId = writableAdapter.getAdapterId().getBytes();
+		if (!insertionIds.isEmpty()) {
+			for (final PersistentValue fieldValue : commonValues) {
+				final FieldInfo<T> fieldInfo = getFieldInfo(
+						indexModel,
+						fieldValue,
+						entry,
+						customFieldVisibilityWriter);
+				if (fieldInfo != null) {
+					fieldInfoList.add(
+							fieldInfo);
+				}
+			}
+			for (final PersistentValue fieldValue : extendedValues) {
+				if (fieldValue.getValue() != null) {
+					final FieldInfo<T> fieldInfo = getFieldInfo(
+							writableAdapter,
+							fieldValue,
+							entry,
+							customFieldVisibilityWriter);
+					if (fieldInfo != null) {
+						fieldInfoList.add(
+								fieldInfo);
+					}
+				}
+			}
+		}
+		else {
+			LOGGER.warn(
+					"Indexing failed to produce insertion ids; entry [" + writableAdapter.getDataId(
+							entry).getString() + "] not saved.");
+		}
+
+		fieldInfoList = DataStoreUtils.composeFlattenedFields(
+				fieldInfoList,
 				index.getIndexModel(),
 				writableAdapter);
 
-		final boolean ensureUniqueId = (writableAdapter instanceof RowMergingDataAdapter)
-				&& (((RowMergingDataAdapter) writableAdapter).getTransform() != null);
+		final boolean ensureUniqueId = (writableAdapter instanceof RowMergingDataAdapter) && (((RowMergingDataAdapter) writableAdapter).getTransform() != null);
 
-		final Iterable<GeoWaveRow> geowaveRows = getRowsFromIngest(
-				writableAdapter.getAdapterId().getBytes(),
+		final IntermediaryWriteEntryInfo ingestInfo = new IntermediaryWriteEntryInfo(
+				dataId,
+				adapterId,
+				insertionIds,
+				fieldInfoList);
+		verifyVisibility(
+				customFieldVisibilityWriter,
+				ingestInfo);
+		final R[] geowaveRows = getRowsFromIngestInfo(
 				ingestInfo,
-				fieldInfoList,
 				ensureUniqueId);
 
 		return geowaveRows;
 	}
 
+	protected void verifyVisibility(
+			final VisibilityWriter customFieldVisibilityWriter,
+			final IntermediaryWriteEntryInfo ingestInfo ) {
+		// TODO: Implement/override vis for all datastore types, if there is
+		// some initializing that must occur within table administration on
+		// encountering a new visibility
+	}
+
+	private static <T> FieldInfo<T> getFieldInfo(
+			final DataWriter dataWriter,
+			final PersistentValue<T> fieldValue,
+			final T entry,
+			final VisibilityWriter<T> customFieldVisibilityWriter ) {
+		final FieldWriter fieldWriter = dataWriter.getWriter(
+				fieldValue.getId());
+		final FieldVisibilityHandler<T, Object> customVisibilityHandler = customFieldVisibilityWriter.getFieldVisibilityHandler(
+				fieldValue.getId());
+		if (fieldWriter != null) {
+			final Object value = fieldValue.getValue();
+			return new FieldInfo<T>(
+					fieldValue,
+					fieldWriter.writeField(
+							value),
+					merge(
+							customVisibilityHandler.getVisibility(
+									entry,
+									fieldValue.getId(),
+									value),
+							fieldWriter.getVisibility(
+									entry,
+									fieldValue.getId(),
+									value)));
+		}
+		else if (fieldValue.getValue() != null) {
+			LOGGER.warn(
+					"Data writer of class " + dataWriter.getClass() + " does not support field for " + fieldValue.getValue());
+		}
+		return null;
+	}
+
+	private static final byte[] BEG_AND_BYTE = "&".getBytes(
+			StringUtils.GEOWAVE_CHAR_SET);
+	private static final byte[] END_AND_BYTE = ")".getBytes(
+			StringUtils.GEOWAVE_CHAR_SET);
+
+	private static byte[] merge(
+			final byte vis1[],
+			final byte vis2[] ) {
+		if ((vis1 == null) || (vis1.length == 0)) {
+			return vis2;
+		}
+		else if ((vis2 == null) || (vis2.length == 0)) {
+			return vis1;
+		}
+
+		final ByteBuffer buffer = ByteBuffer.allocate(
+				vis1.length + 3 + vis2.length);
+		buffer.putChar(
+				'(');
+		buffer.put(
+				vis1);
+		buffer.putChar(
+				')');
+		buffer.put(
+				BEG_AND_BYTE);
+		buffer.put(
+				vis2);
+		buffer.put(
+				END_AND_BYTE);
+		return buffer.array();
+	}
+
 	/**
 	 * DataStore-specific method to create its row impl on ingest Called from
 	 * toGeoWaveRows method above.
-	 * 
+	 *
 	 * @param adapterId
 	 * @param ingestInfo
 	 * @param fieldInfoList
 	 * @param ensureUniqueId
 	 * @return
 	 */
-	protected abstract Iterable<GeoWaveRow> getRowsFromIngest(
-			final byte[] adapterId,
-			final DataStoreEntryInfo ingestInfo,
-			final List<FieldInfo<?>> fieldInfoList,
+	protected abstract R[] getRowsFromIngestInfo(
+			final IntermediaryWriteEntryInfo ingestInfo,
 			final boolean ensureUniqueId );
 
 	/**
@@ -731,35 +878,29 @@ public abstract class BaseDataStore implements
 	 */
 	public abstract void write(
 			Writer writer,
-			Iterable<GeoWaveRow> rows,
-			final String columnFamily );
+			final ByteArrayId adapterId,
+			R... rows );
 
 	/**
 	 * Basic method that decodes a native row Currently overridden by Accumulo
 	 * and HBase; Unification in progress
-	 * 
+	 *
 	 * Override this method if you can't pass in a GeoWaveRow!
 	 */
-	public Object decodeRow(
-			final Object inputRow,
+	public <T> Object decodeRow(
+			final R geowaveRow,
 			final boolean wholeRowEncoding,
 			final QueryFilter clientFilter,
-			final DataAdapter adapter,
+			final DataAdapter<T> adapter,
 			final AdapterStore adapterStore,
 			final PrimaryIndex index,
 			final ScanCallback scanCallback,
 			final byte[] fieldSubsetBitmask,
 			final boolean decodeRow ) {
-		// The base case for decoding requires the input row to be a GeoWaveRow
-		if (!(inputRow instanceof GeoWaveRow)) {
-			return null;
-		}
-
-		GeoWaveRow geowaveRow = (GeoWaveRow) inputRow;
-		ByteArrayId adapterId = new ByteArrayId(
+		final ByteArrayId adapterId = new ByteArrayId(
 				geowaveRow.getAdapterId());
 
-		DecodePackage decodePackage = new DecodePackage(
+		final IntermediaryReadEntryInfo decodePackage = new IntermediaryReadEntryInfo(
 				index,
 				true);
 
@@ -804,7 +945,7 @@ public abstract class BaseDataStore implements
 	 * Generic field reader - updates fieldInfoList from field input data
 	 */
 	protected void readFieldInfo(
-			final DecodePackage decodePackage,
+			final IntermediaryReadEntryInfo decodePackage,
 			final byte[] fieldMask,
 			final byte[] commonVisiblity,
 			final byte[] byteValue ) {
@@ -817,14 +958,13 @@ public abstract class BaseDataStore implements
 			final ByteArrayId fieldId = decodePackage.getDataAdapter().getFieldIdForPosition(
 					decodePackage.getIndex().getIndexModel(),
 					fieldInfo.getFieldPosition());
-			final FieldReader<? extends CommonIndexValue> indexFieldReader = decodePackage
-					.getIndex()
-					.getIndexModel()
-					.getReader(
-							fieldId);
+			final FieldReader<? extends CommonIndexValue> indexFieldReader = decodePackage.getIndex().getIndexModel().getReader(
+					fieldId);
 			if (indexFieldReader != null) {
-				final CommonIndexValue indexValue = indexFieldReader.readField(fieldInfo.getValue());
-				indexValue.setVisibility(commonVisiblity);
+				final CommonIndexValue indexValue = indexFieldReader.readField(
+						fieldInfo.getValue());
+				indexValue.setVisibility(
+						commonVisiblity);
 				final PersistentValue<CommonIndexValue> val = new PersistentValue<CommonIndexValue>(
 						fieldId,
 						indexValue);
@@ -840,7 +980,8 @@ public abstract class BaseDataStore implements
 				final FieldReader<?> extFieldReader = decodePackage.getDataAdapter().getReader(
 						fieldId);
 				if (extFieldReader != null) {
-					final Object value = extFieldReader.readField(fieldInfo.getValue());
+					final Object value = extFieldReader.readField(
+							fieldInfo.getValue());
 					final PersistentValue<Object> val = new PersistentValue<Object>(
 							fieldId,
 							value);
@@ -853,7 +994,8 @@ public abstract class BaseDataStore implements
 									commonVisiblity));
 				}
 				else {
-					LOGGER.error("field reader not found for data entry, the value may be ignored");
+					LOGGER.error(
+							"field reader not found for data entry, the value may be ignored");
 					decodePackage.getUnknownData().addValue(
 							new PersistentValue<byte[]>(
 									fieldId,
@@ -868,11 +1010,11 @@ public abstract class BaseDataStore implements
 	 * filters and if its accepted, use the data adapter to decode the
 	 * persistence model into the native data type
 	 */
-	protected Object getDecodedRow(
-			GeoWaveRow geowaveRow,
-			DecodePackage decodePackage,
-			QueryFilter clientFilter,
-			ScanCallback scanCallback ) {
+	protected <T> Object getDecodedRow(
+			final IntermediaryReadEntryInfo<T> decodePackage,
+			final QueryFilter clientFilter,
+			final ScanCallback<T, R> scanCallback,
+			final R... geowaveRows) {
 		final IndexedAdapterPersistenceEncoding encodedRow = new IndexedAdapterPersistenceEncoding(
 				decodePackage.getDataAdapter().getAdapterId(),
 				new ByteArrayId(
@@ -891,23 +1033,14 @@ public abstract class BaseDataStore implements
 				return encodedRow;
 			}
 
-			final Object decodedRow = decodePackage.getDataAdapter().decode(
+			final T decodedRow = decodePackage.getDataAdapter().decode(
 					encodedRow,
 					decodePackage.getIndex());
 
 			if (scanCallback != null) {
-				final DataStoreEntryInfo entryInfo = new DataStoreEntryInfo(
-						geowaveRow.getDataId(),
-						Arrays.asList(new ByteArrayId(
-								geowaveRow.getIndex())),
-						Arrays.asList(new ByteArrayId(
-								geowaveRow.getRowId())),
-						decodePackage.getFieldInfo());
-
 				scanCallback.entryScanned(
-						entryInfo,
-						geowaveRow,
-						decodedRow);
+						decodedRow,
+						geowaveRows);
 			}
 
 			return decodedRow;

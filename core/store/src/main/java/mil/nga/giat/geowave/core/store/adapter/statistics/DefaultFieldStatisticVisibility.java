@@ -25,8 +25,7 @@ public class DefaultFieldStatisticVisibility<T> implements
 		List<GeoWaveValue> retVal = new ArrayList<>();
 		for (GeoWaveRow kv : kvs) {
 			for (GeoWaveValue v : kv.getFieldValues()) {
-				retVal.add(
-						v);
+				retVal.add(v);
 			}
 		}
 		return retVal;
@@ -36,8 +35,7 @@ public class DefaultFieldStatisticVisibility<T> implements
 	public byte[] getVisibility(
 			final T entry,
 			final GeoWaveRow... kvs ) {
-		List<GeoWaveValue> allVis = getAllVisibilities(
-				kvs);
+		List<GeoWaveValue> allVis = getAllVisibilities(kvs);
 		if (allVis.size() == 1) {
 			return allVis.get(
 					0).getVisibility();
@@ -45,8 +43,7 @@ public class DefaultFieldStatisticVisibility<T> implements
 		int lowestOrdinal = Integer.MAX_VALUE;
 		byte[] lowestOrdinalVisibility = null;
 		for (GeoWaveValue v : allVis) {
-			final int pos = BitmaskUtils.getLowestFieldPosition(
-					v.getFieldMask());
+			final int pos = BitmaskUtils.getLowestFieldPosition(v.getFieldMask());
 			if (pos == 0) {
 				return v.getVisibility();
 			}

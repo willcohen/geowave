@@ -14,7 +14,7 @@ import mil.nga.giat.geowave.core.store.base.BaseDataStore;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
 import mil.nga.giat.geowave.core.store.data.visibility.DifferingFieldVisibilityEntryCount;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
-import mil.nga.giat.geowave.datastore.hbase.operations.BasicHBaseOperations;
+import mil.nga.giat.geowave.datastore.hbase.operations.HBaseOperations;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseEntryIteratorWrapper;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils.ScannerClosableWrapper;
 
@@ -40,7 +40,7 @@ abstract public class AbstractHBaseRowQuery<T> extends
 	}
 
 	public CloseableIterator<T> query(
-			final BasicHBaseOperations operations,
+			final HBaseOperations operations,
 			final double[] maxResolutionSubsamplingPerDimension,
 			final AdapterStore adapterStore ) {
 		final Scan scanner = new Scan();

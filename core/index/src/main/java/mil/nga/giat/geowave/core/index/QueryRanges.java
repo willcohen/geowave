@@ -29,8 +29,7 @@ public class QueryRanges
 			final Set<ByteArrayId> partitionKeys,
 			final QueryRanges queryRanges ) {
 		if ((queryRanges == null) || (queryRanges.partitionRanges == null) || queryRanges.partitionRanges.isEmpty()) {
-			partitionRanges = fromPartitionKeys(
-					partitionKeys);
+			partitionRanges = fromPartitionKeys(partitionKeys);
 		}
 		else if ((partitionKeys == null) || partitionKeys.isEmpty()) {
 			partitionRanges = queryRanges.partitionRanges;
@@ -53,10 +52,9 @@ public class QueryRanges
 										partitionKey.getBytes(),
 										sortKeyRange.getPartitionKey().getBytes()));
 					}
-					partitionRanges.add(
-							new SinglePartitionQueryRanges(
-									newPartitionKey,
-									sortKeyRange.getSortKeyRanges()));
+					partitionRanges.add(new SinglePartitionQueryRanges(
+							newPartitionKey,
+							sortKeyRange.getSortKeyRanges()));
 				}
 			}
 		}
@@ -65,26 +63,24 @@ public class QueryRanges
 	public QueryRanges(
 			final List<QueryRanges> queryRangesList ) {
 		// group by partition
-		final Map<ByteArrayId, List<ByteArrayRange>> sortRangesPerPartition = new HashMap<>();
+		final Map<ByteArrayId, Collection<ByteArrayRange>> sortRangesPerPartition = new HashMap<>();
 		for (final QueryRanges qr : queryRangesList) {
 			for (final SinglePartitionQueryRanges r : qr.getPartitionQueryRanges()) {
-				final List<ByteArrayRange> ranges = sortRangesPerPartition.get(
-						r.getPartitionKey());
+				final Collection<ByteArrayRange> ranges = sortRangesPerPartition.get(r.getPartitionKey());
 				if (ranges == null) {
 					sortRangesPerPartition.put(
 							r.getPartitionKey(),
 							r.getSortKeyRanges());
 				}
 				else {
-					ranges.addAll(
-							r.getSortKeyRanges());
+					ranges.addAll(r.getSortKeyRanges());
 				}
 			}
 		}
 		partitionRanges = new ArrayList<>(
 				sortRangesPerPartition.size());
-		for (final Entry<ByteArrayId, List<ByteArrayRange>> e : sortRangesPerPartition.entrySet()) {
-			List<ByteArrayRange> mergedRanges;
+		for (final Entry<ByteArrayId, Collection<ByteArrayRange>> e : sortRangesPerPartition.entrySet()) {
+			Collection<ByteArrayRange> mergedRanges;
 			if (e.getValue() != null) {
 				mergedRanges = ByteArrayRange.mergeIntersections(
 						e.getValue(),
@@ -93,10 +89,9 @@ public class QueryRanges
 			else {
 				mergedRanges = null;
 			}
-			partitionRanges.add(
-					new SinglePartitionQueryRanges(
-							e.getKey(),
-							mergedRanges));
+			partitionRanges.add(new SinglePartitionQueryRanges(
+					e.getKey(),
+					mergedRanges));
 		}
 	}
 
@@ -107,15 +102,13 @@ public class QueryRanges
 
 	public QueryRanges(
 			final ByteArrayRange singleSortKeyRange ) {
-		partitionRanges = Collections.singletonList(
-				new SinglePartitionQueryRanges(
-						singleSortKeyRange));
+		partitionRanges = Collections.singletonList(new SinglePartitionQueryRanges(
+				singleSortKeyRange));
 	}
 
 	public QueryRanges(
 			final Set<ByteArrayId> partitionKeys ) {
-		partitionRanges = fromPartitionKeys(
-				partitionKeys);
+		partitionRanges = fromPartitionKeys(partitionKeys);
 	}
 
 	private static Collection<SinglePartitionQueryRanges> fromPartitionKeys(
@@ -153,30 +146,27 @@ public class QueryRanges
 		final List<ByteArrayRange> internalQueryRanges = new ArrayList<>();
 		for (final SinglePartitionQueryRanges partition : partitionRanges) {
 			if ((partition.getSortKeyRanges() == null) || partition.getSortKeyRanges().isEmpty()) {
-				internalQueryRanges.add(
-						new ByteArrayRange(
-								partition.getPartitionKey(),
-								partition.getPartitionKey(),
-								true));
+				internalQueryRanges.add(new ByteArrayRange(
+						partition.getPartitionKey(),
+						partition.getPartitionKey(),
+						true));
 			}
 
 			else if (partition.getPartitionKey() == null) {
-				internalQueryRanges.addAll(
-						partition.getSortKeyRanges());
+				internalQueryRanges.addAll(partition.getSortKeyRanges());
 			}
 			else {
 				for (final ByteArrayRange sortKeyRange : partition.getSortKeyRanges()) {
-					internalQueryRanges.add(
-							new ByteArrayRange(
-									new ByteArrayId(
-											ByteArrayUtils.combineArrays(
-													partition.getPartitionKey().getBytes(),
-													sortKeyRange.getStart().getBytes())),
-									new ByteArrayId(
-											ByteArrayUtils.combineArrays(
-													partition.getPartitionKey().getBytes(),
-													sortKeyRange.getEnd().getBytes())),
-									sortKeyRange.singleValue));
+					internalQueryRanges.add(new ByteArrayRange(
+							new ByteArrayId(
+									ByteArrayUtils.combineArrays(
+											partition.getPartitionKey().getBytes(),
+											sortKeyRange.getStart().getBytes())),
+							new ByteArrayId(
+									ByteArrayUtils.combineArrays(
+											partition.getPartitionKey().getBytes(),
+											sortKeyRange.getEnd().getBytes())),
+							sortKeyRange.singleValue));
 				}
 			}
 		}

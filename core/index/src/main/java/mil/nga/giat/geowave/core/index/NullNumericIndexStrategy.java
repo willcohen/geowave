@@ -31,15 +31,13 @@ public class NullNumericIndexStrategy implements
 
 	@Override
 	public byte[] toBinary() {
-		return StringUtils.stringToBinary(
-				id);
+		return StringUtils.stringToBinary(id);
 	}
 
 	@Override
 	public void fromBinary(
 			final byte[] bytes ) {
-		id = StringUtils.stringFromBinary(
-				bytes);
+		id = StringUtils.stringFromBinary(bytes);
 	}
 
 	@Override
@@ -111,17 +109,11 @@ public class NullNumericIndexStrategy implements
 			final int maxDuplicateInsertionIds ) {
 		// return a single empty sort key as the ID
 		final List<ByteArrayId> retVal = new ArrayList<ByteArrayId>();
-		retVal.add(
-				new ByteArrayId(
-						new byte[] {}));
+		retVal.add(new ByteArrayId(
+				new byte[] {}));
 		return new InsertionIds(
 				null,
 				retVal);
-	}
-
-	@Override
-	public Set<ByteArrayId> getPartitionKeys() {
-		return null;
 	}
 
 	@Override

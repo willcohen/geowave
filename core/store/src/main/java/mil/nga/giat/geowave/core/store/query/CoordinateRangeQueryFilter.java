@@ -20,8 +20,7 @@ import mil.nga.giat.geowave.core.store.query.CoordinateRangeUtils.RangeLookupFac
 public class CoordinateRangeQueryFilter implements
 		DistributableQueryFilter
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			CoordinateRangeQueryFilter.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(CoordinateRangeQueryFilter.class);
 	protected NumericIndexStrategy indexStrategy;
 	protected RangeCache rangeCache;
 	protected MultiDimensionalCoordinateRangesArray[] coordinateRanges;
@@ -33,16 +32,16 @@ public class CoordinateRangeQueryFilter implements
 			final MultiDimensionalCoordinateRangesArray[] coordinateRanges ) {
 		this.indexStrategy = indexStrategy;
 		this.coordinateRanges = coordinateRanges;
-		rangeCache = RangeLookupFactory.createMultiRangeLookup(
-				coordinateRanges);
+		rangeCache = RangeLookupFactory.createMultiRangeLookup(coordinateRanges);
 	}
 
 	@Override
 	public boolean accept(
 			final CommonIndexModel indexModel,
 			final IndexedPersistenceEncoding<?> persistenceEncoding ) {
-		if ((persistenceEncoding == null) || ((persistenceEncoding.getInsertionPartitionKey() == null)
-				&& (persistenceEncoding.getInsertionSortKey() == null))) {
+		if ((persistenceEncoding == null)
+				|| ((persistenceEncoding.getInsertionPartitionKey() == null) && (persistenceEncoding
+						.getInsertionSortKey() == null))) {
 			return false;
 		}
 		return inBounds(
@@ -56,51 +55,40 @@ public class CoordinateRangeQueryFilter implements
 		final MultiDimensionalCoordinates coordinates = indexStrategy.getCoordinatesPerDimension(
 				partitionKey,
 				sortKey);
-		return rangeCache.inBounds(
-				coordinates);
+		return rangeCache.inBounds(coordinates);
 	}
 
 	@Override
 	public byte[] toBinary() {
-		final byte[] indexStrategyBytes = PersistenceUtils.toBinary(
-				indexStrategy);
+		final byte[] indexStrategyBytes = PersistenceUtils.toBinary(indexStrategy);
 		final byte[] coordinateRangesBinary = new ArrayOfArrays(
 				coordinateRanges).toBinary();
 
-		final ByteBuffer buf = ByteBuffer.allocate(
-				coordinateRangesBinary.length + indexStrategyBytes.length + 4);
+		final ByteBuffer buf = ByteBuffer.allocate(coordinateRangesBinary.length + indexStrategyBytes.length + 4);
 
-		buf.putInt(
-				indexStrategyBytes.length);
-		buf.put(
-				indexStrategyBytes);
-		buf.put(
-				coordinateRangesBinary);
+		buf.putInt(indexStrategyBytes.length);
+		buf.put(indexStrategyBytes);
+		buf.put(coordinateRangesBinary);
 		return buf.array();
 	}
 
 	@Override
 	public void fromBinary(
 			final byte[] bytes ) {
-		final ByteBuffer buf = ByteBuffer.wrap(
-				bytes);
+		final ByteBuffer buf = ByteBuffer.wrap(bytes);
 		try {
 			final int indexStrategyLength = buf.getInt();
 			final byte[] indexStrategyBytes = new byte[indexStrategyLength];
-			buf.get(
-					indexStrategyBytes);
+			buf.get(indexStrategyBytes);
 			indexStrategy = PersistenceUtils.fromBinary(
 					indexStrategyBytes,
 					NumericIndexStrategy.class);
 			final byte[] coordRangeBytes = new byte[bytes.length - indexStrategyLength - 4];
-			buf.get(
-					coordRangeBytes);
+			buf.get(coordRangeBytes);
 			final ArrayOfArrays arrays = new ArrayOfArrays();
-			arrays.fromBinary(
-					coordRangeBytes);
+			arrays.fromBinary(coordRangeBytes);
 			coordinateRanges = arrays.getCoordinateArrays();
-			rangeCache = RangeLookupFactory.createMultiRangeLookup(
-					coordinateRanges);
+			rangeCache = RangeLookupFactory.createMultiRangeLookup(coordinateRanges);
 		}
 		catch (final Exception e) {
 			LOGGER.warn(

@@ -5,6 +5,6 @@ public interface GeoWaveValue
 	public byte[] getFieldMask();
 
 	public byte[] getVisibility();
-	
+
 	public byte[] getValue();
 }

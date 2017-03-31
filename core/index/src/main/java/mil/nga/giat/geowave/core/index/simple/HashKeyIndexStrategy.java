@@ -56,25 +56,21 @@ public class HashKeyIndexStrategy implements
 
 	public HashKeyIndexStrategy(
 			final int size ) {
-		init(
-				size);
+		init(size);
 	}
 
 	private void init(
 			final int size ) {
 		keys.clear();
 		if (size > 256) {
-			final ByteBuffer buf = ByteBuffer.allocate(
-					4);
+			final ByteBuffer buf = ByteBuffer.allocate(4);
 			for (int i = 0; i < size; i++) {
-				buf.putInt(
-						i);
+				buf.putInt(i);
 				final ByteArrayId id = new ByteArrayId(
 						Arrays.copyOf(
 								buf.array(),
 								4));
-				keys.add(
-						id);
+				keys.add(id);
 				buf.rewind();
 			}
 		}
@@ -84,24 +80,20 @@ public class HashKeyIndexStrategy implements
 						new byte[] {
 							(byte) i
 						});
-				keys.add(
-						id);
+				keys.add(id);
 			}
 		}
 	}
 
 	@Override
 	public String getId() {
-		return StringUtils.intToString(
-				hashCode());
+		return StringUtils.intToString(hashCode());
 	}
 
 	@Override
 	public byte[] toBinary() {
-		final ByteBuffer buf = ByteBuffer.allocate(
-				4);
-		buf.putInt(
-				keys.size());
+		final ByteBuffer buf = ByteBuffer.allocate(4);
+		buf.putInt(keys.size());
 		return buf.array();
 
 	}
@@ -109,16 +101,12 @@ public class HashKeyIndexStrategy implements
 	@Override
 	public void fromBinary(
 			final byte[] bytes ) {
-		final ByteBuffer buf = ByteBuffer.wrap(
-				bytes);
-		init(
-				buf.getInt());
+		final ByteBuffer buf = ByteBuffer.wrap(bytes);
+		init(buf.getInt());
 	}
 
-	@Override
 	public Set<ByteArrayId> getPartitionKeys() {
-		return Sets.newHashSet(
-				keys);
+		return Sets.newHashSet(keys);
 	}
 
 	private static long hashCode(
@@ -126,8 +114,7 @@ public class HashKeyIndexStrategy implements
 			final long start ) {
 		long result = start;
 		for (final double element : a1) {
-			final long bits = Double.doubleToLongBits(
-					element);
+			final long bits = Double.doubleToLongBits(element);
 			result = (31 * result) + (bits ^ (bits >>> 32));
 		}
 		return result;
@@ -154,17 +141,14 @@ public class HashKeyIndexStrategy implements
 	@Override
 	public Set<ByteArrayId> getInsertionPartitionKeys(
 			final MultiDimensionalNumericData insertionData ) {
-		final long hashCode = Math.abs(
+		final long hashCode = Math.abs(hashCode(
+				insertionData.getMaxValuesPerDimension(),
 				hashCode(
-						insertionData.getMaxValuesPerDimension(),
-						hashCode(
-								insertionData.getMinValuesPerDimension(),
-								1)));
+						insertionData.getMinValuesPerDimension(),
+						1)));
 		final int position = (int) (hashCode % keys.size());
 
-		return Collections.singleton(
-				keys.get(
-						position));
+		return Collections.singleton(keys.get(position));
 	}
 
 	/**

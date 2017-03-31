@@ -20,7 +20,6 @@ import mil.nga.giat.geowave.test.mapreduce.GeoWaveNNIT;
 import mil.nga.giat.geowave.test.mapreduce.KDERasterResizeIT;
 import mil.nga.giat.geowave.test.query.AttributesSubsetQueryIT;
 import mil.nga.giat.geowave.test.query.PolygonDataIdQueryIT;
-import mil.nga.giat.geowave.test.query.SecondaryIndexIT;
 import mil.nga.giat.geowave.test.query.SpatialTemporalQueryIT;
 import mil.nga.giat.geowave.test.service.GeoServerIT;
 import mil.nga.giat.geowave.test.service.GeoWaveIngestGeoserverIT;
@@ -49,7 +48,7 @@ import mil.nga.giat.geowave.test.store.DataStatisticsStoreIT;
 	PolygonDataIdQueryIT.class,
 	ConfigCacheIT.class,
 	DataStatisticsStoreIT.class,
-	SecondaryIndexIT.class
+//	SecondaryIndexIT.class
 // GeoWaveKMeansIT.class,
 })
 public class GeoWaveITSuite

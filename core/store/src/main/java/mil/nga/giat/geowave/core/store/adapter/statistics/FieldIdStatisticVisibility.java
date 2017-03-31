@@ -33,10 +33,8 @@ public class FieldIdStatisticVisibility<T> implements
 			final GeoWaveRow... kvs ) {
 		for (final GeoWaveRow r : kvs) {
 			for (final GeoWaveValue v : r.getFieldValues()) {
-				final List<Integer> positions = BitmaskUtils.getFieldPositions(
-						v.getFieldMask());
-				if (positions.contains(
-						bitPosition)) {
+				final List<Integer> positions = BitmaskUtils.getFieldPositions(v.getFieldMask());
+				if (positions.contains(bitPosition)) {
 					return v.getVisibility();
 				}
 			}

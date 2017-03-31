@@ -69,13 +69,11 @@ public class RoundRobinKeyIndexStrategyTest
 
 	@Test
 	public void testBinaryEncoding() {
-		final byte[] bytes = PersistenceUtils.toBinary(
-				compoundIndexStrategy);
+		final byte[] bytes = PersistenceUtils.toBinary(compoundIndexStrategy);
 		final CompoundIndexStrategy deserializedStrategy = PersistenceUtils.fromBinary(
 				bytes,
 				CompoundIndexStrategy.class);
-		final byte[] bytes2 = PersistenceUtils.toBinary(
-				deserializedStrategy);
+		final byte[] bytes2 = PersistenceUtils.toBinary(deserializedStrategy);
 		Assert.assertArrayEquals(
 				bytes,
 				bytes2);
@@ -108,10 +106,9 @@ public class RoundRobinKeyIndexStrategyTest
 									(byte) i
 								},
 								r2.getEnd().getBytes()));
-				ranges.add(
-						new ByteArrayRange(
-								start,
-								end));
+				ranges.add(new ByteArrayRange(
+						start,
+						end));
 			}
 		}
 		final Set<ByteArrayRange> testRanges = new HashSet<>(
@@ -119,12 +116,8 @@ public class RoundRobinKeyIndexStrategyTest
 		final Set<ByteArrayRange> compoundIndexRanges = new HashSet<>(
 				compoundIndexStrategy.getQueryRanges(
 						sfcIndexedRange).getCompositeQueryRanges());
-		Assert.assertTrue(
-				testRanges.containsAll(
-						compoundIndexRanges));
-		Assert.assertTrue(
-				compoundIndexRanges.containsAll(
-						testRanges));
+		Assert.assertTrue(testRanges.containsAll(compoundIndexRanges));
+		Assert.assertTrue(compoundIndexRanges.containsAll(testRanges));
 	}
 
 	@Test
@@ -133,18 +126,15 @@ public class RoundRobinKeyIndexStrategyTest
 				512);
 		final Map<ByteArrayId, Integer> countMap = new HashMap<ByteArrayId, Integer>();
 		for (int i = 0; i < 2048; i++) {
-			final Set<ByteArrayId> ids = strategy.getInsertionPartitionKeys(
-					sfcIndexedRange);
+			final Set<ByteArrayId> ids = strategy.getInsertionPartitionKeys(sfcIndexedRange);
 			assertEquals(
 					1,
 					ids.size());
 			final ByteArrayId key = ids.iterator().next();
-			if (countMap.containsKey(
-					key)) {
+			if (countMap.containsKey(key)) {
 				countMap.put(
 						key,
-						countMap.get(
-								key) + 1);
+						countMap.get(key) + 1);
 			}
 			else {
 				countMap.put(
@@ -170,13 +160,12 @@ public class RoundRobinKeyIndexStrategyTest
 		final List<ByteArrayId> compositeIds = ids2.getCompositeInsertionIds();
 		for (int i = 0; i < 3; i++) {
 			for (final ByteArrayId id2 : compositeIds) {
-				ids.add(
-						new ByteArrayId(
-								ByteArrayUtils.combineArrays(
-										new byte[] {
-											(byte) i
-										},
-										id2.getBytes())));
+				ids.add(new ByteArrayId(
+						ByteArrayUtils.combineArrays(
+								new byte[] {
+									(byte) i
+								},
+								id2.getBytes())));
 			}
 		}
 		final Set<ByteArrayId> testIds = new HashSet<>(
@@ -185,9 +174,7 @@ public class RoundRobinKeyIndexStrategyTest
 				compoundIndexStrategy.getInsertionIds(
 						sfcIndexedRange,
 						8).getCompositeInsertionIds());
-		Assert.assertTrue(
-				testIds.containsAll(
-						compoundIndexIds));
+		Assert.assertTrue(testIds.containsAll(compoundIndexIds));
 		final SinglePartitionInsertionIds id2 = ids2.getPartitionKeys().iterator().next();
 		final MultiDimensionalCoordinates sfcIndexCoordinatesPerDim = sfcIndexStrategy.getCoordinatesPerDimension(
 				id2.getPartitionKey(),
@@ -209,9 +196,7 @@ public class RoundRobinKeyIndexStrategyTest
 								ids.get(
 										0).getBytes().length)));
 
-		Assert.assertTrue(
-				sfcIndexCoordinatesPerDim.equals(
-						coordinatesPerDim));
+		Assert.assertTrue(sfcIndexCoordinatesPerDim.equals(coordinatesPerDim));
 	}
 
 }

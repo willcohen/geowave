@@ -91,26 +91,19 @@ public abstract class SimpleNumericIndexStrategy<T extends Number> implements
 			final MultiDimensionalNumericData indexedRange,
 			final int maxEstimatedRangeDecomposition,
 			final IndexMetaData... hints ) {
-		final T min = cast(
-				indexedRange.getMinValuesPerDimension()[0]);
+		final T min = cast(indexedRange.getMinValuesPerDimension()[0]);
 		final ByteArrayId start = new ByteArrayId(
-				lexicoder.toByteArray(
-						min));
-		final T max = cast(
-				Math.ceil(
-						indexedRange.getMaxValuesPerDimension()[0]));
+				lexicoder.toByteArray(min));
+		final T max = cast(Math.ceil(indexedRange.getMaxValuesPerDimension()[0]));
 		final ByteArrayId end = new ByteArrayId(
-				lexicoder.toByteArray(
-						max));
+				lexicoder.toByteArray(max));
 		final ByteArrayRange range = new ByteArrayRange(
 				start,
 				end);
 		final SinglePartitionQueryRanges partitionRange = new SinglePartitionQueryRanges(
-				Collections.singletonList(
-						range));
+				Collections.singletonList(range));
 		return new QueryRanges(
-				Collections.singletonList(
-						partitionRange));
+				Collections.singletonList(partitionRange));
 	}
 
 	/**
@@ -142,16 +135,12 @@ public abstract class SimpleNumericIndexStrategy<T extends Number> implements
 			final MultiDimensionalNumericData indexedData,
 			final int maxEstimatedDuplicateIds ) {
 		final long min = (long) indexedData.getMinValuesPerDimension()[0];
-		final long max = (long) Math.ceil(
-				indexedData.getMaxValuesPerDimension()[0]);
+		final long max = (long) Math.ceil(indexedData.getMaxValuesPerDimension()[0]);
 		final List<ByteArrayId> insertionIds = new ArrayList<>(
 				(int) (max - min) + 1);
 		for (long i = min; i <= max; i++) {
-			insertionIds.add(
-					new ByteArrayId(
-							lexicoder.toByteArray(
-									cast(
-											i))));
+			insertionIds.add(new ByteArrayId(
+					lexicoder.toByteArray(cast(i))));
 		}
 		return new InsertionIds(
 				insertionIds);
@@ -166,9 +155,7 @@ public abstract class SimpleNumericIndexStrategy<T extends Number> implements
 	public MultiDimensionalNumericData getRangeForId(
 			final ByteArrayId partitionKey,
 			final ByteArrayId sortKey ) {
-		final long value = Long.class.cast(
-				lexicoder.fromByteArray(
-						sortKey.getBytes()));
+		final long value = Long.class.cast(lexicoder.fromByteArray(sortKey.getBytes()));
 		final NumericData[] dataPerDimension = new NumericData[] {
 			new NumericValue(
 					value)
@@ -185,9 +172,7 @@ public abstract class SimpleNumericIndexStrategy<T extends Number> implements
 				null,
 				new Coordinate[] {
 					new Coordinate(
-							Long.class.cast(
-									lexicoder.fromByteArray(
-											sortKey.getBytes())),
+							Long.class.cast(lexicoder.fromByteArray(sortKey.getBytes())),
 							null)
 				});
 	}
@@ -211,16 +196,14 @@ public abstract class SimpleNumericIndexStrategy<T extends Number> implements
 
 	@Override
 	public String getId() {
-		return StringUtils.intToString(
-				hashCode());
+		return StringUtils.intToString(hashCode());
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = (prime * result) + Arrays.hashCode(
-				definitions);
+		result = (prime * result) + Arrays.hashCode(definitions);
 		result = (prime * result) + ((lexicoder == null) ? 0 : lexicoder.hashCode());
 		return result;
 	}
@@ -248,16 +231,10 @@ public abstract class SimpleNumericIndexStrategy<T extends Number> implements
 				return false;
 			}
 		}
-		else if (!lexicoder.equals(
-				other.lexicoder)) {
+		else if (!lexicoder.equals(other.lexicoder)) {
 			return false;
 		}
 		return true;
-	}
-
-	@Override
-	public Set<ByteArrayId> getPartitionKeys() {
-		return null;
 	}
 
 	@Override

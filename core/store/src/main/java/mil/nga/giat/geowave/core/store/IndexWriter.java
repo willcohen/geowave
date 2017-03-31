@@ -1,9 +1,6 @@
 package mil.nga.giat.geowave.core.store;
 
 import java.io.Closeable;
-import java.util.List;
-
-import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.InsertionIds;
 import mil.nga.giat.geowave.core.store.data.VisibilityWriter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;

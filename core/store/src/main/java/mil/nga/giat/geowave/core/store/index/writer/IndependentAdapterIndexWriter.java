@@ -45,7 +45,8 @@ public class IndependentAdapterIndexWriter<T> implements
 					feldVisibilityWriter);
 			partitionInsertionIds.addAll(ids.getPartitionKeys());
 		}
-		return new InsertionIds(partitionInsertionIds);
+		return new InsertionIds(
+				partitionInsertionIds);
 
 	}
 
@@ -66,7 +67,8 @@ public class IndependentAdapterIndexWriter<T> implements
 			InsertionIds ids = writer.write(indexedEntries.next());
 			partitionInsertionIds.addAll(ids.getPartitionKeys());
 		}
-		return new InsertionIds(partitionInsertionIds);
+		return new InsertionIds(
+				partitionInsertionIds);
 	}
 
 	@Override

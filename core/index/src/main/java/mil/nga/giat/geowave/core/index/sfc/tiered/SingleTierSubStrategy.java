@@ -36,8 +36,7 @@ import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
 public class SingleTierSubStrategy implements
 		NumericIndexStrategy
 {
-	private final static Logger LOGGER = Logger.getLogger(
-			SingleTierSubStrategy.class);
+	private final static Logger LOGGER = Logger.getLogger(SingleTierSubStrategy.class);
 	private SpaceFillingCurve sfc;
 	private NumericDimensionDefinition[] baseDefinitions;
 	public byte tier;
@@ -86,8 +85,7 @@ public class SingleTierSubStrategy implements
 				partitionKey,
 				sortKey).getCompositeInsertionIds();
 		if (insertionIds.isEmpty()) {
-			LOGGER.warn(
-					"Unexpected empty insertion ID in getRangeForId()");
+			LOGGER.warn("Unexpected empty insertion ID in getRangeForId()");
 			return null;
 		}
 		final byte[] rowId = insertionIds.get(
@@ -142,8 +140,7 @@ public class SingleTierSubStrategy implements
 					null,
 					tier);
 			if (binRowIds != null) {
-				retVal.add(
-						binRowIds);
+				retVal.add(binRowIds);
 			}
 		}
 		return new InsertionIds(
@@ -157,16 +154,14 @@ public class SingleTierSubStrategy implements
 
 	@Override
 	public String getId() {
-		return StringUtils.intToString(
-				hashCode());
+		return StringUtils.intToString(hashCode());
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = (prime * result) + Arrays.hashCode(
-				baseDefinitions);
+		result = (prime * result) + Arrays.hashCode(baseDefinitions);
 		result = (prime * result) + ((sfc == null) ? 0 : sfc.hashCode());
 		result = (prime * result) + tier;
 		return result;
@@ -195,8 +190,7 @@ public class SingleTierSubStrategy implements
 				return false;
 			}
 		}
-		else if (!sfc.equals(
-				other.sfc)) {
+		else if (!sfc.equals(other.sfc)) {
 			return false;
 		}
 		if (tier != other.tier) {
@@ -210,31 +204,21 @@ public class SingleTierSubStrategy implements
 		int byteBufferLength = 5;
 		final List<byte[]> dimensionBinaries = new ArrayList<byte[]>(
 				baseDefinitions.length);
-		final byte[] sfcBinary = PersistenceUtils.toBinary(
-				sfc);
+		final byte[] sfcBinary = PersistenceUtils.toBinary(sfc);
 		byteBufferLength += (4 + sfcBinary.length);
 		for (final NumericDimensionDefinition dimension : baseDefinitions) {
-			final byte[] dimensionBinary = PersistenceUtils.toBinary(
-					dimension);
+			final byte[] dimensionBinary = PersistenceUtils.toBinary(dimension);
 			byteBufferLength += (4 + dimensionBinary.length);
-			dimensionBinaries.add(
-					dimensionBinary);
+			dimensionBinaries.add(dimensionBinary);
 		}
-		final ByteBuffer buf = ByteBuffer.allocate(
-				byteBufferLength);
-		buf.put(
-				tier);
-		buf.putInt(
-				baseDefinitions.length);
-		buf.putInt(
-				sfcBinary.length);
-		buf.put(
-				sfcBinary);
+		final ByteBuffer buf = ByteBuffer.allocate(byteBufferLength);
+		buf.put(tier);
+		buf.putInt(baseDefinitions.length);
+		buf.putInt(sfcBinary.length);
+		buf.put(sfcBinary);
 		for (final byte[] dimensionBinary : dimensionBinaries) {
-			buf.putInt(
-					dimensionBinary.length);
-			buf.put(
-					dimensionBinary);
+			buf.putInt(dimensionBinary.length);
+			buf.put(dimensionBinary);
 		}
 		return buf.array();
 	}
@@ -242,21 +226,18 @@ public class SingleTierSubStrategy implements
 	@Override
 	public void fromBinary(
 			final byte[] bytes ) {
-		final ByteBuffer buf = ByteBuffer.wrap(
-				bytes);
+		final ByteBuffer buf = ByteBuffer.wrap(bytes);
 		tier = buf.get();
 		final int numDimensions = buf.getInt();
 		baseDefinitions = new NumericDimensionDefinition[numDimensions];
 		final byte[] sfcBinary = new byte[buf.getInt()];
-		buf.get(
-				sfcBinary);
+		buf.get(sfcBinary);
 		sfc = PersistenceUtils.fromBinary(
 				sfcBinary,
 				SpaceFillingCurve.class);
 		for (int i = 0; i < numDimensions; i++) {
 			final byte[] dim = new byte[buf.getInt()];
-			buf.get(
-					dim);
+			buf.get(dim);
 			baseDefinitions[i] = PersistenceUtils.fromBinary(
 					dim,
 					NumericDimensionDefinition.class);
@@ -266,11 +247,6 @@ public class SingleTierSubStrategy implements
 	@Override
 	public double[] getHighestPrecisionIdRangePerDimension() {
 		return sfc.getInsertionIdRangePerDimension();
-	}
-
-	@Override
-	public Set<ByteArrayId> getPartitionKeys() {
-		return null;
 	}
 
 	@Override

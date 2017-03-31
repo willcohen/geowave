@@ -37,7 +37,7 @@ import mil.nga.giat.geowave.core.store.filter.DistributableQueryFilter;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.query.FilteredIndexQuery;
-import mil.nga.giat.geowave.datastore.hbase.operations.BasicHBaseOperations;
+import mil.nga.giat.geowave.datastore.hbase.operations.HBaseOperations;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseEntryIteratorWrapper;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseMergingEntryIterator;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils.MultiScannerClosableWrapper;
@@ -77,7 +77,7 @@ public abstract class HBaseFilteredIndexQuery extends
 	}
 
 	private boolean validateAdapters(
-			final BasicHBaseOperations operations )
+			final HBaseOperations operations )
 			throws IOException {
 		if ((adapterIds == null) || adapterIds.isEmpty()) {
 			return true;
@@ -99,7 +99,7 @@ public abstract class HBaseFilteredIndexQuery extends
 
 	@SuppressWarnings("rawtypes")
 	public CloseableIterator<Object> query(
-			final BasicHBaseOperations operations,
+			final HBaseOperations operations,
 			final AdapterStore adapterStore,
 			final double[] maxResolutionSubsamplingPerDimension,
 			final Integer limit ) {
@@ -112,7 +112,7 @@ public abstract class HBaseFilteredIndexQuery extends
 	}
 
 	protected CloseableIterator<Object> internalQuery(
-			final BasicHBaseOperations operations,
+			final HBaseOperations operations,
 			final AdapterStore adapterStore,
 			final double[] maxResolutionSubsamplingPerDimension,
 			final Integer limit,

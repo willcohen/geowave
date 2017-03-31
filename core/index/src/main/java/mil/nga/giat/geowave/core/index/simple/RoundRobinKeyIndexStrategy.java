@@ -54,31 +54,26 @@ public class RoundRobinKeyIndexStrategy implements
 	 * Default initial key set size is 3.
 	 */
 	public RoundRobinKeyIndexStrategy() {
-		init(
-				3);
+		init(3);
 	}
 
 	public RoundRobinKeyIndexStrategy(
 			final int size ) {
-		init(
-				size);
+		init(size);
 	}
 
 	private void init(
 			final int size ) {
 		keys.clear();
 		if (size > 256) {
-			final ByteBuffer buf = ByteBuffer.allocate(
-					4);
+			final ByteBuffer buf = ByteBuffer.allocate(4);
 			for (int i = 0; i < size; i++) {
-				buf.putInt(
-						i);
+				buf.putInt(i);
 				final ByteArrayId id = new ByteArrayId(
 						Arrays.copyOf(
 								buf.array(),
 								4));
-				keys.add(
-						id);
+				keys.add(id);
 				buf.rewind();
 			}
 		}
@@ -88,24 +83,20 @@ public class RoundRobinKeyIndexStrategy implements
 						new byte[] {
 							(byte) i
 						});
-				keys.add(
-						id);
+				keys.add(id);
 			}
 		}
 	}
 
 	@Override
 	public String getId() {
-		return StringUtils.intToString(
-				hashCode());
+		return StringUtils.intToString(hashCode());
 	}
 
 	@Override
 	public byte[] toBinary() {
-		final ByteBuffer buf = ByteBuffer.allocate(
-				4);
-		buf.putInt(
-				keys.size());
+		final ByteBuffer buf = ByteBuffer.allocate(4);
+		buf.putInt(keys.size());
 		return buf.array();
 
 	}
@@ -113,16 +104,12 @@ public class RoundRobinKeyIndexStrategy implements
 	@Override
 	public void fromBinary(
 			final byte[] bytes ) {
-		final ByteBuffer buf = ByteBuffer.wrap(
-				bytes);
-		init(
-				buf.getInt());
+		final ByteBuffer buf = ByteBuffer.wrap(bytes);
+		init(buf.getInt());
 	}
 
-	@Override
 	public Set<ByteArrayId> getPartitionKeys() {
-		return Sets.newHashSet(
-				keys);
+		return Sets.newHashSet(keys);
 	}
 
 	@Override
@@ -143,9 +130,7 @@ public class RoundRobinKeyIndexStrategy implements
 	public Set<ByteArrayId> getInsertionPartitionKeys(
 			final MultiDimensionalNumericData insertionData ) {
 		position = (position + 1) % keys.size();
-		return Collections.singleton(
-				keys.get(
-						position));
+		return Collections.singleton(keys.get(position));
 	}
 
 	@Override

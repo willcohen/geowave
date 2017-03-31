@@ -1,7 +1,5 @@
 package mil.nga.giat.geowave.core.index;
 
-import java.util.List;
-
 public interface IndexMetaData extends
 		Persistable,
 		Mergeable

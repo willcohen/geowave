@@ -29,35 +29,25 @@ public class NumericIndexStrategyWrapper implements
 
 	@Override
 	public byte[] toBinary() {
-		final byte[] idBinary = StringUtils.stringToBinary(
-				id);
-		final byte[] delegateBinary = PersistenceUtils.toBinary(
-				indexStrategy);
-		final ByteBuffer buf = ByteBuffer.allocate(
-				4 + idBinary.length + delegateBinary.length);
-		buf.putInt(
-				idBinary.length);
-		buf.put(
-				idBinary);
-		buf.put(
-				delegateBinary);
+		final byte[] idBinary = StringUtils.stringToBinary(id);
+		final byte[] delegateBinary = PersistenceUtils.toBinary(indexStrategy);
+		final ByteBuffer buf = ByteBuffer.allocate(4 + idBinary.length + delegateBinary.length);
+		buf.putInt(idBinary.length);
+		buf.put(idBinary);
+		buf.put(delegateBinary);
 		return buf.array();
 	}
 
 	@Override
 	public void fromBinary(
 			final byte[] bytes ) {
-		final ByteBuffer buf = ByteBuffer.wrap(
-				bytes);
+		final ByteBuffer buf = ByteBuffer.wrap(bytes);
 		final int idBinaryLength = buf.getInt();
 		final byte[] idBinary = new byte[idBinaryLength];
 		final byte[] delegateBinary = new byte[bytes.length - idBinaryLength - 4];
-		buf.get(
-				idBinary);
-		buf.get(
-				delegateBinary);
-		id = StringUtils.stringFromBinary(
-				idBinary);
+		buf.get(idBinary);
+		buf.get(delegateBinary);
+		id = StringUtils.stringFromBinary(idBinary);
 		indexStrategy = PersistenceUtils.fromBinary(
 				delegateBinary,
 				NumericIndexStrategy.class);
@@ -86,8 +76,7 @@ public class NumericIndexStrategyWrapper implements
 	@Override
 	public InsertionIds getInsertionIds(
 			final MultiDimensionalNumericData indexedData ) {
-		return indexStrategy.getInsertionIds(
-				indexedData);
+		return indexStrategy.getInsertionIds(indexedData);
 	}
 
 	@Override
@@ -128,11 +117,6 @@ public class NumericIndexStrategyWrapper implements
 	}
 
 	@Override
-	public Set<ByteArrayId> getPartitionKeys() {
-		return indexStrategy.getPartitionKeys();
-	}
-
-	@Override
 	public int getPartitionKeyLength() {
 		return indexStrategy.getPartitionKeyLength();
 	}
@@ -154,8 +138,7 @@ public class NumericIndexStrategyWrapper implements
 	@Override
 	public Set<ByteArrayId> getInsertionPartitionKeys(
 			final MultiDimensionalNumericData insertionData ) {
-		return indexStrategy.getInsertionPartitionKeys(
-				insertionData);
+		return indexStrategy.getInsertionPartitionKeys(insertionData);
 	}
 
 	@Override

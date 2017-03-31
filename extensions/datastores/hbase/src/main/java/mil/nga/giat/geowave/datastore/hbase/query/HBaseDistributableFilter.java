@@ -23,7 +23,7 @@ import mil.nga.giat.geowave.core.store.data.PersistentDataset;
 import mil.nga.giat.geowave.core.store.data.PersistentValue;
 import mil.nga.giat.geowave.core.store.data.field.FieldReader;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
-import mil.nga.giat.geowave.core.store.entities.GeoWaveRowImpl;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveKeyImpl;
 import mil.nga.giat.geowave.core.store.filter.DistributableQueryFilter;
 import mil.nga.giat.geowave.core.store.flatten.FlattenedDataSet;
 import mil.nga.giat.geowave.core.store.flatten.FlattenedFieldInfo;
@@ -182,7 +182,7 @@ public class HBaseDistributableFilter extends
 
 				// Grab rowkey from first cell
 				if (rowId == null) {
-					rowId = new GeoWaveRowImpl(
+					rowId = new GeoWaveKeyImpl(
 							cell.getRowArray(),
 							cell.getRowOffset(),
 							cell.getRowLength());
@@ -224,7 +224,7 @@ public class HBaseDistributableFilter extends
 
 	protected ReturnCode applyFilter(
 			final Cell cell ) {
-		final GeoWaveRow rowId = new GeoWaveRowImpl(
+		final GeoWaveRow rowId = new GeoWaveKeyImpl(
 				cell.getRowArray(),
 				cell.getRowOffset(),
 				cell.getRowLength());

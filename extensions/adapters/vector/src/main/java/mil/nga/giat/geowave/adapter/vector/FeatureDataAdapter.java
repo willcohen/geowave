@@ -592,7 +592,10 @@ public class FeatureDataAdapter extends
 			CommonIndexModel indexModel,
 			DataAdapter<SimpleFeature> adapter,
 			final ByteArrayId statisticsId ) {
-		return statsManager.getVisibilityHandler(statisticsId);
+		return statsManager.getVisibilityHandler(
+				indexModel,
+				adapter,
+				statisticsId);
 	}
 
 	@Override
@@ -729,7 +732,7 @@ public class FeatureDataAdapter extends
 		}
 	}
 
-	private List<ByteArrayId> getDimensionFieldIds(
+	protected List<ByteArrayId> getDimensionFieldIds(
 			final CommonIndexModel model ) {
 		final List<ByteArrayId> retVal = modelToDimensionsMap.get(model.getId());
 		if (retVal != null) {

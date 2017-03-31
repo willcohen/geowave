@@ -1,6 +1,5 @@
 package mil.nga.giat.geowave.core.store.index.numeric;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -9,7 +8,6 @@ import mil.nga.giat.geowave.core.index.IndexMetaData;
 import mil.nga.giat.geowave.core.index.InsertionIds;
 import mil.nga.giat.geowave.core.index.QueryRanges;
 import mil.nga.giat.geowave.core.index.lexicoder.Lexicoders;
-import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo.FieldInfo;
 import mil.nga.giat.geowave.core.store.index.FieldIndexStrategy;
 
 public class NumericFieldIndexStrategy implements
@@ -54,31 +52,23 @@ public class NumericFieldIndexStrategy implements
 
 	@Override
 	public InsertionIds getInsertionIds(
-			final List<FieldInfo<Number>> indexedData ) {
-		final List<ByteArrayId> insertionIds = new ArrayList<>();
-		for (final FieldInfo<Number> fieldInfo : indexedData) {
-			insertionIds.add(
-					new ByteArrayId(
-							toIndexByte(
-									fieldInfo.getDataValue().getValue())));
-		}
+			final Number indexedData ) {
 		return new InsertionIds(
 				null,
-				insertionIds);
+				Collections.singletonList(new ByteArrayId(
+						toIndexByte(indexedData))));
 	}
 
 	@Override
 	public InsertionIds getInsertionIds(
-			final List<FieldInfo<Number>> indexedData,
+			final Number indexedData,
 			final int maxEstimatedDuplicateIds ) {
-		return getInsertionIds(
-				indexedData);
+		return getInsertionIds(indexedData);
 	}
 
 	public static final byte[] toIndexByte(
 			final Number number ) {
-		return Lexicoders.DOUBLE.toByteArray(
-				number.doubleValue());
+		return Lexicoders.DOUBLE.toByteArray(number.doubleValue());
 	}
 
 	@Override
@@ -87,10 +77,10 @@ public class NumericFieldIndexStrategy implements
 	}
 
 	@Override
-	public List<FieldInfo<Number>> getRangeForId(
-			ByteArrayId partitionKey,
-			ByteArrayId sortKey ) {
-		return Collections.emptyList();
+	public Number getRangeForId(
+			final ByteArrayId partitionKey,
+			final ByteArrayId sortKey ) {
+		return Lexicoders.DOUBLE.fromByteArray(sortKey.getBytes());
 	}
 
 }

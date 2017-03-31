@@ -87,10 +87,8 @@ public class HashKeyIndexStrategyTest
 							dimension1Range,
 							dimension2Range
 						});
-				for (final ByteArrayId id : hashIdexStrategy.getInsertionPartitionKeys(
-						sfcIndexedRange)) {
-					final Long count = counts.get(
-							id);
+				for (final ByteArrayId id : hashIdexStrategy.getInsertionPartitionKeys(sfcIndexedRange)) {
+					final Long count = counts.get(id);
 					final long nextcount = count == null ? 1 : count + 1;
 					counts.put(
 							id,
@@ -107,21 +105,17 @@ public class HashKeyIndexStrategyTest
 					mean - count,
 					2);
 		}
-		final double sd = Math.sqrt(
-				diff / counts.size());
-		assertTrue(
-				sd < (mean * 0.18));
+		final double sd = Math.sqrt(diff / counts.size());
+		assertTrue(sd < (mean * 0.18));
 	}
 
 	@Test
 	public void testBinaryEncoding() {
-		final byte[] bytes = PersistenceUtils.toBinary(
-				compoundIndexStrategy);
+		final byte[] bytes = PersistenceUtils.toBinary(compoundIndexStrategy);
 		final CompoundIndexStrategy deserializedStrategy = PersistenceUtils.fromBinary(
 				bytes,
 				CompoundIndexStrategy.class);
-		final byte[] bytes2 = PersistenceUtils.toBinary(
-				deserializedStrategy);
+		final byte[] bytes2 = PersistenceUtils.toBinary(deserializedStrategy);
 		Assert.assertArrayEquals(
 				bytes,
 				bytes2);
@@ -149,27 +143,22 @@ public class HashKeyIndexStrategyTest
 					dimension1Range,
 					dimension2Range
 				});
-		final InsertionIds id = compoundIndexStrategy.getInsertionIds(
-				sfcIndexedRange);
+		final InsertionIds id = compoundIndexStrategy.getInsertionIds(sfcIndexedRange);
 		for (final SinglePartitionInsertionIds partitionKey : id.getPartitionKeys()) {
 			for (final ByteArrayId sortKey : partitionKey.getSortKeys()) {
 				final MultiDimensionalCoordinates coords = compoundIndexStrategy.getCoordinatesPerDimension(
 						partitionKey.getPartitionKey(),
 						sortKey);
-				assertTrue(
-						coords.getCoordinate(
-								0).getCoordinate() > 0);
-				assertTrue(
-						coords.getCoordinate(
-								1).getCoordinate() > 0);
+				assertTrue(coords.getCoordinate(
+						0).getCoordinate() > 0);
+				assertTrue(coords.getCoordinate(
+						1).getCoordinate() > 0);
 			}
 		}
 		final Iterator<SinglePartitionInsertionIds> it = id.getPartitionKeys().iterator();
-		assertTrue(
-				it.hasNext());
+		assertTrue(it.hasNext());
 		final SinglePartitionInsertionIds partitionId = it.next();
-		assertTrue(
-				!it.hasNext());
+		assertTrue(!it.hasNext());
 		for (final ByteArrayId sortKey : partitionId.getSortKeys()) {
 			final MultiDimensionalNumericData nd = compoundIndexStrategy.getRangeForId(
 					partitionId.getPartitionKey(),
@@ -212,10 +201,9 @@ public class HashKeyIndexStrategyTest
 									(byte) i
 								},
 								r2.getEnd().getBytes()));
-				ranges.add(
-						new ByteArrayRange(
-								start,
-								end));
+				ranges.add(new ByteArrayRange(
+						start,
+						end));
 			}
 		}
 		final Set<ByteArrayRange> testRanges = new HashSet<>(
@@ -223,12 +211,8 @@ public class HashKeyIndexStrategyTest
 		final Set<ByteArrayRange> compoundIndexRanges = new HashSet<>(
 				compoundIndexStrategy.getQueryRanges(
 						sfcIndexedRange).getCompositeQueryRanges());
-		Assert.assertTrue(
-				testRanges.containsAll(
-						compoundIndexRanges));
-		Assert.assertTrue(
-				compoundIndexRanges.containsAll(
-						testRanges));
+		Assert.assertTrue(testRanges.containsAll(compoundIndexRanges));
+		Assert.assertTrue(compoundIndexRanges.containsAll(testRanges));
 	}
 
 }

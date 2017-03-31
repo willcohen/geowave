@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.opengis.coverage.grid.GridCoverage;
@@ -29,13 +30,18 @@ public class RasterTileResizeHelper
 
 	public RasterTileResizeHelper(
 			final JobContext context ) {
-		index = JobContextIndexStore.getIndices(context)[0];
+		index = JobContextIndexStore.getIndices(
+				context)[0];
 		indexIds = new ArrayList<ByteArrayId>();
-		indexIds.add(index.getId());
-		final DataAdapter[] adapters = JobContextAdapterStore.getDataAdapters(context);
+		indexIds.add(
+				index.getId());
+		final DataAdapter[] adapters = JobContextAdapterStore.getDataAdapters(
+				context);
 		final Configuration conf = context.getConfiguration();
-		final String oldAdapterId = conf.get(RasterTileResizeJobRunner.OLD_ADAPTER_ID_KEY);
-		final String newAdapterId = conf.get(RasterTileResizeJobRunner.NEW_ADAPTER_ID_KEY);
+		final String oldAdapterId = conf.get(
+				RasterTileResizeJobRunner.OLD_ADAPTER_ID_KEY);
+		final String newAdapterId = conf.get(
+				RasterTileResizeJobRunner.NEW_ADAPTER_ID_KEY);
 		for (final DataAdapter adapter : adapters) {
 			if (adapter.getAdapterId().getString().equals(
 					oldAdapterId)) {
@@ -88,20 +94,28 @@ public class RasterTileResizeHelper
 				}
 				else {
 					if (!needsMerge) {
-						mergedTile = newAdapter.getRasterTileFromCoverage(mergedCoverage);
+						mergedTile = newAdapter.getRasterTileFromCoverage(
+								mergedCoverage);
 						needsMerge = true;
 					}
-					final MergeableRasterTile thisTile = newAdapter.getRasterTileFromCoverage((GridCoverage) value);
+					final MergeableRasterTile thisTile = newAdapter.getRasterTileFromCoverage(
+							(GridCoverage) value);
 					if (mergedTile != null) {
-						mergedTile.merge(thisTile);
+						mergedTile.merge(
+								thisTile);
 					}
 				}
 			}
 		}
 		if (needsMerge) {
+			final Pair<byte[], byte[]> pair = key.getPartitionAndSortKey(
+					index);
 			mergedCoverage = newAdapter.getCoverageFromRasterTile(
 					mergedTile,
-					key.getDataId(),
+					pair == null ? null : new ByteArrayId(
+							pair.getLeft()),
+					pair == null ? null : new ByteArrayId(
+							pair.getRight()),
 					index);
 		}
 		return mergedCoverage;
@@ -109,6 +123,16 @@ public class RasterTileResizeHelper
 
 	public ByteArrayId getNewCoverageId() {
 		return newAdapter.getAdapterId();
+	}
+
+	public ByteArrayId getNewDataId(
+			final GridCoverage coverage ) {
+		return newAdapter.getDataId(
+				coverage);
+	}
+
+	public ByteArrayId getIndexId() {
+		return index.getId();
 	}
 
 	public boolean isOriginalCoverage(

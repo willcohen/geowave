@@ -27,5 +27,5 @@ public interface ScanCallback<T, R extends GeoWaveRow>
 	 */
 	public void entryScanned(
 			final T entry,
-			final R row);
+			final R row );
 }

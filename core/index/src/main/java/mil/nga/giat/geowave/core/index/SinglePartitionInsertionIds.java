@@ -25,8 +25,7 @@ public class SinglePartitionInsertionIds implements
 			final ByteArrayId partitionKey,
 			final ByteArrayId sortKey ) {
 		this.partitionKey = partitionKey;
-		sortKeys = sortKey == null ? null : Arrays.asList(
-				sortKey);
+		sortKeys = sortKey == null ? null : Arrays.asList(sortKey);
 	}
 
 	public SinglePartitionInsertionIds(
@@ -58,11 +57,10 @@ public class SinglePartitionInsertionIds implements
 					insertionId1.sortKeys.size() * insertionId2.sortKeys.size());
 			for (final ByteArrayId sortKey1 : insertionId1.sortKeys) {
 				for (final ByteArrayId sortKey2 : insertionId2.sortKeys) {
-					sortKeys.add(
-							new ByteArrayId(
-									ByteArrayUtils.combineArrays(
-											sortKey1.getBytes(),
-											sortKey2.getBytes())));
+					sortKeys.add(new ByteArrayId(
+							ByteArrayUtils.combineArrays(
+									sortKey1.getBytes(),
+									sortKey2.getBytes())));
 				}
 			}
 		}
@@ -81,8 +79,7 @@ public class SinglePartitionInsertionIds implements
 		}
 
 		if ((sortKeys == null) || sortKeys.isEmpty()) {
-			compositeInsertionIds = Arrays.asList(
-					partitionKey);
+			compositeInsertionIds = Arrays.asList(partitionKey);
 			return compositeInsertionIds;
 		}
 
@@ -94,11 +91,10 @@ public class SinglePartitionInsertionIds implements
 		final List<ByteArrayId> internalInsertionIds = new ArrayList<>(
 				sortKeys.size());
 		for (final ByteArrayId sortKey : sortKeys) {
-			internalInsertionIds.add(
-					new ByteArrayId(
-							ByteArrayUtils.combineArrays(
-									partitionKey.getBytes(),
-									sortKey.getBytes())));
+			internalInsertionIds.add(new ByteArrayId(
+					ByteArrayUtils.combineArrays(
+							partitionKey.getBytes(),
+							sortKey.getBytes())));
 		}
 		compositeInsertionIds = internalInsertionIds;
 		return compositeInsertionIds;
@@ -139,8 +135,7 @@ public class SinglePartitionInsertionIds implements
 				return false;
 			}
 		}
-		else if (!partitionKey.equals(
-				other.partitionKey)) {
+		else if (!partitionKey.equals(other.partitionKey)) {
 			return false;
 		}
 		if (sortKeys == null) {
@@ -148,8 +143,7 @@ public class SinglePartitionInsertionIds implements
 				return false;
 			}
 		}
-		else if (!sortKeys.equals(
-				other.sortKeys)) {
+		else if (!sortKeys.equals(other.sortKeys)) {
 			return false;
 		}
 		return true;
@@ -176,23 +170,17 @@ public class SinglePartitionInsertionIds implements
 				byteBufferSize += sKey.getBytes().length;
 			}
 		}
-		final ByteBuffer buf = ByteBuffer.allocate(
-				byteBufferSize);
-		buf.putInt(
-				pLength);
+		final ByteBuffer buf = ByteBuffer.allocate(byteBufferSize);
+		buf.putInt(pLength);
 		if (pLength > 0) {
-			buf.put(
-					partitionKey.getBytes());
+			buf.put(partitionKey.getBytes());
 		}
-		buf.putInt(
-				sSize);
+		buf.putInt(sSize);
 
 		if (sSize > 0) {
 			for (final ByteArrayId sKey : sortKeys) {
-				buf.putInt(
-						sKey.getBytes().length);
-				buf.put(
-						sKey.getBytes());
+				buf.putInt(sKey.getBytes().length);
+				buf.put(sKey.getBytes());
 			}
 		}
 		return buf.array();
@@ -201,13 +189,11 @@ public class SinglePartitionInsertionIds implements
 	@Override
 	public void fromBinary(
 			final byte[] bytes ) {
-		final ByteBuffer buf = ByteBuffer.wrap(
-				bytes);
+		final ByteBuffer buf = ByteBuffer.wrap(bytes);
 		final int pLength = buf.getInt();
 		if (pLength > 0) {
 			final byte[] pBytes = new byte[pLength];
-			buf.get(
-					pBytes);
+			buf.get(pBytes);
 			partitionKey = new ByteArrayId(
 					pBytes);
 		}
@@ -221,11 +207,9 @@ public class SinglePartitionInsertionIds implements
 			for (int i = 0; i < sSize; i++) {
 				final int keyLength = buf.getInt();
 				final byte[] sortKey = new byte[keyLength];
-				buf.get(
-						sortKey);
-				sortKeys.add(
-						new ByteArrayId(
-								sortKey));
+				buf.get(sortKey);
+				sortKeys.add(new ByteArrayId(
+						sortKey));
 			}
 		}
 		else {

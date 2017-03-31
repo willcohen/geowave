@@ -51,8 +51,7 @@ public class DuplicateEntryCount<T> extends
 			final ByteArrayId indexId ) {
 		super(
 				dataAdapterId,
-				composeId(
-						indexId));
+				composeId(indexId));
 	}
 
 	public static ByteArrayId composeId(
@@ -73,18 +72,15 @@ public class DuplicateEntryCount<T> extends
 
 	@Override
 	public byte[] toBinary() {
-		final ByteBuffer buf = super.binaryBuffer(
-				8);
-		buf.putLong(
-				entriesWithDuplicates);
+		final ByteBuffer buf = super.binaryBuffer(8);
+		buf.putLong(entriesWithDuplicates);
 		return buf.array();
 	}
 
 	@Override
 	public void fromBinary(
 			final byte[] bytes ) {
-		final ByteBuffer buf = super.binaryBuffer(
-				bytes);
+		final ByteBuffer buf = super.binaryBuffer(bytes);
 		entriesWithDuplicates = buf.getLong();
 	}
 
@@ -93,8 +89,7 @@ public class DuplicateEntryCount<T> extends
 			final T entry,
 			final GeoWaveRow... kvs ) {
 		if (kvs.length > 0) {
-			if (entryHasDuplicates(
-					kvs[0])) {
+			if (entryHasDuplicates(kvs[0])) {
 				entriesWithDuplicates++;
 			}
 		}
@@ -105,8 +100,7 @@ public class DuplicateEntryCount<T> extends
 			final T entry,
 			final GeoWaveRow... kvs ) {
 		if (kvs.length > 0) {
-			if (entryHasDuplicates(
-					kvs[0])) {
+			if (entryHasDuplicates(kvs[0])) {
 				entriesWithDuplicates--;
 			}
 		}
@@ -134,15 +128,13 @@ public class DuplicateEntryCount<T> extends
 		for (final ByteArrayId adapterId : adapterIdsToQuery) {
 			final DuplicateEntryCount adapterVisibilityCount = (DuplicateEntryCount) statisticsStore.getDataStatistics(
 					adapterId,
-					DuplicateEntryCount.composeId(
-							index.getId()),
+					DuplicateEntryCount.composeId(index.getId()),
 					authorizations);
 			if (combinedDuplicateCount == null) {
 				combinedDuplicateCount = adapterVisibilityCount;
 			}
 			else {
-				combinedDuplicateCount.merge(
-						adapterVisibilityCount);
+				combinedDuplicateCount.merge(adapterVisibilityCount);
 			}
 		}
 		return combinedDuplicateCount;

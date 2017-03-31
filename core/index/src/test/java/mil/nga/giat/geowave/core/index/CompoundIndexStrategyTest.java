@@ -62,13 +62,11 @@ public class CompoundIndexStrategyTest
 
 	@Test
 	public void testBinaryEncoding() {
-		final byte[] bytes = PersistenceUtils.toBinary(
-				compoundIndexStrategy);
+		final byte[] bytes = PersistenceUtils.toBinary(compoundIndexStrategy);
 		final CompoundIndexStrategy deserializedStrategy = PersistenceUtils.fromBinary(
 				bytes,
 				CompoundIndexStrategy.class);
-		final byte[] bytes2 = PersistenceUtils.toBinary(
-				deserializedStrategy);
+		final byte[] bytes2 = PersistenceUtils.toBinary(deserializedStrategy);
 		Assert.assertArrayEquals(
 				bytes,
 				bytes2);
@@ -84,10 +82,8 @@ public class CompoundIndexStrategyTest
 
 	@Test
 	public void testGetQueryRangesWithMaximumNumberOfRanges() {
-		final Set<ByteArrayId> partitions = simpleIndexStrategy.getQueryPartitionKeys(
-				sfcIndexedRange);
-		final QueryRanges sfcIndexRanges = sfcIndexStrategy.getQueryRanges(
-				sfcIndexedRange);
+		final Set<ByteArrayId> partitions = simpleIndexStrategy.getQueryPartitionKeys(sfcIndexedRange);
+		final QueryRanges sfcIndexRanges = sfcIndexStrategy.getQueryRanges(sfcIndexedRange);
 		final List<ByteArrayRange> ranges = new ArrayList<>();
 		for (final ByteArrayId r1 : partitions) {
 			for (final ByteArrayRange r2 : sfcIndexRanges.getCompositeQueryRanges()) {
@@ -99,10 +95,9 @@ public class CompoundIndexStrategyTest
 						ByteArrayUtils.combineArrays(
 								r1.getBytes(),
 								r2.getEnd().getBytes()));
-				ranges.add(
-						new ByteArrayRange(
-								start,
-								end));
+				ranges.add(new ByteArrayRange(
+						start,
+						end));
 			}
 		}
 		final Set<ByteArrayRange> testRanges = new HashSet<>(
@@ -110,18 +105,13 @@ public class CompoundIndexStrategyTest
 		final Set<ByteArrayRange> compoundIndexRanges = new HashSet<>(
 				compoundIndexStrategy.getQueryRanges(
 						compoundIndexedRange).getCompositeQueryRanges());
-		Assert.assertTrue(
-				testRanges.containsAll(
-						compoundIndexRanges));
-		Assert.assertTrue(
-				compoundIndexRanges.containsAll(
-						testRanges));
+		Assert.assertTrue(testRanges.containsAll(compoundIndexRanges));
+		Assert.assertTrue(compoundIndexRanges.containsAll(testRanges));
 	}
 
 	@Test
 	public void testGetQueryRanges() {
-		final Set<ByteArrayId> simpleIndexRanges = simpleIndexStrategy.getQueryPartitionKeys(
-				sfcIndexedRange);
+		final Set<ByteArrayId> simpleIndexRanges = simpleIndexStrategy.getQueryPartitionKeys(sfcIndexedRange);
 		final List<ByteArrayRange> sfcIndexRanges = sfcIndexStrategy.getQueryRanges(
 				sfcIndexedRange,
 				8).getCompositeQueryRanges();
@@ -137,10 +127,9 @@ public class CompoundIndexStrategyTest
 						ByteArrayUtils.combineArrays(
 								r1.getBytes(),
 								r2.getEnd().getBytes()));
-				ranges.add(
-						new ByteArrayRange(
-								start,
-								end));
+				ranges.add(new ByteArrayRange(
+						start,
+						end));
 			}
 		}
 		final Set<ByteArrayRange> testRanges = new HashSet<>(
@@ -149,30 +138,24 @@ public class CompoundIndexStrategyTest
 				compoundIndexStrategy.getQueryRanges(
 						compoundIndexedRange,
 						8).getCompositeQueryRanges());
-		Assert.assertTrue(
-				testRanges.containsAll(
-						compoundIndexRanges));
-		Assert.assertTrue(
-				compoundIndexRanges.containsAll(
-						testRanges));
+		Assert.assertTrue(testRanges.containsAll(compoundIndexRanges));
+		Assert.assertTrue(compoundIndexRanges.containsAll(testRanges));
 	}
 
 	@Test
 	public void testGetInsertionIds() {
 		final List<ByteArrayId> ids = new ArrayList<>();
-		final Set<ByteArrayId> ids1 = simpleIndexStrategy.getInsertionPartitionKeys(
-				sfcIndexedRange);
+		final Set<ByteArrayId> ids1 = simpleIndexStrategy.getInsertionPartitionKeys(sfcIndexedRange);
 		final int maxEstDuplicatesStrategy2 = 8 / ids1.size();
 		final List<ByteArrayId> ids2 = sfcIndexStrategy.getInsertionIds(
 				sfcIndexedRange,
 				maxEstDuplicatesStrategy2).getCompositeInsertionIds();
 		for (final ByteArrayId id1 : ids1) {
 			for (final ByteArrayId id2 : ids2) {
-				ids.add(
-						new ByteArrayId(
-								ByteArrayUtils.combineArrays(
-										id1.getBytes(),
-										id2.getBytes())));
+				ids.add(new ByteArrayId(
+						ByteArrayUtils.combineArrays(
+								id1.getBytes(),
+								id2.getBytes())));
 			}
 		}
 		final Set<ByteArrayId> testIds = new HashSet<>(
@@ -181,12 +164,8 @@ public class CompoundIndexStrategyTest
 				compoundIndexStrategy.getInsertionIds(
 						compoundIndexedRange,
 						8).getCompositeInsertionIds());
-		Assert.assertTrue(
-				testIds.containsAll(
-						compoundIndexIds));
-		Assert.assertTrue(
-				compoundIndexIds.containsAll(
-						testIds));
+		Assert.assertTrue(testIds.containsAll(compoundIndexIds));
+		Assert.assertTrue(compoundIndexIds.containsAll(testIds));
 	}
 
 	@Test
@@ -209,23 +188,24 @@ public class CompoundIndexStrategyTest
 		final MultiDimensionalCoordinates coordinatesPerDim = compoundIndexStrategy.getCoordinatesPerDimension(
 				compoundIndexPartitionKey,
 				compoundIndexSortKey);
-		Assert.assertTrue(
-				Long.compare(
-						sfcIndexCoordinatesPerDim.getCoordinate(
-								0).getCoordinate(),
-						coordinatesPerDim.getCoordinate(
-								0).getCoordinate()) == 0);
-		Assert.assertTrue(
-				Long.compare(
-						sfcIndexCoordinatesPerDim.getCoordinate(
-								1).getCoordinate(),
-						coordinatesPerDim.getCoordinate(
-								1).getCoordinate()) == 0);
+		Assert.assertTrue(Long.compare(
+				sfcIndexCoordinatesPerDim.getCoordinate(
+						0).getCoordinate(),
+				coordinatesPerDim.getCoordinate(
+						0).getCoordinate()) == 0);
+		Assert.assertTrue(Long.compare(
+				sfcIndexCoordinatesPerDim.getCoordinate(
+						1).getCoordinate(),
+				coordinatesPerDim.getCoordinate(
+						1).getCoordinate()) == 0);
 	}
 
 	@Test
-	public void testGetRangeForId() {		
-		final ByteArrayId sfcIndexPartitionKey = new ByteArrayId(new byte[]{16});
+	public void testGetRangeForId() {
+		final ByteArrayId sfcIndexPartitionKey = new ByteArrayId(
+				new byte[] {
+					16
+				});
 		final ByteArrayId sfcIndexSortKey = new ByteArrayId(
 				new byte[] {
 					-46,
@@ -245,22 +225,18 @@ public class CompoundIndexStrategyTest
 		Assert.assertEquals(
 				range.getDimensionCount(),
 				2);
-		Assert.assertTrue(
-				Double.compare(
-						sfcIndexRange.getMinValuesPerDimension()[0],
-						range.getMinValuesPerDimension()[0]) == 0);
-		Assert.assertTrue(
-				Double.compare(
-						sfcIndexRange.getMinValuesPerDimension()[1],
-						range.getMinValuesPerDimension()[1]) == 0);
-		Assert.assertTrue(
-				Double.compare(
-						sfcIndexRange.getMaxValuesPerDimension()[0],
-						range.getMaxValuesPerDimension()[0]) == 0);
-		Assert.assertTrue(
-				Double.compare(
-						sfcIndexRange.getMaxValuesPerDimension()[1],
-						range.getMaxValuesPerDimension()[1]) == 0);
+		Assert.assertTrue(Double.compare(
+				sfcIndexRange.getMinValuesPerDimension()[0],
+				range.getMinValuesPerDimension()[0]) == 0);
+		Assert.assertTrue(Double.compare(
+				sfcIndexRange.getMinValuesPerDimension()[1],
+				range.getMinValuesPerDimension()[1]) == 0);
+		Assert.assertTrue(Double.compare(
+				sfcIndexRange.getMaxValuesPerDimension()[0],
+				range.getMaxValuesPerDimension()[0]) == 0);
+		Assert.assertTrue(Double.compare(
+				sfcIndexRange.getMaxValuesPerDimension()[1],
+				range.getMaxValuesPerDimension()[1]) == 0);
 	}
 
 	@Test
@@ -271,14 +247,11 @@ public class CompoundIndexStrategyTest
 
 		final List<IndexMetaData> metaData = compoundIndexStrategy.createMetaData();
 		for (final IndexMetaData imd : metaData) {
-			imd.insertionIdsAdded(
-					ids);
+			imd.insertionIdsAdded(ids);
 		}
 
-		final Set<ByteArrayId> simpleIndexRanges = simpleIndexStrategy.getQueryPartitionKeys(
-				sfcIndexedRange);
-		final QueryRanges sfcIndexRanges = sfcIndexStrategy.getQueryRanges(
-				sfcIndexedRange);
+		final Set<ByteArrayId> simpleIndexRanges = simpleIndexStrategy.getQueryPartitionKeys(sfcIndexedRange);
+		final QueryRanges sfcIndexRanges = sfcIndexStrategy.getQueryRanges(sfcIndexedRange);
 		final List<ByteArrayRange> ranges = new ArrayList<>();
 		for (final ByteArrayId r1 : simpleIndexRanges) {
 			for (final ByteArrayRange r2 : sfcIndexRanges.getCompositeQueryRanges()) {
@@ -290,10 +263,9 @@ public class CompoundIndexStrategyTest
 						ByteArrayUtils.combineArrays(
 								r1.getBytes(),
 								r2.getEnd().getBytes()));
-				ranges.add(
-						new ByteArrayRange(
-								start,
-								end));
+				ranges.add(new ByteArrayRange(
+						start,
+						end));
 			}
 		}
 
@@ -301,35 +273,19 @@ public class CompoundIndexStrategyTest
 				compoundIndexStrategy.getQueryRanges(
 						compoundIndexedRange).getCompositeQueryRanges());
 		final Set<ByteArrayRange> compoundIndexRangesWithHints = new HashSet<>(
-				compoundIndexStrategy
-						.getQueryRanges(
-								compoundIndexedRange,
-								metaData.toArray(
-										new IndexMetaData[metaData.size()]))
-						.getCompositeQueryRanges());
-		Assert.assertTrue(
-				compoundIndexRangesWithoutHints.containsAll(
-						compoundIndexRangesWithHints));
-		Assert.assertTrue(
-				compoundIndexRangesWithHints.containsAll(
-						compoundIndexRangesWithoutHints));
+				compoundIndexStrategy.getQueryRanges(
+						compoundIndexedRange,
+						metaData.toArray(new IndexMetaData[metaData.size()])).getCompositeQueryRanges());
+		Assert.assertTrue(compoundIndexRangesWithoutHints.containsAll(compoundIndexRangesWithHints));
+		Assert.assertTrue(compoundIndexRangesWithHints.containsAll(compoundIndexRangesWithoutHints));
 
-		final List<Persistable> newMetaData = PersistenceUtils.fromBinary(
-				PersistenceUtils.toBinary(
-						metaData));
+		final List<Persistable> newMetaData = PersistenceUtils.fromBinary(PersistenceUtils.toBinary(metaData));
 		final Set<ByteArrayRange> compoundIndexRangesWithHints2 = new HashSet<>(
-				compoundIndexStrategy
-						.getQueryRanges(
-								compoundIndexedRange,
-								metaData.toArray(
-										new IndexMetaData[newMetaData.size()]))
-						.getCompositeQueryRanges());
-		Assert.assertTrue(
-				compoundIndexRangesWithoutHints.containsAll(
-						compoundIndexRangesWithHints2));
-		Assert.assertTrue(
-				compoundIndexRangesWithHints2.containsAll(
-						compoundIndexRangesWithoutHints));
+				compoundIndexStrategy.getQueryRanges(
+						compoundIndexedRange,
+						metaData.toArray(new IndexMetaData[newMetaData.size()])).getCompositeQueryRanges());
+		Assert.assertTrue(compoundIndexRangesWithoutHints.containsAll(compoundIndexRangesWithHints2));
+		Assert.assertTrue(compoundIndexRangesWithHints2.containsAll(compoundIndexRangesWithoutHints));
 
 	}
 }

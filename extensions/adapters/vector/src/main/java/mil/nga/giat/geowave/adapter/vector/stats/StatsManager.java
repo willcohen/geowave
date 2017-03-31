@@ -31,7 +31,7 @@ public class StatsManager
 	private final static EntryVisibilityHandler<SimpleFeature> DEFAULT_VISIBILITY_HANDLER = new DefaultFieldStatisticVisibility<SimpleFeature>();
 
 	private final List<DataStatistics<SimpleFeature>> statsList = new ArrayList<DataStatistics<SimpleFeature>>();
-	private final Map<ByteArrayId, ByteArrayId> statisticsIdToFieldIdMap = new HashMap<ByteArrayId,ByteArrayId>();
+	private final Map<ByteArrayId, ByteArrayId> statisticsIdToFieldIdMap = new HashMap<ByteArrayId, ByteArrayId>();
 
 	public DataStatistics<SimpleFeature> createDataStatistics(
 			final DataAdapter<SimpleFeature> dataAdapter,
@@ -67,7 +67,10 @@ public class StatsManager
 			return DEFAULT_VISIBILITY_HANDLER;
 		}
 		ByteArrayId fieldId = statisticsIdToFieldIdMap.get(statisticsId);
-		return new FieldIdStatisticVisibility<>(fieldId, indexModel, adapter);
+		return new FieldIdStatisticVisibility<>(
+				fieldId,
+				indexModel,
+				adapter);
 	}
 
 	public StatsManager(
@@ -94,8 +97,8 @@ public class StatsManager
 						new FeatureTimeRangeStatistics(
 								dataAdapter.getAdapterId(),
 								descriptor.getLocalName()),
-								new ByteArrayId(
-										descriptor.getLocalName()));
+						new ByteArrayId(
+								descriptor.getLocalName()));
 			}
 			else if (Geometry.class.isAssignableFrom(descriptor.getType().getBinding())) {
 				addStats(
@@ -105,8 +108,8 @@ public class StatsManager
 								persistedType,
 								reprojectedType,
 								transform),
-								new ByteArrayId(
-										descriptor.getLocalName()));
+						new ByteArrayId(
+								descriptor.getLocalName()));
 			}
 
 			if (descriptor.getUserData().containsKey(
@@ -120,8 +123,8 @@ public class StatsManager
 							statConfig.create(
 									dataAdapter.getAdapterId(),
 									descriptor.getLocalName()),
-									new ByteArrayId(
-											descriptor.getLocalName()));
+							new ByteArrayId(
+									descriptor.getLocalName()));
 				}
 
 			}
@@ -130,15 +133,15 @@ public class StatsManager
 						new FeatureNumericRangeStatistics(
 								dataAdapter.getAdapterId(),
 								descriptor.getLocalName()),
-								new ByteArrayId(
-										descriptor.getLocalName()));
+						new ByteArrayId(
+								descriptor.getLocalName()));
 
 				addStats(
 						new FeatureFixedBinNumericStatistics(
 								dataAdapter.getAdapterId(),
 								descriptor.getLocalName()),
-								new ByteArrayId(
-										descriptor.getLocalName()));
+						new ByteArrayId(
+								descriptor.getLocalName()));
 
 			}
 			// else if (String.class.isAssignableFrom(

@@ -36,10 +36,9 @@ public class CompoundIndexStrategy implements
 			final NumericIndexStrategy subStrategy2 ) {
 		this.subStrategy1 = subStrategy1;
 		this.subStrategy2 = subStrategy2;
-		defaultMaxDuplication = (int) Math.ceil(
-				Math.pow(
-						2,
-						getNumberOfDimensions()));
+		defaultMaxDuplication = (int) Math.ceil(Math.pow(
+				2,
+				getNumberOfDimensions()));
 	}
 
 	protected CompoundIndexStrategy() {}
@@ -54,33 +53,24 @@ public class CompoundIndexStrategy implements
 
 	@Override
 	public byte[] toBinary() {
-		final byte[] delegateBinary1 = PersistenceUtils.toBinary(
-				subStrategy1);
-		final byte[] delegateBinary2 = PersistenceUtils.toBinary(
-				subStrategy2);
-		final ByteBuffer buf = ByteBuffer.allocate(
-				4 + delegateBinary1.length + delegateBinary2.length);
-		buf.putInt(
-				delegateBinary1.length);
-		buf.put(
-				delegateBinary1);
-		buf.put(
-				delegateBinary2);
+		final byte[] delegateBinary1 = PersistenceUtils.toBinary(subStrategy1);
+		final byte[] delegateBinary2 = PersistenceUtils.toBinary(subStrategy2);
+		final ByteBuffer buf = ByteBuffer.allocate(4 + delegateBinary1.length + delegateBinary2.length);
+		buf.putInt(delegateBinary1.length);
+		buf.put(delegateBinary1);
+		buf.put(delegateBinary2);
 		return buf.array();
 	}
 
 	@Override
 	public void fromBinary(
 			final byte[] bytes ) {
-		final ByteBuffer buf = ByteBuffer.wrap(
-				bytes);
+		final ByteBuffer buf = ByteBuffer.wrap(bytes);
 		final int delegateBinary1Length = buf.getInt();
 		final byte[] delegateBinary1 = new byte[delegateBinary1Length];
-		buf.get(
-				delegateBinary1);
+		buf.get(delegateBinary1);
 		final byte[] delegateBinary2 = new byte[bytes.length - delegateBinary1Length - 4];
-		buf.get(
-				delegateBinary2);
+		buf.get(delegateBinary2);
 		subStrategy1 = PersistenceUtils.fromBinary(
 				delegateBinary1,
 				PartitionIndexStrategy.class);
@@ -88,10 +78,9 @@ public class CompoundIndexStrategy implements
 				delegateBinary2,
 				NumericIndexStrategy.class);
 
-		defaultMaxDuplication = (int) Math.ceil(
-				Math.pow(
-						2,
-						getNumberOfDimensions()));
+		defaultMaxDuplication = (int) Math.ceil(Math.pow(
+				2,
+				getNumberOfDimensions()));
 	}
 
 	/**
@@ -151,8 +140,7 @@ public class CompoundIndexStrategy implements
 	public InsertionIds getInsertionIds(
 			final MultiDimensionalNumericData indexedData,
 			final int maxEstimatedDuplicateIds ) {
-		final Collection<ByteArrayId> partitionKeys = subStrategy1.getInsertionPartitionKeys(
-				indexedData);
+		final Collection<ByteArrayId> partitionKeys = subStrategy1.getInsertionPartitionKeys(indexedData);
 		final InsertionIds insertionIds = subStrategy2.getInsertionIds(
 				indexedData,
 				maxEstimatedDuplicateIds);
@@ -185,28 +173,27 @@ public class CompoundIndexStrategy implements
 			final List<SinglePartitionInsertionIds> permutations = new ArrayList<>(
 					insertionIds.getPartitionKeys().size() * partitionKeys.size());
 			for (final ByteArrayId partitionKey : partitionKeys) {
-				permutations.addAll(
-						Collections2.transform(
-								insertionIds.getPartitionKeys(),
-								new Function<SinglePartitionInsertionIds, SinglePartitionInsertionIds>() {
-									@Override
-									public SinglePartitionInsertionIds apply(
-											final SinglePartitionInsertionIds input ) {
-										if (input.getPartitionKey() != null) {
-											return new SinglePartitionInsertionIds(
-													new ByteArrayId(
-															ByteArrayUtils.combineArrays(
-																	partitionKey.getBytes(),
-																	input.getPartitionKey().getBytes())),
-													input.getSortKeys());
-										}
-										else {
-											return new SinglePartitionInsertionIds(
-													partitionKey,
-													input.getSortKeys());
-										}
-									}
-								}));
+				permutations.addAll(Collections2.transform(
+						insertionIds.getPartitionKeys(),
+						new Function<SinglePartitionInsertionIds, SinglePartitionInsertionIds>() {
+							@Override
+							public SinglePartitionInsertionIds apply(
+									final SinglePartitionInsertionIds input ) {
+								if (input.getPartitionKey() != null) {
+									return new SinglePartitionInsertionIds(
+											new ByteArrayId(
+													ByteArrayUtils.combineArrays(
+															partitionKey.getBytes(),
+															input.getPartitionKey().getBytes())),
+											input.getSortKeys());
+								}
+								else {
+									return new SinglePartitionInsertionIds(
+											partitionKey,
+											input.getSortKeys());
+								}
+							}
+						}));
 			}
 			return new InsertionIds(
 					permutations);
@@ -218,8 +205,7 @@ public class CompoundIndexStrategy implements
 			final ByteArrayId partitionKey,
 			final ByteArrayId sortKey ) {
 		return subStrategy2.getRangeForId(
-				trimPartitionIdForSortStrategy(
-						partitionKey),
+				trimPartitionIdForSortStrategy(partitionKey),
 				sortKey);
 	}
 
@@ -228,8 +214,7 @@ public class CompoundIndexStrategy implements
 			final ByteArrayId partitionKey,
 			final ByteArrayId sortKey ) {
 		return subStrategy2.getCoordinatesPerDimension(
-				trimPartitionIdForSortStrategy(
-						partitionKey),
+				trimPartitionIdForSortStrategy(partitionKey),
 				sortKey);
 	}
 
@@ -274,8 +259,7 @@ public class CompoundIndexStrategy implements
 				return false;
 			}
 		}
-		else if (!subStrategy1.equals(
-				other.subStrategy1)) {
+		else if (!subStrategy1.equals(other.subStrategy1)) {
 			return false;
 		}
 		if (subStrategy2 == null) {
@@ -283,8 +267,7 @@ public class CompoundIndexStrategy implements
 				return false;
 			}
 		}
-		else if (!subStrategy2.equals(
-				other.subStrategy2)) {
+		else if (!subStrategy2.equals(other.subStrategy2)) {
 			return false;
 		}
 		return true;
@@ -292,41 +275,12 @@ public class CompoundIndexStrategy implements
 
 	@Override
 	public String getId() {
-		return StringUtils.intToString(
-				hashCode());
+		return StringUtils.intToString(hashCode());
 	}
 
 	@Override
 	public double[] getHighestPrecisionIdRangePerDimension() {
 		return subStrategy2.getHighestPrecisionIdRangePerDimension();
-	}
-
-	@Override
-	public Set<ByteArrayId> getPartitionKeys() {
-		final Set<ByteArrayId> partitionKeys1 = subStrategy1.getPartitionKeys();
-		final Set<ByteArrayId> partitionKeys2 = subStrategy2.getPartitionKeys();
-		Set<ByteArrayId> partitionKeys;
-		if ((partitionKeys1 == null) || partitionKeys1.isEmpty()) {
-			partitionKeys = partitionKeys2;
-		}
-		else if ((partitionKeys2 == null) || partitionKeys2.isEmpty()) {
-			partitionKeys = partitionKeys1;
-		}
-		else {
-			// use all permutations of range keys
-			partitionKeys = new HashSet<ByteArrayId>(
-					partitionKeys1.size() * partitionKeys2.size());
-			for (final ByteArrayId partitionKey1 : partitionKeys1) {
-				for (final ByteArrayId partitionKey2 : partitionKeys2) {
-					partitionKeys.add(
-							new ByteArrayId(
-									ByteArrayUtils.combineArrays(
-											partitionKey1.getBytes(),
-											partitionKey2.getBytes())));
-				}
-			}
-		}
-		return partitionKeys;
 	}
 
 	@Override
@@ -338,19 +292,17 @@ public class CompoundIndexStrategy implements
 	public List<IndexMetaData> createMetaData() {
 		final List<IndexMetaData> result = new ArrayList<IndexMetaData>();
 		for (final IndexMetaData metaData : subStrategy1.createMetaData()) {
-			result.add(
-					new CompoundIndexMetaDataWrapper(
-							metaData,
-							subStrategy1.getPartitionKeyLength(),
-							(byte) 0));
+			result.add(new CompoundIndexMetaDataWrapper(
+					metaData,
+					subStrategy1.getPartitionKeyLength(),
+					(byte) 0));
 		}
 		metaDataSplit = result.size();
 		for (final IndexMetaData metaData : subStrategy2.createMetaData()) {
-			result.add(
-					new CompoundIndexMetaDataWrapper(
-							metaData,
-							subStrategy1.getPartitionKeyLength(),
-							(byte) 1));
+			result.add(new CompoundIndexMetaDataWrapper(
+					metaData,
+					subStrategy1.getPartitionKeyLength(),
+					(byte) 1));
 		}
 		return result;
 	}
@@ -411,25 +363,19 @@ public class CompoundIndexStrategy implements
 
 		@Override
 		public byte[] toBinary() {
-			final byte[] metaBytes = PersistenceUtils.toBinary(
-					metaData);
-			final ByteBuffer buf = ByteBuffer.allocate(
-					1 + metaBytes.length);
-			buf.put(
-					metaBytes);
-			buf.put(
-					index);
+			final byte[] metaBytes = PersistenceUtils.toBinary(metaData);
+			final ByteBuffer buf = ByteBuffer.allocate(1 + metaBytes.length);
+			buf.put(metaBytes);
+			buf.put(index);
 			return buf.array();
 		}
 
 		@Override
 		public void fromBinary(
 				final byte[] bytes ) {
-			final ByteBuffer buf = ByteBuffer.wrap(
-					bytes);
+			final ByteBuffer buf = ByteBuffer.wrap(bytes);
 			final byte[] metaBytes = new byte[bytes.length - 1];
-			buf.get(
-					metaBytes);
+			buf.get(metaBytes);
 			metaData = PersistenceUtils.fromBinary(
 					metaBytes,
 					IndexMetaData.class);
@@ -441,17 +387,14 @@ public class CompoundIndexStrategy implements
 				final Mergeable merge ) {
 			if (merge instanceof CompoundIndexMetaDataWrapper) {
 				final CompoundIndexMetaDataWrapper compound = (CompoundIndexMetaDataWrapper) merge;
-				metaData.merge(
-						compound.metaData);
+				metaData.merge(compound.metaData);
 			}
 		}
 
 		@Override
 		public void insertionIdsAdded(
 				final InsertionIds insertionIds ) {
-			metaData.insertionIdsAdded(
-					trimPartitionForSubstrategy(
-							insertionIds));
+			metaData.insertionIdsAdded(trimPartitionForSubstrategy(insertionIds));
 		}
 
 		private InsertionIds trimPartitionForSubstrategy(
@@ -466,10 +409,9 @@ public class CompoundIndexStrategy implements
 					return insertionIds;
 				}
 				else {
-					retVal.add(
-							new SinglePartitionInsertionIds(
-									trimmedPartitionId,
-									partitionIds.getSortKeys()));
+					retVal.add(new SinglePartitionInsertionIds(
+							trimmedPartitionId,
+							partitionIds.getSortKeys()));
 				}
 			}
 			return new InsertionIds(
@@ -479,9 +421,7 @@ public class CompoundIndexStrategy implements
 		@Override
 		public void insertionIdsRemoved(
 				final InsertionIds insertionIds ) {
-			metaData.insertionIdsRemoved(
-					trimPartitionForSubstrategy(
-							insertionIds));
+			metaData.insertionIdsRemoved(trimPartitionForSubstrategy(insertionIds));
 		}
 	}
 
@@ -533,10 +473,8 @@ public class CompoundIndexStrategy implements
 	@Override
 	public Set<ByteArrayId> getInsertionPartitionKeys(
 			final MultiDimensionalNumericData insertionData ) {
-		final Set<ByteArrayId> partitionKeys1 = subStrategy1.getInsertionPartitionKeys(
-				insertionData);
-		final Set<ByteArrayId> partitionKeys2 = subStrategy2.getInsertionPartitionKeys(
-				insertionData);
+		final Set<ByteArrayId> partitionKeys1 = subStrategy1.getInsertionPartitionKeys(insertionData);
+		final Set<ByteArrayId> partitionKeys2 = subStrategy2.getInsertionPartitionKeys(insertionData);
 		if ((partitionKeys1 == null) || partitionKeys1.isEmpty()) {
 			return partitionKeys2;
 		}
@@ -548,11 +486,10 @@ public class CompoundIndexStrategy implements
 				partitionKeys1.size() * partitionKeys2.size());
 		for (final ByteArrayId partitionKey1 : partitionKeys1) {
 			for (final ByteArrayId partitionKey2 : partitionKeys2) {
-				partitionKeys.add(
-						new ByteArrayId(
-								ByteArrayUtils.combineArrays(
-										partitionKey1.getBytes(),
-										partitionKey2.getBytes())));
+				partitionKeys.add(new ByteArrayId(
+						ByteArrayUtils.combineArrays(
+								partitionKey1.getBytes(),
+								partitionKey2.getBytes())));
 			}
 		}
 		return partitionKeys;
@@ -579,11 +516,10 @@ public class CompoundIndexStrategy implements
 				partitionKeys1.size() * partitionKeys2.size());
 		for (final ByteArrayId partitionKey1 : partitionKeys1) {
 			for (final ByteArrayId partitionKey2 : partitionKeys2) {
-				partitionKeys.add(
-						new ByteArrayId(
-								ByteArrayUtils.combineArrays(
-										partitionKey1.getBytes(),
-										partitionKey2.getBytes())));
+				partitionKeys.add(new ByteArrayId(
+						ByteArrayUtils.combineArrays(
+								partitionKey1.getBytes(),
+								partitionKey2.getBytes())));
 			}
 		}
 		return partitionKeys;

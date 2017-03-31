@@ -54,8 +54,7 @@ public class DifferingFieldVisibilityEntryCount<T> extends
 			final ByteArrayId indexId ) {
 		super(
 				dataAdapterId,
-				composeId(
-						indexId));
+				composeId(indexId));
 	}
 
 	public static ByteArrayId composeId(
@@ -76,18 +75,15 @@ public class DifferingFieldVisibilityEntryCount<T> extends
 
 	@Override
 	public byte[] toBinary() {
-		final ByteBuffer buf = super.binaryBuffer(
-				8);
-		buf.putLong(
-				entriesWithDifferingFieldVisibilities);
+		final ByteBuffer buf = super.binaryBuffer(8);
+		buf.putLong(entriesWithDifferingFieldVisibilities);
 		return buf.array();
 	}
 
 	@Override
 	public void fromBinary(
 			final byte[] bytes ) {
-		final ByteBuffer buf = super.binaryBuffer(
-				bytes);
+		final ByteBuffer buf = super.binaryBuffer(bytes);
 		entriesWithDifferingFieldVisibilities = buf.getLong();
 	}
 
@@ -96,8 +92,7 @@ public class DifferingFieldVisibilityEntryCount<T> extends
 			final T entry,
 			final GeoWaveRow... kvs ) {
 		for (final GeoWaveRow kv : kvs) {
-			if (entryHasDifferentVisibilities(
-					kv)) {
+			if (entryHasDifferentVisibilities(kv)) {
 				entriesWithDifferingFieldVisibilities++;
 			}
 		}
@@ -108,8 +103,7 @@ public class DifferingFieldVisibilityEntryCount<T> extends
 			final T entry,
 			final GeoWaveRow... kvs ) {
 		for (final GeoWaveRow kv : kvs) {
-			if (entryHasDifferentVisibilities(
-					kv)) {
+			if (entryHasDifferentVisibilities(kv)) {
 				entriesWithDifferingFieldVisibilities--;
 			}
 		}
@@ -140,17 +134,16 @@ public class DifferingFieldVisibilityEntryCount<T> extends
 			final String... authorizations ) {
 		DifferingFieldVisibilityEntryCount combinedVisibilityCount = null;
 		for (final ByteArrayId adapterId : adapterIdsToQuery) {
-			final DifferingFieldVisibilityEntryCount adapterVisibilityCount = (DifferingFieldVisibilityEntryCount) statisticsStore.getDataStatistics(
-					adapterId,
-					DifferingFieldVisibilityEntryCount.composeId(
-							index.getId()),
-					authorizations);
+			final DifferingFieldVisibilityEntryCount adapterVisibilityCount = (DifferingFieldVisibilityEntryCount) statisticsStore
+					.getDataStatistics(
+							adapterId,
+							DifferingFieldVisibilityEntryCount.composeId(index.getId()),
+							authorizations);
 			if (combinedVisibilityCount == null) {
 				combinedVisibilityCount = adapterVisibilityCount;
 			}
 			else {
-				combinedVisibilityCount.merge(
-						adapterVisibilityCount);
+				combinedVisibilityCount.merge(adapterVisibilityCount);
 			}
 		}
 		return combinedVisibilityCount;

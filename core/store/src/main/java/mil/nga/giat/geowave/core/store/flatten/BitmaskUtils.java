@@ -104,7 +104,8 @@ public class BitmaskUtils
 			currentByte++;
 		}
 		return fieldPositions;
-	}	
+	}
+
 	/**
 	 * Iterates the set (true) bits within the given composite bitmask and
 	 * generates a list of field positions.
@@ -140,7 +141,7 @@ public class BitmaskUtils
 	 */
 	public static byte[] generateFieldSubsetBitmask(
 			final CommonIndexModel indexModel,
-			final List<String> fieldIds,
+			final List<ByteArrayId> fieldIds,
 			final DataAdapter<?> adapterAssociatedWithFieldIds ) {
 		final SortedSet<Integer> fieldPositions = new TreeSet<Integer>();
 
@@ -151,11 +152,10 @@ public class BitmaskUtils
 					dimension.getFieldId()));
 		}
 
-		for (final String fieldId : fieldIds) {
+		for (final ByteArrayId fieldId : fieldIds) {
 			fieldPositions.add(adapterAssociatedWithFieldIds.getPositionOfOrderedField(
 					indexModel,
-					new ByteArrayId(
-							fieldId)));
+					fieldId));
 		}
 		return generateCompositeBitmask(fieldPositions);
 	}

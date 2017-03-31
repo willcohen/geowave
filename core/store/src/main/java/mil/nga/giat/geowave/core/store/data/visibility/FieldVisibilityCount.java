@@ -113,7 +113,7 @@ public class FieldVisibilityCount<T> extends
 	@Override
 	public void entryIngested(
 			final T entry,
-			GeoWaveRow... kvs) {
+			GeoWaveRow... kvs ) {
 		updateEntry(
 				1,
 				kvs);
@@ -122,7 +122,7 @@ public class FieldVisibilityCount<T> extends
 	private void updateEntry(
 			final int incrementValue,
 			GeoWaveRow... kvs ) {
-		for (GeoWaveRow row : kvs){
+		for (GeoWaveRow row : kvs) {
 			GeoWaveValue[] values = row.getFieldValues();
 			for (final GeoWaveValue v : values) {
 				ByteArrayId visibility = new ByteArrayId(
@@ -139,7 +139,7 @@ public class FieldVisibilityCount<T> extends
 						visibility,
 						count + incrementValue);
 			}
-		}		
+		}
 	}
 
 	@Override
@@ -147,7 +147,8 @@ public class FieldVisibilityCount<T> extends
 			final T entry,
 			GeoWaveRow... kvs ) {
 		updateEntry(
-				-1,kvs);
+				-1,
+				kvs);
 	}
 
 	@Override

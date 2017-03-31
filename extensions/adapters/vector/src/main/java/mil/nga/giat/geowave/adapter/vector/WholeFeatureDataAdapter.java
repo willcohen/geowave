@@ -213,10 +213,13 @@ public class WholeFeatureDataAdapter extends
 
 	@Override
 	public EntryVisibilityHandler<SimpleFeature> getVisibilityHandler(
-			CommonIndexModel indexModel,
-			DataAdapter<SimpleFeature> adapter,
+			final CommonIndexModel indexModel,
+			final DataAdapter<SimpleFeature> adapter,
 			final ByteArrayId statisticsId ) {
-		return statsManager.getVisibilityHandler(statisticsId);
+		return statsManager.getVisibilityHandler(
+				indexModel,
+				adapter,
+				statisticsId);
 	}
 
 	@Override

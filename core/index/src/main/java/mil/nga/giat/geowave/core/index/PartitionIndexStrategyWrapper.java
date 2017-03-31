@@ -62,19 +62,13 @@ public class PartitionIndexStrategyWrapper implements
 	}
 
 	@Override
-	public Set<ByteArrayId> getPartitionKeys() {
-		return partitionIndexStrategy.getPartitionKeys();
-	}
-
-	@Override
 	public List<IndexMetaData> createMetaData() {
 		return partitionIndexStrategy.createMetaData();
 	}
 
 	@Override
 	public byte[] toBinary() {
-		return PersistenceUtils.toBinary(
-				partitionIndexStrategy);
+		return PersistenceUtils.toBinary(partitionIndexStrategy);
 	}
 
 	@Override
@@ -117,8 +111,7 @@ public class PartitionIndexStrategyWrapper implements
 	@Override
 	public Set<ByteArrayId> getInsertionPartitionKeys(
 			final MultiDimensionalNumericData insertionData ) {
-		return partitionIndexStrategy.getInsertionPartitionKeys(
-				insertionData);
+		return partitionIndexStrategy.getInsertionPartitionKeys(insertionData);
 	}
 
 	@Override

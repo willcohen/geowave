@@ -63,8 +63,8 @@ abstract public class NumericRangeDataStatistics<T> extends
 
 	@Override
 	public void entryIngested(
-			final T entry ,
-			final GeoWaveRow... kvs) {
+			final T entry,
+			final GeoWaveRow... kvs ) {
 		final NumericRange range = getRange(entry);
 		if (range != null) {
 			min = Math.min(

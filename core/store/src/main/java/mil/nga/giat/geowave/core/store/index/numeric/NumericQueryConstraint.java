@@ -58,24 +58,19 @@ public class NumericQueryConstraint implements
 		return new QueryRanges(
 				new ByteArrayRange(
 						new ByteArrayId(
-								NumericFieldIndexStrategy.toIndexByte(
-										lowerValue.doubleValue())),
+								NumericFieldIndexStrategy.toIndexByte(lowerValue.doubleValue())),
 						new ByteArrayId(
-								NumericFieldIndexStrategy.toIndexByte(
-										upperValue.doubleValue()))));
+								NumericFieldIndexStrategy.toIndexByte(upperValue.doubleValue()))));
 	}
 
 	@Override
 	public FilterableConstraints intersect(
 			final FilterableConstraints other ) {
-		if ((other instanceof NumericQueryConstraint) && ((NumericQueryConstraint) other).fieldId.equals(
-				fieldId)) {
+		if ((other instanceof NumericQueryConstraint) && ((NumericQueryConstraint) other).fieldId.equals(fieldId)) {
 			final NumericQueryConstraint otherNumeric = ((NumericQueryConstraint) other);
 
-			final boolean lowEquals = lowerValue.equals(
-					otherNumeric.lowerValue);
-			final boolean upperEquals = upperValue.equals(
-					otherNumeric.upperValue);
+			final boolean lowEquals = lowerValue.equals(otherNumeric.lowerValue);
+			final boolean upperEquals = upperValue.equals(otherNumeric.upperValue);
 			final boolean replaceMin = (lowerValue.doubleValue() < otherNumeric.lowerValue.doubleValue());
 			final boolean replaceMax = (upperValue.doubleValue() > otherNumeric.upperValue.doubleValue());
 			return new NumericQueryConstraint(
@@ -86,10 +81,10 @@ public class NumericQueryConstraint implements
 					Math.min(
 							upperValue.doubleValue(),
 							otherNumeric.upperValue.doubleValue()),
-					lowEquals ? otherNumeric.inclusiveLow & inclusiveLow
-							: (replaceMin ? otherNumeric.inclusiveLow : inclusiveLow),
-					upperEquals ? otherNumeric.inclusiveHigh & inclusiveHigh
-							: (replaceMax ? otherNumeric.inclusiveHigh : inclusiveHigh));
+					lowEquals ? otherNumeric.inclusiveLow & inclusiveLow : (replaceMin ? otherNumeric.inclusiveLow
+							: inclusiveLow),
+					upperEquals ? otherNumeric.inclusiveHigh & inclusiveHigh : (replaceMax ? otherNumeric.inclusiveHigh
+							: inclusiveHigh));
 		}
 		return this;
 	}
@@ -97,14 +92,11 @@ public class NumericQueryConstraint implements
 	@Override
 	public FilterableConstraints union(
 			final FilterableConstraints other ) {
-		if ((other instanceof NumericQueryConstraint) && ((NumericQueryConstraint) other).fieldId.equals(
-				fieldId)) {
+		if ((other instanceof NumericQueryConstraint) && ((NumericQueryConstraint) other).fieldId.equals(fieldId)) {
 			final NumericQueryConstraint otherNumeric = ((NumericQueryConstraint) other);
 
-			final boolean lowEquals = lowerValue.equals(
-					otherNumeric.lowerValue);
-			final boolean upperEquals = upperValue.equals(
-					otherNumeric.upperValue);
+			final boolean lowEquals = lowerValue.equals(otherNumeric.lowerValue);
+			final boolean upperEquals = upperValue.equals(otherNumeric.upperValue);
 			final boolean replaceMin = (lowerValue.doubleValue() > otherNumeric.lowerValue.doubleValue());
 			final boolean replaceMax = (upperValue.doubleValue() < otherNumeric.upperValue.doubleValue());
 			return new NumericQueryConstraint(
@@ -115,10 +107,10 @@ public class NumericQueryConstraint implements
 					Math.max(
 							upperValue.doubleValue(),
 							otherNumeric.upperValue.doubleValue()),
-					lowEquals ? otherNumeric.inclusiveLow | inclusiveLow
-							: (replaceMin ? otherNumeric.inclusiveLow : inclusiveLow),
-					upperEquals ? otherNumeric.inclusiveHigh | inclusiveHigh
-							: (replaceMax ? otherNumeric.inclusiveHigh : inclusiveHigh));
+					lowEquals ? otherNumeric.inclusiveLow | inclusiveLow : (replaceMin ? otherNumeric.inclusiveLow
+							: inclusiveLow),
+					upperEquals ? otherNumeric.inclusiveHigh | inclusiveHigh : (replaceMax ? otherNumeric.inclusiveHigh
+							: inclusiveHigh));
 		}
 		return this;
 	}

@@ -41,7 +41,7 @@ import mil.nga.giat.geowave.core.store.query.CoordinateRangeQueryFilter;
 import mil.nga.giat.geowave.core.store.query.Query;
 import mil.nga.giat.geowave.core.store.query.aggregate.Aggregation;
 import mil.nga.giat.geowave.core.store.query.aggregate.CommonIndexAggregation;
-import mil.nga.giat.geowave.datastore.hbase.operations.BasicHBaseOperations;
+import mil.nga.giat.geowave.datastore.hbase.operations.HBaseOperations;
 import mil.nga.giat.geowave.datastore.hbase.query.protobuf.AggregationProtos;
 
 public class HBaseConstraintsQuery extends
@@ -94,7 +94,6 @@ public class HBaseConstraintsQuery extends
 			final DifferingFieldVisibilityEntryCount visibilityCounts,
 			final Pair<List<String>, DataAdapter<?>> fieldIds,
 			final String[] authorizations ) {
-
 		super(
 				dataStore,
 				adapterIds,
@@ -179,7 +178,7 @@ public class HBaseConstraintsQuery extends
 
 	@Override
 	public CloseableIterator<Object> query(
-			final BasicHBaseOperations operations,
+			final HBaseOperations operations,
 			final AdapterStore adapterStore,
 			final double[] maxResolutionSubsamplingPerDimension,
 			final Integer limit ) {
@@ -235,7 +234,7 @@ public class HBaseConstraintsQuery extends
 	}
 
 	private CloseableIterator<Object> aggregateWithCoprocessor(
-			final BasicHBaseOperations operations,
+			final HBaseOperations operations,
 			final AdapterStore adapterStore,
 			final Integer limit ) {
 		final String tableName = StringUtils.stringFromBinary(index.getId().getBytes());

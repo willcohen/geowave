@@ -16,7 +16,7 @@ public class EmptyStatisticVisibility<T> implements
 	@Override
 	public byte[] getVisibility(
 			final T entry,
-			final GeoWaveRow... kvs) {
+			final GeoWaveRow... kvs ) {
 		return new byte[0];
 	}
 

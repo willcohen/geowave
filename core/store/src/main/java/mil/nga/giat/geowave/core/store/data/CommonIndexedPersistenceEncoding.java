@@ -64,8 +64,7 @@ public class CommonIndexedPersistenceEncoding extends
 	 */
 	public InsertionIds getInsertionIds(
 			final PrimaryIndex index ) {
-		final MultiDimensionalNumericData boxRangeData = getNumericData(
-				index.getIndexModel().getDimensions());
+		final MultiDimensionalNumericData boxRangeData = getNumericData(index.getIndexModel().getDimensions());
 		final InsertionIds untrimmedResult = index.getIndexStrategy().getInsertionIds(
 				boxRangeData);
 		for (final SinglePartitionInsertionIds insertionId : untrimmedResult.getPartitionKeys()) {
@@ -86,8 +85,7 @@ public class CommonIndexedPersistenceEncoding extends
 							index.getIndexStrategy().getRangeForId(
 									partitionKey,
 									sortKey))) {
-						LOGGER.error(
-								"Index strategy produced an unmatching tile during encoding and storing an entry");
+						LOGGER.error("Index strategy produced an unmatching tile during encoding and storing an entry");
 					}
 					if (!overlaps(
 							index.getIndexStrategy().getRangeForId(
@@ -121,11 +119,10 @@ public class CommonIndexedPersistenceEncoding extends
 			final boolean overlaps = ((i1 < j2) || DoubleMath.fuzzyEquals(
 					i1,
 					j2,
-					DOUBLE_TOLERANCE))
-					&& ((i2 > j1) || DoubleMath.fuzzyEquals(
-							i2,
-							j1,
-							DOUBLE_TOLERANCE));
+					DOUBLE_TOLERANCE)) && ((i2 > j1) || DoubleMath.fuzzyEquals(
+					i2,
+					j1,
+					DOUBLE_TOLERANCE));
 			if (!overlaps) {
 				return false;
 			}
@@ -152,8 +149,7 @@ public class CommonIndexedPersistenceEncoding extends
 			final CommonIndexValue val = getCommonData().getValue(
 					dimensions[d].getFieldId());
 			if (val != null) {
-				dataPerDimension[d] = dimensions[d].getNumericData(
-						val);
+				dataPerDimension[d] = dimensions[d].getNumericData(val);
 			}
 		}
 		return new BasicNumericDataset(
@@ -225,12 +221,10 @@ public class CommonIndexedPersistenceEncoding extends
 			else {
 				baseDefinitionCls = dimensions[d].getClass();
 			}
-			final NumericDimensionField field = dimensionTypeToFieldMap.get(
-					baseDefinitionCls);
+			final NumericDimensionField field = dimensionTypeToFieldMap.get(baseDefinitionCls);
 			if (field != null) {
 				final ByteArrayId fieldId = field.getFieldId();
-				final DimensionRangePair fieldData = fieldsRangeData.get(
-						fieldId);
+				final DimensionRangePair fieldData = fieldsRangeData.get(fieldId);
 				if (fieldData == null) {
 					fieldsRangeData.put(
 							fieldId,
@@ -249,8 +243,7 @@ public class CommonIndexedPersistenceEncoding extends
 		for (final Entry<ByteArrayId, DimensionRangePair> entry : fieldsRangeData.entrySet()) {
 			final PersistentDataset<CommonIndexValue> commonData = getCommonData();
 			if (commonData != null) {
-				final CommonIndexValue value = commonData.getValue(
-						entry.getKey());
+				final CommonIndexValue value = commonData.getValue(entry.getKey());
 				if ((value != null) && !value.overlaps(
 						entry.getValue().dimensions,
 						entry.getValue().dataPerDimension)) {

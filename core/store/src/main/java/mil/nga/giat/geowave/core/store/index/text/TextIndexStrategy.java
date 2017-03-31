@@ -1,16 +1,12 @@
 package mil.nga.giat.geowave.core.store.index.text;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
-import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.index.IndexMetaData;
 import mil.nga.giat.geowave.core.index.InsertionIds;
 import mil.nga.giat.geowave.core.index.QueryRanges;
-import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo.FieldInfo;
 import mil.nga.giat.geowave.core.store.index.FieldIndexStrategy;
 
 public class TextIndexStrategy implements
@@ -43,16 +39,16 @@ public class TextIndexStrategy implements
 
 	@Override
 	public QueryRanges getQueryRanges(
-			TextQueryConstraint indexedRange,
-			IndexMetaData... hints ) {
+			final TextQueryConstraint indexedRange,
+			final IndexMetaData... hints ) {
 		return indexedRange.getQueryRanges();
 	}
 
 	@Override
 	public QueryRanges getQueryRanges(
-			TextQueryConstraint indexedRange,
-			int maxEstimatedRangeDecomposition,
-			IndexMetaData... hints ) {
+			final TextQueryConstraint indexedRange,
+			final int maxEstimatedRangeDecomposition,
+			final IndexMetaData... hints ) {
 		return getQueryRanges(
 				indexedRange,
 				hints);
@@ -60,26 +56,23 @@ public class TextIndexStrategy implements
 
 	@Override
 	public InsertionIds getInsertionIds(
-			List<FieldInfo<String>> indexedData ) {
-		final List<ByteArrayId> sortKeys = new ArrayList<>();
-		for (FieldInfo<String> fieldInfo : indexedData) {
-			sortKeys.add(new ByteArrayId(
-					fieldInfo.getDataValue().getValue()));
-		}
-		return new InsertionIds(null, sortKeys);
+			final String indexedData ) {
+		return new InsertionIds(
+				Collections.singletonList(new ByteArrayId(
+						indexedData)));
 	}
 
 	@Override
 	public InsertionIds getInsertionIds(
-			List<FieldInfo<String>> indexedData,
-			int maxEstimatedDuplicateIds ) {
+			final String indexedData,
+			final int maxEstimatedDuplicateIds ) {
 		return getInsertionIds(indexedData);
 	}
 
 	@Override
-	public List<FieldInfo<String>> getRangeForId(
-			ByteArrayId partitionKey,
-			ByteArrayId sortKey ) {
-		return Collections.emptyList();
+	public String getRangeForId(
+			final ByteArrayId partitionKey,
+			final ByteArrayId sortKey ) {
+		return sortKey.getString();
 	}
 }

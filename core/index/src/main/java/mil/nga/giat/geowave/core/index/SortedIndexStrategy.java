@@ -62,7 +62,8 @@ public interface SortedIndexStrategy<QueryRangeType extends QueryConstraints, En
 	 * Returns the range that the given ID represents
 	 *
 	 * @param partitionKey
-	 *            the partition key part of the insertion ID to determine a range for
+	 *            the partition key part of the insertion ID to determine a
+	 *            range for
 	 * @param sortKey
 	 *            the sort key part of the insertion ID to determine a range for
 	 * @return the range that the given insertion ID represents, inclusive on

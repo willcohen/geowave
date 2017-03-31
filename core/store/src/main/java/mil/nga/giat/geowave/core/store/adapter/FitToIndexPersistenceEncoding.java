@@ -21,13 +21,15 @@ public class FitToIndexPersistenceEncoding extends
 			final PersistentDataset<CommonIndexValue> commonData,
 			final PersistentDataset<Object> adapterExtendedData,
 			final ByteArrayId partitionKey,
-			final ByteArrayId sortKey) {
+			final ByteArrayId sortKey ) {
 		super(
 				adapterId,
 				dataId,
 				commonData,
 				adapterExtendedData);
-		insertionIds = new InsertionIds(partitionKey, sortKey == null ? null :Collections.singletonList(sortKey));
+		insertionIds = new InsertionIds(
+				partitionKey,
+				sortKey == null ? null : Collections.singletonList(sortKey));
 	}
 
 	@Override

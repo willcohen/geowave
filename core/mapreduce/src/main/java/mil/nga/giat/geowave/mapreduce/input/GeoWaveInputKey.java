@@ -3,11 +3,16 @@ package mil.nga.giat.geowave.mapreduce.input;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Arrays;
+
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.hadoop.io.WritableComparator;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.mapreduce.GeoWaveKey;
-
-import org.apache.hadoop.io.WritableComparator;
 
 /**
  * This class encapsulates the unique identifier for GeoWave input data using a
@@ -22,10 +27,20 @@ public class GeoWaveInputKey extends
 	 */
 	private static final long serialVersionUID = 1L;
 	private ByteArrayId dataId;
-	private transient ByteArrayId insertionId;
+	private transient mil.nga.giat.geowave.core.store.entities.GeoWaveKey key;
 
 	public GeoWaveInputKey() {
 		super();
+	}
+
+	public GeoWaveInputKey(
+			final mil.nga.giat.geowave.core.store.entities.GeoWaveKey key,
+			final ByteArrayId indexId ) {
+		this(
+				new ByteArrayId(
+						key.getAdapterId()),
+				key,
+				indexId);
 	}
 
 	public GeoWaveInputKey(
@@ -36,13 +51,72 @@ public class GeoWaveInputKey extends
 		this.dataId = dataId;
 	}
 
-	public ByteArrayId getInsertionId() {
-		return insertionId;
+	public GeoWaveInputKey(
+			final ByteArrayId adapterId,
+			final mil.nga.giat.geowave.core.store.entities.GeoWaveKey key,
+			final ByteArrayId indexId ) {
+		super(
+				adapterId);
+		if (key.getNumberOfDuplicates() > 0) {
+			dataId = new ByteArrayId(
+					key.getDataId());
+		}
+		else {
+			// if deduplication should be disabled, prefix the actual data
+			// ID with the index ID concatenated with the insertion
+			// ID to gaurantee uniqueness and effectively disable
+			// aggregating by only the data ID
+			byte[] idBytes = key.getDataId();
+			if (key.getSortKey() != null) {
+				idBytes = ArrayUtils.addAll(
+						key.getSortKey(),
+						idBytes);
+			}
+			if (key.getPartitionKey() != null) {
+				idBytes = ArrayUtils.addAll(
+						key.getPartitionKey(),
+						idBytes);
+			}
+			if (indexId != null) {
+				idBytes = ArrayUtils.addAll(
+						indexId.getBytes(),
+						idBytes);
+			}
+			dataId = new ByteArrayId(
+					idBytes);
+		}
+		this.key = key;
 	}
 
-	public void setInsertionId(
-			final ByteArrayId insertionId ) {
-		this.insertionId = insertionId;
+	public Pair<byte[], byte[]> getPartitionAndSortKey(
+			final PrimaryIndex index ) {
+		final int partitionKeyLength = index.getIndexStrategy().getPartitionKeyLength();
+		final int indexIdLength = index.getId().getBytes().length;
+		if (dataId.getBytes().length < (indexIdLength + partitionKeyLength)) {
+			return null;
+		}
+		else {
+			final byte[] partitionKey = Arrays.copyOfRange(
+					dataId.getBytes(),
+					indexIdLength,
+					indexIdLength + partitionKeyLength);
+			final byte[] sortKey = Arrays.copyOfRange(
+					dataId.getBytes(),
+					indexIdLength + partitionKeyLength,
+					dataId.getBytes().length);
+			return ImmutablePair.of(
+					partitionKey,
+					sortKey);
+		}
+	}
+
+	public mil.nga.giat.geowave.core.store.entities.GeoWaveKey getGeoWaveKey() {
+		return key;
+	}
+
+	public void setGeoWaveKey(
+			final mil.nga.giat.geowave.core.store.entities.GeoWaveKey key ) {
+		this.key = key;
 	}
 
 	public void setDataId(
@@ -57,7 +131,8 @@ public class GeoWaveInputKey extends
 	@Override
 	public int compareTo(
 			final GeoWaveKey o ) {
-		final int baseCompare = super.compareTo(o);
+		final int baseCompare = super.compareTo(
+				o);
 		if (baseCompare != 0) {
 			return baseCompare;
 		}
@@ -88,7 +163,8 @@ public class GeoWaveInputKey extends
 		if (this == obj) {
 			return true;
 		}
-		if (!super.equals(obj)) {
+		if (!super.equals(
+				obj)) {
 			return false;
 		}
 		if (getClass() != obj.getClass()) {
@@ -100,7 +176,8 @@ public class GeoWaveInputKey extends
 				return false;
 			}
 		}
-		else if (!dataId.equals(other.dataId)) {
+		else if (!dataId.equals(
+				other.dataId)) {
 			return false;
 		}
 		return true;
@@ -110,10 +187,12 @@ public class GeoWaveInputKey extends
 	public void readFields(
 			final DataInput input )
 			throws IOException {
-		super.readFields(input);
+		super.readFields(
+				input);
 		final int dataIdLength = input.readInt();
 		final byte[] dataIdBytes = new byte[dataIdLength];
-		input.readFully(dataIdBytes);
+		input.readFully(
+				dataIdBytes);
 		dataId = new ByteArrayId(
 				dataIdBytes);
 	}
@@ -122,8 +201,11 @@ public class GeoWaveInputKey extends
 	public void write(
 			final DataOutput output )
 			throws IOException {
-		super.write(output);
-		output.writeInt(dataId.getBytes().length);
-		output.write(dataId.getBytes());
+		super.write(
+				output);
+		output.writeInt(
+				dataId.getBytes().length);
+		output.write(
+				dataId.getBytes());
 	}
 }

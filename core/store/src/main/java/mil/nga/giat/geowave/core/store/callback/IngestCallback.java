@@ -9,7 +9,7 @@ import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
  * @param <T>
  *            A generic type for ingested entries
  */
-public interface IngestCallback<T, R extends GeoWaveRow>
+public interface IngestCallback<T>
 {
 	/**
 	 * This will be called after an entry is successfully ingested with the row
@@ -23,10 +23,8 @@ public interface IngestCallback<T, R extends GeoWaveRow>
 	 * @param rows
 	 *            the rows inserted into the table for this entry
 	 */
-
-	@SuppressWarnings("unchecked")
 	public void entryIngested(
 			T entry,
-			R... rows );
+			GeoWaveRow... rows );
 
 }

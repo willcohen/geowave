@@ -1,10 +1,18 @@
 package mil.nga.giat.geowave.core.store.base;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.IntFunction;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.InsertionIds;
 import mil.nga.giat.geowave.core.store.data.PersistentValue;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveKey;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveKeyImpl;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRowImpl;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveValue;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveValueImpl;
 
 /**
  * There is a single intermediate row per original entry passed into a write
@@ -14,7 +22,7 @@ import mil.nga.giat.geowave.core.store.data.PersistentValue;
  * key-value rows.
  *
  */
-public class IntermediaryWriteEntryInfo
+class IntermediaryWriteEntryInfo
 {
 	public static class FieldInfo<T>
 	{
@@ -41,6 +49,13 @@ public class IntermediaryWriteEntryInfo
 
 		public byte[] getVisibility() {
 			return visibility;
+		}
+
+		public GeoWaveValue getValue() {
+			return new GeoWaveValueImpl(
+					dataValue.getId().getBytes(),
+					visibility,
+					writtenValue);
 		}
 	}
 
@@ -80,6 +95,37 @@ public class IntermediaryWriteEntryInfo
 
 	public List<FieldInfo<?>> getFieldInfo() {
 		return fieldInfo;
+	}
+
+	public GeoWaveRow[] getRows() {
+		final GeoWaveValue[] fieldValues = new GeoWaveValue[fieldInfo.size()];
+		for (int i = 0; i < fieldValues.length; i++) {
+			fieldValues[i] = fieldInfo.get(
+					i).getValue();
+		}
+		final GeoWaveKey[] keys = GeoWaveKeyImpl.createKeys(
+				insertionIds,
+				dataId,
+				adapterId);
+		return Arrays
+				.stream(
+						keys)
+				.map(
+						k -> new GeoWaveRowImpl(
+								k,
+								fieldValues))
+				.toArray(
+						new ArrayGenerator());
+	}
+
+	private static class ArrayGenerator implements
+			IntFunction<GeoWaveRow[]>
+	{
+		@Override
+		public GeoWaveRow[] apply(
+				final int value ) {
+			return new GeoWaveRow[value];
+		}
 	}
 
 }

@@ -71,11 +71,12 @@ public class TemporalQueryConstraint implements
 	}
 
 	public QueryRanges getQueryRanges() {
-		return new QueryRanges(new ByteArrayRange(
-				new ByteArrayId(
-						TemporalIndexStrategy.toIndexByte(start)),
-				new ByteArrayId(
-						TemporalIndexStrategy.toIndexByte(end))));
+		return new QueryRanges(
+				new ByteArrayRange(
+						new ByteArrayId(
+								TemporalIndexStrategy.toIndexByte(start)),
+						new ByteArrayId(
+								TemporalIndexStrategy.toIndexByte(end))));
 	}
 
 	@Override
@@ -83,22 +84,15 @@ public class TemporalQueryConstraint implements
 			final FilterableConstraints constraints ) {
 		if (constraints instanceof TemporalQueryConstraint) {
 			final TemporalQueryConstraint filterConstraints = (TemporalQueryConstraint) constraints;
-			if (fieldId.equals(
-					filterConstraints.fieldId)) {
-				final boolean lowEquals = start.equals(
-						filterConstraints.start);
-				final boolean upperEquals = end.equals(
-						filterConstraints.end);
-				final boolean replaceMin = start.compareTo(
-						filterConstraints.start) < 0;
-				final boolean replaceMax = end.compareTo(
-						filterConstraints.end) > 0;
+			if (fieldId.equals(filterConstraints.fieldId)) {
+				final boolean lowEquals = start.equals(filterConstraints.start);
+				final boolean upperEquals = end.equals(filterConstraints.end);
+				final boolean replaceMin = start.compareTo(filterConstraints.start) < 0;
+				final boolean replaceMax = end.compareTo(filterConstraints.end) > 0;
 				return new TemporalQueryConstraint(
 						fieldId,
-						start.compareTo(
-								filterConstraints.start) < 0 ? filterConstraints.start : start,
-						end.compareTo(
-								filterConstraints.end) > 0 ? filterConstraints.end : end,
+						start.compareTo(filterConstraints.start) < 0 ? filterConstraints.start : start,
+						end.compareTo(filterConstraints.end) > 0 ? filterConstraints.end : end,
 						lowEquals ? filterConstraints.inclusiveLow & inclusiveLow
 								: (replaceMin ? filterConstraints.inclusiveLow : inclusiveLow),
 						upperEquals ? filterConstraints.inclusiveHigh & inclusiveHigh
@@ -113,22 +107,15 @@ public class TemporalQueryConstraint implements
 			final FilterableConstraints constraints ) {
 		if (constraints instanceof TemporalQueryConstraint) {
 			final TemporalQueryConstraint filterConstraints = (TemporalQueryConstraint) constraints;
-			if (fieldId.equals(
-					filterConstraints.fieldId)) {
-				final boolean lowEquals = start.equals(
-						filterConstraints.start);
-				final boolean upperEquals = end.equals(
-						filterConstraints.end);
-				final boolean replaceMin = start.compareTo(
-						filterConstraints.start) > 0;
-				final boolean replaceMax = end.compareTo(
-						filterConstraints.end) < 0;
+			if (fieldId.equals(filterConstraints.fieldId)) {
+				final boolean lowEquals = start.equals(filterConstraints.start);
+				final boolean upperEquals = end.equals(filterConstraints.end);
+				final boolean replaceMin = start.compareTo(filterConstraints.start) > 0;
+				final boolean replaceMax = end.compareTo(filterConstraints.end) < 0;
 				return new TemporalQueryConstraint(
 						fieldId,
-						start.compareTo(
-								filterConstraints.start) > 0 ? filterConstraints.start : start,
-						end.compareTo(
-								filterConstraints.end) < 0 ? filterConstraints.end : end,
+						start.compareTo(filterConstraints.start) > 0 ? filterConstraints.start : start,
+						end.compareTo(filterConstraints.end) < 0 ? filterConstraints.end : end,
 						lowEquals ? filterConstraints.inclusiveLow | inclusiveLow
 								: (replaceMin ? filterConstraints.inclusiveLow : inclusiveLow),
 						upperEquals ? filterConstraints.inclusiveHigh | inclusiveHigh

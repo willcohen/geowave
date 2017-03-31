@@ -26,15 +26,14 @@ import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
  *            Entry type
  */
 public class StatsCompositionTool<T> implements
-		IngestCallback<T, GeoWaveRow>,
+		IngestCallback<T>,
 		ScanCallback<T, GeoWaveRow>,
 		DeleteCallback<T, GeoWaveRow>,
 		AutoCloseable,
 		Closeable,
 		Flushable
 {
-	private final static Logger LOGGER = Logger.getLogger(
-			StatsCompositionTool.class);
+	private final static Logger LOGGER = Logger.getLogger(StatsCompositionTool.class);
 	public static final int FLUSH_STATS_THRESHOLD = 16384;
 
 	int updateCount = 0;
@@ -46,9 +45,11 @@ public class StatsCompositionTool<T> implements
 	public StatsCompositionTool(
 			final StatisticsProvider<T> statisticsProvider,
 			final PrimaryIndex index,
-			final DataAdapter<T> adapter) {
+			final DataAdapter<T> adapter ) {
 		this.statisticsStore = null;
-		this.init(index,adapter,
+		this.init(
+				index,
+				adapter,
 				statisticsProvider);
 	}
 
@@ -58,26 +59,28 @@ public class StatsCompositionTool<T> implements
 			final PrimaryIndex index,
 			final DataAdapter<T> adapter ) {
 		this.statisticsStore = statisticsStore;
-		this.init(index,adapter,
+		this.init(
+				index,
+				adapter,
 				statisticsProvider);
 	}
 
 	private void init(
 			final PrimaryIndex index,
 			final DataAdapter<T> adapter,
-			final StatisticsProvider<T> statisticsProvider) {
+			final StatisticsProvider<T> statisticsProvider ) {
 		final ByteArrayId[] statisticsIds = statisticsProvider.getSupportedStatisticsIds();
 		statisticsBuilders = new ArrayList<DataStatisticsBuilder<T>>(
 				statisticsIds.length);
 		for (final ByteArrayId id : statisticsIds) {
-			statisticsBuilders.add(
-					new DataStatisticsBuilder<T>(index,adapter,
-							statisticsProvider,
-							id));
+			statisticsBuilders.add(new DataStatisticsBuilder<T>(
+					index,
+					adapter,
+					statisticsProvider,
+					id));
 		}
 		try {
-			final Object v = System.getProperty(
-					"StatsCompositionTool.skipFlush");
+			final Object v = System.getProperty("StatsCompositionTool.skipFlush");
 			skipFlush = ((v != null) && v.toString().equalsIgnoreCase(
 					"true"));
 		}
@@ -140,8 +143,7 @@ public class StatsCompositionTool<T> implements
 			for (final DataStatisticsBuilder<T> builder : statisticsBuilders) {
 				final Collection<DataStatistics<T>> statistics = builder.getStatistics();
 				for (final DataStatistics<T> s : statistics) {
-					statisticsStore.incorporateStatistics(
-							s);
+					statisticsStore.incorporateStatistics(s);
 				}
 				statistics.clear();
 			}

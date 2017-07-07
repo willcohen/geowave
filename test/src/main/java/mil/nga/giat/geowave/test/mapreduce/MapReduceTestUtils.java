@@ -19,8 +19,8 @@ public class MapReduceTestUtils
 	private final static Logger LOGGER = Logger.getLogger(MapReduceTestUtils.class);
 
 	public static final String EXPECTED_RESULTS_KEY = "EXPECTED_RESULTS";
-	public static final int MIN_INPUT_SPLITS = 3;
-	public static final int MAX_INPUT_SPLITS = 5;
+	public static final int MIN_INPUT_SPLITS = 1;
+	public static final int MAX_INPUT_SPLITS = 1;
 
 	protected static void testMapReduceIngest(
 			final DataStorePluginOptions dataStore,

@@ -4,10 +4,12 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import mil.nga.giat.geowave.core.index.ByteArrayId;
-import mil.nga.giat.geowave.mapreduce.GeoWaveKey;
-
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.hadoop.io.WritableComparator;
+
+import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
+import mil.nga.giat.geowave.mapreduce.GeoWaveKey;
 
 /**
  * This class encapsulates the unique identifier for GeoWave input data using a
@@ -22,11 +24,50 @@ public class GeoWaveInputKey extends
 	 */
 	private static final long serialVersionUID = 1L;
 	private ByteArrayId dataId;
-	private transient ByteArrayId partitionKey;
-	private transient ByteArrayId sortKey;
+	private transient GeoWaveRow row;
 
 	public GeoWaveInputKey() {
 		super();
+	}
+
+	public GeoWaveInputKey(
+			final GeoWaveRow row,
+			final ByteArrayId indexId ) {
+		super(
+				new ByteArrayId(
+						row.getAdapterId()));
+		if (row.getNumberOfDuplicates() > 0) {
+
+			System.err.println("dupes " +new ByteArrayId(
+					row.getAdapterId()).getString() + " " + row.getNumberOfDuplicates());
+			dataId = new ByteArrayId(
+					row.getDataId());
+		}
+		else {
+			// if deduplication should be disabled, prefix the actual data
+			// ID with the index ID concatenated with the insertion
+			// ID to gaurantee uniqueness and effectively disable
+			// aggregating by only the data ID
+			byte[] idBytes = row.getDataId();
+			if (row.getSortKey() != null) {
+				idBytes = ArrayUtils.addAll(
+						row.getSortKey(),
+						idBytes);
+			}
+			if (row.getPartitionKey() != null) {
+				idBytes = ArrayUtils.addAll(
+						row.getPartitionKey(),
+						idBytes);
+			}
+			if (indexId != null) {
+				idBytes = ArrayUtils.addAll(
+						indexId.getBytes(),
+						idBytes);
+			}
+			dataId = new ByteArrayId(
+					idBytes);
+		}
+		this.row = row;
 	}
 
 	public GeoWaveInputKey(
@@ -37,22 +78,13 @@ public class GeoWaveInputKey extends
 		this.dataId = dataId;
 	}
 
-	public ByteArrayId getPartitionKey() {
-		return partitionKey;
+	public GeoWaveRow getRow() {
+		return row;
 	}
 
-	public void setPartitionKey(
-			ByteArrayId partitionKey ) {
-		this.partitionKey = partitionKey;
-	}
-
-	public ByteArrayId getSortKey() {
-		return sortKey;
-	}
-
-	public void setSortKey(
-			ByteArrayId sortKey ) {
-		this.sortKey = sortKey;
+	public void setRow(
+			GeoWaveRow row ) {
+		this.row = row;
 	}
 
 	public void setDataId(
@@ -73,36 +105,13 @@ public class GeoWaveInputKey extends
 		}
 		if (o instanceof GeoWaveInputKey) {
 			final GeoWaveInputKey other = (GeoWaveInputKey) o;
-			final int dataIdCompare = WritableComparator.compareBytes(
+			return WritableComparator.compareBytes(
 					dataId.getBytes(),
 					0,
 					dataId.getBytes().length,
 					other.dataId.getBytes(),
 					0,
 					other.dataId.getBytes().length);
-			if (dataIdCompare != 0) {
-				return dataIdCompare;
-			}
-			if (partitionKey != null) {
-				int partitionKeyCompare = partitionKey.compareTo(other.partitionKey);
-
-				if (partitionKeyCompare != 0) {
-					return partitionKeyCompare;
-				}
-			}
-			else if (other.partitionKey != null) {
-				return 1;
-			}
-			if (sortKey != null) {
-				int sortKeyCompare = sortKey.compareTo(other.sortKey);
-
-				if (sortKeyCompare != 0) {
-					return sortKeyCompare;
-				}
-			}
-			else if (other.sortKey != null) {
-				return 1;
-			}
 		}
 		return 1;
 	}

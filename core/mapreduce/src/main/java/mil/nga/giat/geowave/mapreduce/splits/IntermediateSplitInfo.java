@@ -15,8 +15,10 @@ import java.util.TreeSet;
 import org.apache.log4j.Logger;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
 import mil.nga.giat.geowave.core.store.adapter.statistics.RowRangeHistogramStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.histogram.ByteUtils;
+import mil.nga.giat.geowave.core.store.data.visibility.DifferingFieldVisibilityEntryCount;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
 public class IntermediateSplitInfo implements
@@ -86,11 +88,11 @@ public class IntermediateSplitInfo implements
 			final String location = rangeLocationPair.getLocation();
 			final boolean startKeyInclusive = true;
 			final boolean endKeyInclusive = false;
-			if (new ByteArrayId(
+			if ((new ByteArrayId(
 					start).compareTo(new ByteArrayId(
-					splitKey)) >= 0 || new ByteArrayId(
+					splitKey)) >= 0) || (new ByteArrayId(
 					end).compareTo(new ByteArrayId(
-					splitKey)) <= 0) {
+					splitKey)) <= 0)) {
 				splitKey = SplitsProvider.getMidpoint(rangeLocationPair.getRange());
 				if (splitKey == null) {
 					return null;
@@ -102,11 +104,11 @@ public class IntermediateSplitInfo implements
 				if (Arrays.equals(
 						end,
 						splitKey) && !rangeLocationPair.getRange().isEndKeyInclusive()) {
-					rangeLocationPair = splitsProvider.constructRangeLocationPair(
-							splitsProvider.constructRange(
+					rangeLocationPair = new RangeLocationPair(
+							new GeoWaveRowRange(
 									rangeLocationPair.getRange().getStartKey(),
-									rangeLocationPair.getRange().isStartKeyInclusive(),
 									splitKey,
+									rangeLocationPair.getRange().isStartKeyInclusive(),
 									endKeyInclusive),
 							location,
 							stats.cardinality(
@@ -118,22 +120,22 @@ public class IntermediateSplitInfo implements
 			}
 
 			try {
-				final RangeLocationPair newPair = splitsProvider.constructRangeLocationPair(
-						splitsProvider.constructRange(
+				final RangeLocationPair newPair = new RangeLocationPair(
+						new GeoWaveRowRange(
 								rangeLocationPair.getRange().getStartKey(),
-								rangeLocationPair.getRange().isStartKeyInclusive(),
 								splitKey,
+								rangeLocationPair.getRange().isStartKeyInclusive(),
 								endKeyInclusive),
 						location,
 						stats.cardinality(
 								rangeLocationPair.getRange().getStartKey(),
 								splitKey));
 
-				rangeLocationPair = splitsProvider.constructRangeLocationPair(
-						splitsProvider.constructRange(
+				rangeLocationPair = new RangeLocationPair(
+						new GeoWaveRowRange(
 								splitKey,
-								startKeyInclusive,
 								rangeLocationPair.getRange().getEndKey(),
+								startKeyInclusive,
 								rangeLocationPair.getRange().isEndKeyInclusive()),
 						location,
 
@@ -177,11 +179,11 @@ public class IntermediateSplitInfo implements
 		}
 	}
 
-	private final Map<PrimaryIndex, List<RangeLocationPair>> splitInfo;
+	private final Map<ByteArrayId, SplitInfo> splitInfo;
 	private final SplitsProvider splitsProvider;
 
 	public IntermediateSplitInfo(
-			final Map<PrimaryIndex, List<RangeLocationPair>> splitInfo,
+			final Map<ByteArrayId, SplitInfo> splitInfo,
 			final SplitsProvider splitsProvider ) {
 		this.splitInfo = splitInfo;
 		this.splitsProvider = splitsProvider;
@@ -189,15 +191,17 @@ public class IntermediateSplitInfo implements
 
 	synchronized void merge(
 			final IntermediateSplitInfo split ) {
-		for (final Entry<PrimaryIndex, List<RangeLocationPair>> e : split.splitInfo.entrySet()) {
-			List<RangeLocationPair> thisList = splitInfo.get(e.getKey());
-			if (thisList == null) {
-				thisList = new ArrayList<RangeLocationPair>();
+		for (final Entry<ByteArrayId, SplitInfo> e : split.splitInfo.entrySet()) {
+			SplitInfo thisInfo = splitInfo.get(e.getKey());
+			if (thisInfo == null) {
+				thisInfo = new SplitInfo(
+						e.getValue().getIndex());
 				splitInfo.put(
 						e.getKey(),
-						thisList);
+						thisInfo);
 			}
-			thisList.addAll(e.getValue());
+			thisInfo.getRangeLocationPairs().addAll(
+					e.getValue().getRangeLocationPairs());
 		}
 	}
 
@@ -226,16 +230,16 @@ public class IntermediateSplitInfo implements
 								: 1;
 					}
 				});
-		for (final Entry<PrimaryIndex, List<RangeLocationPair>> ranges : splitInfo.entrySet()) {
-			for (final RangeLocationPair p : ranges.getValue()) {
+		for (final Entry<ByteArrayId, SplitInfo> ranges : splitInfo.entrySet()) {
+			for (final RangeLocationPair p : ranges.getValue().getRangeLocationPairs()) {
 				orderedSplits.add(new IndexRangeLocation(
 						p,
-						ranges.getKey()));
+						ranges.getValue().getIndex()));
 			}
 		}
 		final double targetCardinality = getTotalRangeAtCardinality() / 2;
 		double currentCardinality = 0.0;
-		final Map<PrimaryIndex, List<RangeLocationPair>> otherSplitInfo = new HashMap<PrimaryIndex, List<RangeLocationPair>>();
+		final Map<ByteArrayId, SplitInfo> otherSplitInfo = new HashMap<ByteArrayId, SplitInfo>();
 
 		splitInfo.clear();
 
@@ -263,8 +267,7 @@ public class IntermediateSplitInfo implements
 				}
 				else {
 					// Still add to the other SPLIT if there is remaining
-					// pairs
-					// in this SPLIT
+					// pairs in this SPLIT
 					addPairForIndex(
 							(!orderedSplits.isEmpty()) ? otherSplitInfo : splitInfo,
 							next.rangeLocationPair,
@@ -299,8 +302,8 @@ public class IntermediateSplitInfo implements
 		if (splitInfo.size() == 0) {
 			// First try to move a index set of ranges back.
 			if (otherSplitInfo.size() > 1) {
-				final Iterator<Entry<PrimaryIndex, List<RangeLocationPair>>> it = otherSplitInfo.entrySet().iterator();
-				final Entry<PrimaryIndex, List<RangeLocationPair>> entry = it.next();
+				final Iterator<Entry<ByteArrayId, SplitInfo>> it = otherSplitInfo.entrySet().iterator();
+				final Entry<ByteArrayId, SplitInfo> entry = it.next();
 				it.remove();
 				splitInfo.put(
 						entry.getKey(),
@@ -317,28 +320,44 @@ public class IntermediateSplitInfo implements
 	}
 
 	private void addPairForIndex(
-			final Map<PrimaryIndex, List<RangeLocationPair>> otherSplitInfo,
+			final Map<ByteArrayId, SplitInfo> otherSplitInfo,
 			final RangeLocationPair pair,
 			final PrimaryIndex index ) {
-		List<RangeLocationPair> list = otherSplitInfo.get(index);
-		if (list == null) {
-			list = new ArrayList<RangeLocationPair>();
+		SplitInfo other = otherSplitInfo.get(index.getId());
+		if (other == null) {
+			other = new SplitInfo(
+					index);
 			otherSplitInfo.put(
-					index,
-					list);
+					index.getId(),
+					other);
 		}
-		list.add(pair);
+		other.getRangeLocationPairs().add(
+				pair);
 
 	}
 
-	synchronized GeoWaveInputSplit toFinalSplit() {
+	protected synchronized GeoWaveInputSplit toFinalSplit(
+			final DataStatisticsStore statisticsStore,
+			final Map<ByteArrayId, List<ByteArrayId>> indexIdToAdaptersMap,
+			final String... authorizations ) {
 		final Set<String> locations = new HashSet<String>();
-		for (final Entry<PrimaryIndex, List<RangeLocationPair>> entry : splitInfo.entrySet()) {
-			for (final RangeLocationPair pair : entry.getValue()) {
+		for (final Entry<ByteArrayId, SplitInfo> entry : splitInfo.entrySet()) {
+			for (final RangeLocationPair pair : entry.getValue().getRangeLocationPairs()) {
 				locations.add(pair.getLocation());
 			}
 		}
-		return splitsProvider.constructInputSplit(
+		for (final SplitInfo si : splitInfo.values()) {
+			final DifferingFieldVisibilityEntryCount visibilityCounts = DifferingFieldVisibilityEntryCount
+					.getVisibilityCounts(
+							si.getIndex(),
+
+							indexIdToAdaptersMap.get(si.getIndex().getId()),
+							statisticsStore,
+							authorizations);
+
+			si.setMixedVisibility((visibilityCounts == null) || visibilityCounts.isAnyEntryDifferingFieldVisiblity());
+		}
+		return new GeoWaveInputSplit(
 				splitInfo,
 				locations.toArray(new String[locations.size()]));
 	}
@@ -361,11 +380,11 @@ public class IntermediateSplitInfo implements
 				final List<RangeLocationPair> otherPairs = new ArrayList<>();
 				double rangeSum = 0;
 				double otherSum = 0;
-				for (final List<RangeLocationPair> p : splitInfo.values()) {
-					pairs.addAll(p);
+				for (final SplitInfo s : splitInfo.values()) {
+					pairs.addAll(s.getRangeLocationPairs());
 				}
-				for (final List<RangeLocationPair> p : o.splitInfo.values()) {
-					otherPairs.addAll(p);
+				for (final SplitInfo s : o.splitInfo.values()) {
+					otherPairs.addAll(s.getRangeLocationPairs());
 				}
 
 				result = Integer.compare(
@@ -435,8 +454,8 @@ public class IntermediateSplitInfo implements
 
 	private synchronized double getTotalRangeAtCardinality() {
 		double sum = 0.0;
-		for (final List<RangeLocationPair> pairList : splitInfo.values()) {
-			for (final RangeLocationPair pair : pairList) {
+		for (final SplitInfo si : splitInfo.values()) {
+			for (final RangeLocationPair pair : si.getRangeLocationPairs()) {
 				sum += pair.getCardinality();
 			}
 		}

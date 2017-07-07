@@ -21,6 +21,8 @@ public class GeoWaveDedupeMapper extends
 			final MapContext<GeoWaveInputKey, Object, GeoWaveInputKey, Object> context )
 			throws IOException,
 			InterruptedException {
+		System.err.println("key dataId: "+ key.getDataId().getString());
+		System.err.println("key adapterId: "+ key.getAdapterId().getString());
 		context.write(
 				key,
 				value);

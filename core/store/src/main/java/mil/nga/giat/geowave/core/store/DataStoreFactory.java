@@ -26,7 +26,7 @@ public class DataStoreFactory extends
 			final StoreFactoryOptions factoryOptions ) {
 		final DataStoreOperations operations = helper.createOperations(factoryOptions);
 		final DataStoreOptions options = factoryOptions.getStoreOptions();
-		return new BaseDataStore<>(
+		return new BaseDataStore(
 				new IndexStoreImpl(
 						operations,
 						options),

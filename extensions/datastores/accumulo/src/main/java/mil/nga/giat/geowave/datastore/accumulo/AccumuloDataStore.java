@@ -7,7 +7,6 @@ import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.hadoop.mapreduce.InputSplit;
-import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.log4j.Logger;
 
 import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
@@ -15,7 +14,6 @@ import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
-import mil.nga.giat.geowave.core.store.base.BaseDataStore;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.metadata.AdapterIndexMappingStoreImpl;
@@ -28,11 +26,9 @@ import mil.nga.giat.geowave.core.store.util.DataAdapterAndIndexCache;
 import mil.nga.giat.geowave.datastore.accumulo.cli.config.AccumuloOptions;
 import mil.nga.giat.geowave.datastore.accumulo.index.secondary.AccumuloSecondaryIndexDataStore;
 import mil.nga.giat.geowave.datastore.accumulo.mapreduce.AccumuloSplitsProvider;
-import mil.nga.giat.geowave.datastore.accumulo.mapreduce.GeoWaveAccumuloRecordReader;
 import mil.nga.giat.geowave.datastore.accumulo.operations.AccumuloOperations;
 import mil.nga.giat.geowave.datastore.accumulo.util.AccumuloUtils;
-import mil.nga.giat.geowave.mapreduce.MapReduceDataStore;
-import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputKey;
+import mil.nga.giat.geowave.mapreduce.BaseMapReduceDataStore;
 
 /**
  * This is the Accumulo implementation of the data store. It requires an
@@ -46,8 +42,7 @@ import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputKey;
  * used in subsequent queries.
  */
 public class AccumuloDataStore extends
-		BaseDataStore<AccumuloRow> implements
-		MapReduceDataStore
+		BaseMapReduceDataStore
 {
 	private final static Logger LOGGER = Logger.getLogger(AccumuloDataStore.class);
 
@@ -178,25 +173,5 @@ public class AccumuloDataStore extends
 				indexMappingStore,
 				minSplits,
 				maxSplits);
-	}
-
-	@Override
-	public RecordReader<GeoWaveInputKey, ?> createRecordReader(
-			final DistributableQuery query,
-			final QueryOptions queryOptions,
-			final AdapterStore adapterStore,
-			final DataStatisticsStore statsStore,
-			final IndexStore indexStore,
-			final boolean isOutputWritable,
-			final InputSplit inputSplit )
-			throws IOException,
-			InterruptedException {
-		return new GeoWaveAccumuloRecordReader(
-				query,
-				queryOptions,
-				isOutputWritable,
-				adapterStore,
-				this,
-				accumuloOperations);
 	}
 }

@@ -3,12 +3,15 @@ package mil.nga.giat.geowave.core.store.base;
 import org.apache.log4j.Logger;
 
 import mil.nga.giat.geowave.core.store.CloseableIterator;
+import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.DataStoreOptions;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
 import mil.nga.giat.geowave.core.store.data.visibility.DifferingFieldVisibilityEntryCount;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.operations.DataStoreOperations;
+import mil.nga.giat.geowave.core.store.operations.Reader;
+import mil.nga.giat.geowave.core.store.operations.ReaderClosableWrapper;
 import mil.nga.giat.geowave.core.store.operations.ReaderParams;
 import mil.nga.giat.geowave.core.store.util.NativeEntryIteratorWrapper;
 
@@ -42,27 +45,31 @@ abstract class AbstractBaseRowQuery<T> extends
 			final DataStoreOptions options,
 			final double[] maxResolutionSubsamplingPerDimension,
 			final AdapterStore adapterStore ) {
-		return (CloseableIterator<T>) new NativeEntryIteratorWrapper(
-				dataStore,
-				adapterStore,
+		Reader reader = operations.createReader(new ReaderParams(
 				index,
-				operations.createReader(new ReaderParams(
+				adapterIds,
+				maxResolutionSubsamplingPerDimension,
+				getAggregation(),
+				getFieldSubsets(),
+				isMixedVisibilityRows(),
+				isServerSideAggregation(options),
+				getRanges(),
+				getServerFilter(options),
+				getScannerLimit(),
+				getCoordinateRanges(),
+				getConstraints(),
+				getAdditionalAuthorizations()));
+		return new CloseableIteratorWrapper(
+				new ReaderClosableWrapper(
+						reader),
+				new NativeEntryIteratorWrapper(
+						dataStore,
+						adapterStore,
 						index,
-						adapterIds,
-						maxResolutionSubsamplingPerDimension,
-						getAggregation(),
-						getFieldSubsets(),
-						isMixedVisibilityRows(),
-						isServerSideAggregation(options),
-						getRanges(),
-						getServerFilter(options),
-						getScannerLimit(),
-						getCoordinateRanges(),
-						getConstraints(),
-						getAdditionalAuthorizations())),
-				getClientFilter(options),
-				scanCallback,
-				!isCommonIndexAggregation());
+						reader,
+						getClientFilter(options),
+						scanCallback,
+						!isCommonIndexAggregation()));
 	}
 
 	abstract protected Integer getScannerLimit();

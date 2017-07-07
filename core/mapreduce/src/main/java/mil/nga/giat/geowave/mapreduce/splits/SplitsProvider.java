@@ -1,7 +1,6 @@
 package mil.nga.giat.geowave.mapreduce.splits;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,9 +9,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.log4j.Logger;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
@@ -21,7 +24,6 @@ import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
 import mil.nga.giat.geowave.core.store.adapter.statistics.RowRangeDataStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.RowRangeHistogramStatistics;
-import mil.nga.giat.geowave.core.store.adapter.statistics.histogram.ByteUtils;
 import mil.nga.giat.geowave.core.store.index.Index;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
@@ -31,9 +33,11 @@ import mil.nga.giat.geowave.core.store.query.QueryOptions;
 
 public abstract class SplitsProvider
 {
-	private final static Logger LOGGER = Logger.getLogger(SplitsProvider.class);
+	private final static Logger LOGGER = Logger.getLogger(
+			SplitsProvider.class);
 
-	private static final BigInteger TWO = BigInteger.valueOf(2);
+	private static final BigInteger TWO = BigInteger.valueOf(
+			2);
 
 	public SplitsProvider() {}
 
@@ -57,13 +61,24 @@ public abstract class SplitsProvider
 
 		final List<InputSplit> retVal = new ArrayList<InputSplit>();
 		final TreeSet<IntermediateSplitInfo> splits = new TreeSet<IntermediateSplitInfo>();
-
+		final Map<ByteArrayId, List<ByteArrayId>> indexIdToAdaptersMap = new HashMap<>();
 		for (final Pair<PrimaryIndex, List<DataAdapter<Object>>> indexAdapterPair : queryOptions
 				.getAdaptersWithMinimalSetOfIndices(
 						adapterStore,
 						adapterIndexMappingStore,
 						indexStore)) {
+			indexIdToAdaptersMap.put(
+					indexAdapterPair.getKey().getId(),
+					Lists.transform(
+							indexAdapterPair.getValue(),
+							new Function<DataAdapter<Object>, ByteArrayId>() {
 
+								@Override
+								public ByteArrayId apply(
+										final DataAdapter<Object> input ) {
+									return input.getAdapterId();
+								}
+							}));
 			populateIntermediateSplits(
 					splits,
 					operations,
@@ -90,13 +105,17 @@ public abstract class SplitsProvider
 				// back,
 				// increasing the size by 1
 				final IntermediateSplitInfo highestSplit = splits.pollLast();
-				final IntermediateSplitInfo otherSplit = highestSplit.split(statsCache);
-				splits.add(highestSplit);
+				final IntermediateSplitInfo otherSplit = highestSplit.split(
+						statsCache);
+				splits.add(
+						highestSplit);
 				if (otherSplit == null) {
-					LOGGER.warn("Cannot meet minimum splits");
+					LOGGER.warn(
+							"Cannot meet minimum splits");
 					break;
 				}
-				splits.add(otherSplit);
+				splits.add(
+						otherSplit);
 			}
 			while (splits.size() < minSplits);
 		}
@@ -111,14 +130,20 @@ public abstract class SplitsProvider
 				// the number of locations/indices
 				final IntermediateSplitInfo lowestSplit = splits.pollFirst();
 				final IntermediateSplitInfo nextLowestSplit = splits.pollFirst();
-				lowestSplit.merge(nextLowestSplit);
-				splits.add(lowestSplit);
+				lowestSplit.merge(
+						nextLowestSplit);
+				splits.add(
+						lowestSplit);
 			}
 			while (splits.size() > maxSplits);
 		}
 
 		for (final IntermediateSplitInfo split : splits) {
-			retVal.add(split.toFinalSplit());
+			retVal.add(
+					split.toFinalSplit(
+							statsStore,
+							indexIdToAdaptersMap,
+							queryOptions.getAuthorizations()));
 		}
 		return retVal;
 	}
@@ -142,55 +167,54 @@ public abstract class SplitsProvider
 			final DataStatisticsStore statsStore,
 			final String[] authorizations ) {
 
-		final RowRangeDataStatistics<?> stats = (RowRangeDataStatistics<?>) statsStore.getDataStatistics(
-				index.getId(),
-				RowRangeDataStatistics.getId(index.getId()),
-				authorizations);
-		if (stats == null) {
-			LOGGER
-					.warn("Could not determine range of data from 'RowRangeDataStatistics'.  Range will not be clipped. This may result in some splits being empty.");
-			return defaultConstructRange();
-		}
-
-		final byte[] min = stats.getMin();
-		final byte[] max = stats.getMax();
-
-		return constructRange(
-				getKeyFromBigInteger(
-						new BigInteger(
-								min).subtract(BigInteger.ONE),
-						min.length),
-				true,
-				getKeyFromBigInteger(
-						new BigInteger(
-								max).add(BigInteger.ONE),
-						max.length),
-				true);
+//		final RowRangeDataStatistics<?> stats = (RowRangeDataStatistics<?>) statsStore.getDataStatistics(
+//				index.getId(),
+//				RowRangeDataStatistics.getId(
+//						index.getId()),
+//				authorizations);
+//		if (stats == null) {
+			LOGGER.warn(
+					"Could not determine range of data from 'RowRangeDataStatistics'.  Range will not be clipped. This may result in some splits being empty.");
+			return new GeoWaveRowRange(
+					null,
+					null,
+					true,
+					true);
+//		}
+//
+//		final byte[] min = stats.getMin();
+//		final byte[] max = stats.getMax();
+//
+//		return new GeoWaveRowRange(
+//				getKeyFromBigInteger(
+//						new BigInteger(
+//								min).subtract(
+//										BigInteger.ONE),
+//						min.length),
+//				getKeyFromBigInteger(
+//						new BigInteger(
+//								max).add(
+//										BigInteger.ONE),
+//						max.length),
+//				true,
+//				true);
 	}
-
-	protected abstract GeoWaveRowRange constructRange(
-			byte[] startKey,
-			boolean isStartKeyInclusive,
-			byte[] endKey,
-			boolean isEndKeyInclusive );
-
-	protected abstract GeoWaveRowRange defaultConstructRange();
-
-	protected abstract RangeLocationPair constructRangeLocationPair(
-			GeoWaveRowRange range,
-			String location,
-			double cardinality );
-
-	public abstract GeoWaveInputSplit constructInputSplit(
-			Map<PrimaryIndex, List<RangeLocationPair>> splitInfo,
-			String[] locations );
 
 	protected double getCardinality(
 			final RowRangeHistogramStatistics<?> rangeStats,
-			final GeoWaveRowRange range ) {
-		return rangeStats == null ? getRangeLength(range) : rangeStats.cardinality(
-				range.getStartKey(),
-				range.getEndKey());
+			final GeoWaveRowRange range,
+			final int partitionKeyLength ) {
+		return rangeStats == null ? getRangeLength(
+				range)
+				: rangeStats.cardinality(
+						range.getStartKey() == null ? null : ArrayUtils.subarray(
+								range.getStartKey(),
+								partitionKeyLength,
+								range.getStartKey().length),
+						range.getEndKey() == null ? null : ArrayUtils.subarray(
+								range.getEndKey(),
+								partitionKeyLength,
+								range.getEndKey().length));
 	}
 
 	protected RowRangeHistogramStatistics<?> getHistStats(
@@ -201,28 +225,30 @@ public abstract class SplitsProvider
 			final Map<PrimaryIndex, RowRangeHistogramStatistics<?>> statsCache,
 			final String[] authorizations )
 			throws IOException {
-		RowRangeHistogramStatistics<?> rangeStats = statsCache.get(index);
-
-		if (rangeStats == null) {
-			try {
-				rangeStats = getRangeStats(
-						index,
-						adapters,
-						adapterStore,
-						statsStore,
-						authorizations);
-			}
-			catch (final Exception e) {
-				throw new IOException(
-						e);
-			}
-		}
-		if (rangeStats != null) {
-			statsCache.put(
-					index,
-					rangeStats);
-		}
-		return rangeStats;
+//		RowRangeHistogramStatistics<?> rangeStats = statsCache.get(
+//				index);
+//
+//		if (rangeStats == null) {
+//			try {
+//				rangeStats = getRangeStats(
+//						index,
+//						adapters,
+//						adapterStore,
+//						statsStore,
+//						authorizations);
+//			}
+//			catch (final Exception e) {
+//				throw new IOException(
+//						e);
+//			}
+//		}
+//		if (rangeStats != null) {
+//			statsCache.put(
+//					index,
+//					rangeStats);
+//		}
+//		return rangeStats;
+		return null;
 	}
 
 	protected static byte[] getKeyFromBigInteger(
@@ -231,7 +257,8 @@ public abstract class SplitsProvider
 		// TODO: does this account for the two extra bytes on BigInteger?
 		final byte[] valueBytes = value.toByteArray();
 		final byte[] bytes = new byte[numBytes];
-		final int pos = Math.abs(numBytes - valueBytes.length);
+		final int pos = Math.abs(
+				numBytes - valueBytes.length);
 		System.arraycopy(
 				valueBytes,
 				0,
@@ -253,13 +280,15 @@ public abstract class SplitsProvider
 		for (final DataAdapter<?> adapter : adapters) {
 			final RowRangeHistogramStatistics<?> rowStat = (RowRangeHistogramStatistics<?>) store.getDataStatistics(
 					adapter.getAdapterId(),
-					RowRangeHistogramStatistics.composeId(index.getId()),
+					RowRangeHistogramStatistics.composeId(
+							index.getId()),
 					authorizations);
 			if (singleStats == null) {
 				singleStats = rowStat;
 			}
 			else {
-				singleStats.merge(rowStat);
+				singleStats.merge(
+						rowStat);
 			}
 		}
 
@@ -272,9 +301,9 @@ public abstract class SplitsProvider
 		return getEnd(
 				range,
 				cardinality).subtract(
-				getStart(
-						range,
-						cardinality));
+						getStart(
+								range,
+								cardinality));
 	}
 
 	protected static BigInteger getStart(
@@ -364,13 +393,20 @@ public abstract class SplitsProvider
 				extractBytes(
 						end,
 						maxDepth));
-		final BigInteger rangeBI = endBI.subtract(startBI);
-		if (rangeBI.equals(BigInteger.ZERO) || rangeBI.equals(BigInteger.ONE)) {
+		final BigInteger rangeBI = endBI.subtract(
+				startBI);
+		if (rangeBI.equals(
+				BigInteger.ZERO)
+				|| rangeBI.equals(
+						BigInteger.ONE)) {
 			return end;
 		}
-		final byte[] valueBytes = rangeBI.divide(
-				TWO).add(
-				startBI).toByteArray();
+		final byte[] valueBytes = rangeBI
+				.divide(
+						TWO)
+				.add(
+						startBI)
+				.toByteArray();
 		final byte[] bytes = new byte[valueBytes.length - 2];
 		System.arraycopy(
 				valueBytes,

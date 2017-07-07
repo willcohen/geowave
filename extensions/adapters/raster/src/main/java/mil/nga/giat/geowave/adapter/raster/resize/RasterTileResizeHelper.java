@@ -101,8 +101,10 @@ public class RasterTileResizeHelper
 		if (needsMerge) {
 			mergedCoverage = newAdapter.getCoverageFromRasterTile(
 					mergedTile,
-					key.getPartitionKey(),
-					key.getSortKey(),
+					key.getRow().getPartitionKey() == null ? null : new ByteArrayId(
+							key.getRow().getPartitionKey()),
+					key.getRow().getSortKey() == null ? null : new ByteArrayId(
+							key.getRow().getSortKey()),
 					index);
 		}
 		return mergedCoverage;

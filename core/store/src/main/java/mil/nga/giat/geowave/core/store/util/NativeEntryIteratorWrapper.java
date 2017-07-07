@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.base.BaseDataStore;
+import mil.nga.giat.geowave.core.store.base.BaseDataStoreUtils;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
@@ -26,7 +27,6 @@ public class NativeEntryIteratorWrapper<T> extends
 			final ScanCallback<T, ? extends GeoWaveRow> scanCallback,
 			final boolean decodePersistenceEncoding ) {
 		super(
-				false,
 				dataStore,
 				adapterStore,
 				index,
@@ -40,11 +40,9 @@ public class NativeEntryIteratorWrapper<T> extends
 	protected T decodeRow(
 			final GeoWaveRow row,
 			final QueryFilter clientFilter,
-			final PrimaryIndex index,
-			final boolean wholeRowEncoding ) {
-		return (T) dataStore.decodeRow(
+			final PrimaryIndex index ) {
+		return (T) BaseDataStoreUtils.decodeRow(
 				row,
-				wholeRowEncoding,
 				clientFilter,
 				null,
 				adapterStore,

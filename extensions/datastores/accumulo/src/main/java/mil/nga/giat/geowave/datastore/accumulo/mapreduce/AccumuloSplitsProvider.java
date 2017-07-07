@@ -16,17 +16,27 @@ import org.apache.accumulo.core.client.Instance;
 import org.apache.accumulo.core.client.TableDeletedException;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.client.TableOfflineException;
+//@formatter:off
+/*if[accumulo.api=1.6]
+import org.apache.accumulo.core.security.Credentials;
+import org.apache.accumulo.core.data.KeyExtent;
+else[accumulo.api=1.6]*/
+import org.apache.accumulo.core.client.impl.ClientContext;
+import org.apache.accumulo.core.client.impl.Credentials;
 import org.apache.accumulo.core.client.impl.Tables;
 import org.apache.accumulo.core.client.impl.TabletLocator;
 import org.apache.accumulo.core.client.mock.MockInstance;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
-import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Range;
+import org.apache.accumulo.core.data.impl.KeyExtent;
+/*end[accumulo.api=1.6]*/
+//@formatter:on
 import org.apache.accumulo.core.master.state.tables.TableState;
 import org.apache.accumulo.core.util.UtilWaitThread;
 import org.apache.hadoop.io.Text;
 import org.apache.log4j.Logger;
 
+import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.NumericIndexStrategy;
 import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
@@ -39,27 +49,17 @@ import mil.nga.giat.geowave.core.store.query.DistributableQuery;
 import mil.nga.giat.geowave.core.store.util.DataStoreUtils;
 import mil.nga.giat.geowave.datastore.accumulo.operations.AccumuloOperations;
 import mil.nga.giat.geowave.datastore.accumulo.util.AccumuloUtils;
-import mil.nga.giat.geowave.mapreduce.splits.GeoWaveInputSplit;
 import mil.nga.giat.geowave.mapreduce.splits.GeoWaveRowRange;
 import mil.nga.giat.geowave.mapreduce.splits.IntermediateSplitInfo;
 import mil.nga.giat.geowave.mapreduce.splits.RangeLocationPair;
+import mil.nga.giat.geowave.mapreduce.splits.SplitInfo;
 import mil.nga.giat.geowave.mapreduce.splits.SplitsProvider;
-
-//@formatter:off
-/*if[accumulo.api=1.6]
-import org.apache.accumulo.core.security.Credentials;
-import org.apache.accumulo.core.data.KeyExtent;
-else[accumulo.api=1.6]*/
-import org.apache.accumulo.core.client.impl.ClientContext;
-import org.apache.accumulo.core.client.impl.Credentials;
-import org.apache.accumulo.core.data.impl.KeyExtent;
-/*end[accumulo.api=1.6]*/
-//@formatter:on
 
 public class AccumuloSplitsProvider extends
 		SplitsProvider
 {
-	private final static Logger LOGGER = Logger.getLogger(AccumuloSplitsProvider.class);
+	private final static Logger LOGGER = Logger.getLogger(
+			AccumuloSplitsProvider.class);
 
 	@Override
 	protected TreeSet<IntermediateSplitInfo> populateIntermediateSplits(
@@ -80,20 +80,23 @@ public class AccumuloSplitsProvider extends
 			accumuloOperations = (AccumuloOperations) operations;
 		}
 		else {
-			LOGGER.error("AccumuloSplitsProvider requires AccumuloOperations object.");
+			LOGGER.error(
+					"AccumuloSplitsProvider requires AccumuloOperations object.");
 			return splits;
 		}
 
-		if ((query != null) && !query.isSupported(index)) {
+		if ((query != null) && !query.isSupported(
+				index)) {
 			return splits;
 		}
 		Range fullrange;
 		try {
-			fullrange = unwrapRange(getRangeMax(
-					index,
-					adapterStore,
-					statsStore,
-					authorizations));
+			fullrange = toAccumuloRange(
+					getRangeMax(
+							index,
+							adapterStore,
+							statsStore,
+							authorizations));
 		}
 		catch (final Exception e) {
 			fullrange = new Range();
@@ -108,32 +111,40 @@ public class AccumuloSplitsProvider extends
 		final NumericIndexStrategy indexStrategy = index.getIndexStrategy();
 		final TreeSet<Range> ranges;
 		if (query != null) {
-			final List<MultiDimensionalNumericData> indexConstraints = query.getIndexConstraints(indexStrategy);
+			final List<MultiDimensionalNumericData> indexConstraints = query.getIndexConstraints(
+					indexStrategy);
 			if ((maxSplits != null) && (maxSplits > 0)) {
-				ranges = AccumuloUtils.byteArrayRangesToAccumuloRanges(DataStoreUtils.constraintsToQueryRanges(
-						indexConstraints,
-						indexStrategy,
-						maxSplits).getCompositeQueryRanges());
+				ranges = AccumuloUtils.byteArrayRangesToAccumuloRanges(
+						DataStoreUtils.constraintsToQueryRanges(
+								indexConstraints,
+								indexStrategy,
+								1).getCompositeQueryRanges());
 			}
 			else {
-				ranges = AccumuloUtils.byteArrayRangesToAccumuloRanges(DataStoreUtils.constraintsToQueryRanges(
-						indexConstraints,
-						indexStrategy,
-						-1).getCompositeQueryRanges());
+				ranges = AccumuloUtils.byteArrayRangesToAccumuloRanges(
+						DataStoreUtils.constraintsToQueryRanges(
+								indexConstraints,
+								indexStrategy,
+								1).getCompositeQueryRanges());
 			}
 			if (ranges.size() == 1) {
 				final Range range = ranges.first();
 				if (range.isInfiniteStartKey() || range.isInfiniteStopKey()) {
-					ranges.remove(range);
-					ranges.add(fullrange.clip(range));
+					ranges.remove(
+							range);
+					ranges.add(
+							fullrange.clip(
+									range));
 				}
 			}
 		}
 		else {
 			ranges = new TreeSet<Range>();
-			ranges.add(fullrange);
+			ranges.add(
+					fullrange);
 			if (LOGGER.isTraceEnabled()) {
-				LOGGER.trace("Protected range: " + fullrange);
+				LOGGER.trace(
+						"Protected range: " + fullrange);
 			}
 		}
 		// get the metadata information for these ranges
@@ -193,8 +204,10 @@ public class AccumuloSplitsProvider extends
 					}
 				}
 				tserverBinnedRanges.clear();
-				LOGGER.warn("Unable to locate bins for specified ranges. Retrying.");
-				UtilWaitThread.sleep(150);
+				LOGGER.warn(
+						"Unable to locate bins for specified ranges. Retrying.");
+				UtilWaitThread.sleep(
+						150);
 				tl.invalidateCache();
 			}
 		}
@@ -210,12 +223,14 @@ public class AccumuloSplitsProvider extends
 					":",
 					2)[0];
 
-			String location = hostNameCache.get(ipAddress);
+			String location = hostNameCache.get(
+					ipAddress);
 			if (location == null) {
 				// HP Fortify "Often Misused: Authentication"
 				// These methods are not being used for
 				// authentication
-				final InetAddress inetAddress = InetAddress.getByName(ipAddress);
+				final InetAddress inetAddress = InetAddress.getByName(
+						ipAddress);
 				location = inetAddress.getHostName();
 				hostNameCache.put(
 						ipAddress,
@@ -223,13 +238,16 @@ public class AccumuloSplitsProvider extends
 			}
 			for (final Entry<KeyExtent, List<Range>> extentRanges : tserverBin.getValue().entrySet()) {
 				final Range keyExtent = extentRanges.getKey().toDataRange();
-				final Map<PrimaryIndex, List<RangeLocationPair>> splitInfo = new HashMap<PrimaryIndex, List<RangeLocationPair>>();
+				System.err.println("Key Extent: "+ keyExtent);
+				final Map<ByteArrayId, SplitInfo> splitInfo = new HashMap<ByteArrayId, SplitInfo>();
 				final List<RangeLocationPair> rangeList = new ArrayList<RangeLocationPair>();
 				for (final Range range : extentRanges.getValue()) {
-
-					final Range clippedRange = keyExtent.clip(range);
-					if (!(fullrange.beforeStartKey(clippedRange.getEndKey()) || fullrange.afterEndKey(clippedRange
-							.getStartKey()))) {
+					final Range clippedRange = keyExtent.clip(
+							range);
+					if (!(fullrange.beforeStartKey(
+							clippedRange.getEndKey())
+							|| fullrange.afterEndKey(
+									clippedRange.getStartKey()))) {
 						final double cardinality = getCardinality(
 								getHistStats(
 										index,
@@ -238,27 +256,36 @@ public class AccumuloSplitsProvider extends
 										statsStore,
 										statsCache,
 										authorizations),
-								wrapRange(clippedRange));
-						rangeList.add(new AccumuloRangeLocationPair(
-								wrapRange(clippedRange),
-								location,
-								cardinality < 1 ? 1.0 : cardinality));
+								fromAccumuloRange(
+										clippedRange),
+								index.getIndexStrategy().getPartitionKeyLength());
+						rangeList.add(
+								new RangeLocationPair(
+										fromAccumuloRange(
+												clippedRange),
+										location,
+										cardinality < 1 ? 1.0 : cardinality));
 					}
 					else {
-						LOGGER.info("Query split outside of range");
+						LOGGER.info(
+								"Query split outside of range");
 					}
 					if (LOGGER.isTraceEnabled()) {
-						LOGGER.warn("Clipped range: " + rangeList.get(
-								rangeList.size() - 1).getRange());
+						LOGGER.warn(
+								"Clipped range: " + rangeList.get(
+										rangeList.size() - 1).getRange());
 					}
 				}
 				if (!rangeList.isEmpty()) {
 					splitInfo.put(
-							index,
-							rangeList);
-					splits.add(new IntermediateSplitInfo(
-							splitInfo,
-							this));
+							index.getId(),
+							new SplitInfo(
+									index,
+									rangeList));
+					splits.add(
+							new IntermediateSplitInfo(
+									splitInfo,
+									this));
 				}
 			}
 		}
@@ -266,67 +293,24 @@ public class AccumuloSplitsProvider extends
 		return splits;
 	}
 
-	public static GeoWaveRowRange wrapRange(
-			final Range range ) {
-		return new AccumuloRowRange(
-				range);
-	}
-
-	public static Range unwrapRange(
+	private static Range toAccumuloRange(
 			final GeoWaveRowRange range ) {
-		if (range instanceof AccumuloRowRange) {
-			return ((AccumuloRowRange) range).getRange();
-		}
-		LOGGER.error("AccumuloSplitsProvider requires use of AccumuloRowRange type.");
-		return null;
+		return new Range(
+				(range.getStartKey() == null) ? null : new Text(
+						range.getStartKey()),
+				range.isStartKeyInclusive(),
+				(range.getEndKey() == null) ? null : new Text(
+						range.getEndKey()),
+				range.isEndKeyInclusive());
 	}
 
-	@Override
-	protected GeoWaveRowRange constructRange(
-			final byte[] startKey,
-			final boolean isStartKeyInclusive,
-			final byte[] endKey,
-			final boolean isEndKeyInclusive ) {
-		return new AccumuloRowRange(
-				new Range(
-						new Key(
-								new Text(
-										startKey)),
-						isStartKeyInclusive,
-						new Key(
-								new Text(
-										endKey)),
-						isEndKeyInclusive));
-	}
-
-	@Override
-	protected GeoWaveRowRange defaultConstructRange() {
-		return new AccumuloRowRange(
-				new Range());
-	}
-
-	public static RangeLocationPair defaultConstructRangeLocationPair() {
-		return new AccumuloRangeLocationPair();
-	}
-
-	@Override
-	protected RangeLocationPair constructRangeLocationPair(
-			final GeoWaveRowRange range,
-			final String location,
-			final double cardinality ) {
-		return new AccumuloRangeLocationPair(
-				range,
-				location,
-				cardinality);
-	}
-
-	@Override
-	public GeoWaveInputSplit constructInputSplit(
-			final Map<PrimaryIndex, List<RangeLocationPair>> splitInfo,
-			final String[] locations ) {
-		return new GeoWaveAccumuloInputSplit(
-				splitInfo,
-				locations);
+	private static GeoWaveRowRange fromAccumuloRange(
+			final Range range ) {
+		return new GeoWaveRowRange(
+				range.getStartKey() == null ? null : range.getStartKey().getRowData().getBackingArray(),
+				range.getEndKey() == null ? null : range.getEndKey().getRowData().getBackingArray(),
+				range.isStartKeyInclusive(),
+				range.isEndKeyInclusive());
 	}
 
 	/**

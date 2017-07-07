@@ -23,6 +23,7 @@ import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.operations.DataStoreOperations;
 import mil.nga.giat.geowave.core.store.operations.Reader;
+import mil.nga.giat.geowave.core.store.operations.ReaderClosableWrapper;
 import mil.nga.giat.geowave.core.store.util.NativeEntryIteratorWrapper;
 
 abstract class BaseFilteredIndexQuery extends

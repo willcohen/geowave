@@ -29,12 +29,10 @@ public abstract class EntryIteratorWrapper<T> implements
 	protected final Iterator<GeoWaveRow> scannerIt;
 	protected final QueryFilter clientFilter;
 	protected final ScanCallback<T, ? extends GeoWaveRow> scanCallback;
-	protected final boolean wholeRowEncoding;
 
 	protected T nextValue;
 
 	public EntryIteratorWrapper(
-			final boolean wholeRowEncoding,
 			final BaseDataStore dataStore,
 			final AdapterStore adapterStore,
 			final PrimaryIndex index,
@@ -47,7 +45,6 @@ public abstract class EntryIteratorWrapper<T> implements
 		this.scannerIt = scannerIt;
 		this.clientFilter = clientFilter;
 		this.scanCallback = scanCallback;
-		this.wholeRowEncoding = wholeRowEncoding;
 	}
 
 	private void findNext() {
@@ -56,8 +53,7 @@ public abstract class EntryIteratorWrapper<T> implements
 			final T decodedValue = decodeRow(
 					row,
 					clientFilter,
-					index,
-					wholeRowEncoding);
+					index);
 			if (decodedValue != null) {
 				nextValue = decodedValue;
 				return;
@@ -76,8 +72,7 @@ public abstract class EntryIteratorWrapper<T> implements
 	protected abstract T decodeRow(
 			final GeoWaveRow row,
 			final QueryFilter clientFilter,
-			final PrimaryIndex index,
-			boolean wholeRowEncoding );
+			final PrimaryIndex index );
 
 	@Override
 	public boolean hasNext() {

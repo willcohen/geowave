@@ -10,7 +10,11 @@ import org.opengis.coverage.grid.GridCoverage;
 
 import mil.nga.giat.geowave.adapter.raster.FitToIndexGridCoverage;
 import mil.nga.giat.geowave.adapter.raster.adapter.RasterDataAdapter;
+import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveKeyImpl;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRowImpl;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveValue;
 import mil.nga.giat.geowave.mapreduce.GeoWaveWritableOutputMapper;
 import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputKey;
 
@@ -43,8 +47,16 @@ public class RasterTileResizeMapper extends
 						final GeoWaveInputKey inputKey = new GeoWaveInputKey(
 								helper.getNewCoverageId(),
 								key.getDataId());
-						inputKey.setPartitionKey(((FitToIndexGridCoverage) c).getPartitionKey());
-						inputKey.setSortKey(((FitToIndexGridCoverage) c).getSortKey());
+						final ByteArrayId partitionKey = ((FitToIndexGridCoverage) c).getPartitionKey();
+						final ByteArrayId sortKey = ((FitToIndexGridCoverage) c).getSortKey();
+						inputKey.setRow(new GeoWaveRowImpl(
+								new GeoWaveKeyImpl(
+										new byte[0],
+										key.getAdapterId().getBytes(),
+										partitionKey == null ? null : partitionKey.getBytes(),
+										sortKey == null ? null : sortKey.getBytes(),
+										0),
+								new GeoWaveValue[0]));
 						context.write(
 								inputKey,
 								c);

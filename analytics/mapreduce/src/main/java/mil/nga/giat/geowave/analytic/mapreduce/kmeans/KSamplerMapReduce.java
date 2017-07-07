@@ -157,8 +157,7 @@ public class KSamplerMapReduce
 								1.0 - rank, // sorts in ascending order
 								key.getDataId().getBytes())));
 				outputKey.setAdapterId(key.getAdapterId());
-				outputKey.setPartitionKey(key.getPartitionKey());
-				outputKey.setSortKey(key.getSortKey());
+				outputKey.setRow(key.getRow());
 				context.write(
 						outputKey,
 						currentValue);

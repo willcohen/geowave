@@ -1,12 +1,10 @@
-package mil.nga.giat.geowave.core.store.base;
+package mil.nga.giat.geowave.core.store.operations;
 
 import java.io.Closeable;
 
 import org.apache.log4j.Logger;
 
-import mil.nga.giat.geowave.core.store.operations.Reader;
-
-class ReaderClosableWrapper implements
+public class ReaderClosableWrapper implements
 		Closeable
 {
 	private final static Logger LOGGER = Logger.getLogger(ReaderClosableWrapper.class);

@@ -58,15 +58,11 @@ public class ChooseBestMatchIndexQueryStrategyTest
 
 		final RowRangeHistogramStatistics<SimpleFeature> rangeTempStats = new RowRangeHistogramStatistics<SimpleFeature>(
 				temporalindex.getId(),
-				temporalindex.getId(),
-				new FixedBinNumericHistogramFactory(),
-				1024);
+				temporalindex.getId());
 
 		final RowRangeHistogramStatistics<SimpleFeature> rangeStats = new RowRangeHistogramStatistics<SimpleFeature>(
 				spatialIndex.getId(),
-				spatialIndex.getId(),
-				new FixedBinNumericHistogramFactory(),
-				1024);
+				spatialIndex.getId());
 
 		final Map<ByteArrayId, DataStatistics<SimpleFeature>> statsMap = new HashMap<ByteArrayId, DataStatistics<SimpleFeature>>();
 		statsMap.put(

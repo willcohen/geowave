@@ -7,7 +7,6 @@ import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DuplicateEntryCount;
 import mil.nga.giat.geowave.core.store.adapter.statistics.EmptyStatisticVisibility;
-import mil.nga.giat.geowave.core.store.adapter.statistics.RowRangeDataStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.RowRangeHistogramStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.StatisticsProvider;
 import mil.nga.giat.geowave.core.store.data.visibility.DifferingFieldVisibilityEntryCount;
@@ -38,27 +37,21 @@ public class DataStoreStatisticsProvider<T> implements
 				.getSupportedStatisticsIds() : new ByteArrayId[0];
 		final ByteArrayId[] newSet = Arrays.copyOf(
 				idsFromAdapter,
-				idsFromAdapter.length + 5);
-		newSet[idsFromAdapter.length] = RowRangeDataStatistics.STATS_ID;
-		newSet[idsFromAdapter.length + 1] = RowRangeHistogramStatistics.STATS_ID;
-		newSet[idsFromAdapter.length + 2] = IndexMetaDataSet.STATS_ID;
-		newSet[idsFromAdapter.length + 3] = DifferingFieldVisibilityEntryCount.STATS_ID;
-		newSet[idsFromAdapter.length + 4] = DuplicateEntryCount.STATS_ID;
+				idsFromAdapter.length + 4);
+		newSet[idsFromAdapter.length] = RowRangeHistogramStatistics.STATS_ID;
+		newSet[idsFromAdapter.length + 1] = IndexMetaDataSet.STATS_ID;
+		newSet[idsFromAdapter.length + 2] = DifferingFieldVisibilityEntryCount.STATS_ID;
+		newSet[idsFromAdapter.length + 3] = DuplicateEntryCount.STATS_ID;
 		return newSet;
 	}
 
 	@Override
 	public DataStatistics<T> createDataStatistics(
 			final ByteArrayId statisticsId ) {
-		if (statisticsId.equals(RowRangeDataStatistics.STATS_ID)) {
-			return new RowRangeDataStatistics(
-					index.getId());
-		}
 		if (statisticsId.equals(RowRangeHistogramStatistics.STATS_ID)) {
 			return new RowRangeHistogramStatistics(
 					adapter.getAdapterId(),
-					index.getId(),
-					1024);
+					index.getId());
 		}
 		if (statisticsId.equals(IndexMetaDataSet.STATS_ID)) {
 			return new IndexMetaDataSet(

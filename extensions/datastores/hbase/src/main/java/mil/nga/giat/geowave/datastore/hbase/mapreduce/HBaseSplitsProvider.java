@@ -122,11 +122,12 @@ public class HBaseSplitsProvider extends
 		if ((query != null) && !query.isSupported(index)) {
 			return splits;
 		}
-		final ByteArrayRange fullrange = unwrapRange(getRangeMax(
-				index,
-				adapterStore,
-				statsStore,
-				authorizations));
+		final ByteArrayRange fullrange = unwrapRange(new GeoWaveRowRange(
+				null,
+				null,
+				null,
+				true,
+				true));
 
 		final String tableName = index.getId().getString();
 		final NumericIndexStrategy indexStrategy = index.getIndexStrategy();

@@ -25,7 +25,8 @@ public class IntermediateSplitInfo implements
 		Comparable<IntermediateSplitInfo>
 {
 
-	private final static Logger LOGGER = Logger.getLogger(IntermediateSplitInfo.class);
+	private final static Logger LOGGER = Logger.getLogger(
+			IntermediateSplitInfo.class);
 
 	protected class IndexRangeLocation
 	{
@@ -51,18 +52,26 @@ public class IntermediateSplitInfo implements
 			final double thisCardinalty = rangeLocationPair.getCardinality();
 			final double fraction = (targetCardinality - currentCardinality) / thisCardinalty;
 
-			final byte[] start = rangeLocationPair.getRange().getStartKey();
-			final byte[] end = rangeLocationPair.getRange().getEndKey();
+			final byte[] start = rangeLocationPair.getRange().getStartSortKey();
+			final byte[] end = rangeLocationPair.getRange().getEndSortKey();
+			final byte[] partition = rangeLocationPair.getRange().getPartitionKey();
 
-			final double cdfStart = stats.cdf(start);
+			final double cdfStart = stats.cdf(
+					partition,
+					start);
 
-			final double cdfEnd = stats.cdf(end);
-			final double expectedEndValue = stats.quantile(cdfStart + ((cdfEnd - cdfStart) * fraction));
+			final double cdfEnd = stats.cdf(
+					partition,
+					end);
+			final double expectedEndValue = stats.quantile(
+					partition,
+					cdfStart + ((cdfEnd - cdfStart) * fraction));
 			final int maxCardinality = Math.max(
 					start.length,
 					end.length);
 
-			byte[] bytes = ByteUtils.toBytes(expectedEndValue);
+			byte[] bytes = ByteUtils.toBytes(
+					expectedEndValue);
 			byte[] splitKey;
 			if ((bytes.length < 8) && (bytes.length < maxCardinality)) {
 				// prepend with 0
@@ -89,11 +98,15 @@ public class IntermediateSplitInfo implements
 			final boolean startKeyInclusive = true;
 			final boolean endKeyInclusive = false;
 			if ((new ByteArrayId(
-					start).compareTo(new ByteArrayId(
-					splitKey)) >= 0) || (new ByteArrayId(
-					end).compareTo(new ByteArrayId(
-					splitKey)) <= 0)) {
-				splitKey = SplitsProvider.getMidpoint(rangeLocationPair.getRange());
+					start).compareTo(
+							new ByteArrayId(
+									splitKey)) >= 0)
+					|| (new ByteArrayId(
+							end).compareTo(
+									new ByteArrayId(
+											splitKey)) <= 0)) {
+				splitKey = SplitsProvider.getMidpoint(
+						rangeLocationPair.getRange());
 				if (splitKey == null) {
 					return null;
 				}
@@ -103,16 +116,18 @@ public class IntermediateSplitInfo implements
 				// start and don't split producing a new pair
 				if (Arrays.equals(
 						end,
-						splitKey) && !rangeLocationPair.getRange().isEndKeyInclusive()) {
+						splitKey) && !rangeLocationPair.getRange().isEndSortKeyInclusive()) {
 					rangeLocationPair = new RangeLocationPair(
 							new GeoWaveRowRange(
-									rangeLocationPair.getRange().getStartKey(),
+									rangeLocationPair.getRange().getPartitionKey(),
+									rangeLocationPair.getRange().getStartSortKey(),
 									splitKey,
-									rangeLocationPair.getRange().isStartKeyInclusive(),
+									rangeLocationPair.getRange().isStartSortKeyInclusive(),
 									endKeyInclusive),
 							location,
 							stats.cardinality(
-									rangeLocationPair.getRange().getStartKey(),
+									rangeLocationPair.getRange().getPartitionKey(),
+									rangeLocationPair.getRange().getStartSortKey(),
 									splitKey));
 					return null;
 				}
@@ -122,26 +137,30 @@ public class IntermediateSplitInfo implements
 			try {
 				final RangeLocationPair newPair = new RangeLocationPair(
 						new GeoWaveRowRange(
-								rangeLocationPair.getRange().getStartKey(),
+								rangeLocationPair.getRange().getPartitionKey(),
+								rangeLocationPair.getRange().getStartSortKey(),
 								splitKey,
-								rangeLocationPair.getRange().isStartKeyInclusive(),
+								rangeLocationPair.getRange().isStartSortKeyInclusive(),
 								endKeyInclusive),
 						location,
 						stats.cardinality(
-								rangeLocationPair.getRange().getStartKey(),
+								rangeLocationPair.getRange().getPartitionKey(),
+								rangeLocationPair.getRange().getStartSortKey(),
 								splitKey));
 
 				rangeLocationPair = new RangeLocationPair(
 						new GeoWaveRowRange(
+								rangeLocationPair.getRange().getPartitionKey(),
 								splitKey,
-								rangeLocationPair.getRange().getEndKey(),
+								rangeLocationPair.getRange().getEndSortKey(),
 								startKeyInclusive,
-								rangeLocationPair.getRange().isEndKeyInclusive()),
+								rangeLocationPair.getRange().isEndSortKeyInclusive()),
 						location,
 
 						stats.cardinality(
+								rangeLocationPair.getRange().getPartitionKey(),
 								splitKey,
-								rangeLocationPair.getRange().getEndKey()));
+								rangeLocationPair.getRange().getEndSortKey()));
 
 				return new IndexRangeLocation(
 						newPair,
@@ -192,7 +211,8 @@ public class IntermediateSplitInfo implements
 	synchronized void merge(
 			final IntermediateSplitInfo split ) {
 		for (final Entry<ByteArrayId, SplitInfo> e : split.splitInfo.entrySet()) {
-			SplitInfo thisInfo = splitInfo.get(e.getKey());
+			SplitInfo thisInfo = splitInfo.get(
+					e.getKey());
 			if (thisInfo == null) {
 				thisInfo = new SplitInfo(
 						e.getValue().getIndex());
@@ -232,9 +252,10 @@ public class IntermediateSplitInfo implements
 				});
 		for (final Entry<ByteArrayId, SplitInfo> ranges : splitInfo.entrySet()) {
 			for (final RangeLocationPair p : ranges.getValue().getRangeLocationPairs()) {
-				orderedSplits.add(new IndexRangeLocation(
-						p,
-						ranges.getValue().getIndex()));
+				orderedSplits.add(
+						new IndexRangeLocation(
+								p,
+								ranges.getValue().getIndex()));
 			}
 		}
 		final double targetCardinality = getTotalRangeAtCardinality() / 2;
@@ -248,7 +269,8 @@ public class IntermediateSplitInfo implements
 			double nextCardinality = currentCardinality + next.rangeLocationPair.getCardinality();
 			if (nextCardinality > targetCardinality) {
 				final IndexRangeLocation newSplit = next.split(
-						statsCache.get(next.index),
+						statsCache.get(
+								next.index),
 						currentCardinality,
 						targetCardinality);
 				double splitCardinality = next.rangeLocationPair.getCardinality();
@@ -310,7 +332,8 @@ public class IntermediateSplitInfo implements
 						entry.getValue());
 			}
 			else {
-				splitInfo.putAll(otherSplitInfo);
+				splitInfo.putAll(
+						otherSplitInfo);
 				otherSplitInfo.clear();
 			}
 		}
@@ -323,7 +346,8 @@ public class IntermediateSplitInfo implements
 			final Map<ByteArrayId, SplitInfo> otherSplitInfo,
 			final RangeLocationPair pair,
 			final PrimaryIndex index ) {
-		SplitInfo other = otherSplitInfo.get(index.getId());
+		SplitInfo other = otherSplitInfo.get(
+				index.getId());
 		if (other == null) {
 			other = new SplitInfo(
 					index);
@@ -343,7 +367,8 @@ public class IntermediateSplitInfo implements
 		final Set<String> locations = new HashSet<String>();
 		for (final Entry<ByteArrayId, SplitInfo> entry : splitInfo.entrySet()) {
 			for (final RangeLocationPair pair : entry.getValue().getRangeLocationPairs()) {
-				locations.add(pair.getLocation());
+				locations.add(
+						pair.getLocation());
 			}
 		}
 		for (final SplitInfo si : splitInfo.values()) {
@@ -351,15 +376,18 @@ public class IntermediateSplitInfo implements
 					.getVisibilityCounts(
 							si.getIndex(),
 
-							indexIdToAdaptersMap.get(si.getIndex().getId()),
+							indexIdToAdaptersMap.get(
+									si.getIndex().getId()),
 							statisticsStore,
 							authorizations);
 
-			si.setMixedVisibility((visibilityCounts == null) || visibilityCounts.isAnyEntryDifferingFieldVisiblity());
+			si.setMixedVisibility(
+					(visibilityCounts == null) || visibilityCounts.isAnyEntryDifferingFieldVisiblity());
 		}
 		return new GeoWaveInputSplit(
 				splitInfo,
-				locations.toArray(new String[locations.size()]));
+				locations.toArray(
+						new String[locations.size()]));
 	}
 
 	@Override
@@ -381,10 +409,12 @@ public class IntermediateSplitInfo implements
 				double rangeSum = 0;
 				double otherSum = 0;
 				for (final SplitInfo s : splitInfo.values()) {
-					pairs.addAll(s.getRangeLocationPairs());
+					pairs.addAll(
+							s.getRangeLocationPairs());
 				}
 				for (final SplitInfo s : o.splitInfo.values()) {
-					otherPairs.addAll(s.getRangeLocationPairs());
+					otherPairs.addAll(
+							s.getRangeLocationPairs());
 				}
 
 				result = Integer.compare(
@@ -392,10 +422,12 @@ public class IntermediateSplitInfo implements
 						otherPairs.size());
 				if (result == 0) {
 					for (final RangeLocationPair p : pairs) {
-						rangeSum += SplitsProvider.getRangeLength(p.getRange());
+						rangeSum += SplitsProvider.getRangeLength(
+								p.getRange());
 					}
 					for (final RangeLocationPair p : otherPairs) {
-						otherSum += SplitsProvider.getRangeLength(p.getRange());
+						otherSum += SplitsProvider.getRangeLength(
+								p.getRange());
 					}
 					result = Double.compare(
 							rangeSum,
@@ -438,7 +470,8 @@ public class IntermediateSplitInfo implements
 				return false;
 			}
 		}
-		else if (!splitInfo.equals(other.splitInfo)) {
+		else if (!splitInfo.equals(
+				other.splitInfo)) {
 			return false;
 		}
 		if (splitsProvider == null) {
@@ -446,7 +479,8 @@ public class IntermediateSplitInfo implements
 				return false;
 			}
 		}
-		else if (!splitsProvider.equals(other.splitsProvider)) {
+		else if (!splitsProvider.equals(
+				other.splitsProvider)) {
 			return false;
 		}
 		return true;

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -25,6 +26,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.index.QueryRanges;
+import mil.nga.giat.geowave.core.index.SinglePartitionQueryRanges;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
@@ -257,11 +259,16 @@ public class GeoWaveRecordReader<T> extends
 							mixedVisibility,
 							false,
 							new QueryRanges(
-									new ByteArrayRange(
-											new ByteArrayId(
-													range.getStartKey()),
-											new ByteArrayId(
-													range.getEndKey()))),
+									Collections.singletonList(
+											new SinglePartitionQueryRanges(
+													range.getPartitionKey() != null ? new ByteArrayId(
+															range.getPartitionKey()) : null,
+													Collections.singletonList(
+															new ByteArrayRange(
+																	new ByteArrayId(
+																			range.getStartSortKey()),
+																	new ByteArrayId(
+																			range.getEndSortKey())))))),
 							null,
 							queryOptions.getLimit(),
 							null,
@@ -429,12 +436,12 @@ public class GeoWaveRecordReader<T> extends
 		if (currentKey == null) {
 			return 0f;
 		}
-		if ((range.getStartKey() != null) && (range.getEndKey() != null) && (currentKey.getRow() != null)) {
-
+		if ((range.getStartSortKey() != null) && (range.getEndSortKey() != null) && (currentKey.getRow() != null)) {
+			//TODO GEOWAVE-1018 this doesn't account for partition keys at all
 			// just look at the row progress
 			return getProgressForRange(
-					range.getStartKey(),
-					range.getEndKey(),
+					range.getStartSortKey(),
+					range.getEndSortKey(),
 					GeoWaveKey.getCompositeId(
 							currentKey.getRow()));
 

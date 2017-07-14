@@ -33,6 +33,7 @@ import org.apache.accumulo.core.data.impl.KeyExtent;
 //@formatter:on
 import org.apache.accumulo.core.master.state.tables.TableState;
 import org.apache.accumulo.core.util.UtilWaitThread;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.hadoop.io.Text;
 import org.apache.log4j.Logger;
 
@@ -90,13 +91,17 @@ public class AccumuloSplitsProvider extends
 			return splits;
 		}
 		Range fullrange;
+		final NumericIndexStrategy indexStrategy = index.getIndexStrategy();
+		final int partitionKeyLength = indexStrategy.getPartitionKeyLength();
 		try {
 			fullrange = toAccumuloRange(
-					getRangeMax(
-							index,
-							adapterStore,
-							statsStore,
-							authorizations));
+					new GeoWaveRowRange(
+							null,
+							null,
+							null,
+							true,
+							true),
+					partitionKeyLength);
 		}
 		catch (final Exception e) {
 			fullrange = new Range();
@@ -108,7 +113,7 @@ public class AccumuloSplitsProvider extends
 		final String tableName = AccumuloUtils.getQualifiedTableName(
 				accumuloOperations.getTableNameSpace(),
 				index.getId().getString());
-		final NumericIndexStrategy indexStrategy = index.getIndexStrategy();
+
 		final TreeSet<Range> ranges;
 		if (query != null) {
 			final List<MultiDimensionalNumericData> indexConstraints = query.getIndexConstraints(
@@ -238,7 +243,8 @@ public class AccumuloSplitsProvider extends
 			}
 			for (final Entry<KeyExtent, List<Range>> extentRanges : tserverBin.getValue().entrySet()) {
 				final Range keyExtent = extentRanges.getKey().toDataRange();
-				System.err.println("Key Extent: "+ keyExtent);
+				System.err.println(
+						"Key Extent: " + keyExtent);
 				final Map<ByteArrayId, SplitInfo> splitInfo = new HashMap<ByteArrayId, SplitInfo>();
 				final List<RangeLocationPair> rangeList = new ArrayList<RangeLocationPair>();
 				for (final Range range : extentRanges.getValue()) {
@@ -257,12 +263,14 @@ public class AccumuloSplitsProvider extends
 										statsCache,
 										authorizations),
 								fromAccumuloRange(
-										clippedRange),
+										clippedRange,
+										partitionKeyLength),
 								index.getIndexStrategy().getPartitionKeyLength());
 						rangeList.add(
 								new RangeLocationPair(
 										fromAccumuloRange(
-												clippedRange),
+												clippedRange,
+												partitionKeyLength),
 										location,
 										cardinality < 1 ? 1.0 : cardinality));
 					}
@@ -294,23 +302,78 @@ public class AccumuloSplitsProvider extends
 	}
 
 	private static Range toAccumuloRange(
-			final GeoWaveRowRange range ) {
-		return new Range(
-				(range.getStartKey() == null) ? null : new Text(
-						range.getStartKey()),
-				range.isStartKeyInclusive(),
-				(range.getEndKey() == null) ? null : new Text(
-						range.getEndKey()),
-				range.isEndKeyInclusive());
+			final GeoWaveRowRange range,
+			final int partitionKeyLength ) {
+		if ((range.getPartitionKey() == null) || (range.getPartitionKey().length == 0)) {
+			return new Range(
+					(range.getStartSortKey() == null) ? null : new Text(
+							range.getStartSortKey()),
+					range.isStartSortKeyInclusive(),
+					(range.getEndSortKey() == null) ? null : new Text(
+							range.getEndSortKey()),
+					range.isEndSortKeyInclusive());
+		}
+		else {
+			return new Range(
+					(range.getStartSortKey() == null) ? new Text(
+							range.getPartitionKey())
+							: new Text(
+									ArrayUtils.addAll(
+											range.getPartitionKey(),
+											range.getStartSortKey())),
+					range.isStartSortKeyInclusive(),
+					(range.getEndSortKey() == null) ? new Text(
+							range.getPartitionKey())
+							: new Text(
+									ArrayUtils.addAll(
+											range.getPartitionKey(),
+											range.getEndSortKey())),
+					range.isEndSortKeyInclusive());
+		}
 	}
 
 	private static GeoWaveRowRange fromAccumuloRange(
-			final Range range ) {
-		return new GeoWaveRowRange(
-				range.getStartKey() == null ? null : range.getStartKey().getRowData().getBackingArray(),
-				range.getEndKey() == null ? null : range.getEndKey().getRowData().getBackingArray(),
-				range.isStartKeyInclusive(),
-				range.isEndKeyInclusive());
+			final Range range,
+			final int partitionKeyLength ) {
+		if (partitionKeyLength <= 0) {
+			return new GeoWaveRowRange(
+					null,
+					range.getStartKey() == null ? null : range.getStartKey().getRowData().getBackingArray(),
+					range.getEndKey() == null ? null : range.getEndKey().getRowData().getBackingArray(),
+					range.isStartKeyInclusive(),
+					range.isEndKeyInclusive());
+		}
+		else {
+			byte[] partitionKey;
+			if ((range.getStartKey() == null) && (range.getEndKey() == null)) {
+				return null;
+			}
+			else if (range.getStartKey() != null) {
+				partitionKey = ArrayUtils.subarray(
+						range.getStartKey().getRowData().getBackingArray(),
+						0,
+						partitionKeyLength);
+			}
+			else {
+				partitionKey = ArrayUtils.subarray(
+						range.getEndKey().getRowData().getBackingArray(),
+						0,
+						partitionKeyLength);
+			}
+			return new GeoWaveRowRange(
+					partitionKey,
+					range.getStartKey() == null ? null : ArrayUtils.subarray(
+							range.getStartKey().getRowData().getBackingArray(),
+							partitionKeyLength,
+							range.getStartKey().getRowData().getBackingArray().length),
+					range.getEndKey() == null ? null : ArrayUtils.subarray(
+							range.getEndKey().getRowData().getBackingArray(),
+							partitionKeyLength,
+							range.getEndKey().getRowData().getBackingArray().length),
+					range.isStartKeyInclusive(),
+					range.isEndKeyInclusive());
+
+		}
 	}
 
 	/**

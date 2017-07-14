@@ -44,7 +44,7 @@ import mil.nga.giat.geowave.core.store.adapter.statistics.CountDataStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DefaultFieldStatisticVisibility;
-import mil.nga.giat.geowave.core.store.adapter.statistics.RowRangeDataStatistics;
+import mil.nga.giat.geowave.core.store.adapter.statistics.RowRangeHistogramStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.StatisticsProvider;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
 import mil.nga.giat.geowave.core.store.data.PersistentValue;
@@ -522,12 +522,12 @@ public class AccumuloDataStoreStatsTest
 				"bbb");
 		assertNull(countStats);
 
-		final RowRangeDataStatistics<?> rowStats = (RowRangeDataStatistics<?>) statsStore.getDataStatistics(
-				null,
-				RowRangeDataStatistics.getId(index.getId()),
+		final RowRangeHistogramStatistics<?> histogramStats = (RowRangeHistogramStatistics<?>) statsStore.getDataStatistics(
+				adapter.getAdapterId(),
+				RowRangeHistogramStatistics.composeId(index.getId()),
 				"bbb");
 
-		assertTrue(rowStats != null);
+		assertTrue(histogramStats != null);
 
 	}
 

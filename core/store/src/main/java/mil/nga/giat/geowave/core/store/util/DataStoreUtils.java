@@ -118,7 +118,7 @@ public class DataStoreUtils
 		long count = 0;
 		for (final SinglePartitionQueryRanges partitionRange : queryRanges.getPartitionQueryRanges()) {
 			for (final ByteArrayRange range : partitionRange.getSortKeyRanges()) {
-				count += rangeStats.cardinality(
+				count += rangeStats.cardinality(null,
 						range.getStart().getBytes(),
 						range.getEnd().getBytes());
 			}

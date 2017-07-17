@@ -3,6 +3,7 @@ package mil.nga.giat.geowave.datastore.accumulo.mapreduce;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -254,6 +255,9 @@ public class AccumuloSplitsProvider extends
 							clippedRange.getEndKey())
 							|| fullrange.afterEndKey(
 									clippedRange.getStartKey()))) {
+						final GeoWaveRowRange rowRange = fromAccumuloRange(
+								clippedRange,
+								partitionKeyLength);
 						final double cardinality = getCardinality(
 								getHistStats(
 										index,
@@ -262,17 +266,17 @@ public class AccumuloSplitsProvider extends
 										statsStore,
 										statsCache,
 										authorizations),
-								fromAccumuloRange(
-										clippedRange,
-										partitionKeyLength),
+								rowRange,
 								index.getIndexStrategy().getPartitionKeyLength());
 						rangeList.add(
 								new RangeLocationPair(
-										fromAccumuloRange(
-												clippedRange,
-												partitionKeyLength),
+										rowRange,
 										location,
 										cardinality < 1 ? 1.0 : cardinality));
+						System.err.println(
+								"clipped range: " + fromAccumuloRange(
+										clippedRange,
+										partitionKeyLength));
 					}
 					else {
 						LOGGER.info(
@@ -345,6 +349,7 @@ public class AccumuloSplitsProvider extends
 		}
 		else {
 			byte[] partitionKey;
+			boolean partitionKeyDiffers = false;
 			if ((range.getStartKey() == null) && (range.getEndKey() == null)) {
 				return null;
 			}
@@ -353,6 +358,14 @@ public class AccumuloSplitsProvider extends
 						range.getStartKey().getRowData().getBackingArray(),
 						0,
 						partitionKeyLength);
+				if (range.getEndKey() != null) {
+					partitionKeyDiffers = !Arrays.equals(
+							partitionKey,
+							ArrayUtils.subarray(
+									range.getEndKey().getRowData().getBackingArray(),
+									0,
+									partitionKeyLength));
+				}
 			}
 			else {
 				partitionKey = ArrayUtils.subarray(
@@ -366,12 +379,12 @@ public class AccumuloSplitsProvider extends
 							range.getStartKey().getRowData().getBackingArray(),
 							partitionKeyLength,
 							range.getStartKey().getRowData().getBackingArray().length),
-					range.getEndKey() == null ? null : ArrayUtils.subarray(
+					partitionKeyDiffers ? null : range.getEndKey() == null ? null : ArrayUtils.subarray(
 							range.getEndKey().getRowData().getBackingArray(),
 							partitionKeyLength,
 							range.getEndKey().getRowData().getBackingArray().length),
 					range.isStartKeyInclusive(),
-					range.isEndKeyInclusive());
+					partitionKeyDiffers ? true : range.isEndKeyInclusive());
 
 		}
 	}

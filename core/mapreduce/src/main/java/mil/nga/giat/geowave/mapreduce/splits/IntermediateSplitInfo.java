@@ -383,6 +383,9 @@ public class IntermediateSplitInfo implements
 
 			si.setMixedVisibility(
 					(visibilityCounts == null) || visibilityCounts.isAnyEntryDifferingFieldVisiblity());
+			for(RangeLocationPair p : si.getRangeLocationPairs()){
+			System.err.println("final range: " + p.getRange());
+			}
 		}
 		return new GeoWaveInputSplit(
 				splitInfo,

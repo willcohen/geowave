@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -24,9 +23,6 @@ import com.google.common.collect.Iterators;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
-import mil.nga.giat.geowave.core.index.ByteArrayRange;
-import mil.nga.giat.geowave.core.index.QueryRanges;
-import mil.nga.giat.geowave.core.index.SinglePartitionQueryRanges;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
@@ -35,12 +31,11 @@ import mil.nga.giat.geowave.core.store.entities.GeoWaveKey;
 import mil.nga.giat.geowave.core.store.filter.FilterList;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
-import mil.nga.giat.geowave.core.store.operations.DataStoreOperations;
 import mil.nga.giat.geowave.core.store.operations.Reader;
 import mil.nga.giat.geowave.core.store.operations.ReaderClosableWrapper;
-import mil.nga.giat.geowave.core.store.operations.ReaderParams;
 import mil.nga.giat.geowave.core.store.query.DistributableQuery;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
+import mil.nga.giat.geowave.mapreduce.MapReduceDataStoreOperations;
 import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputKey;
 import mil.nga.giat.geowave.mapreduce.input.InputFormatIteratorWrapper;
 
@@ -87,14 +82,14 @@ public class GeoWaveRecordReader<T> extends
 	protected boolean isOutputWritable;
 	protected AdapterStore adapterStore;
 	protected BaseDataStore dataStore;
-	protected DataStoreOperations operations;
+	protected MapReduceDataStoreOperations operations;
 
 	public GeoWaveRecordReader(
 			final DistributableQuery query,
 			final QueryOptions queryOptions,
 			final boolean isOutputWritable,
 			final AdapterStore adapterStore,
-			final DataStoreOperations operations ) {
+			final MapReduceDataStoreOperations operations ) {
 		try {
 			System.err.println(
 					"record reader " + queryOptions.getAdapterIds(
@@ -244,35 +239,16 @@ public class GeoWaveRecordReader<T> extends
 								queryFilters);
 		try {
 			final Reader reader = operations.createReader(
-					new ReaderParams(
+					new RecordReaderParams(
 							i,
 							rangeQueryOptions.getAdapterIds(
 									adapterStore),
 							rangeQueryOptions.getMaxResolutionSubsamplingPerDimension(),
 							rangeQueryOptions.getAggregation(),
 							rangeQueryOptions.getFieldIdsAdapterPair(),
-							// TODO GEOWAVE-1018 should we always use
-							// whole row encoding or check the stats for
-							// mixed visibilities, probably check stats,
-							// although might be passed through
-							// configuration
 							mixedVisibility,
-							false,
-							new QueryRanges(
-									Collections.singletonList(
-											new SinglePartitionQueryRanges(
-													range.getPartitionKey() != null ? new ByteArrayId(
-															range.getPartitionKey()) : null,
-													Collections.singletonList(
-															new ByteArrayRange(
-																	new ByteArrayId(
-																			range.getStartSortKey()),
-																	new ByteArrayId(
-																			range.getEndSortKey())))))),
-							null,
+							range,
 							queryOptions.getLimit(),
-							null,
-							null,
 							rangeQueryOptions.getAuthorizations()));
 			return new CloseableIteratorWrapper(
 					new ReaderClosableWrapper(
@@ -437,7 +413,7 @@ public class GeoWaveRecordReader<T> extends
 			return 0f;
 		}
 		if ((range.getStartSortKey() != null) && (range.getEndSortKey() != null) && (currentKey.getRow() != null)) {
-			//TODO GEOWAVE-1018 this doesn't account for partition keys at all
+			// TODO GEOWAVE-1018 this doesn't account for partition keys at all
 			// just look at the row progress
 			return getProgressForRange(
 					range.getStartSortKey(),

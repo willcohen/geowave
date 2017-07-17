@@ -284,12 +284,12 @@ public class BasicMapReduceIT extends
 //				null,
 //				null);
 		System.err.println("running test " + 
-				adapters[2].getAdapterId().getString());
+				adapters[0].getAdapterId().getString());
 		runTestJob(
-		adapterIdToResultsMap.get(adapters[2].getAdapterId()),
+		adapterIdToResultsMap.get(adapters[0].getAdapterId()),
 		null,
 		new DataAdapter[] {
-			adapters[2]
+			adapters[0]
 		},
 		TestUtils.DEFAULT_SPATIAL_TEMPORAL_INDEX);
 	}

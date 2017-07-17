@@ -29,7 +29,7 @@ public abstract class BaseMapReduceDataStore extends
 			DataStatisticsStore statisticsStore,
 			AdapterIndexMappingStore indexMappingStore,
 			SecondaryIndexDataStore secondaryIndexDataStore,
-			DataStoreOperations operations,
+			MapReduceDataStoreOperations operations,
 			DataStoreOptions options ) {
 		super(
 				indexStore,
@@ -57,6 +57,6 @@ public abstract class BaseMapReduceDataStore extends
 				queryOptions,
 				isOutputWritable,
 				adapterStore,
-				baseOperations);
+				(MapReduceDataStoreOperations) baseOperations);
 	}
 }

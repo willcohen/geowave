@@ -3,6 +3,7 @@ package mil.nga.giat.geowave.mapreduce.splits;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.hadoop.io.Writable;
 
@@ -124,5 +125,16 @@ public class GeoWaveRowRange implements
 
 	public boolean isInfiniteStopSortKey() {
 		return endKey == null;
+	}
+
+	@Override
+	public String toString() {
+		return "GeoWaveRowRange [partitionKey=" + Arrays.toString(
+				partitionKey) + ", startKey="
+				+ Arrays.toString(
+						startKey)
+				+ ", endKey=" + Arrays.toString(
+						endKey)
+				+ ", startKeyInclusive=" + startKeyInclusive + ", endKeyInclusive=" + endKeyInclusive + "]";
 	}
 }

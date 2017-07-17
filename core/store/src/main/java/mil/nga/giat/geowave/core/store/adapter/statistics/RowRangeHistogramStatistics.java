@@ -100,14 +100,14 @@ public class RowRangeHistogramStatistics<T> extends
 		final NumericHistogram histogram = getHistogram(
 				getPartitionKey(
 						partition));
-		return histogram.sum(
+		return ((end == null ? histogram.getTotalCount() : histogram.sum(
 				ByteUtils.toDouble(
 						end),
-				true)
-				- histogram.sum(
+				true))
+				- (start == null ? 0 : histogram.sum(
 						ByteUtils.toDouble(
 								start),
-						false);
+						false)));
 	}
 
 	public double[] quantile(
@@ -221,6 +221,8 @@ public class RowRangeHistogramStatistics<T> extends
 			else {
 				buffer.putInt(
 						e.getKey().getBytes().length);
+				buffer.put(
+						e.getKey().getBytes());
 			}
 			e.getValue().toBinary(
 					buffer);

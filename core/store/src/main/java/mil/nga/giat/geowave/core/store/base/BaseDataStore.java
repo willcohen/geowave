@@ -128,14 +128,12 @@ public class BaseDataStore implements
 
 			final String indexName = index.getId().getString();
 
-			if (adapter instanceof WritableDataAdapter) {
-				if (baseOptions.isUseAltIndex()) {
-					addAltIndexCallback(
-							callbacks,
-							indexName,
-							adapter,
-							index.getId());
-				}
+			if (baseOptions.isUseAltIndex()) {
+				addAltIndexCallback(
+						callbacks,
+						indexName,
+						adapter,
+						index.getId());
 			}
 			callbacks.add(callbackManager.getIngestCallback(
 					adapter,
@@ -218,7 +216,8 @@ public class BaseDataStore implements
 						final PrefixIdQuery prefixIdQuery = (PrefixIdQuery) sanitizedQuery;
 						results.add(queryRowPrefix(
 								indexAdapterPair.getLeft(),
-								prefixIdQuery.getRowPrefix(),
+								prefixIdQuery.getPartitionKey(),
+								prefixIdQuery.getSortKeyPrefix(),
 								sanitizedQueryOptions,
 								tempAdapterStore,
 								adapterIdsToQuery));
@@ -378,7 +377,8 @@ public class BaseDataStore implements
 					else if (query instanceof PrefixIdQuery) {
 						dataIt = queryRowPrefix(
 								index,
-								((PrefixIdQuery) query).getRowPrefix(),
+								((PrefixIdQuery) query).getPartitionKey(),
+								((PrefixIdQuery) query).getSortKeyPrefix(),
 								queryOptions,
 								adapterStore,
 								adapterIds);
@@ -541,6 +541,7 @@ public class BaseDataStore implements
 
 	protected CloseableIterator<Object> queryRowPrefix(
 			final PrimaryIndex index,
+			final ByteArrayId partitionKey,
 			final ByteArrayId sortPrefix,
 			final QueryOptions sanitizedQueryOptions,
 			final AdapterStore tempAdapterStore,
@@ -548,6 +549,7 @@ public class BaseDataStore implements
 		final BaseRowPrefixQuery<Object> prefixQuery = new BaseRowPrefixQuery<Object>(
 				this,
 				index,
+				partitionKey,
 				sortPrefix,
 				(ScanCallback<Object, ?>) sanitizedQueryOptions.getScanCallback(),
 				sanitizedQueryOptions.getLimit(),

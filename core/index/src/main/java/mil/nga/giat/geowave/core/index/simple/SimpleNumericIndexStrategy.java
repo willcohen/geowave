@@ -238,11 +238,6 @@ public abstract class SimpleNumericIndexStrategy<T extends Number> implements
 	}
 
 	@Override
-	public Set<ByteArrayId> getPartitionKeys() {
-		return null;
-	}
-
-	@Override
 	public List<IndexMetaData> createMetaData() {
 		return Collections.emptyList();
 	}

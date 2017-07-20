@@ -37,9 +37,6 @@ public class GeoWaveInputKey extends
 				new ByteArrayId(
 						row.getAdapterId()));
 		if (row.getNumberOfDuplicates() > 0) {
-
-			System.err.println("dupes " +new ByteArrayId(
-					row.getAdapterId()).getString() + " " + row.getNumberOfDuplicates());
 			dataId = new ByteArrayId(
 					row.getDataId());
 		}

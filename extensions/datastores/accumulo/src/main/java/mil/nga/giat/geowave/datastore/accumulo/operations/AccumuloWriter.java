@@ -4,10 +4,10 @@ import org.apache.accumulo.core.client.MutationsRejectedException;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.security.ColumnVisibility;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.io.Text;
 import org.apache.log4j.Logger;
 
+import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveKey;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveValue;
@@ -24,10 +24,16 @@ public class AccumuloWriter implements
 {
 	private final static Logger LOGGER = Logger.getLogger(AccumuloWriter.class);
 	private org.apache.accumulo.core.client.BatchWriter batchWriter;
+	private final AccumuloOperations operations;
+	private final String tableName;
 
 	public AccumuloWriter(
-			final org.apache.accumulo.core.client.BatchWriter batchWriter ) {
+			final org.apache.accumulo.core.client.BatchWriter batchWriter,
+			final AccumuloOperations operations,
+			final String tableName ) {
 		this.batchWriter = batchWriter;
+		this.operations = operations;
+		this.tableName = tableName;
 	}
 
 	public org.apache.accumulo.core.client.BatchWriter getBatchWriter() {
@@ -98,6 +104,13 @@ public class AccumuloWriter implements
 	@Override
 	public void write(
 			final GeoWaveRow row ) {
+		final byte[] partition = row.getPartitionKey();
+		if ((partition != null) && (partition.length > 0)) {
+			operations.insurePartition(
+					new ByteArrayId(
+							partition),
+					tableName);
+		}
 		write(rowToMutation(row));
 	}
 

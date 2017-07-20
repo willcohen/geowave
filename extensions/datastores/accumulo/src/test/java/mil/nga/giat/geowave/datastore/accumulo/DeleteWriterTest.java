@@ -102,8 +102,7 @@ public class DeleteWriterTest
 		operations.createTable(
 				"test_table",
 				true,
-				true,
-				null);
+				true);
 		mockDataStore = new AccumuloDataStore(
 				operations,
 				options);

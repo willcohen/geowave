@@ -28,7 +28,8 @@ class BaseRowPrefixQuery<T> extends
 	public BaseRowPrefixQuery(
 			final BaseDataStore dataStore,
 			final PrimaryIndex index,
-			final ByteArrayId rowPrefix,
+			final ByteArrayId partitionKey,
+			final ByteArrayId sortKeyPrefix,
 			final ScanCallback<T, ?> scanCallback,
 			final Integer limit,
 			final DifferingFieldVisibilityEntryCount visibilityCounts,
@@ -40,27 +41,18 @@ class BaseRowPrefixQuery<T> extends
 				scanCallback,
 				visibilityCounts);
 		this.limit = limit;
-		final Set<ByteArrayId> partitions = index.getIndexStrategy().getPartitionKeys();
 
-		final ByteArrayRange rowPrefixRange = new ByteArrayRange(
-				rowPrefix,
-				rowPrefix,
+		final ByteArrayRange sortKeyPrefixRange = new ByteArrayRange(
+				sortKeyPrefix,
+				sortKeyPrefix,
 				false);
-		if ((partitions == null) || partitions.isEmpty()) {
-			queryRanges = new QueryRanges(
-					rowPrefixRange);
-		}
-		else {
-			final List<SinglePartitionQueryRanges> ranges = new ArrayList<SinglePartitionQueryRanges>();
-			final Collection<ByteArrayRange> sortKeys = Collections.singleton(rowPrefixRange);
-			for (final ByteArrayId partitionKey : partitions) {
-				ranges.add(new SinglePartitionQueryRanges(
-						partitionKey,
-						sortKeys));
-			}
-			queryRanges = new QueryRanges(
-					ranges);
-		}
+		final List<SinglePartitionQueryRanges> ranges = new ArrayList<SinglePartitionQueryRanges>();
+		final Collection<ByteArrayRange> sortKeys = Collections.singleton(sortKeyPrefixRange);
+		ranges.add(new SinglePartitionQueryRanges(
+				partitionKey,
+				sortKeys));
+		queryRanges = new QueryRanges(
+				ranges);
 	}
 
 	@Override

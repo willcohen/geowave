@@ -62,11 +62,6 @@ public class PartitionIndexStrategyWrapper implements
 	}
 
 	@Override
-	public Set<ByteArrayId> getPartitionKeys() {
-		return partitionIndexStrategy.getPartitionKeys();
-	}
-
-	@Override
 	public List<IndexMetaData> createMetaData() {
 		return partitionIndexStrategy.createMetaData();
 	}

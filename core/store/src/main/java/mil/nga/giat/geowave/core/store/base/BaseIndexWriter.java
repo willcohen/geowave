@@ -3,6 +3,7 @@ package mil.nga.giat.geowave.core.store.base;
 import java.io.Closeable;
 import java.io.Flushable;
 import java.io.IOException;
+import java.util.Collections;
 
 import org.apache.log4j.Logger;
 
@@ -72,7 +73,6 @@ class BaseIndexWriter<T> implements
 			final VisibilityWriter<T> fieldVisibilityWriter ) {
 		IntermediaryWriteEntryInfo entryInfo;
 		synchronized (this) {
-
 			ensureOpen();
 			if (writer == null) {
 				return new InsertionIds();
@@ -85,10 +85,8 @@ class BaseIndexWriter<T> implements
 			verifyVisibility(
 					fieldVisibilityWriter,
 					entryInfo);
-			if (entryInfo == null) {
-				return new InsertionIds();
-			}
 			final GeoWaveRow[] rows = entryInfo.getRows();
+
 			writer.write(rows);
 			callback.entryIngested(
 					entry,
@@ -166,8 +164,7 @@ class BaseIndexWriter<T> implements
 			try {
 				writer = operations.createWriter(
 						index.getId(),
-						adapter.getAdapterId(),
-						index.getIndexStrategy().getPartitionKeys());
+						adapter.getAdapterId());
 			}
 			catch (final Exception e) {
 				LOGGER.error(

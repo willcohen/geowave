@@ -45,8 +45,7 @@ public interface DataStoreOperations
 	 */
 	public Writer createWriter(
 			ByteArrayId indexId,
-			ByteArrayId adapterId,
-			Set<ByteArrayId> splits );
+			ByteArrayId adapterId );
 
 	public MetadataWriter createMetadataWriter(
 			MetadataType metadataType );

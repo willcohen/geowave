@@ -31,8 +31,7 @@ public class HBaseOptions extends
 			final boolean bigTable ) {
 		this.bigTable = bigTable;
 		if (bigTable) {
-			setServerSideDisabled(
-					true);
+			setServerSideDisabled(true);
 		}
 	}
 

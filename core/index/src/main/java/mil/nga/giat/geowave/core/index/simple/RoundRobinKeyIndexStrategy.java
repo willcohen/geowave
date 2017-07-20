@@ -108,7 +108,6 @@ public class RoundRobinKeyIndexStrategy implements
 		init(buf.getInt());
 	}
 
-	@Override
 	public Set<ByteArrayId> getPartitionKeys() {
 		return Sets.newHashSet(keys);
 	}

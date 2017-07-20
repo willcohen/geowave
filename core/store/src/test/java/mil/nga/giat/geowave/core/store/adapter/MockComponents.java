@@ -720,12 +720,6 @@ public class MockComponents
 		}
 
 		@Override
-		public Set<ByteArrayId> getPartitionKeys() {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		@Override
 		public MultiDimensionalCoordinates getCoordinatesPerDimension(
 				final ByteArrayId partitionKey,
 				final ByteArrayId sortKey ) {

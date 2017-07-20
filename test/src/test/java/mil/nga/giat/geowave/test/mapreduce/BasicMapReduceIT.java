@@ -131,11 +131,12 @@ public class BasicMapReduceIT extends
 	})
 	protected DataStorePluginOptions dataStorePluginOptions;
 
+	@Override
 	protected DataStorePluginOptions getDataStorePluginOptions() {
 		return dataStorePluginOptions;
 	}
 
-//	@Test
+	@Test
 	public void testIngestAndQueryGeneralGpx()
 			throws Exception {
 		TestUtils.deleteAll(dataStorePluginOptions);
@@ -210,7 +211,7 @@ public class BasicMapReduceIT extends
 		// methods, by adapter and by index
 		MapReduceTestUtils.testMapReduceIngest(
 				dataStorePluginOptions,
-				DimensionalityType.SPATIAL_TEMPORAL,
+				DimensionalityType.ALL,
 				OSM_GPX_INPUT_DIR);
 		final WritableDataAdapter<SimpleFeature>[] adapters = new GpxIngestPlugin().getDataAdapters(null);
 
@@ -243,55 +244,42 @@ public class BasicMapReduceIT extends
 
 		// now that we have expected results, run map-reduce export and
 		// re-ingest it
-//		testMapReduceExportAndReingest(DimensionalityType.ALL);
+		testMapReduceExportAndReingest(DimensionalityType.ALL);
 		// first try each adapter individually
-//		for (final WritableDataAdapter<SimpleFeature> adapter : adapters) {
-//			if (adapter.getAdapterId().getString().equals("gpxpoint")){
-//				continue;
-//			}
-//			System.err.println("running test " + adapter.getAdapterId().getString());
-//			runTestJob(
-//					adapterIdToResultsMap.get(adapter.getAdapterId()),
-//					null,
-//					new DataAdapter[] {
-//						adapter
-//					},
-//					TestUtils.DEFAULT_SPATIAL_TEMPORAL_INDEX);
-//		}
+		for (final WritableDataAdapter<SimpleFeature> adapter : adapters) {
+			runTestJob(
+					adapterIdToResultsMap.get(adapter.getAdapterId()),
+					null,
+					new DataAdapter[] {
+						adapter
+					},
+					null);
+		}
 		// then try the first 2 adapters, and may as well try with both indices
 		// set (should be the default behavior anyways)
-//		runTestJob(
-//				firstTwoAdaptersResults,
-//				null,
-//				new DataAdapter[] {
-//					adapters[0],
-//					adapters[1]
-//				},
-//				null);
+		runTestJob(
+				firstTwoAdaptersResults,
+				null,
+				new DataAdapter[] {
+					adapters[0],
+					adapters[1]
+				},
+				null);
 
 		// now try all adapters and the spatial temporal index, the result
 		// should be the full data set
-//		runTestJob(
-//				fullDataSetResults,
-//				null,
-//				adapters,
-//				TestUtils.DEFAULT_SPATIAL_TEMPORAL_INDEX);
+		runTestJob(
+				fullDataSetResults,
+				null,
+				adapters,
+				TestUtils.DEFAULT_SPATIAL_TEMPORAL_INDEX);
 
 		// and finally run with nothing set, should be the full data set
-//		runTestJob(
-//				fullDataSetResults,
-//				null,
-//				null,
-//				null);
-		System.err.println("running test " + 
-				adapters[0].getAdapterId().getString());
 		runTestJob(
-		adapterIdToResultsMap.get(adapters[0].getAdapterId()),
-		null,
-		new DataAdapter[] {
-			adapters[0]
-		},
-		TestUtils.DEFAULT_SPATIAL_TEMPORAL_INDEX);
+				fullDataSetResults,
+				null,
+				null,
+				null);
 	}
 
 	private void testMapReduceExportAndReingest(

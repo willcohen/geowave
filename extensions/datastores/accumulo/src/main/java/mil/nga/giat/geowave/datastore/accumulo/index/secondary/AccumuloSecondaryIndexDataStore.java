@@ -7,13 +7,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableNotFoundException;
-import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.iterators.user.WholeRowIterator;
-import org.apache.accumulo.core.security.ColumnVisibility;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.io.Text;
 import org.apache.log4j.Logger;
@@ -236,6 +235,11 @@ public class AccumuloSecondaryIndexDataStore extends
 										adapter.getAdapterId(),
 										primaryIndexId),
 								new PrefixIdQuery(
+										null, // TODO GEOWAVE-1018: need
+												// partition key with join
+												// entry, also why is the a
+												// prefix query and not an
+												// insertion ID query
 										primaryIndexRowId));
 						allResults.add(intermediateResults);
 						return new CloseableIteratorWrapper<T>(
@@ -243,7 +247,7 @@ public class AccumuloSecondaryIndexDataStore extends
 									@Override
 									public void close()
 											throws IOException {
-										for (CloseableIterator<Object> resultIter : allResults) {
+										for (final CloseableIterator<Object> resultIter : allResults) {
 											resultIter.close();
 										}
 									}

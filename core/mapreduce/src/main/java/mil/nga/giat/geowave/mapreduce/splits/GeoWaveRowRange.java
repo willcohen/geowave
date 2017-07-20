@@ -35,34 +35,23 @@ public class GeoWaveRowRange implements
 	public void write(
 			final DataOutput out )
 			throws IOException {
-		out.writeBoolean(
-				(partitionKey == null) || (partitionKey.length == 0));
-		out.writeBoolean(
-				startKey == null);
-		out.writeBoolean(
-				endKey == null);
+		out.writeBoolean((partitionKey == null) || (partitionKey.length == 0));
+		out.writeBoolean(startKey == null);
+		out.writeBoolean(endKey == null);
 		if ((partitionKey != null) && (partitionKey.length > 0)) {
-			out.writeShort(
-					partitionKey.length);
-			out.write(
-					partitionKey);
+			out.writeShort(partitionKey.length);
+			out.write(partitionKey);
 		}
 		if (startKey != null) {
-			out.writeShort(
-					startKey.length);
-			out.write(
-					startKey);
+			out.writeShort(startKey.length);
+			out.write(startKey);
 		}
 		if (endKey != null) {
-			out.writeShort(
-					endKey.length);
-			out.write(
-					endKey);
+			out.writeShort(endKey.length);
+			out.write(endKey);
 		}
-		out.writeBoolean(
-				startKeyInclusive);
-		out.writeBoolean(
-				endKeyInclusive);
+		out.writeBoolean(startKeyInclusive);
+		out.writeBoolean(endKeyInclusive);
 	}
 
 	@Override
@@ -74,13 +63,11 @@ public class GeoWaveRowRange implements
 		final boolean infiniteEndKey = in.readBoolean();
 		if (!nullPartitionKey) {
 			partitionKey = new byte[in.readShort()];
-			in.readFully(
-					partitionKey);
+			in.readFully(partitionKey);
 		}
 		if (!infiniteStartKey) {
 			startKey = new byte[in.readShort()];
-			in.readFully(
-					startKey);
+			in.readFully(startKey);
 		}
 		else {
 			startKey = null;
@@ -88,8 +75,7 @@ public class GeoWaveRowRange implements
 
 		if (!infiniteEndKey) {
 			endKey = new byte[in.readShort()];
-			in.readFully(
-					endKey);
+			in.readFully(endKey);
 		}
 		else {
 			endKey = null;
@@ -129,12 +115,8 @@ public class GeoWaveRowRange implements
 
 	@Override
 	public String toString() {
-		return "GeoWaveRowRange [partitionKey=" + Arrays.toString(
-				partitionKey) + ", startKey="
-				+ Arrays.toString(
-						startKey)
-				+ ", endKey=" + Arrays.toString(
-						endKey)
-				+ ", startKeyInclusive=" + startKeyInclusive + ", endKeyInclusive=" + endKeyInclusive + "]";
+		return "GeoWaveRowRange [partitionKey=" + Arrays.toString(partitionKey) + ", startKey="
+				+ Arrays.toString(startKey) + ", endKey=" + Arrays.toString(endKey) + ", startKeyInclusive="
+				+ startKeyInclusive + ", endKeyInclusive=" + endKeyInclusive + "]";
 	}
 }

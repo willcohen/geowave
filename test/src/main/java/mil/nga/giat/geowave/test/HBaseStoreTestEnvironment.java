@@ -28,6 +28,7 @@ import org.junit.Assert;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.GenericStoreFactory;
 import mil.nga.giat.geowave.core.store.StoreFactoryOptions;
+import mil.nga.giat.geowave.datastore.accumulo.AccumuloStoreFactoryFamily;
 //import mil.nga.giat.geowave.datastore.hbase.HBaseDataStoreFactory;
 //import mil.nga.giat.geowave.datastore.hbase.operations.config.HBaseRequiredOptions;
 //import mil.nga.giat.geowave.datastore.hbase.util.ConnectionPool;
@@ -36,7 +37,7 @@ import mil.nga.giat.geowave.test.annotation.GeoWaveTestStore.GeoWaveStoreType;
 public class HBaseStoreTestEnvironment extends
 		StoreTestEnvironment
 {
-	private static final GenericStoreFactory<DataStore> STORE_FACTORY = null;// new
+	private static final GenericStoreFactory<DataStore> STORE_FACTORY = new AccumuloStoreFactoryFamily().getDataStoreFactory();// new
 																				// HBaseDataStoreFactory();
 	private static HBaseStoreTestEnvironment singletonInstance = null;
 

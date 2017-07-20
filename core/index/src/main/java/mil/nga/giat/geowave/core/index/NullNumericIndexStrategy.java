@@ -117,11 +117,6 @@ public class NullNumericIndexStrategy implements
 	}
 
 	@Override
-	public Set<ByteArrayId> getPartitionKeys() {
-		return null;
-	}
-
-	@Override
 	public int getPartitionKeyLength() {
 		return 0;
 	}

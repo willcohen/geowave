@@ -13,21 +13,14 @@ import mil.nga.giat.geowave.core.store.filter.DistributableQueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.query.aggregate.Aggregation;
 
-public class ReaderParams
+public class ReaderParams extends
+		BaseReaderParams
 {
-	private final PrimaryIndex index;
-	private final List<ByteArrayId> adapterIds;
-	private final double[] maxResolutionSubsamplingPerDimension;
-	private final Pair<DataAdapter<?>, Aggregation<?, ?, ?>> aggregation;
-	private final Pair<List<String>, DataAdapter<?>> fieldSubsets;
-	private final boolean isMixedVisibility;
 	private final boolean isServersideAggregation;
 	private final QueryRanges queryRanges;
 	private final DistributableQueryFilter filter;
-	private final Integer limit;
 	private final List<MultiDimensionalCoordinateRangesArray> coordinateRanges;
 	private final List<MultiDimensionalNumericData> constraints;
-	private final String[] additionalAuthorizations;
 
 	public ReaderParams(
 			final PrimaryIndex index,
@@ -43,19 +36,20 @@ public class ReaderParams
 			final List<MultiDimensionalCoordinateRangesArray> coordinateRanges,
 			final List<MultiDimensionalNumericData> constraints,
 			final String... additionalAuthorizations ) {
-		this.index = index;
-		this.adapterIds = adapterIds;
-		this.maxResolutionSubsamplingPerDimension = maxResolutionSubsamplingPerDimension;
-		this.aggregation = aggregation;
-		this.fieldSubsets = fieldSubsets;
-		this.isMixedVisibility = isMixedVisibility;
+		super(
+				index,
+				adapterIds,
+				maxResolutionSubsamplingPerDimension,
+				aggregation,
+				fieldSubsets,
+				isMixedVisibility,
+				limit,
+				additionalAuthorizations);
 		this.isServersideAggregation = isServersideAggregation;
 		this.queryRanges = queryRanges;
 		this.filter = filter;
-		this.limit = limit;
 		this.coordinateRanges = coordinateRanges;
 		this.constraints = constraints;
-		this.additionalAuthorizations = additionalAuthorizations;
 	}
 
 	public List<MultiDimensionalCoordinateRangesArray> getCoordinateRanges() {
@@ -66,36 +60,8 @@ public class ReaderParams
 		return constraints;
 	}
 
-	public PrimaryIndex getIndex() {
-		return index;
-	}
-
-	public List<ByteArrayId> getAdapterIds() {
-		return adapterIds;
-	}
-
-	public double[] getMaxResolutionSubsamplingPerDimension() {
-		return maxResolutionSubsamplingPerDimension;
-	}
-
-	public Pair<DataAdapter<?>, Aggregation<?, ?, ?>> getAggregation() {
-		return aggregation;
-	}
-
-	public Pair<List<String>, DataAdapter<?>> getFieldSubsets() {
-		return fieldSubsets;
-	}
-
-	public boolean isMixedVisibility() {
-		return isMixedVisibility;
-	}
-
 	public boolean isServersideAggregation() {
 		return isServersideAggregation;
-	}
-
-	public boolean isAggregation() {
-		return ((aggregation != null) && (aggregation.getRight() != null));
 	}
 
 	public QueryRanges getQueryRanges() {
@@ -104,13 +70,5 @@ public class ReaderParams
 
 	public DistributableQueryFilter getFilter() {
 		return filter;
-	}
-
-	public Integer getLimit() {
-		return limit;
-	}
-
-	public String[] getAdditionalAuthorizations() {
-		return additionalAuthorizations;
 	}
 }

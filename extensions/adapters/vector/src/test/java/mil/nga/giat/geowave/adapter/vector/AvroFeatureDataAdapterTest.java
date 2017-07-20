@@ -195,7 +195,6 @@ public class AvroFeatureDataAdapterTest
 		coordArray[4] = new Coordinate(
 				-180,
 				-90);
-		System.err.println(dataMap.size());
 		// read data using the whole feature data adapter
 		try (final CloseableIterator<SimpleFeature> itr = dataStore.query(
 				new QueryOptions(
@@ -213,7 +212,6 @@ public class AvroFeatureDataAdapterTest
 						DataUtilities.encodeFeature(feat));
 
 			}
-			System.err.println(dataMap.size());
 			assertTrue(dataMap.isEmpty());
 		}
 

@@ -250,11 +250,6 @@ public class SingleTierSubStrategy implements
 	}
 
 	@Override
-	public Set<ByteArrayId> getPartitionKeys() {
-		return null;
-	}
-
-	@Override
 	public int getPartitionKeyLength() {
 		int rowIdOffset = 1;
 		for (int dimensionIdx = 0; dimensionIdx < baseDefinitions.length; dimensionIdx++) {

@@ -214,7 +214,7 @@ class BaseConstraintsQuery extends
 						maxResolutionSubsamplingPerDimension,
 						limit)) {
 					Mergeable mergedAggregationResult = null;
-					if (!reader.hasNext()) {
+					if (reader == null || !reader.hasNext()) {
 						return new CloseableIterator.Empty();
 					}
 					else {

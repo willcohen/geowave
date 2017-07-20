@@ -38,9 +38,6 @@ public class MergingVisibilityCombiner extends
 			// hold keys (a wrapper)
 			final Key currentKey = new Key(
 					input.getTopKey());
-			System.err.println("Row: " + ArrayUtils.toString(currentKey.getRow().getBytes()));
-			System.err.println("CF: " + ArrayUtils.toString(currentKey.getColumnFamily().getBytes()));
-			System.err.println("CQ: " + ArrayUtils.toString(currentKey.getColumnQualifier().getBytes()));
 			if (outputKey == null) {
 				outputKey = currentKey;
 			}

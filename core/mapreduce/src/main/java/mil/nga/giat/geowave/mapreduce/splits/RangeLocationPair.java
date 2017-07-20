@@ -84,8 +84,14 @@ public class RangeLocationPair
 			throws IOException,
 			InstantiationException,
 			IllegalAccessException {
-		range = new GeoWaveRowRange();
-		range.readFields(in);
+		final boolean nullRange = in.readBoolean();
+		if (nullRange) {
+			range = null;
+		}
+		else {
+			range = new GeoWaveRowRange();
+			range.readFields(in);
+		}
 		location = in.readUTF();
 		cardinality = in.readDouble();
 	}
@@ -93,7 +99,10 @@ public class RangeLocationPair
 	public void write(
 			final DataOutput out )
 			throws IOException {
-		range.write(out);
+		out.writeBoolean(range == null);
+		if (range != null) {
+			range.write(out);
+		}
 		out.writeUTF(location);
 		out.writeDouble(cardinality);
 	}

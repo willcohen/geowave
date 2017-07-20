@@ -2,6 +2,7 @@ package mil.nga.giat.geowave.core.store.memory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -10,7 +11,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -101,8 +101,7 @@ public class MemoryDataStoreOperations implements
 	@Override
 	public Writer createWriter(
 			final ByteArrayId indexId,
-			final ByteArrayId adapterId,
-			final Set<ByteArrayId> splits ) {
+			final ByteArrayId adapterId ) {
 		return new MyIndexWriter<>(
 				indexId);
 	}
@@ -261,7 +260,7 @@ public class MemoryDataStoreOperations implements
 		return true;
 	}
 
-	private class MyIndexReader implements
+	private static class MyIndexReader implements
 			Reader
 	{
 		private final Iterator<MemoryStoreEntry> it;
@@ -435,7 +434,35 @@ public class MemoryDataStoreOperations implements
 				return adapterIdCompare;
 			}
 			return 0;
+		}
 
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = (prime * result) + ((row == null) ? 0 : row.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(
+				final Object obj ) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (getClass() != obj.getClass()) {
+				return false;
+			}
+			final MemoryStoreEntry other = (MemoryStoreEntry) obj;
+			if (row == null) {
+				if (other.row != null) {
+					return false;
+				}
+			}
+			return compareTo(other) == 0;
 		}
 	}
 
@@ -735,7 +762,8 @@ public class MemoryDataStoreOperations implements
 				final GeoWaveMetadata metadata ) {
 			this(
 					metadata,
-					UUID.randomUUID().toString().getBytes());
+					UUID.randomUUID().toString().getBytes(
+							StringUtils.GEOWAVE_CHAR_SET));
 		}
 
 		public MemoryMetadataEntry(
@@ -777,6 +805,36 @@ public class MemoryDataStoreOperations implements
 					uuidBytes,
 					other.uuidBytes);
 
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = (prime * result) + ((metadata == null) ? 0 : metadata.hashCode());
+			result = (prime * result) + Arrays.hashCode(uuidBytes);
+			return result;
+		}
+
+		@Override
+		public boolean equals(
+				final Object obj ) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (getClass() != obj.getClass()) {
+				return false;
+			}
+			final MemoryMetadataEntry other = (MemoryMetadataEntry) obj;
+			if (metadata == null) {
+				if (other.metadata != null) {
+					return false;
+				}
+			}
+			return compareTo(other) == 0;
 		}
 	}
 }

@@ -104,8 +104,7 @@ public class OSMRunner extends
 		bao.createTable(
 				argv.getOsmTableName(),
 				true,
-				true,
-				null);
+				true);
 
 		bao.addLocalityGroup(
 				argv.getOsmTableName(),

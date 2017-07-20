@@ -105,7 +105,6 @@ public class HashKeyIndexStrategy implements
 		init(buf.getInt());
 	}
 
-	@Override
 	public Set<ByteArrayId> getPartitionKeys() {
 		return Sets.newHashSet(keys);
 	}

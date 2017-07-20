@@ -52,20 +52,26 @@ public class RowHistogramDataStaticticsTest
 
 		assertEquals(
 				1.0,
-				stats.cdf(null, genKey(
-						10000).getSortKey()),
+				stats.cdf(
+						null,
+						genKey(
+								10000).getSortKey()),
 				0.00001);
 
 		assertEquals(
 				0.0,
-				stats.cdf(null, genKey(
-						0).getSortKey()),
+				stats.cdf(
+						null,
+						genKey(
+								0).getSortKey()),
 				0.00001);
 
 		assertEquals(
 				0.5,
-				stats.cdf(null, genKey(
-						5000).getSortKey()),
+				stats.cdf(
+						null,
+						genKey(
+								5000).getSortKey()),
 				0.04);
 
 		final RowRangeHistogramStatistics<Integer> stats2 = new RowRangeHistogramStatistics<Integer>(
@@ -86,24 +92,30 @@ public class RowHistogramDataStaticticsTest
 
 		assertEquals(
 				0.0,
-				stats2.cdf(null, genKey(
-						10000).getSortKey()),
+				stats2.cdf(
+						null,
+						genKey(
+								10000).getSortKey()),
 				0.00001);
 
 		stats.merge(stats2);
 
 		assertEquals(
 				0.5,
-				stats.cdf(null, genKey(
-						10000).getSortKey()),
+				stats.cdf(
+						null,
+						genKey(
+								10000).getSortKey()),
 				0.15);
 
 		stats2.fromBinary(stats.toBinary());
 
 		assertEquals(
 				0.5,
-				stats.cdf(null, genKey(
-						10000).getSortKey()),
+				stats.cdf(
+						null,
+						genKey(
+								10000).getSortKey()),
 				0.15);
 
 		System.out.println(stats.toString());

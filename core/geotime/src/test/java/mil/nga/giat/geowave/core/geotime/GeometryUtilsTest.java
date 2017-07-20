@@ -271,11 +271,6 @@ public class GeometryUtilsTest
 		}
 
 		@Override
-		public Set<ByteArrayId> getPartitionKeys() {
-			return null;
-		}
-
-		@Override
 		public MultiDimensionalCoordinates getCoordinatesPerDimension(
 				final ByteArrayId partitionKey,
 				final ByteArrayId sortKey ) {

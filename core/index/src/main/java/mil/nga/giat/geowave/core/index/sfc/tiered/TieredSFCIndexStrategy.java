@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
+
 import org.apache.log4j.Logger;
 
 import com.google.common.base.Function;
@@ -724,19 +726,6 @@ public class TieredSFCIndexStrategy implements
 	}
 
 	@Override
-	public Set<ByteArrayId> getPartitionKeys() {
-		final Set<ByteArrayId> retVal = new HashSet<ByteArrayId>(
-				orderedSfcIndexToTierId.size());
-		for (final Byte tier : orderedSfcIndexToTierId.values()) {
-			retVal.add(new ByteArrayId(
-					new byte[] {
-						tier
-					}));
-		}
-		return retVal;
-	}
-
-	@Override
 	public int getPartitionKeyLength() {
 		int rowIdOffset = 1;
 		for (int dimensionIdx = 0; dimensionIdx < baseDefinitions.length; dimensionIdx++) {
@@ -855,6 +844,7 @@ public class TieredSFCIndexStrategy implements
 				new Function<SinglePartitionInsertionIds, ByteArrayId>() {
 					@Override
 					public ByteArrayId apply(
+							@Nonnull
 							final SinglePartitionInsertionIds input ) {
 						return input.getPartitionKey();
 					}
@@ -883,6 +873,7 @@ public class TieredSFCIndexStrategy implements
 				new Function<SinglePartitionQueryRanges, ByteArrayId>() {
 					@Override
 					public ByteArrayId apply(
+							@Nonnull
 							final SinglePartitionQueryRanges input ) {
 						return input.getPartitionKey();
 					}

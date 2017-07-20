@@ -453,11 +453,6 @@ public class BasicQueryTest
 		}
 
 		@Override
-		public Set<ByteArrayId> getPartitionKeys() {
-			return null;
-		}
-
-		@Override
 		public MultiDimensionalCoordinates getCoordinatesPerDimension(
 				ByteArrayId partitionKey,
 				ByteArrayId sortKey ) {

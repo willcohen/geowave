@@ -512,6 +512,13 @@ public class AccumuloDataStoreStatsTest
 				"bbb");
 		assertTrue(countStats != null);
 
+		RowRangeHistogramStatistics<?> histogramStats = (RowRangeHistogramStatistics<?>) statsStore.getDataStatistics(
+				adapter.getAdapterId(),
+				RowRangeHistogramStatistics.composeId(index.getId()),
+				"bbb");
+
+		assertTrue(histogramStats != null);
+
 		statsStore.removeAllStatistics(
 				adapter.getAdapterId(),
 				"bbb");
@@ -522,13 +529,12 @@ public class AccumuloDataStoreStatsTest
 				"bbb");
 		assertNull(countStats);
 
-		final RowRangeHistogramStatistics<?> histogramStats = (RowRangeHistogramStatistics<?>) statsStore.getDataStatistics(
+		histogramStats = (RowRangeHistogramStatistics<?>) statsStore.getDataStatistics(
 				adapter.getAdapterId(),
 				RowRangeHistogramStatistics.composeId(index.getId()),
 				"bbb");
 
-		assertTrue(histogramStats != null);
-
+		assertNull(histogramStats);
 	}
 
 	protected static class TestGeometry

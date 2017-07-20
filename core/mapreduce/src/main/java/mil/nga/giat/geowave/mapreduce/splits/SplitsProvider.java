@@ -23,7 +23,6 @@ import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
 import mil.nga.giat.geowave.core.store.adapter.statistics.RowRangeHistogramStatistics;
-import mil.nga.giat.geowave.core.store.index.Index;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.operations.DataStoreOperations;
@@ -32,11 +31,9 @@ import mil.nga.giat.geowave.core.store.query.QueryOptions;
 
 public abstract class SplitsProvider
 {
-	private final static Logger LOGGER = Logger.getLogger(
-			SplitsProvider.class);
+	private final static Logger LOGGER = Logger.getLogger(SplitsProvider.class);
 
-	private static final BigInteger TWO = BigInteger.valueOf(
-			2);
+	private static final BigInteger TWO = BigInteger.valueOf(2);
 
 	public SplitsProvider() {}
 
@@ -104,17 +101,13 @@ public abstract class SplitsProvider
 				// back,
 				// increasing the size by 1
 				final IntermediateSplitInfo highestSplit = splits.pollLast();
-				final IntermediateSplitInfo otherSplit = highestSplit.split(
-						statsCache);
-				splits.add(
-						highestSplit);
+				final IntermediateSplitInfo otherSplit = highestSplit.split(statsCache);
+				splits.add(highestSplit);
 				if (otherSplit == null) {
-					LOGGER.warn(
-							"Cannot meet minimum splits");
+					LOGGER.warn("Cannot meet minimum splits");
 					break;
 				}
-				splits.add(
-						otherSplit);
+				splits.add(otherSplit);
 			}
 			while (splits.size() < minSplits);
 		}
@@ -129,20 +122,17 @@ public abstract class SplitsProvider
 				// the number of locations/indices
 				final IntermediateSplitInfo lowestSplit = splits.pollFirst();
 				final IntermediateSplitInfo nextLowestSplit = splits.pollFirst();
-				lowestSplit.merge(
-						nextLowestSplit);
-				splits.add(
-						lowestSplit);
+				lowestSplit.merge(nextLowestSplit);
+				splits.add(lowestSplit);
 			}
 			while (splits.size() > maxSplits);
 		}
 
 		for (final IntermediateSplitInfo split : splits) {
-			retVal.add(
-					split.toFinalSplit(
-							statsStore,
-							indexIdToAdaptersMap,
-							queryOptions.getAuthorizations()));
+			retVal.add(split.toFinalSplit(
+					statsStore,
+					indexIdToAdaptersMap,
+					queryOptions.getAuthorizations()));
 		}
 		return retVal;
 	}
@@ -164,17 +154,26 @@ public abstract class SplitsProvider
 			final RowRangeHistogramStatistics<?> rangeStats,
 			final GeoWaveRowRange range,
 			final int partitionKeyLength ) {
-		return rangeStats == null ? getRangeLength(
-				range)
-				: rangeStats.cardinality(range.getPartitionKey(),
-						range.getStartSortKey() == null ? null : ArrayUtils.subarray(
-								range.getStartSortKey(),
-								partitionKeyLength,
-								range.getStartSortKey().length),
-						range.getEndSortKey() == null ? null : ArrayUtils.subarray(
-								range.getEndSortKey(),
-								partitionKeyLength,
-								range.getEndSortKey().length));
+		if (range == null) {
+			if (rangeStats != null) {
+				return rangeStats.totalSampleSize();
+			}
+			else {
+				// with an infinite range and no histogram we have no info to
+				// base a cardinality on
+				return 1;
+			}
+		}
+		return rangeStats == null ? getRangeLength(range) : rangeStats.cardinality(
+				range.getPartitionKey(),
+				range.getStartSortKey() == null ? null : ArrayUtils.subarray(
+						range.getStartSortKey(),
+						partitionKeyLength,
+						range.getStartSortKey().length),
+				range.getEndSortKey() == null ? null : ArrayUtils.subarray(
+						range.getEndSortKey(),
+						partitionKeyLength,
+						range.getEndSortKey().length));
 	}
 
 	protected RowRangeHistogramStatistics<?> getHistStats(
@@ -185,8 +184,7 @@ public abstract class SplitsProvider
 			final Map<PrimaryIndex, RowRangeHistogramStatistics<?>> statsCache,
 			final String[] authorizations )
 			throws IOException {
-		RowRangeHistogramStatistics<?> rangeStats = statsCache.get(
-				index);
+		RowRangeHistogramStatistics<?> rangeStats = statsCache.get(index);
 
 		if (rangeStats == null) {
 			try {
@@ -216,8 +214,7 @@ public abstract class SplitsProvider
 		// TODO: does this account for the two extra bytes on BigInteger?
 		final byte[] valueBytes = value.toByteArray();
 		final byte[] bytes = new byte[numBytes];
-		final int pos = Math.abs(
-				numBytes - valueBytes.length);
+		final int pos = Math.abs(numBytes - valueBytes.length);
 		System.arraycopy(
 				valueBytes,
 				0,
@@ -239,15 +236,13 @@ public abstract class SplitsProvider
 		for (final DataAdapter<?> adapter : adapters) {
 			final RowRangeHistogramStatistics<?> rowStat = (RowRangeHistogramStatistics<?>) store.getDataStatistics(
 					adapter.getAdapterId(),
-					RowRangeHistogramStatistics.composeId(
-							index.getId()),
+					RowRangeHistogramStatistics.composeId(index.getId()),
 					authorizations);
 			if (singleStats == null) {
 				singleStats = rowStat;
 			}
 			else {
-				singleStats.merge(
-						rowStat);
+				singleStats.merge(rowStat);
 			}
 		}
 
@@ -260,9 +255,9 @@ public abstract class SplitsProvider
 		return getEnd(
 				range,
 				cardinality).subtract(
-						getStart(
-								range,
-								cardinality));
+				getStart(
+						range,
+						cardinality));
 	}
 
 	protected static BigInteger getStart(
@@ -307,7 +302,7 @@ public abstract class SplitsProvider
 
 	protected static double getRangeLength(
 			final GeoWaveRowRange range ) {
-		if ((range.getStartSortKey() == null) || (range.getEndSortKey() == null)) {
+		if ((range == null) || (range.getStartSortKey() == null) || (range.getEndSortKey() == null)) {
 			return 1;
 		}
 		final byte[] start = range.getStartSortKey();
@@ -352,20 +347,13 @@ public abstract class SplitsProvider
 				extractBytes(
 						end,
 						maxDepth));
-		final BigInteger rangeBI = endBI.subtract(
-				startBI);
-		if (rangeBI.equals(
-				BigInteger.ZERO)
-				|| rangeBI.equals(
-						BigInteger.ONE)) {
+		final BigInteger rangeBI = endBI.subtract(startBI);
+		if (rangeBI.equals(BigInteger.ZERO) || rangeBI.equals(BigInteger.ONE)) {
 			return end;
 		}
-		final byte[] valueBytes = rangeBI
-				.divide(
-						TWO)
-				.add(
-						startBI)
-				.toByteArray();
+		final byte[] valueBytes = rangeBI.divide(
+				TWO).add(
+				startBI).toByteArray();
 		final byte[] bytes = new byte[valueBytes.length - 2];
 		System.arraycopy(
 				valueBytes,

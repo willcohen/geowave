@@ -176,12 +176,6 @@ public class CompoundHierarchicalIndexStrategyWrapper implements
 	}
 
 	@Override
-	public Set<ByteArrayId> getPartitionKeys() {
-		return parentStrategies.get(
-				0).getPartitionKeys();
-	}
-
-	@Override
 	public List<IndexMetaData> createMetaData() {
 		return parentStrategies.get(
 				0).createMetaData();

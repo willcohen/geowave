@@ -117,11 +117,6 @@ public class NumericIndexStrategyWrapper implements
 	}
 
 	@Override
-	public Set<ByteArrayId> getPartitionKeys() {
-		return indexStrategy.getPartitionKeys();
-	}
-
-	@Override
 	public int getPartitionKeyLength() {
 		return indexStrategy.getPartitionKeyLength();
 	}

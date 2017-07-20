@@ -284,33 +284,6 @@ public class CompoundIndexStrategy implements
 	}
 
 	@Override
-	public Set<ByteArrayId> getPartitionKeys() {
-		final Set<ByteArrayId> partitionKeys1 = subStrategy1.getPartitionKeys();
-		final Set<ByteArrayId> partitionKeys2 = subStrategy2.getPartitionKeys();
-		Set<ByteArrayId> partitionKeys;
-		if ((partitionKeys1 == null) || partitionKeys1.isEmpty()) {
-			partitionKeys = partitionKeys2;
-		}
-		else if ((partitionKeys2 == null) || partitionKeys2.isEmpty()) {
-			partitionKeys = partitionKeys1;
-		}
-		else {
-			// use all permutations of range keys
-			partitionKeys = new HashSet<ByteArrayId>(
-					partitionKeys1.size() * partitionKeys2.size());
-			for (final ByteArrayId partitionKey1 : partitionKeys1) {
-				for (final ByteArrayId partitionKey2 : partitionKeys2) {
-					partitionKeys.add(new ByteArrayId(
-							ByteArrayUtils.combineArrays(
-									partitionKey1.getBytes(),
-									partitionKey2.getBytes())));
-				}
-			}
-		}
-		return partitionKeys;
-	}
-
-	@Override
 	public int getPartitionKeyLength() {
 		return subStrategy1.getPartitionKeyLength() + subStrategy2.getPartitionKeyLength();
 	}

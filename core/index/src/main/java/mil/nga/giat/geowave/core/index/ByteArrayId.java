@@ -4,6 +4,8 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
@@ -183,6 +185,7 @@ public class ByteArrayId implements
 				new Function<String, ByteArrayId>() {
 					@Override
 					public ByteArrayId apply(
+							@Nonnull
 							final String input ) {
 						return new ByteArrayId(
 								input);

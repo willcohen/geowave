@@ -18,9 +18,6 @@ class IntermediaryReadEntryInfo<T>
 
 	private DataAdapter<T> dataAdapter;
 	private boolean adapterVerified;
-	private ByteArrayId dataId;
-	private ByteArrayId partitionId;
-	private ByteArrayId sortKey;
 
 	public IntermediaryReadEntryInfo(
 			final PrimaryIndex index,

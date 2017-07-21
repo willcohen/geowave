@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.TimeZone;
 
 import org.apache.log4j.Logger;
 import org.geotools.data.simple.SimpleFeatureIterator;
@@ -58,9 +59,15 @@ import mil.nga.giat.geowave.test.GeoWaveITRunner;
 import mil.nga.giat.geowave.test.TestUtils;
 import mil.nga.giat.geowave.test.annotation.GeoWaveTestStore;
 import mil.nga.giat.geowave.test.annotation.GeoWaveTestStore.GeoWaveStoreType;
+import mil.nga.giat.geowave.test.annotation.NamespaceOverride;
 import mil.nga.giat.geowave.test.basic.AbstractGeoWaveIT;
 
 @RunWith(GeoWaveITRunner.class)
+@GeoWaveTestStore({
+	GeoWaveStoreType.ACCUMULO,
+	// GeoWaveStoreType.BIGTABLE,
+	GeoWaveStoreType.HBASE
+})
 public class SpatialTemporalQueryIT extends
 		AbstractGeoWaveIT
 {
@@ -71,68 +78,100 @@ public class SpatialTemporalQueryIT extends
 	private static final int MULTI_MONTH_YEAR = 2000;
 	private static final int MULTI_YEAR_MIN = 1980;
 	private static final int MULTI_YEAR_MAX = 1995;
-	private static final PrimaryIndex DAY_INDEX = new SpatialTemporalIndexBuilder().setPartitionStrategy(
-			PartitionStrategy.ROUND_ROBIN).setNumPartitions(
-			10).setPeriodicity(
-			Unit.DAY).createIndex();
-	private static final PrimaryIndex MONTH_INDEX = new SpatialTemporalIndexBuilder().setPartitionStrategy(
-			PartitionStrategy.HASH).setNumPartitions(
-			100).setPeriodicity(
-			Unit.MONTH).createIndex();
-	private static final PrimaryIndex YEAR_INDEX = new SpatialTemporalIndexBuilder().setPartitionStrategy(
-			PartitionStrategy.HASH).setNumPartitions(
-			10).setPeriodicity(
-			Unit.YEAR).createIndex();
+	private static final String TEST_DAY_RANGE_NAMESPACE = "TEST_DAY_RANGE";
+	private static final PrimaryIndex DAY_INDEX = new SpatialTemporalIndexBuilder()
+			.setPartitionStrategy(
+					PartitionStrategy.ROUND_ROBIN)
+			.setNumPartitions(
+					10)
+			.setPeriodicity(
+					Unit.DAY)
+			.createIndex();
+	private static final PrimaryIndex MONTH_INDEX = new SpatialTemporalIndexBuilder()
+			.setPartitionStrategy(
+					PartitionStrategy.HASH)
+			.setNumPartitions(
+					100)
+			.setPeriodicity(
+					Unit.MONTH)
+			.createIndex();
+	private static final PrimaryIndex YEAR_INDEX = new SpatialTemporalIndexBuilder()
+			.setPartitionStrategy(
+					PartitionStrategy.HASH)
+			.setNumPartitions(
+					10)
+			.setPeriodicity(
+					Unit.YEAR)
+			.createIndex();
 	private FeatureDataAdapter timeStampAdapter;
 	private FeatureDataAdapter timeRangeAdapter;
 	private DataStore dataStore;
 	private GeoWaveGTDataStore geowaveGtDataStore;
 	private PrimaryIndex currentGeotoolsIndex;
 
-	@GeoWaveTestStore({
-		GeoWaveStoreType.ACCUMULO,
-		// GeoWaveStoreType.BIGTABLE,
-		GeoWaveStoreType.HBASE
-	})
 	protected DataStorePluginOptions dataStoreOptions;
 
+	@NamespaceOverride(TEST_DAY_RANGE_NAMESPACE)
+	protected DataStorePluginOptions dayRangeDataStoreOptions;
+
+	@Override
 	protected DataStorePluginOptions getDataStorePluginOptions() {
 		return dataStoreOptions;
 	}
 
-	private final static Logger LOGGER = Logger.getLogger(SpatialTemporalQueryIT.class);
+	private final static Logger LOGGER = Logger.getLogger(
+			SpatialTemporalQueryIT.class);
 	private static long startMillis;
 
 	@BeforeClass
 	public static void startTimer() {
+		CQL_DATE_FORMAT.setTimeZone(
+				TimeZone.getTimeZone(
+						"GMT"));
+		;
 		startMillis = System.currentTimeMillis();
-		LOGGER.warn("-----------------------------------------");
-		LOGGER.warn("*                                       *");
-		LOGGER.warn("*     RUNNING SpatialTemporalQueryIT    *");
-		LOGGER.warn("*                                       *");
-		LOGGER.warn("-----------------------------------------");
+		LOGGER.warn(
+				"-----------------------------------------");
+		LOGGER.warn(
+				"*                                       *");
+		LOGGER.warn(
+				"*     RUNNING SpatialTemporalQueryIT    *");
+		LOGGER.warn(
+				"*                                       *");
+		LOGGER.warn(
+				"-----------------------------------------");
 	}
 
 	@AfterClass
 	public static void reportTest() {
-		LOGGER.warn("-----------------------------------------");
-		LOGGER.warn("*                                       *");
-		LOGGER.warn("*    FINISHED SpatialTemporalQueryIT    *");
-		LOGGER
-				.warn("*         " + ((System.currentTimeMillis() - startMillis) / 1000)
-						+ "s elapsed.                 *");
-		LOGGER.warn("*                                       *");
-		LOGGER.warn("-----------------------------------------");
+		LOGGER.warn(
+				"-----------------------------------------");
+		LOGGER.warn(
+				"*                                       *");
+		LOGGER.warn(
+				"*    FINISHED SpatialTemporalQueryIT    *");
+		LOGGER.warn(
+				"*         " + ((System.currentTimeMillis() - startMillis) / 1000) + "s elapsed.                 *");
+		LOGGER.warn(
+				"*                                       *");
+		LOGGER.warn(
+				"-----------------------------------------");
+	}
+
+	@After
+	public void clearDayRangeDataStore() {
+		TestUtils.deleteAll(
+				dayRangeDataStoreOptions);
 	}
 
 	@Before
 	public void initSpatialTemporalTestData()
 			throws IOException,
 			GeoWavePluginException {
-
 		dataStore = dataStoreOptions.createDataStore();
 		SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
-		builder.setName("simpletimestamp");
+		builder.setName(
+				"simpletimestamp");
 		builder.add(
 				"geo",
 				Point.class);
@@ -143,7 +182,8 @@ public class SpatialTemporalQueryIT extends
 				builder.buildFeatureType());
 
 		builder = new SimpleFeatureTypeBuilder();
-		builder.setName("simpletimerange");
+		builder.setName(
+				"simpletimerange");
 		builder.add(
 				"geo",
 				Point.class);
@@ -167,77 +207,103 @@ public class SpatialTemporalQueryIT extends
 				YEAR_INDEX,
 				MONTH_INDEX,
 				DAY_INDEX);
-
+		// time ranges for days isn't tested so we don't have to deal with
+		// ingesting into the day index, the multi-year test case (requiring
+		// 1000+ partitions)
 		final IndexWriter rangeWriters = dataStore.createWriter(
 				timeRangeAdapter,
 				YEAR_INDEX,
-				MONTH_INDEX,
-				DAY_INDEX);
+				MONTH_INDEX);
 
 		try {
-			for (int day = cal.getActualMinimum(Calendar.DAY_OF_MONTH); day <= cal
-					.getActualMaximum(Calendar.DAY_OF_MONTH); day++) {
-				final double ptVal = ((((day + 1.0) - cal.getActualMinimum(Calendar.DAY_OF_MONTH)) / ((cal
-						.getActualMaximum(Calendar.DAY_OF_MONTH) - cal.getActualMinimum(Calendar.DAY_OF_MONTH)) + 2.0)) * 2) - 1;
+			for (int day = cal.getActualMinimum(
+					Calendar.DAY_OF_MONTH); day <= cal.getActualMaximum(
+							Calendar.DAY_OF_MONTH); day++) {
+				final double ptVal = ((((day + 1.0) - cal.getActualMinimum(
+						Calendar.DAY_OF_MONTH))
+						/ ((cal.getActualMaximum(
+								Calendar.DAY_OF_MONTH)
+								- cal.getActualMinimum(
+										Calendar.DAY_OF_MONTH))
+								+ 2.0))
+						* 2) - 1;
 				cal.set(
 						Calendar.DAY_OF_MONTH,
 						day);
-				final Point pt = geomFactory.createPoint(new Coordinate(
-						ptVal,
-						ptVal));
-				featureBuilder.add(pt);
-				featureBuilder.add(cal.getTime());
-				final SimpleFeature feature = featureBuilder.buildFeature("day:" + day);
-				timeWriters.write(feature);
+				final Point pt = geomFactory.createPoint(
+						new Coordinate(
+								ptVal,
+								ptVal));
+				featureBuilder.add(
+						pt);
+				featureBuilder.add(
+						cal.getTime());
+				final SimpleFeature feature = featureBuilder.buildFeature(
+						"day:" + day);
+				timeWriters.write(
+						feature);
 			}
 
-			ingestTimeRangeData(
-					cal,
-					rangeWriters,
-					featureTimeRangeBuilder,
-					cal.getActualMinimum(Calendar.DAY_OF_MONTH),
-					cal.getActualMaximum(Calendar.DAY_OF_MONTH),
-					Calendar.DAY_OF_MONTH,
-					"day");
 			cal = getInitialMonthCalendar();
-			for (int month = cal.getActualMinimum(Calendar.MONTH); month <= cal.getActualMaximum(Calendar.MONTH); month++) {
+			for (int month = cal.getActualMinimum(
+					Calendar.MONTH); month <= cal.getActualMaximum(
+							Calendar.MONTH); month++) {
 				cal.set(
 						Calendar.MONTH,
 						month);
 
-				final double ptVal = ((((month + 1.0) - cal.getActualMinimum(Calendar.MONTH)) / ((cal
-						.getActualMaximum(Calendar.MONTH) - cal.getActualMinimum(Calendar.MONTH)) + 2.0)) * 2) - 1;
-				final Point pt = geomFactory.createPoint(new Coordinate(
-						ptVal,
-						ptVal));
-				featureBuilder.add(pt);
-				featureBuilder.add(cal.getTime());
-				final SimpleFeature feature = featureBuilder.buildFeature("month:" + month);
-				timeWriters.write(feature);
+				final double ptVal = ((((month + 1.0) - cal.getActualMinimum(
+						Calendar.MONTH))
+						/ ((cal.getActualMaximum(
+								Calendar.MONTH)
+								- cal.getActualMinimum(
+										Calendar.MONTH))
+								+ 2.0))
+						* 2) - 1;
+				final Point pt = geomFactory.createPoint(
+						new Coordinate(
+								ptVal,
+								ptVal));
+				featureBuilder.add(
+						pt);
+				featureBuilder.add(
+						cal.getTime());
+				final SimpleFeature feature = featureBuilder.buildFeature(
+						"month:" + month);
+				timeWriters.write(
+						feature);
 			}
 			ingestTimeRangeData(
 					cal,
 					rangeWriters,
 					featureTimeRangeBuilder,
-					cal.getActualMinimum(Calendar.MONTH),
-					cal.getActualMaximum(Calendar.MONTH),
+					cal.getActualMinimum(
+							Calendar.MONTH),
+					cal.getActualMaximum(
+							Calendar.MONTH),
 					Calendar.MONTH,
 					"month");
 
 			cal = getInitialYearCalendar();
 			for (int year = MULTI_YEAR_MIN; year <= MULTI_YEAR_MAX; year++) {
-				final double ptVal = ((((year + 1.0) - MULTI_YEAR_MIN) / ((MULTI_YEAR_MAX - MULTI_YEAR_MIN) + 2.0)) * 2) - 1;
+				final double ptVal = ((((year + 1.0) - MULTI_YEAR_MIN) / ((MULTI_YEAR_MAX - MULTI_YEAR_MIN) + 2.0)) * 2)
+						- 1;
 				cal.set(
 						Calendar.YEAR,
 						year);
-				final Point pt = geomFactory.createPoint(new Coordinate(
-						ptVal,
-						ptVal));
-				featureBuilder.add(pt);
-				featureBuilder.add(cal.getTime());
+				final Point pt = geomFactory.createPoint(
+						new Coordinate(
+								ptVal,
+								ptVal));
+				featureBuilder.add(
+						pt);
+				featureBuilder.add(
+						cal.getTime());
 
-				final SimpleFeature feature = featureBuilder.buildFeature("year:" + year);
-				timeWriters.write(feature);
+				final SimpleFeature feature = featureBuilder.buildFeature(
+						"year:" + year);
+				timeWriters.write(
+						feature);
 			}
 
 			ingestTimeRangeData(
@@ -249,45 +315,67 @@ public class SpatialTemporalQueryIT extends
 					Calendar.YEAR,
 					"year");
 
-			Point pt = geomFactory.createPoint(new Coordinate(
-					-50,
-					-50));
-			featureBuilder.add(pt);
-			featureBuilder.add(cal.getTime());
-			SimpleFeature feature = featureBuilder.buildFeature("outlier1timestamp");
-			timeWriters.write(feature);
+			Point pt = geomFactory.createPoint(
+					new Coordinate(
+							-50,
+							-50));
+			featureBuilder.add(
+					pt);
+			featureBuilder.add(
+					cal.getTime());
+			SimpleFeature feature = featureBuilder.buildFeature(
+					"outlier1timestamp");
+			timeWriters.write(
+					feature);
 
-			pt = geomFactory.createPoint(new Coordinate(
-					50,
-					50));
-			featureBuilder.add(pt);
-			featureBuilder.add(cal.getTime());
-			feature = featureBuilder.buildFeature("outlier2timestamp");
-			timeWriters.write(feature);
+			pt = geomFactory.createPoint(
+					new Coordinate(
+							50,
+							50));
+			featureBuilder.add(
+					pt);
+			featureBuilder.add(
+					cal.getTime());
+			feature = featureBuilder.buildFeature(
+					"outlier2timestamp");
+			timeWriters.write(
+					feature);
 
-			pt = geomFactory.createPoint(new Coordinate(
-					-50,
-					-50));
-			featureTimeRangeBuilder.add(pt);
-			featureTimeRangeBuilder.add(cal.getTime());
+			pt = geomFactory.createPoint(
+					new Coordinate(
+							-50,
+							-50));
+			featureTimeRangeBuilder.add(
+					pt);
+			featureTimeRangeBuilder.add(
+					cal.getTime());
 			cal.roll(
 					Calendar.MINUTE,
 					5);
-			featureTimeRangeBuilder.add(cal.getTime());
-			feature = featureTimeRangeBuilder.buildFeature("outlier1timerange");
-			timeWriters.write(feature);
+			featureTimeRangeBuilder.add(
+					cal.getTime());
+			feature = featureTimeRangeBuilder.buildFeature(
+					"outlier1timerange");
+			timeWriters.write(
+					feature);
 
-			pt = geomFactory.createPoint(new Coordinate(
-					50,
-					50));
-			featureTimeRangeBuilder.add(pt);
-			featureTimeRangeBuilder.add(cal.getTime());
+			pt = geomFactory.createPoint(
+					new Coordinate(
+							50,
+							50));
+			featureTimeRangeBuilder.add(
+					pt);
+			featureTimeRangeBuilder.add(
+					cal.getTime());
 			cal.roll(
 					Calendar.MINUTE,
 					5);
-			featureTimeRangeBuilder.add(cal.getTime());
-			feature = featureTimeRangeBuilder.buildFeature("outlier2timerange");
-			timeWriters.write(feature);
+			featureTimeRangeBuilder.add(
+					cal.getTime());
+			feature = featureTimeRangeBuilder.buildFeature(
+					"outlier2timerange");
+			timeWriters.write(
+					feature);
 		}
 		finally {
 			timeWriters.close();
@@ -305,13 +393,14 @@ public class SpatialTemporalQueryIT extends
 									final Map<ByteArrayId, DataStatistics<SimpleFeature>> stats,
 									final BasicQuery query,
 									final PrimaryIndex[] indices ) {
-								final ServiceLoader<IndexQueryStrategySPI> ldr = ServiceLoader
-										.load(IndexQueryStrategySPI.class);
+								final ServiceLoader<IndexQueryStrategySPI> ldr = ServiceLoader.load(
+										IndexQueryStrategySPI.class);
 								final Iterator<IndexQueryStrategySPI> it = ldr.iterator();
 								final List<Index<?, ?>> indexList = new ArrayList<Index<?, ?>>();
 
 								for (final PrimaryIndex index : indices) {
-									indexList.add(index);
+									indexList.add(
+											index);
 								}
 								while (it.hasNext()) {
 									final IndexQueryStrategySPI strategy = it.next();
@@ -331,7 +420,7 @@ public class SpatialTemporalQueryIT extends
 											public void close()
 													throws IOException {
 
-											}
+										}
 										},
 										(Iterator) Collections.singleton(
 												currentGeotoolsIndex).iterator());
@@ -344,7 +433,8 @@ public class SpatialTemporalQueryIT extends
 	@After
 	public void deleteTestData()
 			throws IOException {
-		TestUtils.deleteAll(dataStoreOptions);
+		TestUtils.deleteAll(
+				dataStoreOptions);
 	}
 
 	private static Calendar getInitialDayCalendar() {
@@ -405,7 +495,8 @@ public class SpatialTemporalQueryIT extends
 			final IndexWriter[] writers,
 			final SimpleFeature feature ) {
 		for (final IndexWriter writer : writers) {
-			writer.write(feature);
+			writer.write(
+					feature);
 		}
 	}
 
@@ -418,45 +509,64 @@ public class SpatialTemporalQueryIT extends
 			final int field,
 			final String name ) {
 		final GeometryFactory geomFactory = new GeometryFactory();
-		final int midPoint = (int) Math.floor((min + max) / 2.0);
+		final int midPoint = (int) Math.floor(
+				(min + max) / 2.0);
 		cal.set(
 				field,
 				min);
-		featureTimeRangeBuilder.add(geomFactory.createPoint(new Coordinate(
-				0,
-				0)));
-		featureTimeRangeBuilder.add(cal.getTime());
+		featureTimeRangeBuilder.add(
+				geomFactory.createPoint(
+						new Coordinate(
+								0,
+								0)));
+		featureTimeRangeBuilder.add(
+				cal.getTime());
 		cal.set(
 				field,
 				max);
-		featureTimeRangeBuilder.add(cal.getTime());
-		SimpleFeature feature = featureTimeRangeBuilder.buildFeature(name + ":fullrange");
-		writer.write(feature);
+		featureTimeRangeBuilder.add(
+				cal.getTime());
+		SimpleFeature feature = featureTimeRangeBuilder.buildFeature(
+				name + ":fullrange");
+		writer.write(
+				feature);
 
 		cal.set(
 				field,
 				min);
-		featureTimeRangeBuilder.add(geomFactory.createPoint(new Coordinate(
-				-0.1,
-				-0.1)));
-		featureTimeRangeBuilder.add(cal.getTime());
+		featureTimeRangeBuilder.add(
+				geomFactory.createPoint(
+						new Coordinate(
+								-0.1,
+								-0.1)));
+		featureTimeRangeBuilder.add(
+				cal.getTime());
 		cal.set(
 				field,
 				midPoint);
-		featureTimeRangeBuilder.add(cal.getTime());
-		feature = featureTimeRangeBuilder.buildFeature(name + ":firsthalfrange");
-		writer.write(feature);
-		featureTimeRangeBuilder.add(geomFactory.createPoint(new Coordinate(
-				0.1,
-				0.1)));
-		featureTimeRangeBuilder.add(cal.getTime());
+		featureTimeRangeBuilder.add(
+				cal.getTime());
+		feature = featureTimeRangeBuilder.buildFeature(
+				name + ":firsthalfrange");
+		writer.write(
+				feature);
+		featureTimeRangeBuilder.add(
+				geomFactory.createPoint(
+						new Coordinate(
+								0.1,
+								0.1)));
+		featureTimeRangeBuilder.add(
+				cal.getTime());
 		cal.set(
 				field,
 				max);
 
-		featureTimeRangeBuilder.add(cal.getTime());
-		feature = featureTimeRangeBuilder.buildFeature(name + ":secondhalfrange");
-		writer.write(feature);
+		featureTimeRangeBuilder.add(
+				cal.getTime());
+		feature = featureTimeRangeBuilder.buildFeature(
+				name + ":secondhalfrange");
+		writer.write(
+				feature);
 	}
 
 	private void testQueryMultipleBins(
@@ -468,12 +578,14 @@ public class SpatialTemporalQueryIT extends
 			final String name )
 			throws IOException,
 			CQLException {
-		options.setAdapter(timeStampAdapter);
+		options.setAdapter(
+				timeStampAdapter);
 		cal.set(
 				field,
 				min);
 		Date startOfQuery = cal.getTime();
-		final int midPoint = (int) Math.floor((min + max) / 2.0);
+		final int midPoint = (int) Math.floor(
+				(min + max) / 2.0);
 		cal.set(
 				field,
 				midPoint);
@@ -516,7 +628,8 @@ public class SpatialTemporalQueryIT extends
 		final Set<String> fidExpectedResults = new HashSet<String>(
 				(maxExpectedResult - minExpectedResult) + 1);
 		for (int i = minExpectedResult; i <= maxExpectedResult; i++) {
-			fidExpectedResults.add(name + ":" + i);
+			fidExpectedResults.add(
+					name + ":" + i);
 		}
 		testQueryGivenDateRange(
 				options,
@@ -541,22 +654,27 @@ public class SpatialTemporalQueryIT extends
 			throws CQLException,
 			IOException {
 		final String cqlPredicate = "BBOX(\"geo\",-1,-1,1,1) AND \"" + startTimeAttribute + "\" <= '"
-				+ CQL_DATE_FORMAT.format(endOfQuery) + "' AND \"" + endTimeAttribute + "\" >= '"
-				+ CQL_DATE_FORMAT.format(startOfQuery) + "'";
+				+ CQL_DATE_FORMAT.format(
+						endOfQuery)
+				+ "' AND \"" + endTimeAttribute + "\" >= '" + CQL_DATE_FORMAT.format(
+						startOfQuery)
+				+ "'";
 		final Set<String> fidResults = new HashSet<String>();
 		try (CloseableIterator<SimpleFeature> it = dataStore.query(
 				options,
 				new SpatialTemporalQuery(
 						startOfQuery,
 						endOfQuery,
-						new GeometryFactory().toGeometry(new Envelope(
-								-1,
-								1,
-								-1,
-								1))))) {
+						new GeometryFactory().toGeometry(
+								new Envelope(
+										-1,
+										1,
+										-1,
+										1))))) {
 			while (it.hasNext()) {
 				final SimpleFeature feature = it.next();
-				fidResults.add(feature.getID());
+				fidResults.add(
+						feature.getID());
 			}
 		}
 		assertFidsMatchExpectation(
@@ -566,12 +684,17 @@ public class SpatialTemporalQueryIT extends
 
 		final Set<String> geotoolsFidResults = new HashSet<String>();
 		// now make sure geotools results match
-		try (final SimpleFeatureIterator features = geowaveGtDataStore.getFeatureSource(
-				adapterId).getFeatures(
-				CQL.toFilter(cqlPredicate)).features()) {
+		try (final SimpleFeatureIterator features = geowaveGtDataStore
+				.getFeatureSource(
+						adapterId)
+				.getFeatures(
+						CQL.toFilter(
+								cqlPredicate))
+				.features()) {
 			while (features.hasNext()) {
 				final SimpleFeature feature = features.next();
-				geotoolsFidResults.add(feature.getID());
+				geotoolsFidResults.add(
+						feature.getID());
 			}
 		}
 		assertFidsMatchExpectation(
@@ -593,7 +716,8 @@ public class SpatialTemporalQueryIT extends
 			final String expectedFid = it.next();
 			Assert.assertTrue(
 					"Cannot find result for " + expectedFid,
-					fidResults.contains(expectedFid));
+					fidResults.contains(
+							expectedFid));
 		}
 	}
 
@@ -602,14 +726,17 @@ public class SpatialTemporalQueryIT extends
 			throws IOException,
 			CQLException {
 		final QueryOptions options = new QueryOptions();
-		options.setIndex(DAY_INDEX);
+		options.setIndex(
+				DAY_INDEX);
 		currentGeotoolsIndex = DAY_INDEX;
 		final Calendar cal = getInitialDayCalendar();
 		testQueryMultipleBins(
 				cal,
 				Calendar.DAY_OF_MONTH,
-				cal.getActualMinimum(Calendar.DAY_OF_MONTH),
-				cal.getActualMaximum(Calendar.DAY_OF_MONTH),
+				cal.getActualMinimum(
+						Calendar.DAY_OF_MONTH),
+				cal.getActualMaximum(
+						Calendar.DAY_OF_MONTH),
 				options,
 				"day");
 	}
@@ -619,14 +746,17 @@ public class SpatialTemporalQueryIT extends
 			throws IOException,
 			CQLException {
 		final QueryOptions options = new QueryOptions();
-		options.setIndex(MONTH_INDEX);
+		options.setIndex(
+				MONTH_INDEX);
 		currentGeotoolsIndex = MONTH_INDEX;
 		final Calendar cal = getInitialMonthCalendar();
 		testQueryMultipleBins(
 				cal,
 				Calendar.MONTH,
-				cal.getActualMinimum(Calendar.MONTH),
-				cal.getActualMaximum(Calendar.MONTH),
+				cal.getActualMinimum(
+						Calendar.MONTH),
+				cal.getActualMaximum(
+						Calendar.MONTH),
 				options,
 				"month");
 
@@ -637,7 +767,8 @@ public class SpatialTemporalQueryIT extends
 			throws IOException,
 			CQLException {
 		final QueryOptions options = new QueryOptions();
-		options.setIndex(YEAR_INDEX);
+		options.setIndex(
+				YEAR_INDEX);
 		currentGeotoolsIndex = YEAR_INDEX;
 		final Calendar cal = getInitialYearCalendar();
 
@@ -663,14 +794,17 @@ public class SpatialTemporalQueryIT extends
 				field,
 				min);
 		Date startOfQuery = cal.getTime();
-		final int midPoint = (int) Math.floor((min + max) / 2.0);
+		final int midPoint = (int) Math.floor(
+				(min + max) / 2.0);
 		cal.set(
 				field,
 				midPoint - 1);
 		Date endOfQuery = cal.getTime();
 		Set<String> fidExpectedResults = new HashSet<String>();
-		fidExpectedResults.add(name + ":fullrange");
-		fidExpectedResults.add(name + ":firsthalfrange");
+		fidExpectedResults.add(
+				name + ":fullrange");
+		fidExpectedResults.add(
+				name + ":firsthalfrange");
 
 		testQueryGivenDateRange(
 				options,
@@ -691,8 +825,10 @@ public class SpatialTemporalQueryIT extends
 				max);
 		endOfQuery = cal.getTime();
 		fidExpectedResults = new HashSet<String>();
-		fidExpectedResults.add(name + ":fullrange");
-		fidExpectedResults.add(name + ":secondhalfrange");
+		fidExpectedResults.add(
+				name + ":fullrange");
+		fidExpectedResults.add(
+				name + ":secondhalfrange");
 
 		testQueryGivenDateRange(
 				options,
@@ -713,9 +849,12 @@ public class SpatialTemporalQueryIT extends
 				max);
 		endOfQuery = cal.getTime();
 
-		fidExpectedResults.add(name + ":fullrange");
-		fidExpectedResults.add(name + ":firsthalfrange");
-		fidExpectedResults.add(name + ":secondhalfrange");
+		fidExpectedResults.add(
+				name + ":fullrange");
+		fidExpectedResults.add(
+				name + ":firsthalfrange");
+		fidExpectedResults.add(
+				name + ":secondhalfrange");
 		testQueryGivenDateRange(
 				options,
 				name,
@@ -728,37 +867,23 @@ public class SpatialTemporalQueryIT extends
 	}
 
 	@Test
-	public void testTimeRangeAcrossBinsDay()
-			throws IOException,
-			CQLException {
-		final QueryOptions options = new QueryOptions();
-		options.setIndex(DAY_INDEX);
-		currentGeotoolsIndex = DAY_INDEX;
-		options.setAdapter(timeRangeAdapter);
-		final Calendar cal = getInitialDayCalendar();
-		testTimeRangeAcrossBins(
-				cal,
-				Calendar.DAY_OF_MONTH,
-				cal.getActualMinimum(Calendar.DAY_OF_MONTH),
-				cal.getActualMaximum(Calendar.DAY_OF_MONTH),
-				options,
-				"day");
-	}
-
-	@Test
 	public void testTimeRangeAcrossBinsMonth()
 			throws IOException,
 			CQLException {
 		final QueryOptions options = new QueryOptions();
-		options.setIndex(MONTH_INDEX);
+		options.setIndex(
+				MONTH_INDEX);
 		currentGeotoolsIndex = MONTH_INDEX;
-		options.setAdapter(timeRangeAdapter);
+		options.setAdapter(
+				timeRangeAdapter);
 		final Calendar cal = getInitialMonthCalendar();
 		testTimeRangeAcrossBins(
 				cal,
 				Calendar.MONTH,
-				cal.getActualMinimum(Calendar.MONTH),
-				cal.getActualMaximum(Calendar.MONTH),
+				cal.getActualMinimum(
+						Calendar.MONTH),
+				cal.getActualMaximum(
+						Calendar.MONTH),
 				options,
 				"month");
 	}
@@ -768,9 +893,11 @@ public class SpatialTemporalQueryIT extends
 			throws IOException,
 			CQLException {
 		final QueryOptions options = new QueryOptions();
-		options.setIndex(YEAR_INDEX);
+		options.setIndex(
+				YEAR_INDEX);
 		currentGeotoolsIndex = YEAR_INDEX;
-		options.setAdapter(timeRangeAdapter);
+		options.setAdapter(
+				timeRangeAdapter);
 		final Calendar cal = getInitialYearCalendar();
 		testTimeRangeAcrossBins(
 				cal,

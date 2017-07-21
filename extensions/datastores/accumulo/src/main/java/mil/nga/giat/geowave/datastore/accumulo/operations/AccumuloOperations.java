@@ -659,8 +659,10 @@ public class AccumuloOperations implements
 	public void insurePartition(
 			final ByteArrayId partition,
 			final String tableName ) {
-		final String qName = getQualifiedTableName(tableName);
-		Set<ByteArrayId> existingPartitions = insuredPartitionCache.get(qName);
+		final String qName = getQualifiedTableName(
+				tableName);
+		Set<ByteArrayId> existingPartitions = insuredPartitionCache.get(
+				qName);
 		try {
 			synchronized (insuredPartitionCache) {
 				if (existingPartitions == null) {
@@ -669,21 +671,25 @@ public class AccumuloOperations implements
 							qName);
 					existingPartitions = new HashSet<>();
 					for (final Text s : splits) {
-						existingPartitions.add(new ByteArrayId(
-								s.getBytes()));
+						existingPartitions.add(
+								new ByteArrayId(
+										s.getBytes()));
 					}
 					insuredPartitionCache.put(
 							qName,
 							existingPartitions);
 				}
-				if (!existingPartitions.contains(partition)) {
+				if (!existingPartitions.contains(
+						partition)) {
 					final SortedSet<Text> partitionKeys = new TreeSet<Text>();
-					partitionKeys.add(new Text(
-							partition.getBytes()));
+					partitionKeys.add(
+							new Text(
+									partition.getBytes()));
 					connector.tableOperations().addSplits(
 							qName,
 							partitionKeys);
-					existingPartitions.add(partition);
+					existingPartitions.add(
+							partition);
 				}
 			}
 		}

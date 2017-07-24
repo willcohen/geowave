@@ -3,15 +3,12 @@ package mil.nga.giat.geowave.test.query;
 import java.io.Closeable;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -393,34 +390,11 @@ public class SpatialTemporalQueryIT extends
 									final Map<ByteArrayId, DataStatistics<SimpleFeature>> stats,
 									final BasicQuery query,
 									final PrimaryIndex[] indices ) {
-								final ServiceLoader<IndexQueryStrategySPI> ldr = ServiceLoader.load(
-										IndexQueryStrategySPI.class);
-								final Iterator<IndexQueryStrategySPI> it = ldr.iterator();
-								final List<Index<?, ?>> indexList = new ArrayList<Index<?, ?>>();
-
-								for (final PrimaryIndex index : indices) {
-									indexList.add(
-											index);
-								}
-								while (it.hasNext()) {
-									final IndexQueryStrategySPI strategy = it.next();
-									final CloseableIterator<Index<?, ?>> indexStrategyIt = strategy.getIndices(
-											stats,
-											query,
-											indices);
-									Assert.assertTrue(
-											"Index Strategy '" + strategy.toString()
-													+ "' must at least choose one index.",
-											indexStrategyIt.hasNext());
-								}
 								return new CloseableIteratorWrapper<Index<?, ?>>(
 										new Closeable() {
-
 											@Override
 											public void close()
-													throws IOException {
-
-										}
+													throws IOException {}
 										},
 										(Iterator) Collections.singleton(
 												currentGeotoolsIndex).iterator());

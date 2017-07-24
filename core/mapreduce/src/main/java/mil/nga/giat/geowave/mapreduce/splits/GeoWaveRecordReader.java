@@ -379,13 +379,13 @@ public class GeoWaveRecordReader<T> extends
 			return 0f;
 		}
 		if ((range != null) && (range.getStartSortKey() != null) && (range.getEndSortKey() != null)
-				&& (currentKey.getRow() != null)) {
+				&& (currentKey.getGeoWaveKey() != null)) {
 			// TODO GEOWAVE-1018 this doesn't account for partition keys at all
 			// just look at the row progress
 			return getProgressForRange(
 					range.getStartSortKey(),
 					range.getEndSortKey(),
-					GeoWaveKey.getCompositeId(currentKey.getRow()));
+					GeoWaveKey.getCompositeId(currentKey.getGeoWaveKey()));
 
 		}
 		// if we can't figure it out, then claim no progress

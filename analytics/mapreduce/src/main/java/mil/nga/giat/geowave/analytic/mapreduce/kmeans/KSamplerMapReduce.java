@@ -157,7 +157,7 @@ public class KSamplerMapReduce
 								1.0 - rank, // sorts in ascending order
 								key.getDataId().getBytes())));
 				outputKey.setAdapterId(key.getAdapterId());
-				outputKey.setRow(key.getRow());
+				outputKey.setGeoWaveKey(key.getGeoWaveKey());
 				context.write(
 						outputKey,
 						currentValue);

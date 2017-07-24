@@ -58,7 +58,7 @@ public class MinimalBinDistanceHistogram implements
 				System.currentTimeMillis());
 
 		bins = new ArrayList<Bin>(
-				1024);
+				nbins);
 	}
 
 	/**

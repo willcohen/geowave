@@ -301,6 +301,15 @@ public class MinimalBinDistanceHistogram implements
 	 */
 	public double quantile(
 			final double q ) {
+		if (bins == null){
+			System.err.println("Bins is null!");
+		}
+		else if (bins.size() <= 0){
+			System.err.println("Bins is empty!");
+		}
+		if (nbins <= 0){
+			System.err.println("nBins is wrong!");
+		}
 		assert ((bins != null) && (bins.size() > 0) && (nbins > 0));
 		double csum = 0;
 		final int binsCount = bins.size();

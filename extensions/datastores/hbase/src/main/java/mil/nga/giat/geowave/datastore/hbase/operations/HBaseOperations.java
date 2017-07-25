@@ -1,9 +1,12 @@
 package mil.nga.giat.geowave.datastore.hbase.operations;
 
+import static org.apache.hadoop.hbase.security.visibility.VisibilityConstants.LABELS_TABLE_FAMILY;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.NavigableMap;
 import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
@@ -15,10 +18,12 @@ import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.RegionLocator;
+import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.security.visibility.Authorizations;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.log4j.Logger;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
@@ -431,6 +436,10 @@ public class HBaseOperations implements
 			coprocessorCache.get(
 					tableNameStr).add(
 							coprocessorName);
+
+			coprocessorCache.get(
+					tableNameStr).add(
+					coprocessorName);
 		}
 		catch (final IOException e) {
 			LOGGER.error(

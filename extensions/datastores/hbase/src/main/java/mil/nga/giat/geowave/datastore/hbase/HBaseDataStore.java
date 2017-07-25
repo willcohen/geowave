@@ -8,6 +8,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.hadoop.hbase.security.visibility.CellVisibility;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.log4j.Logger;
 

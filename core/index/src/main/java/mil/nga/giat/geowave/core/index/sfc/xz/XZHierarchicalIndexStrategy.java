@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -20,15 +20,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
-import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.index.ByteArrayUtils;
 import mil.nga.giat.geowave.core.index.Coordinate;
 import mil.nga.giat.geowave.core.index.HierarchicalNumericIndexStrategy;
 import mil.nga.giat.geowave.core.index.IndexMetaData;
+import mil.nga.giat.geowave.core.index.IndexUtils;
+import mil.nga.giat.geowave.core.index.InsertionIds;
 import mil.nga.giat.geowave.core.index.Mergeable;
 import mil.nga.giat.geowave.core.index.MultiDimensionalCoordinateRanges;
 import mil.nga.giat.geowave.core.index.MultiDimensionalCoordinates;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
+import mil.nga.giat.geowave.core.index.QueryRanges;
+import mil.nga.giat.geowave.core.index.SinglePartitionInsertionIds;
+import mil.nga.giat.geowave.core.index.SinglePartitionQueryRanges;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.index.dimension.NumericDimensionDefinition;
 import mil.nga.giat.geowave.core.index.sfc.SFCDimensionDefinition;
@@ -66,13 +70,13 @@ public class XZHierarchicalIndexStrategy implements
 
 	/**
 	 * Constructor used to create a XZ Hierarchical Index Strategy.
-	 * 
+	 *
 	 * @param maxBitsPerDimension
 	 */
 	public XZHierarchicalIndexStrategy(
-			NumericDimensionDefinition[] baseDefinitions,
-			TieredSFCIndexStrategy rasterStrategy,
-			int[] maxBitsPerDimension ) {
+			final NumericDimensionDefinition[] baseDefinitions,
+			final TieredSFCIndexStrategy rasterStrategy,
+			final int[] maxBitsPerDimension ) {
 		this.rasterStrategy = rasterStrategy;
 		this.maxBitsPerDimension = maxBitsPerDimension;
 		init(baseDefinitions);
@@ -83,7 +87,7 @@ public class XZHierarchicalIndexStrategy implements
 
 		this.baseDefinitions = baseDefinitions;
 
-		byteOffsetFromDimensionIndex = rasterStrategy.getByteOffsetFromDimensionalIndex();
+		byteOffsetFromDimensionIndex = rasterStrategy.getPartitionKeyLength();
 
 		// init dimensionalIds with values not used by rasterStrategy
 		for (byte i = Byte.MIN_VALUE; i <= Byte.MAX_VALUE; i++) {
@@ -99,11 +103,11 @@ public class XZHierarchicalIndexStrategy implements
 				}
 			}
 		}
-		if (pointCurveMultiDimensionalId == null || xzCurveMultiDimensionalId == null) {
+		if ((pointCurveMultiDimensionalId == null) || (xzCurveMultiDimensionalId == null)) {
 			LOGGER.error("No available byte values for xz and point sfc multiDimensionalIds.");
 		}
 
-		SFCDimensionDefinition[] sfcDimensions = new SFCDimensionDefinition[baseDefinitions.length];
+		final SFCDimensionDefinition[] sfcDimensions = new SFCDimensionDefinition[baseDefinitions.length];
 		for (int i = 0; i < baseDefinitions.length; i++) {
 			sfcDimensions[i] = new SFCDimensionDefinition(
 					baseDefinitions[i],
@@ -119,9 +123,9 @@ public class XZHierarchicalIndexStrategy implements
 	}
 
 	@Override
-	public List<ByteArrayRange> getQueryRanges(
-			MultiDimensionalNumericData indexedRange,
-			IndexMetaData... hints ) {
+	public QueryRanges getQueryRanges(
+			final MultiDimensionalNumericData indexedRange,
+			final IndexMetaData... hints ) {
 		return getQueryRanges(
 				indexedRange,
 				DEFAULT_MAX_RANGES,
@@ -129,22 +133,21 @@ public class XZHierarchicalIndexStrategy implements
 	}
 
 	@Override
-	public List<ByteArrayRange> getQueryRanges(
-			MultiDimensionalNumericData indexedRange,
-			int maxEstimatedRangeDecomposition,
-			IndexMetaData... hints ) {
+	public QueryRanges getQueryRanges(
+			final MultiDimensionalNumericData indexedRange,
+			final int maxEstimatedRangeDecomposition,
+			final IndexMetaData... hints ) {
 
 		// TODO don't just pass max ranges along to the SFC, take tiering and
 		// binning into account to limit the number of ranges correctly
 
 		TierIndexMetaData tieredHints = null;
 		XZHierarchicalIndexMetaData xzHints = null;
-		if (hints != null && hints.length > 0) {
+		if ((hints != null) && (hints.length > 0)) {
 			tieredHints = (TierIndexMetaData) hints[0];
 			xzHints = (XZHierarchicalIndexMetaData) hints[1];
 		}
-
-		List<ByteArrayRange> queryRanges = rasterStrategy.getQueryRanges(
+		final QueryRanges queryRanges = rasterStrategy.getQueryRanges(
 				indexedRange,
 				maxEstimatedRangeDecomposition,
 				tieredHints);
@@ -152,48 +155,62 @@ public class XZHierarchicalIndexStrategy implements
 		final BinnedNumericDataset[] binnedQueries = BinnedNumericDataset.applyBins(
 				indexedRange,
 				baseDefinitions);
-
-		if (xzHints == null || xzHints.pointCurveCount > 0) {
-			queryRanges.addAll(BinnedSFCUtils.getQueryRanges(
+		final List<SinglePartitionQueryRanges> partitionedRanges = new ArrayList<>();
+		if ((xzHints == null) || (xzHints.pointCurveCount > 0)) {
+			partitionedRanges.addAll(BinnedSFCUtils.getQueryRanges(
 					binnedQueries,
 					pointCurve,
-					maxEstimatedRangeDecomposition, // for now we're doing this
-													// per SFC rather than
-													// dividing by the SFCs
+					maxEstimatedRangeDecomposition, // for now we're
+													// doing this
+													// per SFC rather
+													// than
+													// dividing by the
+													// SFCs
 					pointCurveMultiDimensionalId));
 		}
 
-		if (xzHints == null || xzHints.xzCurveCount > 0) {
-			queryRanges.addAll(BinnedSFCUtils.getQueryRanges(
+		if ((xzHints == null) || (xzHints.xzCurveCount > 0)) {
+			partitionedRanges.addAll(BinnedSFCUtils.getQueryRanges(
 					binnedQueries,
 					xzCurve,
-					maxEstimatedRangeDecomposition, // for now we're doing this
-													// per SFC rather than
-													// dividing by the SFCs
+					maxEstimatedRangeDecomposition, // for now we're
+													// doing this
+													// per SFC rather
+													// than
+													// dividing by the
+													// SFCs
 					xzCurveMultiDimensionalId));
 		}
-
-		return queryRanges;
+		if (partitionedRanges.isEmpty()) {
+			return queryRanges;
+		}
+		final List<QueryRanges> queryRangesList = new ArrayList<>();
+		queryRangesList.add(queryRanges);
+		queryRangesList.add(new QueryRanges(
+				partitionedRanges));
+		return new QueryRanges(
+				queryRangesList);
 	}
 
 	@Override
-	public List<ByteArrayId> getInsertionIds(
-			MultiDimensionalNumericData indexedData ) {
+	public InsertionIds getInsertionIds(
+			final MultiDimensionalNumericData indexedData ) {
 
 		final BinnedNumericDataset[] ranges = BinnedNumericDataset.applyBins(
 				indexedData,
 				baseDefinitions);
-		final List<ByteArrayId> rowIds = new ArrayList<ByteArrayId>(
+		final List<SinglePartitionInsertionIds> partitionIds = new ArrayList<>(
 				ranges.length);
+
 		for (final BinnedNumericDataset range : ranges) {
-			BigInteger pointIds = pointCurve.getEstimatedIdCount(range);
-			ByteArrayId pointCurveId = BinnedSFCUtils.getSingleBinnedRowId(
+			final BigInteger pointIds = pointCurve.getEstimatedIdCount(range);
+			final SinglePartitionInsertionIds pointCurveId = BinnedSFCUtils.getSingleBinnedInsertionId(
 					pointIds,
 					pointCurveMultiDimensionalId,
 					range,
 					pointCurve);
 			if (pointCurveId != null) {
-				rowIds.add(pointCurveId);
+				partitionIds.add(pointCurveId);
 			}
 			else {
 				final double[] mins = range.getMinValuesPerDimension();
@@ -206,43 +223,47 @@ public class XZHierarchicalIndexStrategy implements
 					i++;
 				}
 
-				byte[] xzId = xzCurve.getId(values);
+				final byte[] xzId = xzCurve.getId(values);
 
-				byte[] prefixedId = ByteArrayUtils.combineArrays(
-						ByteArrayUtils.combineArrays(
-								new byte[] {
-									xzCurveMultiDimensionalId
-								},
-								range.getBinId()),
-						xzId);
-				rowIds.add(new ByteArrayId(
-						prefixedId));
+				partitionIds.add(new SinglePartitionInsertionIds(
+						new ByteArrayId(
+								ByteArrayUtils.combineArrays(
+										new byte[] {
+											xzCurveMultiDimensionalId
+										},
+										range.getBinId())),
+						new ByteArrayId(
+								xzId)));
 			}
 		}
 
-		return rowIds;
+		return new InsertionIds(
+				partitionIds);
 	}
 
 	@Override
-	public List<ByteArrayId> getInsertionIds(
-			MultiDimensionalNumericData indexedData,
-			int maxEstimatedDuplicateIds ) {
+	public InsertionIds getInsertionIds(
+			final MultiDimensionalNumericData indexedData,
+			final int maxEstimatedDuplicateIds ) {
 		return getInsertionIds(indexedData);
 	}
 
 	@Override
 	public MultiDimensionalNumericData getRangeForId(
-			ByteArrayId insertionId ) {
+			final ByteArrayId partitionKey,
+			final ByteArrayId sortKey ) {
 		// select curve based on first byte
-		byte first = insertionId.getBytes()[0];
+		final byte first = partitionKey.getBytes()[0];
 		if (first == pointCurveMultiDimensionalId) {
-			return pointCurve.getRanges(insertionId.getBytes());
+			return pointCurve.getRanges(sortKey.getBytes());
 		}
 		else if (first == xzCurveMultiDimensionalId) {
-			return xzCurve.getRanges(insertionId.getBytes());
+			return xzCurve.getRanges(sortKey.getBytes());
 		}
 		else {
-			return rasterStrategy.getRangeForId(insertionId);
+			return rasterStrategy.getRangeForId(
+					partitionKey,
+					sortKey);
 		}
 	}
 
@@ -277,23 +298,6 @@ public class XZHierarchicalIndexStrategy implements
 	}
 
 	@Override
-	public Set<ByteArrayId> getNaturalSplits() {
-		// return the multidimensionalIds of the curves and tiers
-		Set<ByteArrayId> splits = rasterStrategy.getNaturalSplits();
-
-		splits.add(new ByteArrayId(
-				new byte[] {
-					pointCurveMultiDimensionalId
-				}));
-		splits.add(new ByteArrayId(
-				new byte[] {
-					xzCurveMultiDimensionalId
-				}));
-
-		return splits;
-	}
-
-	@Override
 	public byte[] toBinary() {
 
 		final List<byte[]> dimensionDefBinaries = new ArrayList<byte[]>(
@@ -306,7 +310,7 @@ public class XZHierarchicalIndexStrategy implements
 		}
 
 		bufferLength += 4;
-		byte[] rasterStrategyBinary = PersistenceUtils.toBinary(rasterStrategy);
+		final byte[] rasterStrategyBinary = PersistenceUtils.toBinary(rasterStrategy);
 		bufferLength += rasterStrategyBinary.length;
 
 		bufferLength += 4;
@@ -324,7 +328,7 @@ public class XZHierarchicalIndexStrategy implements
 		buf.put(rasterStrategyBinary);
 
 		buf.putInt(maxBitsPerDimension.length);
-		for (int dimBits : maxBitsPerDimension) {
+		for (final int dimBits : maxBitsPerDimension) {
 			buf.putInt(dimBits);
 		}
 
@@ -333,7 +337,7 @@ public class XZHierarchicalIndexStrategy implements
 
 	@Override
 	public void fromBinary(
-			byte[] bytes ) {
+			final byte[] bytes ) {
 
 		final ByteBuffer buf = ByteBuffer.wrap(bytes);
 
@@ -349,7 +353,7 @@ public class XZHierarchicalIndexStrategy implements
 		}
 
 		final int rasterStrategySize = buf.getInt();
-		byte[] rasterStrategyBinary = new byte[rasterStrategySize];
+		final byte[] rasterStrategyBinary = new byte[rasterStrategySize];
 		buf.get(rasterStrategyBinary);
 		rasterStrategy = PersistenceUtils.fromBinary(
 				rasterStrategyBinary,
@@ -366,26 +370,33 @@ public class XZHierarchicalIndexStrategy implements
 
 	@Override
 	public MultiDimensionalCoordinates getCoordinatesPerDimension(
-			ByteArrayId insertionId ) {
+			final ByteArrayId partitionKey,
+			final ByteArrayId sortKey ) {
 
 		// select curve based on first byte
-		byte first = insertionId.getBytes()[0];
+		final byte first = partitionKey.getBytes()[0];
 		Coordinate[] coordinates = null;
 
 		if (first == pointCurveMultiDimensionalId) {
 			coordinates = BinnedSFCUtils.getCoordinatesForId(
-					insertionId.getBytes(),
+					ByteArrayUtils.combineArrays(
+							partitionKey.getBytes(),
+							sortKey == null ? null : sortKey.getBytes()),
 					baseDefinitions,
 					pointCurve);
 		}
 		else if (first == xzCurveMultiDimensionalId) {
 			coordinates = BinnedSFCUtils.getCoordinatesForId(
-					insertionId.getBytes(),
+					ByteArrayUtils.combineArrays(
+							partitionKey.getBytes(),
+							sortKey == null ? null : sortKey.getBytes()),
 					baseDefinitions,
 					xzCurve);
 		}
 		else {
-			return rasterStrategy.getCoordinatesPerDimension(insertionId);
+			return rasterStrategy.getCoordinatesPerDimension(
+					partitionKey,
+					sortKey);
 		}
 
 		return new MultiDimensionalCoordinates(
@@ -397,10 +408,10 @@ public class XZHierarchicalIndexStrategy implements
 
 	@Override
 	public MultiDimensionalCoordinateRanges[] getCoordinateRangesPerDimension(
-			MultiDimensionalNumericData dataRange,
-			IndexMetaData... hints ) {
+			final MultiDimensionalNumericData dataRange,
+			final IndexMetaData... hints ) {
 
-		MultiDimensionalCoordinateRanges[] rasterRanges = rasterStrategy.getCoordinateRangesPerDimension(
+		final MultiDimensionalCoordinateRanges[] rasterRanges = rasterStrategy.getCoordinateRangesPerDimension(
 				dataRange,
 				hints);
 
@@ -449,7 +460,7 @@ public class XZHierarchicalIndexStrategy implements
 	}
 
 	@Override
-	public int getByteOffsetFromDimensionalIndex() {
+	public int getPartitionKeyLength() {
 		return byteOffsetFromDimensionIndex;
 	}
 
@@ -460,9 +471,9 @@ public class XZHierarchicalIndexStrategy implements
 
 	@Override
 	public List<IndexMetaData> createMetaData() {
-		List<IndexMetaData> metaData = new ArrayList<IndexMetaData>();
+		final List<IndexMetaData> metaData = new ArrayList<IndexMetaData>();
 		metaData.addAll(rasterStrategy.createMetaData());
-		metaData.add((IndexMetaData) new XZHierarchicalIndexMetaData(
+		metaData.add(new XZHierarchicalIndexMetaData(
 				pointCurveMultiDimensionalId,
 				xzCurveMultiDimensionalId));
 		return metaData;
@@ -500,7 +511,7 @@ public class XZHierarchicalIndexStrategy implements
 
 		@Override
 		public void fromBinary(
-				byte[] bytes ) {
+				final byte[] bytes ) {
 			final ByteBuffer buffer = ByteBuffer.wrap(bytes);
 			pointCurveMultiDimensionalId = buffer.get();
 			xzCurveMultiDimensionalId = buffer.get();
@@ -510,7 +521,7 @@ public class XZHierarchicalIndexStrategy implements
 
 		@Override
 		public void merge(
-				Mergeable merge ) {
+				final Mergeable merge ) {
 			if (merge instanceof XZHierarchicalIndexMetaData) {
 				final XZHierarchicalIndexMetaData other = (XZHierarchicalIndexMetaData) merge;
 				pointCurveCount += other.pointCurveCount;
@@ -520,28 +531,28 @@ public class XZHierarchicalIndexStrategy implements
 
 		@Override
 		public void insertionIdsAdded(
-				List<ByteArrayId> insertionIds ) {
-			for (final ByteArrayId id : insertionIds) {
-				final byte first = id.getBytes()[0];
+				final InsertionIds insertionIds ) {
+			for (final SinglePartitionInsertionIds partitionId : insertionIds.getPartitionKeys()) {
+				final byte first = partitionId.getPartitionKey().getBytes()[0];
 				if (first == pointCurveMultiDimensionalId) {
-					pointCurveCount++;
+					pointCurveCount += partitionId.getSortKeys().size();
 				}
 				else if (first == xzCurveMultiDimensionalId) {
-					xzCurveCount++;
+					xzCurveCount += partitionId.getSortKeys().size();
 				}
 			}
 		}
 
 		@Override
 		public void insertionIdsRemoved(
-				List<ByteArrayId> insertionIds ) {
-			for (final ByteArrayId id : insertionIds) {
-				final byte first = id.getBytes()[0];
+				final InsertionIds insertionIds ) {
+			for (final SinglePartitionInsertionIds partitionId : insertionIds.getPartitionKeys()) {
+				final byte first = partitionId.getPartitionKey().getBytes()[0];
 				if (first == pointCurveMultiDimensionalId) {
-					pointCurveCount--;
+					pointCurveCount -= partitionId.getSortKeys().size();
 				}
 				else if (first == xzCurveMultiDimensionalId) {
-					xzCurveCount--;
+					xzCurveCount -= partitionId.getSortKeys().size();
 				}
 			}
 		}
@@ -553,7 +564,7 @@ public class XZHierarchicalIndexStrategy implements
 		@Override
 		public JSONObject toJSONObject()
 				throws JSONException {
-			JSONObject jo = new JSONObject();
+			final JSONObject jo = new JSONObject();
 			jo.put(
 					"type",
 					"XZHierarchicalIndexStrategy");
@@ -573,6 +584,24 @@ public class XZHierarchicalIndexStrategy implements
 
 			return jo;
 		}
+	}
+
+	@Override
+	public Set<ByteArrayId> getInsertionPartitionKeys(
+			final MultiDimensionalNumericData insertionData ) {
+		return IndexUtils.getInsertionPartitionKeys(
+				this,
+				insertionData);
+	}
+
+	@Override
+	public Set<ByteArrayId> getQueryPartitionKeys(
+			final MultiDimensionalNumericData queryData,
+			final IndexMetaData... hints ) {
+		return IndexUtils.getQueryPartitionKeys(
+				this,
+				queryData,
+				hints);
 	}
 
 }

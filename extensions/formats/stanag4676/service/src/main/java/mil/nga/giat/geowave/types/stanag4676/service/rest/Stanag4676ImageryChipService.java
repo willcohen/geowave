@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -41,8 +41,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.jcodec.codecs.vpx.NopRateControl;
 import org.jcodec.codecs.vpx.RateControl;
 import org.jcodec.codecs.vpx.VP8Encoder;
@@ -55,6 +53,8 @@ import org.jcodec.containers.mkv.muxer.MKVMuxer;
 import org.jcodec.containers.mkv.muxer.MKVMuxerTrack;
 import org.jcodec.scale.AWTUtil;
 import org.jcodec.scale.RgbToYuv420p;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Files;
 
@@ -74,7 +74,8 @@ import mil.nga.giat.geowave.service.ServiceUtils;
 @Path("stanag4676")
 public class Stanag4676ImageryChipService
 {
-	private static Logger LOGGER = LoggerFactory.getLogger(Stanag4676ImageryChipService.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(
+			Stanag4676ImageryChipService.class);
 	@Context
 	ServletContext context;
 	private static DataStore dataStore;
@@ -564,7 +565,7 @@ public class Stanag4676ImageryChipService
 			props = ServiceUtils.loadProperties(
 					is);
 		}
-		catch (IOException e) {
+		catch (final IOException e) {
 			LOGGER.error(
 					e.getLocalizedMessage(),
 					e);
@@ -575,32 +576,34 @@ public class Stanag4676ImageryChipService
 		if (props != null) {
 			final Map<String, String> strMap = new HashMap<String, String>();
 
-		final Set<Object> keySet = props.keySet();
-		final Iterator<Object> it = keySet.iterator();
-		while (it.hasNext()) {
-			final String key = it.next().toString();
-			final String value = ServiceUtils.getProperty(
-					props,
-					key);
-			strMap.put(
-					key,
-					value);
-			// HP Fortify "Log Forging" false positive
-			// What Fortify considers "user input" comes only
-			// from users with OS-level access anyway
-			LOGGER.info(
-					"    Key/Value: " + key + "/" + value);
+			final Set<Object> keySet = props.keySet();
+			final Iterator<Object> it = keySet.iterator();
+			while (it.hasNext()) {
+				final String key = it.next().toString();
+				final String value = ServiceUtils.getProperty(
+						props,
+						key);
+				strMap.put(
+						key,
+						value);
+				// HP Fortify "Log Forging" false positive
+				// What Fortify considers "user input" comes only
+				// from users with OS-level access anyway
+				LOGGER.info(
+						"    Key/Value: " + key + "/" + value);
+			}
+
+			dataStore = GeoWaveStoreFinder.createDataStore(
+					strMap);
+
+			dataStore = GeoWaveStoreFinder.createDataStore(
+					strMap);
 		}
-
-			dataStore = GeoWaveStoreFinder.createDataStore(strMap);
-
-		dataStore = GeoWaveStoreFinder.createDataStore(
-				strMap);
-
 		if (dataStore == null) {
 			LOGGER.error(
 					"Unable to create datastore for 4676 service");
 		}
 		return dataStore;
 	}
+
 }

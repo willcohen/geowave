@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.index.InsertionIds;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.GeoWaveStoreFinder;
@@ -302,7 +303,7 @@ public class GeoWaveOutputFormat extends
 						adapter,
 						ingestKey.getIndexIds());
 				if (indexWriter != null) {
-					List writeList = indexWriter.write(data);
+					final InsertionIds writeList = indexWriter.write(data);
 
 					if (!writeList.isEmpty()) {
 						success = true;

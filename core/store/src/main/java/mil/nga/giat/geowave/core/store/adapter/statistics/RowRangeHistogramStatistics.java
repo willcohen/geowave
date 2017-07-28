@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -75,9 +75,9 @@ public class RowRangeHistogramStatistics<T> extends
 	public static ByteArrayId decomposeFromId(
 			final ByteArrayId id ) {
 		// Need to account for length of type and of the separator
-		int lengthOfNonId = STATS_TYPE.getBytes().length + STATS_ID_SEPARATOR.length();
-		int idLength = id.getBytes().length - lengthOfNonId;
-		byte[] idBytes = new byte[idLength];
+		final int lengthOfNonId = STATS_TYPE.getBytes().length + STATS_ID_SEPARATOR.length();
+		final int idLength = id.getBytes().length - lengthOfNonId;
+		final byte[] idBytes = new byte[idLength];
 		System.arraycopy(
 				id.getBytes(),
 				lengthOfNonId,
@@ -325,9 +325,10 @@ public class RowRangeHistogramStatistics<T> extends
 	 * Convert Row Range Numeric statistics to a JSON object
 	 */
 
+	@Override
 	public JSONObject toJSONObject()
 			throws JSONException {
-		JSONObject jo = new JSONObject();
+		final JSONObject jo = new JSONObject();
 		jo.put(
 				"type",
 				STATS_TYPE.getString());
@@ -335,32 +336,55 @@ public class RowRangeHistogramStatistics<T> extends
 		jo.put(
 				"statisticsID",
 				statisticsId.getString());
+		final JSONArray histogramsArray = new JSONArray();
+		for (final Entry<ByteArrayId, NumericHistogram> e : histogramPerPartition.entrySet()) {
+			final JSONObject histogram = new JSONObject();
 
-		jo.put(
-				"range_min",
-				histogram.getMinValue());
-		jo.put(
-				"range_max",
-				histogram.getMaxValue());
-		jo.put(
-				"totalCount",
-				histogram.getTotalCount());
-		JSONArray binsArray = new JSONArray();
-		for (final double v : this.quantile(10)) {
-			binsArray.add(v);
+			final ByteArrayId p = e.getKey();
+			if ((p == null) || (p.getBytes() == null)) {
+				histogram.put(
+						"partition",
+						"null");
+			}
+			else {
+				histogram.put(
+						"partition",
+						p.getHexString());
+			}
+			histogram.put(
+					"range_min",
+					e.getValue().getMinValue());
+			histogram.put(
+					"range_min",
+					e.getValue().getMinValue());
+			histogram.put(
+					"range_max",
+					e.getValue().getMaxValue());
+			histogram.put(
+					"totalCount",
+					e.getValue().getTotalCount());
+			final JSONArray binsArray = new JSONArray();
+			for (final double v : e.getValue().quantile(
+					10)) {
+				binsArray.add(v);
+			}
+			histogram.put(
+					"bins",
+					binsArray);
+
+			final JSONArray countsArray = new JSONArray();
+			for (final long v : e.getValue().count(
+					10)) {
+				countsArray.add(v);
+			}
+			histogram.put(
+					"counts",
+					countsArray);
+			histogramsArray.add(histogram);
 		}
 		jo.put(
-				"bins",
-				binsArray);
-
-		JSONArray countsArray = new JSONArray();
-		for (final long v : count(10)) {
-			countsArray.add(v);
-		}
-		jo.put(
-				"counts",
-				countsArray);
-
+				"histograms",
+				histogramsArray);
 		return jo;
 	}
 

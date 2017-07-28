@@ -1,8 +1,6 @@
 package mil.nga.giat.geowave.example.cli;
 
 import mil.nga.giat.geowave.core.cli.spi.CLIOperationProviderSpi;
-import mil.nga.giat.geowave.datastore.hbase.cli.CombineStatisticsCommand;
-import mil.nga.giat.geowave.datastore.hbase.cli.HBaseSection;
 
 public class ExampleOperationProvider implements
 		CLIOperationProviderSpi

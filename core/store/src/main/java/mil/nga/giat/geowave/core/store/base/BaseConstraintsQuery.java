@@ -44,7 +44,7 @@ import mil.nga.giat.geowave.core.store.util.DataStoreUtils;
  * This class represents basic numeric contraints applied to a datastore query
  *
  */
-class BaseConstraintsQuery extends
+public class BaseConstraintsQuery extends
 		BaseFilteredIndexQuery
 {
 
@@ -59,7 +59,6 @@ class BaseConstraintsQuery extends
 	private final PrimaryIndex index;
 
 	public BaseConstraintsQuery(
-			final BaseDataStore dataStore,
 			final List<ByteArrayId> adapterIds,
 			final PrimaryIndex index,
 			final Query query,
@@ -72,7 +71,6 @@ class BaseConstraintsQuery extends
 			final DifferingFieldVisibilityEntryCount visibilityCounts,
 			final String[] authorizations ) {
 		this(
-				dataStore,
 				adapterIds,
 				index,
 				query != null ? query.getIndexConstraints(index.getIndexStrategy()) : null,
@@ -88,7 +86,6 @@ class BaseConstraintsQuery extends
 	}
 
 	public BaseConstraintsQuery(
-			final BaseDataStore dataStore,
 			final List<ByteArrayId> adapterIds,
 			final PrimaryIndex index,
 			final List<MultiDimensionalNumericData> constraints,
@@ -103,7 +100,6 @@ class BaseConstraintsQuery extends
 			final String[] authorizations ) {
 
 		super(
-				dataStore,
 				adapterIds,
 				index,
 				scanCallback,

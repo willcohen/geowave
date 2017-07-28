@@ -34,7 +34,6 @@ abstract class BaseFilteredIndexQuery extends
 	protected final ScanCallback<?, ?> scanCallback;
 
 	public BaseFilteredIndexQuery(
-			final BaseDataStore dataStore,
 			final List<ByteArrayId> adapterIds,
 			final PrimaryIndex index,
 			final ScanCallback<?, ?> scanCallback,
@@ -42,7 +41,6 @@ abstract class BaseFilteredIndexQuery extends
 			final DifferingFieldVisibilityEntryCount visibilityCounts,
 			final String... authorizations ) {
 		super(
-				dataStore,
 				adapterIds,
 				index,
 				fieldIdsAdapterPair,
@@ -123,7 +121,6 @@ abstract class BaseFilteredIndexQuery extends
 		// TODO GEOWAVE-1018: this will be a logical place to subsample (and
 		// field subset?) if it is not already happening on the server
 		return new NativeEntryIteratorWrapper(
-				dataStore,
 				adapterStore,
 				index,
 				reader,

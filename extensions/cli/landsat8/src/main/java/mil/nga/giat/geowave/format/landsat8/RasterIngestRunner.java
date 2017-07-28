@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -77,7 +77,8 @@ public class RasterIngestRunner extends
 	private static final double LANDSAT8_NO_DATA_VALUE_BQA = 1;
 	private static final double LANDSAT8_NO_DATA_VALUE_OTHER_BANDS = 0;
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(RasterIngestRunner.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(
+			RasterIngestRunner.class);
 	private static Map<String, Landsat8BandConverterSpi> registeredBandConverters = null;
 	protected final List<String> parameters;
 	protected Landsat8RasterIngestCommandLineOptions ingestOptions;
@@ -110,8 +111,10 @@ public class RasterIngestRunner extends
 			throw new ParameterException(
 					"Requires arguments: <storename> <comma delimited index/group list>");
 		}
-		final String inputStoreName = parameters.get(0);
-		final String indexList = parameters.get(1);
+		final String inputStoreName = parameters.get(
+				0);
+		final String indexList = parameters.get(
+				1);
 
 		// Config file
 		final File configFile = (File) params.getContext().get(
@@ -119,7 +122,8 @@ public class RasterIngestRunner extends
 		// Attempt to load input store.
 		final StoreLoader inputStoreLoader = new StoreLoader(
 				inputStoreName);
-		if (!inputStoreLoader.loadFromConfig(configFile)) {
+		if (!inputStoreLoader.loadFromConfig(
+				configFile)) {
 			throw new ParameterException(
 					"Cannot find store name: " + inputStoreLoader.getStoreName());
 		}
@@ -129,7 +133,8 @@ public class RasterIngestRunner extends
 		// Load the Indices
 		final IndexLoader indexLoader = new IndexLoader(
 				indexList);
-		if (!indexLoader.loadFromConfig(configFile)) {
+		if (!indexLoader.loadFromConfig(
+				configFile)) {
 			throw new ParameterException(
 					"Cannot find index(s) by name: " + indexList);
 		}
@@ -140,7 +145,8 @@ public class RasterIngestRunner extends
 		for (final IndexPluginOptions dimensionType : indexOptions) {
 			final PrimaryIndex primaryIndex = dimensionType.createPrimaryIndex();
 			if (primaryIndex == null) {
-				LOGGER.error("Could not get index instance, getIndex() returned null;");
+				LOGGER.error(
+						"Could not get index instance, getIndex() returned null;");
 				throw new IOException(
 						"Could not get index instance, getIndex() returned null");
 			}
@@ -158,8 +164,10 @@ public class RasterIngestRunner extends
 			final OperationParams params )
 			throws Exception {
 		try {
-			processParameters(params);
-			super.runInternal(params);
+			processParameters(
+					params);
+			super.runInternal(
+					params);
 		}
 		finally {
 			for (final IndexWriter writer : writerCache.values()) {
@@ -185,7 +193,8 @@ public class RasterIngestRunner extends
 		final SimpleFeatureType type = band.getFeatureType();
 		for (final AttributeDescriptor attr : type.getAttributeDescriptors()) {
 			final String attrName = attr.getLocalName();
-			final Object attrValue = band.getAttribute(attrName);
+			final Object attrValue = band.getAttribute(
+					attrName);
 			if (attrValue != null) {
 				model.put(
 						attrName,
@@ -200,11 +209,13 @@ public class RasterIngestRunner extends
 				landsatOptions.getWorkspaceDir());
 		final GDALGeoTiffReader reader = new GDALGeoTiffReader(
 				geotiffFile);
-		GridCoverage2D coverage = reader.read(null);
+		GridCoverage2D coverage = reader.read(
+				null);
 		reader.dispose();
 		if ((ingestOptions.getCoverageConverter() != null) && !ingestOptions.getCoverageConverter().trim().isEmpty()) {
 			// a converter was supplied, attempt to use it
-			final Landsat8BandConverterSpi converter = getConverter(ingestOptions.getCoverageConverter());
+			final Landsat8BandConverterSpi converter = getConverter(
+					ingestOptions.getCoverageConverter());
 			if (converter != null) {
 				coverage = converter.convert(
 						coverageName,
@@ -232,18 +243,22 @@ public class RasterIngestRunner extends
 				Geometry geometry = geometryAndCompareOp.getGeometry();
 				if (geometry != null) {
 					// go ahead and intersect this with the scene geometry
-					final Geometry sceneShape = (Geometry) band.getAttribute(SceneFeatureIterator.SHAPE_ATTRIBUTE_NAME);
-					if (geometry.contains(sceneShape)) {
+					final Geometry sceneShape = (Geometry) band.getAttribute(
+							SceneFeatureIterator.SHAPE_ATTRIBUTE_NAME);
+					if (geometry.contains(
+							sceneShape)) {
 						cropped = true;
 					}
 					else {
-						geometry = geometry.intersection(sceneShape);
+						geometry = geometry.intersection(
+								sceneShape);
 						final CoverageProcessor processor = CoverageProcessor.getInstance();
-						final AbstractOperation op = (AbstractOperation) processor.getOperation("CoverageCrop");
+						final AbstractOperation op = (AbstractOperation) processor.getOperation(
+								"CoverageCrop");
 						final ParameterValueGroup params = op.getParameters();
 						params.parameter(
 								"Source").setValue(
-								coverage);
+										coverage);
 						try {
 							final MathTransform transform = CRS.findMathTransform(
 									GeoWaveGTDataStore.DEFAULT_CRS,
@@ -251,21 +266,22 @@ public class RasterIngestRunner extends
 									true);
 							params.parameter(
 									Crop.CROP_ROI.getName().getCode()).setValue(
-									JTS.transform(
-											geometry,
-											transform));
-							final double nodataValue = getNoDataValue(band);
+											JTS.transform(
+													geometry,
+													transform));
+							final double nodataValue = getNoDataValue(
+									band);
 							params.parameter(
 									Crop.NODATA.getName().getCode()).setValue(
-									RangeFactory.create(
-											nodataValue,
-											nodataValue));
+											RangeFactory.create(
+													nodataValue,
+													nodataValue));
 
 							params.parameter(
 									Crop.DEST_NODATA.getName().getCode()).setValue(
-									new double[] {
-										nodataValue
-									});
+											new double[] {
+												nodataValue
+											});
 							coverage = (GridCoverage2D) op.doOperation(
 									params,
 									null);
@@ -280,8 +296,8 @@ public class RasterIngestRunner extends
 					}
 				}
 				if (!cropped) {
-					LOGGER
-							.warn("Option to crop spatially was set but no spatial constraints were provided in CQL expression");
+					LOGGER.warn(
+							"Option to crop spatially was set but no spatial constraints were provided in CQL expression");
 				}
 			}
 		}
@@ -296,13 +312,15 @@ public class RasterIngestRunner extends
 			final SimpleFeature band ) {
 		final String bandName = band.getAttribute(
 				BandFeatureIterator.BAND_ATTRIBUTE_NAME).toString();
-		return getNoDataValueFromName(bandName);
+		return getNoDataValueFromName(
+				bandName);
 	}
 
 	public static double getNoDataValueFromName(
 			final String bandName ) {
 		double nodataValue;
-		if ("BQA".equals(bandName)) {
+		if ("BQA".equals(
+				bandName)) {
 			nodataValue = LANDSAT8_NO_DATA_VALUE_BQA;
 		}
 		else {
@@ -324,11 +342,13 @@ public class RasterIngestRunner extends
 			// using a user supplied freemarker template
 
 			try {
-				final BandData bandData = getBandData(band);
+				final BandData bandData = getBandData(
+						band);
 				final GridCoverage2D coverage = bandData.coverage;
 				final String coverageName = bandData.name;
 				final GDALGeoTiffReader reader = bandData.reader;
-				IndexWriter writer = writerCache.get(coverageName);
+				IndexWriter writer = writerCache.get(
+						coverageName);
 				final GridCoverage2D nextCov = coverage;
 				if (writer == null) {
 					final Map<String, String> metadata = new HashMap<String, String>();
@@ -337,11 +357,13 @@ public class RasterIngestRunner extends
 						for (final String mdName : mdNames) {
 							metadata.put(
 									mdName,
-									reader.getMetadataValue(mdName));
+									reader.getMetadataValue(
+											mdName));
 						}
 					}
 
-					final double nodataValue = getNoDataValue(band);
+					final double nodataValue = getNoDataValue(
+							band);
 					final RasterDataAdapter adapter = new RasterDataAdapter(
 							coverageName,
 							metadata,
@@ -362,10 +384,12 @@ public class RasterIngestRunner extends
 							coverageName,
 							writer);
 				}
-				writer.write(nextCov);
+				writer.write(
+						nextCov);
 				if (!ingestOptions.isRetainImages()) {
 					if (!bandData.geotiffFile.delete()) {
-						LOGGER.warn("Unable to delete '" + bandData.geotiffFile.getAbsolutePath() + "'");
+						LOGGER.warn(
+								"Unable to delete '" + bandData.geotiffFile.getAbsolutePath() + "'");
 
 					}
 				}
@@ -378,7 +402,8 @@ public class RasterIngestRunner extends
 			}
 		}
 		else {
-			lastSceneBands.add(band);
+			lastSceneBands.add(
+					band);
 		}
 
 	}
@@ -387,20 +412,22 @@ public class RasterIngestRunner extends
 	protected void lastSceneComplete(
 			final AnalysisInfo analysisInfo ) {
 		processPreviousScene();
-		super.lastSceneComplete(analysisInfo);
+		super.lastSceneComplete(
+				analysisInfo);
 		if (!ingestOptions.isSkipMerge()) {
-			System.out.println("Merging overlapping tiles...");
+			System.out.println(
+					"Merging overlapping tiles...");
 			for (final PrimaryIndex index : indices) {
 				if (dataStorePluginOptions.createDataStoreOperations().mergeData(
 						index,
 						dataStorePluginOptions.createAdapterStore(),
 						dataStorePluginOptions.createAdapterIndexMappingStore())) {
-					System.out.println("Successfully merged overlapping tiles within index '"
-							+ index.getId().getString() + "'");
+					System.out.println(
+							"Successfully merged overlapping tiles within index '" + index.getId().getString() + "'");
 				}
 				else {
-					System.err.println("Unable to merge overlapping landsat8 tiles in index '"
-							+ index.getId().getString() + "'");
+					System.err.println(
+							"Unable to merge overlapping landsat8 tiles in index '" + index.getId().getString() + "'");
 				}
 			}
 		}
@@ -430,13 +457,16 @@ public class RasterIngestRunner extends
 				for (final SimpleFeature band : lastSceneBands) {
 					BandData bandData;
 					try {
-						bandData = getBandData(band);
+						bandData = getBandData(
+								band);
 						if (coverageName == null) {
 							coverageName = bandData.name;
 						}
-						else if (!coverageName.equals(bandData.name)) {
-							LOGGER.warn("Unable to use band data as the band coverage name '" + bandData.name
-									+ "' is unexpectedly different from default name '" + coverageName + "'");
+						else if (!coverageName.equals(
+								bandData.name)) {
+							LOGGER.warn(
+									"Unable to use band data as the band coverage name '" + bandData.name
+											+ "' is unexpectedly different from default name '" + coverageName + "'");
 						}
 
 						final String bandName = band.getAttribute(
@@ -452,7 +482,8 @@ public class RasterIngestRunner extends
 					}
 				}
 				if (coverageName == null) {
-					LOGGER.warn("No valid bands found for scene");
+					LOGGER.warn(
+							"No valid bands found for scene");
 					lastSceneBands.clear();
 					return;
 				}
@@ -462,18 +493,20 @@ public class RasterIngestRunner extends
 				}
 				else {
 					final CoverageProcessor processor = CoverageProcessor.getInstance();
-					final AbstractOperation op = (AbstractOperation) processor.getOperation("BandMerge");
+					final AbstractOperation op = (AbstractOperation) processor.getOperation(
+							"BandMerge");
 					final ParameterValueGroup params = op.getParameters();
 					final List<GridCoverage2D> sources = new ArrayList<>();
 					for (final BandData b : sceneData.values()) {
-						sources.add(b.coverage);
+						sources.add(
+								b.coverage);
 					}
 					params.parameter(
 							"Sources").setValue(
-							sources);
+									sources);
 					params.parameter(
 							BandMerge.TRANSFORM_CHOICE).setValue(
-							TransformList.FIRST.toString());
+									TransformList.FIRST.toString());
 
 					mergedCoverage = (GridCoverage2D) op.doOperation(
 							params,
@@ -492,7 +525,8 @@ public class RasterIngestRunner extends
 							for (final String mdName : mdNames) {
 								metadata.put(
 										mdName,
-										b.reader.getMetadataValue(mdName));
+										b.reader.getMetadataValue(
+												mdName));
 							}
 						}
 					}
@@ -501,7 +535,8 @@ public class RasterIngestRunner extends
 						int b = 0;
 						for (final String bandName : sceneData.keySet()) {
 							noDataValues[b++] = new double[] {
-								getNoDataValueFromName(bandName)
+								getNoDataValueFromName(
+										bandName)
 							};
 						}
 						final RasterDataAdapter adapter = new RasterDataAdapter(
@@ -526,7 +561,8 @@ public class RasterIngestRunner extends
 								"Unable to create index writer for coverage '" + coverageName + "'.  Skipping scene '"
 										+ lastSceneBands.get(
 												0).getAttribute(
-												SceneFeatureIterator.ENTITY_ID_ATTRIBUTE_NAME) + "'.",
+														SceneFeatureIterator.ENTITY_ID_ATTRIBUTE_NAME)
+										+ "'.",
 								e);
 						lastSceneBands.clear();
 						return;
@@ -535,39 +571,41 @@ public class RasterIngestRunner extends
 				else if (!Arrays.equals(
 						bandsIngested,
 						thisSceneBands)) {
-					LOGGER.warn("The bands in this scene ('" + Arrays.toString(thisSceneBands)
-							+ "') differ from the previous scene ('" + Arrays.toString(bandsIngested)
-							+ "').  To merge bands all scenes must use the same bands.  Skipping scene'"
-							+ lastSceneBands.get(
-									0).getAttribute(
-									SceneFeatureIterator.ENTITY_ID_ATTRIBUTE_NAME) + "'.");
+					LOGGER.warn(
+							"The bands in this scene ('" + Arrays.toString(
+									thisSceneBands) + "') differ from the previous scene ('"
+									+ Arrays.toString(
+											bandsIngested)
+									+ "').  To merge bands all scenes must use the same bands.  Skipping scene'"
+									+ lastSceneBands.get(
+											0).getAttribute(
+													SceneFeatureIterator.ENTITY_ID_ATTRIBUTE_NAME)
+									+ "'.");
 					lastSceneBands.clear();
 					return;
 				}
 				else {
-					writer = writerCache.get(coverageName);
+					writer = writerCache.get(
+							coverageName);
 					if (writer == null) {
-						LOGGER.warn("Unable to find writer for coverage '" + coverageName + "'.  Skipping scene'"
-								+ lastSceneBands.get(
-										0).getAttribute(
-										SceneFeatureIterator.ENTITY_ID_ATTRIBUTE_NAME) + "'.");
+						LOGGER.warn(
+								"Unable to find writer for coverage '" + coverageName + "'.  Skipping scene'"
+										+ lastSceneBands.get(
+												0).getAttribute(
+														SceneFeatureIterator.ENTITY_ID_ATTRIBUTE_NAME)
+										+ "'.");
 						lastSceneBands.clear();
 						return;
 					}
 				}
-				try {
-					writer.write(mergedCoverage);
-				}
-				catch (final IOException e) {
-					LOGGER.error(
-							"Unable to write merged coverage",
-							e);
-				}
+				writer.write(
+						mergedCoverage);
 				lastSceneBands.clear();
 				if (!ingestOptions.isRetainImages()) {
 					for (final BandData b : sceneData.values()) {
 						if (!b.geotiffFile.delete()) {
-							LOGGER.warn("Unable to delete '" + b.geotiffFile.getAbsolutePath() + "'");
+							LOGGER.warn(
+									"Unable to delete '" + b.geotiffFile.getAbsolutePath() + "'");
 						}
 					}
 				}
@@ -580,7 +618,8 @@ public class RasterIngestRunner extends
 		final Landsat8BandConverterSpi converter = getRegisteredConverters().get(
 				converterName);
 		if (converter == null) {
-			LOGGER.warn("no landsat8 converter registered with name '" + converterName + "'");
+			LOGGER.warn(
+					"no landsat8 converter registered with name '" + converterName + "'");
 		}
 		return converter;
 	}
@@ -588,8 +627,8 @@ public class RasterIngestRunner extends
 	private synchronized Map<String, Landsat8BandConverterSpi> getRegisteredConverters() {
 		if (registeredBandConverters == null) {
 			registeredBandConverters = new HashMap<String, Landsat8BandConverterSpi>();
-			final ServiceLoader<Landsat8BandConverterSpi> converters = ServiceLoader
-					.load(Landsat8BandConverterSpi.class);
+			final ServiceLoader<Landsat8BandConverterSpi> converters = ServiceLoader.load(
+					Landsat8BandConverterSpi.class);
 			final Iterator<Landsat8BandConverterSpi> it = converters.iterator();
 			while (it.hasNext()) {
 				final Landsat8BandConverterSpi converter = it.next();

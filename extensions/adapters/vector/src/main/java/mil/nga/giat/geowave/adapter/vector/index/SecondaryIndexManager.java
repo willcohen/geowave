@@ -29,9 +29,10 @@ import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.index.SecondaryIndex;
 import mil.nga.giat.geowave.core.store.index.SecondaryIndexType;
-import mil.nga.giat.geowave.core.store.index.numeric.NumericIndexStrategy;
+import mil.nga.giat.geowave.core.store.index.numeric.NumericFieldIndexStrategy;
 import mil.nga.giat.geowave.core.store.index.temporal.TemporalIndexStrategy;
 import mil.nga.giat.geowave.core.store.index.text.TextIndexStrategy;
+
 /**
  * Class to manage secondary indexes for a Simple Feature Type. It keeps a list
  * of supported secondary indices associated with all the attributes attached to
@@ -153,7 +154,7 @@ public class SecondaryIndexManager implements
 						fieldId.getString());
 				statistics.add(stat);
 				supportedSecondaryIndices.add(new SecondaryIndex<SimpleFeature>(
-						new NumericIndexStrategy(),
+						new NumericFieldIndexStrategy(),
 						fieldId,
 						statistics,
 						secondaryIndexType,

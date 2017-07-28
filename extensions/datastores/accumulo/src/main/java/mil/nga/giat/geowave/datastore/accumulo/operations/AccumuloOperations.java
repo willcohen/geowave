@@ -52,7 +52,10 @@ import mil.nga.giat.geowave.core.index.MultiDimensionalCoordinateRangesArray.Arr
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.DataStoreOptions;
+import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
+import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.metadata.AbstractGeoWavePersistence;
 import mil.nga.giat.geowave.core.store.operations.BaseReaderParams;
 import mil.nga.giat.geowave.core.store.operations.Deleter;
@@ -1361,5 +1364,30 @@ public class AccumuloOperations implements
 		return new AccumuloMetadataDeleter(
 				this,
 				metadataType);
+	}
+
+	@Override
+	public boolean mergeData(
+			final PrimaryIndex index,
+			final AdapterStore adapterStore,
+			final AdapterIndexMappingStore adapterIndexMappingStore ) {
+		final String tableName = getQualifiedTableName(index.getId().getString());
+		try {
+			LOGGER.info("Compacting table '" + tableName + "'");
+			connector.tableOperations().compact(
+					tableName,
+					null,
+					null,
+					true,
+					true);
+			LOGGER.info("Successfully compacted table '" + tableName + "'");
+		}
+		catch (AccumuloSecurityException | TableNotFoundException | AccumuloException e) {
+			LOGGER.error(
+					"Unable to merge data by compacting table '" + tableName + "'",
+					e);
+			return false;
+		}
+		return true;
 	}
 }

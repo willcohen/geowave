@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -23,6 +23,7 @@ import org.apache.log4j.Logger;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayUtils;
 import mil.nga.giat.geowave.core.index.IndexMetaData;
+import mil.nga.giat.geowave.core.index.IndexUtils;
 import mil.nga.giat.geowave.core.index.InsertionIds;
 import mil.nga.giat.geowave.core.index.MultiDimensionalCoordinateRanges;
 import mil.nga.giat.geowave.core.index.MultiDimensionalCoordinates;
@@ -296,7 +297,7 @@ public class SingleTierSubStrategy implements
 	@Override
 	public Set<ByteArrayId> getInsertionPartitionKeys(
 			final MultiDimensionalNumericData insertionData ) {
-		return TieredSFCIndexStrategy.internalGetInsertionKeys(
+		return IndexUtils.getInsertionPartitionKeys(
 				this,
 				insertionData);
 	}
@@ -305,7 +306,7 @@ public class SingleTierSubStrategy implements
 	public Set<ByteArrayId> getQueryPartitionKeys(
 			final MultiDimensionalNumericData queryData,
 			final IndexMetaData... hints ) {
-		return TieredSFCIndexStrategy.internalGetQueryPartitionKeys(
+		return IndexUtils.getQueryPartitionKeys(
 				this,
 				queryData,
 				hints);

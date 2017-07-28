@@ -28,7 +28,6 @@ import org.apache.hadoop.conf.Configuration;
 //import org.apache.hadoop.hbase.security.visibility.VisibilityLabelServiceManager;
 //import org.apache.hadoop.hbase.security.visibility.VisibilityTestUtil;
 //import org.apache.hadoop.hbase.security.visibility.VisibilityUtils;
-import org.apache.log4j.Logger;
 import org.junit.Assert;
 
 //import com.github.sakserv.minicluster.config.ConfigVars;
@@ -42,9 +41,9 @@ import mil.nga.giat.geowave.datastore.accumulo.AccumuloStoreFactoryFamily;
 //import mil.nga.giat.geowave.datastore.hbase.HBaseDataStoreFactory;
 //import mil.nga.giat.geowave.datastore.hbase.operations.config.HBaseRequiredOptions;
 //import mil.nga.giat.geowave.datastore.hbase.util.ConnectionPool;
-import mil.nga.giat.geowave.datastore.hbase.util.ConnectionPool;
 import mil.nga.giat.geowave.test.annotation.GeoWaveTestStore.GeoWaveStoreType;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 public class HBaseStoreTestEnvironment extends
 		StoreTestEnvironment
 {
@@ -253,35 +252,6 @@ public class HBaseStoreTestEnvironment extends
 		// };
 		//
 		// SUPERUSER.runAs(action);
-	}
-
-	private void addLabels(
-			Configuration conf,
-			String[] labels,
-			String user )
-			throws Exception {
-		PrivilegedExceptionAction<VisibilityLabelsResponse> action = new PrivilegedExceptionAction<VisibilityLabelsResponse>() {
-			public VisibilityLabelsResponse run()
-					throws Exception {
-				try {
-					VisibilityClient.addLabels(
-							conf,
-							labels);
-
-					VisibilityClient.setAuths(
-							conf,
-							labels,
-							user);
-				}
-				catch (Throwable t) {
-					throw new IOException(
-							t);
-				}
-				return null;
-			}
-		};
-
-		SUPERUSER.runAs(action);
 	}
 
 	@Override

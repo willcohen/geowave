@@ -19,7 +19,6 @@ public class NativeEntryIteratorWrapper<T> extends
 	private final boolean decodePersistenceEncoding;
 
 	public NativeEntryIteratorWrapper(
-			final BaseDataStore dataStore,
 			final AdapterStore adapterStore,
 			final PrimaryIndex index,
 			final Iterator scannerIt,
@@ -27,7 +26,6 @@ public class NativeEntryIteratorWrapper<T> extends
 			final ScanCallback<T, ? extends GeoWaveRow> scanCallback,
 			final boolean decodePersistenceEncoding ) {
 		super(
-				dataStore,
 				adapterStore,
 				index,
 				scannerIt,

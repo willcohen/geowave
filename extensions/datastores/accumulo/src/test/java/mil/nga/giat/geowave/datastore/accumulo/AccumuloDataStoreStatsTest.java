@@ -25,9 +25,10 @@ import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.mock.MockInstance;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
-import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
@@ -372,7 +373,7 @@ public class AccumuloDataStoreStatsTest
 
 		countStats = (CountDataStatistics<?>) statsStore.getDataStatistics(
 				adapter.getAdapterId(),
-				CountDataStatistics.STATS_ID,
+				CountDataStatistics.STATS_TYPE,
 				"aaa",
 				"bbb");
 		assertEquals(
@@ -423,7 +424,7 @@ public class AccumuloDataStoreStatsTest
 				countStats.getCount());
 		countStats = (CountDataStatistics<?>) statsStore.getDataStatistics(
 				adapter.getAdapterId(),
-				CountDataStatistics.STATS_ID,
+				CountDataStatistics.STATS_TYPE,
 				"aaa");
 		assertEquals(
 				1,

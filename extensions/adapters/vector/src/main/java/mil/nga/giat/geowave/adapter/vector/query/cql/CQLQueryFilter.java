@@ -13,7 +13,6 @@ package mil.nga.giat.geowave.adapter.vector.query.cql;
 import java.net.MalformedURLException;
 import java.nio.ByteBuffer;
 
-import org.apache.log4j.Logger;
 import org.geotools.filter.text.cql2.CQLException;
 import org.geotools.filter.text.ecql.ECQL;
 import org.opengis.feature.simple.SimpleFeature;
@@ -34,10 +33,6 @@ import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.geotools.filter.text.cql2.CQLException;
-import org.geotools.filter.text.ecql.ECQL;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.filter.Filter;
 
 public class CQLQueryFilter implements
 		DistributableQueryFilter

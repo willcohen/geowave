@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.Set;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
+import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
 public interface DataStoreOperations
 {
@@ -64,4 +67,8 @@ public interface DataStoreOperations
 			String... authorizations )
 			throws Exception;
 
+	public boolean mergeData(
+			final PrimaryIndex index,
+			final AdapterStore adapterStore,
+			final AdapterIndexMappingStore adapterIndexMappingStore );
 }

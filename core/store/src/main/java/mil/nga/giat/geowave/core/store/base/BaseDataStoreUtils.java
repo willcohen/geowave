@@ -12,7 +12,8 @@ import java.util.TreeSet;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.InsertionIds;
@@ -44,7 +45,7 @@ import mil.nga.giat.geowave.core.store.util.DataStoreUtils;
 
 public class BaseDataStoreUtils
 {
-	private final static Logger LOGGER = Logger.getLogger(BaseDataStoreUtils.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(BaseDataStoreUtils.class);
 	public static final int MAX_RANGE_DECOMPOSITION = 2000;
 	public static final int AGGREGATION_RANGE_DECOMPOSITION = 10;
 

@@ -33,7 +33,7 @@ import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
 import mil.nga.giat.geowave.core.store.cli.remote.options.DataStorePluginOptions;
-import mil.nga.giat.geowave.core.store.operations.remote.options.StatsCommandLineOptions;
+import mil.nga.giat.geowave.core.store.cli.remote.options.StatsCommandLineOptions;
 
 @GeowaveOperation(name = "liststats", parentOperation = RemoteSection.class)
 @Parameters(commandDescription = "Print statistics of an existing GeoWave dataset to standard output.  ")

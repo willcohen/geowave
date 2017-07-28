@@ -29,7 +29,6 @@ abstract class BaseQuery
 {
 	private final static Logger LOGGER = Logger.getLogger(BaseQuery.class);
 
-	protected final BaseDataStore dataStore;
 	protected List<ByteArrayId> adapterIds;
 	protected final PrimaryIndex index;
 	protected final Pair<List<String>, DataAdapter<?>> fieldIdsAdapterPair;
@@ -37,12 +36,10 @@ abstract class BaseQuery
 	protected final String[] authorizations;
 
 	public BaseQuery(
-			final BaseDataStore dataStore,
 			final PrimaryIndex index,
 			final DifferingFieldVisibilityEntryCount visibilityCounts,
 			final String... authorizations ) {
 		this(
-				dataStore,
 				null,
 				index,
 				null,
@@ -51,13 +48,11 @@ abstract class BaseQuery
 	}
 
 	public BaseQuery(
-			final BaseDataStore dataStore,
 			final List<ByteArrayId> adapterIds,
 			final PrimaryIndex index,
 			final Pair<List<String>, DataAdapter<?>> fieldIdsAdapterPair,
 			final DifferingFieldVisibilityEntryCount visibilityCounts,
 			final String... authorizations ) {
-		this.dataStore = dataStore;
 		this.adapterIds = adapterIds;
 		this.index = index;
 		this.fieldIdsAdapterPair = fieldIdsAdapterPair;

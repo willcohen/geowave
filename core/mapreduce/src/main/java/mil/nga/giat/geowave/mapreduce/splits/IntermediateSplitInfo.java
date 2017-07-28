@@ -357,7 +357,7 @@ public class IntermediateSplitInfo implements
 
 	}
 
-	protected synchronized GeoWaveInputSplit toFinalSplit(
+	public synchronized GeoWaveInputSplit toFinalSplit(
 			final DataStatisticsStore statisticsStore,
 			final Map<ByteArrayId, List<ByteArrayId>> indexIdToAdaptersMap,
 			final String... authorizations ) {

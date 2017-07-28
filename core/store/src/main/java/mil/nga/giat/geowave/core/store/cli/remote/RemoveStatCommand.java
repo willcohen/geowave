@@ -25,7 +25,7 @@ import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
 import mil.nga.giat.geowave.core.store.cli.remote.options.DataStorePluginOptions;
-import mil.nga.giat.geowave.core.store.operations.remote.options.StatsCommandLineOptions;
+import mil.nga.giat.geowave.core.store.cli.remote.options.StatsCommandLineOptions;
 
 @GeowaveOperation(name = "rmstat", parentOperation = RemoteSection.class)
 @Parameters(commandDescription = "Remove a statistic from the remote store. You will be prompted with are you sure")

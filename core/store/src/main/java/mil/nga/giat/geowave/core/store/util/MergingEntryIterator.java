@@ -38,7 +38,6 @@ public class MergingEntryIterator<T> extends
 	private GeoWaveRow peekedValue;
 
 	public MergingEntryIterator(
-			final BaseDataStore dataStore,
 			final AdapterStore adapterStore,
 			final PrimaryIndex index,
 			final Iterator<GeoWaveRow> scannerIt,
@@ -46,7 +45,6 @@ public class MergingEntryIterator<T> extends
 			final ScanCallback<T, GeoWaveRow> scanCallback,
 			final Map<ByteArrayId, RowMergingDataAdapter> mergingAdapters ) {
 		super(
-				dataStore,
 				adapterStore,
 				index,
 				scannerIt,

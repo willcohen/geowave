@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -48,6 +48,7 @@ import mil.nga.giat.geowave.core.store.callback.ScanCallback;
 import mil.nga.giat.geowave.core.store.data.visibility.DifferingFieldVisibilityEntryCount;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.filter.DedupeFilter;
+import mil.nga.giat.geowave.core.store.index.IndexMetaDataSet;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.index.SecondaryIndexDataStore;
@@ -176,6 +177,7 @@ public class BaseDataStore implements
 
 	}
 
+	@Override
 	public <T> CloseableIterator<T> query(
 			final QueryOptions queryOptions,
 			final Query query ) {
@@ -199,7 +201,7 @@ public class BaseDataStore implements
 	protected <T> CloseableIterator<T> internalQuery(
 			final QueryOptions queryOptions,
 			final Query query,
-			boolean delete ) {
+			final boolean delete ) {
 		final List<CloseableIterator<Object>> results = new ArrayList<CloseableIterator<Object>>();
 		// all queries will use the same instance of the dedupe filter for
 		// client side filtering because the filter needs to be applied across
@@ -209,7 +211,7 @@ public class BaseDataStore implements
 
 		final DedupeFilter filter = new DedupeFilter();
 		MemoryAdapterStore tempAdapterStore;
-		List<DataStoreCallbackManager> deleteCallbacks = new ArrayList<>();
+		final List<DataStoreCallbackManager> deleteCallbacks = new ArrayList<>();
 
 		try {
 			tempAdapterStore = new MemoryAdapterStore(
@@ -230,25 +232,25 @@ public class BaseDataStore implements
 								secondaryIndexDataStore,
 								queriedAdapters.add(adapter.getAdapterId()));
 						deleteCallbacks.add(callbackCache);
-						ScanCallback callback = queryOptions.getScanCallback();
+						final ScanCallback callback = queryOptions.getScanCallback();
 
 						final PrimaryIndex index = indexAdapterPair.getLeft();
-						queryOptions.setScanCallback(new ScanCallback<Object>() {
+						queryOptions.setScanCallback(new ScanCallback<Object, GeoWaveRow>() {
 
 							@Override
 							public void entryScanned(
-									DataStoreEntryInfo entryInfo,
-									Object entry ) {
+									final Object entry,
+									final GeoWaveRow row ) {
 								if (callback != null) {
 									callback.entryScanned(
-											entryInfo,
-											entry);
+											entry,
+											row);
 								}
 								callbackCache.getDeleteCallback(
 										(WritableDataAdapter<Object>) adapter,
 										index).entryDeleted(
-										entryInfo,
-										entry);
+										entry,
+										row);
 							}
 						});
 					}
@@ -306,7 +308,7 @@ public class BaseDataStore implements
 						for (final CloseableIterator<Object> result : results) {
 							result.close();
 						}
-						for (DataStoreCallbackManager c : deleteCallbacks) {
+						for (final DataStoreCallbackManager c : deleteCallbacks) {
 							c.close();
 						}
 					}
@@ -474,6 +476,7 @@ public class BaseDataStore implements
 						e);
 			}
 		}
+	}
 
 	protected boolean deleteEverything() {
 		try {
@@ -541,32 +544,15 @@ public class BaseDataStore implements
 
 	}
 
-	protected CloseableIterator<Object> getEntryRows(
-			final PrimaryIndex index,
-			final AdapterStore tempAdapterStore,
-			final List<ByteArrayId> dataIds,
-			final DataAdapter<?> adapter,
-			final DedupeFilter dedupeFilter,
-			final QueryOptions queryOptions) {
-		return queryConstraints(
-				Collections.singletonList(adapter.getAdapterId()),
-				index,
-				new DataIdQuery(
-						dataIds),
-				dedupeFilter,
-				queryOptions,
-				tempAdapterStore);
-	}
-
 	protected CloseableIterator<Object> queryConstraints(
 			final List<ByteArrayId> adapterIdsToQuery,
 			final PrimaryIndex index,
 			final Query sanitizedQuery,
 			final DedupeFilter filter,
 			final QueryOptions sanitizedQueryOptions,
-			final AdapterStore tempAdapterStore ) {
+			final AdapterStore tempAdapterStore,
+			boolean delete ) {
 		final BaseConstraintsQuery constraintsQuery = new BaseConstraintsQuery(
-				this,
 				adapterIdsToQuery,
 				index,
 				sanitizedQuery,
@@ -605,9 +591,9 @@ public class BaseDataStore implements
 			final ByteArrayId sortPrefix,
 			final QueryOptions sanitizedQueryOptions,
 			final AdapterStore tempAdapterStore,
-			final List<ByteArrayId> adapterIdsToQuery ) {
+			final List<ByteArrayId> adapterIdsToQuery,
+			boolean delete ) {
 		final BaseRowPrefixQuery<Object> prefixQuery = new BaseRowPrefixQuery<Object>(
-				this,
 				index,
 				partitionKey,
 				sortPrefix,
@@ -634,7 +620,8 @@ public class BaseDataStore implements
 			final InsertionIdQuery query,
 			final DedupeFilter filter,
 			final QueryOptions sanitizedQueryOptions,
-			final AdapterStore tempAdapterStore ) {
+			final AdapterStore tempAdapterStore,
+			boolean delete ) {
 		final DifferingFieldVisibilityEntryCount visibilityCounts = DifferingFieldVisibilityEntryCount
 				.getVisibilityCounts(
 						index,
@@ -643,7 +630,6 @@ public class BaseDataStore implements
 						sanitizedQueryOptions.getAuthorizations());
 
 		final BaseInsertionIdQuery<Object> q = new BaseInsertionIdQuery<Object>(
-				this,
 				adapter,
 				index,
 				query,

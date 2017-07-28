@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -12,6 +12,7 @@ package mil.nga.giat.geowave.datastore.accumulo.mapreduce;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -34,15 +35,15 @@ import org.apache.accumulo.core.data.KeyExtent;
 else[accumulo.api=1.6]*/
 import org.apache.accumulo.core.client.impl.ClientContext;
 import org.apache.accumulo.core.client.impl.Credentials;
-import org.apache.accumulo.core.data.impl.KeyExtent;
+import org.apache.accumulo.core.client.impl.Tables;
+import org.apache.accumulo.core.client.impl.TabletLocator;
 /*end[accumulo.api=1.6]*/
 //@formatter:on
 import org.apache.accumulo.core.client.mock.MockInstance;
-import org.apache.accumulo.core.client.impl.TabletLocator;
-import org.apache.accumulo.core.client.impl.Tables;
 import org.apache.accumulo.core.client.security.tokens.NullToken;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.Range;
+import org.apache.accumulo.core.data.impl.KeyExtent;
 import org.apache.accumulo.core.master.state.tables.TableState;
 import org.apache.accumulo.core.util.UtilWaitThread;
 import org.apache.commons.lang3.ArrayUtils;
@@ -155,83 +156,13 @@ public class AccumuloSplitsProvider extends
 			}
 		}
 		// get the metadata information for these ranges
-		final Map<String, Map<KeyExtent, List<Range>>> tserverBinnedRanges = getBinnedRangesStructure();
-		TabletLocator tl;
-		try {
-			final Instance instance = accumuloOperations.getInstance();
-			final String tableId;
-			Credentials credentials;
-			if (instance instanceof MockInstance) {
-				tableId = "";
-				// in this case, we will have no password;
-				credentials = new Credentials(
-						accumuloOperations.getUsername(),
-						new NullToken());
-			}
-			else {
-				tableId = Tables.getTableId(
-						instance,
-						tableName);
-				credentials = new Credentials(
-						accumuloOperations.getUsername(),
-						new PasswordToken(
-								accumuloOperations.getPassword()));
-			}
+		final Map<String, Map<KeyExtent, List<Range>>> tserverBinnedRanges = getBinnedRangesStructure(
+				accumuloOperations,
+				tableName,
+				ranges);
 
-			// @formatter:off
-				/*if[accumulo.api=1.6]
-				tl = getTabletLocator(
-						instance,
-						tableId);
-				Object clientContextOrCredentials = credentials;
-				else[accumulo.api=1.6]*/
-				final ClientContext clientContext = new ClientContext(
-						instance,credentials,
-						new ClientConfiguration());
-				tl = getTabletLocator(
-						clientContext,
-						tableId);
-
-				final Object clientContextOrCredentials = clientContext;
-				/*end[accumulo.api=1.6]*/
-				// @formatter:on
-			// its possible that the cache could contain complete, but
-			// old information about a tables tablets... so clear it
-			tl.invalidateCache();
-			final List<Range> rangeList = new ArrayList<Range>(
-					ranges);
-			while (!binRanges(
-					rangeList,
-					clientContextOrCredentials,
-					tserverBinnedRanges,
-					tl)) {
-				if (!(instance instanceof MockInstance)) {
-					if (!Tables.exists(
-							instance,
-							tableId)) {
-						throw new TableDeletedException(
-								tableId);
-					}
-					if (Tables.getTableState(
-							instance,
-							tableId) == TableState.OFFLINE) {
-						throw new TableOfflineException(
-								instance,
-								tableId);
-					}
-				}
-				tserverBinnedRanges.clear();
-				LOGGER.warn("Unable to locate bins for specified ranges. Retrying.");
-				UtilWaitThread.sleep(150);
-				tl.invalidateCache();
-			}
-		}
-		catch (final Exception e) {
-			throw new IOException(
-					e);
-		}
-
-		final HashMap<String, String> hostNameCache = getHostNameCache();
+		final HashMap<String, String> hostNameCache = new HashMap<String, String>();
+		;
 		for (final Entry<String, Map<KeyExtent, List<Range>>> tserverBin : tserverBinnedRanges.entrySet()) {
 			final String tabletServer = tserverBin.getKey();
 			final String ipAddress = tabletServer.split(
@@ -240,11 +171,7 @@ public class AccumuloSplitsProvider extends
 
 			String location = hostNameCache.get(ipAddress);
 			if (location == null) {
-				// HP Fortify "Often Misused: Authentication"
-				// These methods are not being used for
-				// authentication
-				final InetAddress inetAddress = InetAddress.getByName(ipAddress);
-				location = inetAddress.getHostName();
+				location = getHostName(ipAddress);
 				hostNameCache.put(
 						ipAddress,
 						location);
@@ -299,6 +226,103 @@ public class AccumuloSplitsProvider extends
 		return splits;
 	}
 
+	protected String getHostName(
+			final String ipAddress )
+			throws UnknownHostException {
+		// HP Fortify "Often Misused: Authentication"
+		// These methods are not being used for
+		// authentication
+		final InetAddress inetAddress = InetAddress.getByName(ipAddress);
+		return inetAddress.getHostName();
+	}
+
+	/**
+	 * Returns binnedRanges. Extracted out as its own method to facilitate
+	 * testing
+	 */
+	protected Map<String, Map<KeyExtent, List<Range>>> getBinnedRangesStructure(
+			final AccumuloOperations accumuloOperations,
+			final String tableName,
+			final TreeSet<Range> ranges )
+			throws IOException {
+		final Map<String, Map<KeyExtent, List<Range>>> tserverBinnedRanges = new HashMap<String, Map<KeyExtent, List<Range>>>();
+		TabletLocator tl;
+		try {
+			final Instance instance = accumuloOperations.getInstance();
+			final String tableId;
+			Credentials credentials;
+			if (instance instanceof MockInstance) {
+				tableId = "";
+				// in this case, we will have no password;
+				credentials = new Credentials(
+						accumuloOperations.getUsername(),
+						new NullToken());
+			}
+			else {
+				tableId = Tables.getTableId(
+						instance,
+						tableName);
+				credentials = new Credentials(
+						accumuloOperations.getUsername(),
+						new PasswordToken(
+								accumuloOperations.getPassword()));
+			}
+
+			// @formatter:off
+			/*if[accumulo.api=1.6]
+			tl = getTabletLocator(
+					instance,
+					tableId);
+			Object clientContextOrCredentials = credentials;
+			else[accumulo.api=1.6]*/
+			final ClientContext clientContext = new ClientContext(
+					instance,credentials,
+					new ClientConfiguration());
+			tl = getTabletLocator(
+					clientContext,
+					tableId);
+
+			final Object clientContextOrCredentials = clientContext;
+			/*end[accumulo.api=1.6]*/
+			// @formatter:on
+			// its possible that the cache could contain complete, but
+			// old information about a tables tablets... so clear it
+			tl.invalidateCache();
+			final List<Range> rangeList = new ArrayList<Range>(
+					ranges);
+			while (!binRanges(
+					rangeList,
+					clientContextOrCredentials,
+					tserverBinnedRanges,
+					tl)) {
+				if (!(instance instanceof MockInstance)) {
+					if (!Tables.exists(
+							instance,
+							tableId)) {
+						throw new TableDeletedException(
+								tableId);
+					}
+					if (Tables.getTableState(
+							instance,
+							tableId) == TableState.OFFLINE) {
+						throw new TableOfflineException(
+								instance,
+								tableId);
+					}
+				}
+				tserverBinnedRanges.clear();
+				LOGGER.warn("Unable to locate bins for specified ranges. Retrying.");
+				UtilWaitThread.sleep(150);
+				tl.invalidateCache();
+			}
+		}
+		catch (final Exception e) {
+			throw new IOException(
+					e);
+		}
+		return tserverBinnedRanges;
+	}
+
 	public static Range toAccumuloRange(
 			final GeoWaveRowRange range,
 			final int partitionKeyLength ) {
@@ -328,7 +352,7 @@ public class AccumuloSplitsProvider extends
 		}
 	}
 
-	private static GeoWaveRowRange fromAccumuloRange(
+	public static GeoWaveRowRange fromAccumuloRange(
 			final Range range,
 			final int partitionKeyLength ) {
 		if (partitionKeyLength <= 0) {

@@ -26,7 +26,6 @@ class BaseRowPrefixQuery<T> extends
 	final QueryRanges queryRanges;
 
 	public BaseRowPrefixQuery(
-			final BaseDataStore dataStore,
 			final PrimaryIndex index,
 			final ByteArrayId partitionKey,
 			final ByteArrayId sortKeyPrefix,
@@ -35,7 +34,6 @@ class BaseRowPrefixQuery<T> extends
 			final DifferingFieldVisibilityEntryCount visibilityCounts,
 			final String[] authorizations ) {
 		super(
-				dataStore,
 				index,
 				authorizations,
 				scanCallback,

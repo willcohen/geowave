@@ -27,13 +27,11 @@ abstract class AbstractBaseRowQuery<T> extends
 	protected final ScanCallback<T, ?> scanCallback;
 
 	public AbstractBaseRowQuery(
-			final BaseDataStore dataStore,
 			final PrimaryIndex index,
 			final String[] authorizations,
 			final ScanCallback<T, ?> scanCallback,
 			final DifferingFieldVisibilityEntryCount visibilityCounts ) {
 		super(
-				dataStore,
 				index,
 				visibilityCounts,
 				authorizations);
@@ -63,7 +61,6 @@ abstract class AbstractBaseRowQuery<T> extends
 				new ReaderClosableWrapper(
 						reader),
 				new NativeEntryIteratorWrapper(
-						dataStore,
 						adapterStore,
 						index,
 						reader,

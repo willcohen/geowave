@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import org.apache.log4j.Logger;
 import org.opengis.feature.simple.SimpleFeature;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;

@@ -44,6 +44,7 @@ import mil.nga.giat.geowave.datastore.accumulo.AccumuloStoreFactoryFamily;
 import mil.nga.giat.geowave.test.annotation.GeoWaveTestStore.GeoWaveStoreType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 public class HBaseStoreTestEnvironment extends
 		StoreTestEnvironment
 {

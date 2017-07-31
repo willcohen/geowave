@@ -38,8 +38,7 @@ import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 public class IngestRunner extends
 		RasterIngestRunner
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			IngestRunner.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(IngestRunner.class);
 	private IndexWriter bandWriter;
 	private IndexWriter sceneWriter;
 	private final VectorOverrideCommandLineOptions vectorOverrideOptions;
@@ -64,8 +63,7 @@ public class IngestRunner extends
 			final OperationParams params )
 			throws Exception { // Ensure we have all the required
 								// arguments
-		super.processParameters(
-				params);
+		super.processParameters(params);
 
 		final DataStore vectorStore;
 		final PrimaryIndex[] vectorIndices;
@@ -77,8 +75,7 @@ public class IngestRunner extends
 			String vectorStoreName = vectorOverrideOptions.getVectorStore();
 			final StoreLoader vectorStoreLoader = new StoreLoader(
 					vectorStoreName);
-			if (!vectorStoreLoader.loadFromConfig(
-					configFile)) {
+			if (!vectorStoreLoader.loadFromConfig(configFile)) {
 				throw new ParameterException(
 						"Cannot find vector store name: " + vectorStoreLoader.getStoreName());
 			}
@@ -95,8 +92,7 @@ public class IngestRunner extends
 			// Load the Indices
 			final IndexLoader indexLoader = new IndexLoader(
 					vectorIndexList);
-			if (!indexLoader.loadFromConfig(
-					configFile)) {
+			if (!indexLoader.loadFromConfig(configFile)) {
 				throw new ParameterException(
 						"Cannot find index(s) by name: " + vectorIndexList);
 			}
@@ -107,8 +103,7 @@ public class IngestRunner extends
 			for (final IndexPluginOptions dimensionType : indexOptions) {
 				final PrimaryIndex primaryIndex = dimensionType.createPrimaryIndex();
 				if (primaryIndex == null) {
-					LOGGER.error(
-							"Could not get index instance, getIndex() returned null;");
+					LOGGER.error("Could not get index instance, getIndex() returned null;");
 					throw new IOException(
 							"Could not get index instance, getIndex() returned null");
 				}
@@ -124,8 +119,7 @@ public class IngestRunner extends
 		sceneWriter = vectorStore.createWriter(
 				sceneAdapter,
 				vectorIndices);
-		final SimpleFeatureType bandType = BandFeatureIterator.createFeatureType(
-				sceneType);
+		final SimpleFeatureType bandType = BandFeatureIterator.createFeatureType(sceneType);
 		final FeatureDataAdapter bandAdapter = new FeatureDataAdapter(
 				bandType);
 		bandWriter = vectorStore.createWriter(
@@ -137,8 +131,7 @@ public class IngestRunner extends
 	protected void nextBand(
 			final SimpleFeature band,
 			final AnalysisInfo analysisInfo ) {
-		bandWriter.write(
-				band);
+		bandWriter.write(band);
 		super.nextBand(
 				band,
 				analysisInfo);
@@ -162,8 +155,7 @@ public class IngestRunner extends
 			OperationParams params )
 			throws Exception {
 		try {
-			super.runInternal(
-					params);
+			super.runInternal(params);
 		}
 		finally {
 			if (sceneWriter != null) {

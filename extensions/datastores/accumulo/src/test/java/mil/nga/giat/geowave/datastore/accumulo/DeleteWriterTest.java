@@ -290,7 +290,7 @@ public class DeleteWriterTest
 						key.getLeft(),
 						key.getRight(),
 						new ByteArrayId(
-								"test_pt_1")));
+								"test_line_1")));
 		assertTrue(it1.hasNext());
 		assertTrue(mockDataStore.delete(
 				new QueryOptions(
@@ -412,7 +412,7 @@ public class DeleteWriterTest
 						key.getLeft(),
 						key.getRight(),
 						new ByteArrayId(
-								"test_pt_1")));
+								"test_line_1")));
 		assertTrue(it1.hasNext());
 		assertTrue(((BaseDataStore) mockDataStore).delete(
 				new QueryOptions(

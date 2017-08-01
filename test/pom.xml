@@ -89,6 +89,12 @@
 			<groupId>org.codehaus.mojo</groupId>
 			<artifactId>cassandra-maven-plugin</artifactId>
 			<version>3.5</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>log4j-over-slf4j</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>

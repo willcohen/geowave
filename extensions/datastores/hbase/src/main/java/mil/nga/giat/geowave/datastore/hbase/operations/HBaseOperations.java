@@ -38,6 +38,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.store.CloseableIterator;
+import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
+import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
+import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
+import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.operations.Deleter;
 import mil.nga.giat.geowave.core.store.operations.MetadataDeleter;
 import mil.nga.giat.geowave.core.store.operations.MetadataReader;
@@ -49,6 +55,7 @@ import mil.nga.giat.geowave.core.store.operations.Writer;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseRequiredOptions;
 import mil.nga.giat.geowave.datastore.hbase.util.ConnectionPool;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils;
+import mil.nga.giat.geowave.datastore.hbase.util.RewritingMergingEntryIterator;
 import mil.nga.giat.geowave.mapreduce.MapReduceDataStoreOperations;
 import mil.nga.giat.geowave.mapreduce.splits.RecordReaderParams;
 

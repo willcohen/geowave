@@ -39,8 +39,6 @@ public class HBaseDataStore extends
 	private final static Logger LOGGER = Logger.getLogger(
 			HBaseDataStore.class);
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(HBaseDataStore.class);
-
 	private final BasicHBaseOperations operations;
 	private final HBaseOptions options;
 

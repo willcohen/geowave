@@ -75,7 +75,7 @@ public class HBaseWriter implements
 					"Incorrect HFile version (should be 3)");
 		}
 
-		if (LOGGER.getLevel() == Level.DEBUG) {
+		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(
 					"Schema Update Enabled = " + schemaUpdateEnabled);
 

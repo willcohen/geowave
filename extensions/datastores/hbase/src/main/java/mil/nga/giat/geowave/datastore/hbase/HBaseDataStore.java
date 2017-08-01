@@ -4,17 +4,12 @@
 package mil.nga.giat.geowave.datastore.hbase;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.List;
 
-import org.apache.hadoop.hbase.security.visibility.CellVisibility;
-import org.apache.hadoop.hbase.security.visibility.CellVisibility;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
@@ -36,11 +31,8 @@ import mil.nga.giat.geowave.mapreduce.BaseMapReduceDataStore;
 public class HBaseDataStore extends
 		BaseMapReduceDataStore
 {
-	private final static Logger LOGGER = Logger.getLogger(
+	private final static Logger LOGGER = LoggerFactory.getLogger(
 			HBaseDataStore.class);
-
-	private final BasicHBaseOperations operations;
-	private final HBaseOptions options;
 
 	private final HBaseSplitsProvider splitsProvider = new HBaseSplitsProvider();
 
@@ -84,8 +76,6 @@ public class HBaseDataStore extends
 				operations,
 				options);
 
-		this.operations = operations;
-		this.options = options;
 		secondaryIndexDataStore.setDataStore(
 				this);
 	}
@@ -94,46 +84,6 @@ public class HBaseDataStore extends
 	protected void initOnIndexWriterCreate(
 			final DataAdapter adapter,
 			final PrimaryIndex index ) {}
-
-	protected boolean rowHasData(
-			final byte[] rowId,
-			final List<ByteArrayId> dataIds )
-			throws IOException {
-
-		final byte[] metadata = Arrays.copyOfRange(
-				rowId,
-				rowId.length - 12,
-				rowId.length);
-
-		final ByteBuffer metadataBuf = ByteBuffer.wrap(
-				metadata);
-		final int adapterIdLength = metadataBuf.getInt();
-		final int dataIdLength = metadataBuf.getInt();
-
-		final ByteBuffer buf = ByteBuffer.wrap(
-				rowId,
-				0,
-				rowId.length - 12);
-		final byte[] indexId = new byte[rowId.length - 12 - adapterIdLength - dataIdLength];
-		final byte[] rawAdapterId = new byte[adapterIdLength];
-		final byte[] rawDataId = new byte[dataIdLength];
-		buf.get(
-				indexId);
-		buf.get(
-				rawAdapterId);
-		buf.get(
-				rawDataId);
-
-		for (final ByteArrayId dataId : dataIds) {
-			if (Arrays.equals(
-					rawDataId,
-					dataId.getBytes())) {
-				return true;
-			}
-		}
-
-		return false;
-	}
 
 	@Override
 	public List<InputSplit> getSplits(
@@ -147,7 +97,7 @@ public class HBaseDataStore extends
 			throws IOException,
 			InterruptedException {
 		return splitsProvider.getSplits(
-				operations,
+				baseOperations,
 				query,
 				queryOptions,
 				adapterStore,

@@ -44,7 +44,7 @@ public class HBaseStoreFactoryFamily extends
 		return new AccumuloDataStoreFactory(
 				TYPE,
 				DESCRIPTION,
-				new AccumuloFactoryHelper());
+				new HBaseFactoryHelper());
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class HBaseStoreFactoryFamily extends
 		return new AccumuloSecondaryIndexDataStoreFactory(
 				TYPE,
 				DESCRIPTION,
-				new AccumuloFactoryHelper());
+				new HBaseFactoryHelper());
 	}
 
 }

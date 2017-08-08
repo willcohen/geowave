@@ -4,6 +4,7 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -35,10 +36,11 @@ import mil.nga.giat.geowave.test.basic.AbstractGeoWaveBasicVectorIT;
 public class GeoWaveJavaSparkSQLIT extends
 		AbstractGeoWaveBasicVectorIT
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(GeoWaveJavaSparkSQLIT.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(
+			GeoWaveJavaSparkSQLIT.class);
 
 	@GeoWaveTestStore(value = {
-		GeoWaveStoreType.ACCUMULO,
+		// GeoWaveStoreType.ACCUMULO,
 		GeoWaveStoreType.HBASE
 	})
 	protected DataStorePluginOptions dataStore;
@@ -49,30 +51,45 @@ public class GeoWaveJavaSparkSQLIT extends
 	public static void reportTestStart() {
 		stopwatch.reset();
 		stopwatch.start();
-		LOGGER.warn("-----------------------------------------");
-		LOGGER.warn("*                                       *");
-		LOGGER.warn("*  RUNNING GeoWaveJavaSparkSQLIT        *");
-		LOGGER.warn("*                                       *");
-		LOGGER.warn("-----------------------------------------");
+		LOGGER.warn(
+				"-----------------------------------------");
+		LOGGER.warn(
+				"*                                       *");
+		LOGGER.warn(
+				"*  RUNNING GeoWaveJavaSparkSQLIT        *");
+		LOGGER.warn(
+				"*                                       *");
+		LOGGER.warn(
+				"-----------------------------------------");
 	}
 
 	@AfterClass
 	public static void reportTestFinish() {
 		stopwatch.stop();
-		LOGGER.warn("-----------------------------------------");
-		LOGGER.warn("*                                       *");
-		LOGGER.warn("* FINISHED GeoWaveJavaSparkSQLIT        *");
-		LOGGER.warn("*         " + stopwatch.getTimeString() + " elapsed.             *");
-		LOGGER.warn("*                                       *");
-		LOGGER.warn("-----------------------------------------");
+		LOGGER.warn(
+				"-----------------------------------------");
+		LOGGER.warn(
+				"*                                       *");
+		LOGGER.warn(
+				"* FINISHED GeoWaveJavaSparkSQLIT        *");
+		LOGGER.warn(
+				"*         " + stopwatch.getTimeString() + " elapsed.             *");
+		LOGGER.warn(
+				"*                                       *");
+		LOGGER.warn(
+				"-----------------------------------------");
 	}
 
 	@Test
-	public void testCreateDataFrame() {
+	public void writeDataFrameCsv() {
 		// Set up Spark
-		SparkSession spark = SparkSession.builder().master(
-				"local[*]").appName(
-				"JavaSparkSqlIT").getOrCreate();
+		SparkSession spark = SparkSession
+				.builder()
+				.master(
+						"local[*]")
+				.appName(
+						"JavaSparkSqlIT")
+				.getOrCreate();
 
 		JavaSparkContext context = new JavaSparkContext(
 				spark.sparkContext());
@@ -91,7 +108,8 @@ public class GeoWaveJavaSparkSQLIT extends
 					dataStore);
 
 			long count = javaRdd.count();
-			LOGGER.warn("DataStore loaded into RDD with " + count + " features.");
+			LOGGER.warn(
+					"DataStore loaded into RDD with " + count + " features.");
 
 			// Create a DataFrame from the RDD
 			SimpleFeatureDataFrame sfDataFrame = new SimpleFeatureDataFrame(
@@ -100,25 +118,115 @@ public class GeoWaveJavaSparkSQLIT extends
 			if (!sfDataFrame.init(
 					dataStore,
 					null)) {
-				Assert.fail("Failed to initialize dataframe");
+				Assert.fail(
+						"Failed to initialize dataframe");
 			}
 
-			LOGGER.warn(sfDataFrame.getSchema().json());
+			LOGGER.warn(
+					sfDataFrame.getSchema().json());
 
-			Dataset<Row> df = sfDataFrame.getDataFrame(javaRdd);
-			df.show(10);
+			Dataset<Row> df = sfDataFrame.getDataFrame(
+					javaRdd);
 
-			df.createOrReplaceTempView("features");
+			// Test CSV write operation
+			df
+					.repartition(
+							1)
+					.write()
+					.format(
+							"com.databricks.spark.csv")
+					.option(
+							"header",
+							"true")
+					.mode(
+							SaveMode.Overwrite)
+					.save(
+							"hail-csv.dir");
+		}
+		catch (final Exception e) {
+			e.printStackTrace();
+			TestUtils.deleteAll(
+					dataStore);
+			spark.close();
+			context.close();
+			Assert.fail(
+					"Error occurred while writing dataframe to csv: '" + e.getLocalizedMessage() + "'");
+		}
+
+		// Clean up
+		TestUtils.deleteAll(
+				dataStore);
+
+		spark.close();
+		context.close();
+	}
+
+	@Test
+	public void testCreateDataFrame() {
+		// Set up Spark
+		SparkSession spark = SparkSession
+				.builder()
+				.master(
+						"local[*]")
+				.appName(
+						"JavaSparkSqlIT")
+				.getOrCreate();
+
+		JavaSparkContext context = new JavaSparkContext(
+				spark.sparkContext());
+
+		// ingest test points
+		TestUtils.testLocalIngest(
+				dataStore,
+				DimensionalityType.SPATIAL,
+				HAIL_SHAPEFILE_FILE,
+				1);
+
+		try {
+			// Load RDD from datastore, no filters
+			JavaPairRDD<GeoWaveInputKey, SimpleFeature> javaRdd = GeoWaveRDD.rddForSimpleFeatures(
+					context.sc(),
+					dataStore);
+
+			long count = javaRdd.count();
+			LOGGER.warn(
+					"DataStore loaded into RDD with " + count + " features.");
+
+			// Create a DataFrame from the RDD
+			SimpleFeatureDataFrame sfDataFrame = new SimpleFeatureDataFrame(
+					spark);
+
+			if (!sfDataFrame.init(
+					dataStore,
+					null)) {
+				Assert.fail(
+						"Failed to initialize dataframe");
+			}
+
+			LOGGER.warn(
+					sfDataFrame.getSchema().json());
+
+			Dataset<Row> df = sfDataFrame.getDataFrame(
+					javaRdd);
+			df.show(
+					10);
+
+			df.createOrReplaceTempView(
+					"features");
 
 			String bbox = "POLYGON ((-94 34, -93 34, -93 35, -94 35, -94 34))";
 
-			Dataset<Row> results = spark.sql("SELECT * FROM features WHERE geomContains('" + bbox + "', geom)");
+			Dataset<Row> results = spark.sql(
+					"SELECT * FROM features WHERE geomContains('" + bbox + "', geom)");
 			long containsCount = results.count();
-			LOGGER.warn("Got " + containsCount + " for geomContains test");
+			LOGGER.warn(
+					"Got " + containsCount + " for geomContains test");
 
-			results = spark.sql("SELECT * FROM features WHERE geomWithin(geom, '" + bbox + "')");
+			results = spark.sql(
+					"SELECT * FROM features WHERE geomWithin(geom, '" + bbox + "')");
 			long withinCount = results.count();
-			LOGGER.warn("Got " + withinCount + " for geomWithin test");
+			LOGGER.warn(
+					"Got " + withinCount + " for geomWithin test");
 
 			Assert.assertTrue(
 					"Within and Contains counts should be equal",
@@ -129,7 +237,8 @@ public class GeoWaveJavaSparkSQLIT extends
 					results,
 					dataStore);
 
-			sqlResultsWriter.writeResults("sqltest");
+			sqlResultsWriter.writeResults(
+					"sqltest");
 
 			// Test other spatial UDFs
 			String line1 = "LINESTRING(0 0, 10 10)";
@@ -137,8 +246,10 @@ public class GeoWaveJavaSparkSQLIT extends
 			Row result = spark.sql(
 					"SELECT geomIntersects('" + line1 + "', '" + line2 + "')").head();
 
-			boolean intersect = result.getBoolean(0);
-			LOGGER.warn("geomIntersects returned " + intersect);
+			boolean intersect = result.getBoolean(
+					0);
+			LOGGER.warn(
+					"geomIntersects returned " + intersect);
 
 			Assert.assertTrue(
 					"Lines should intersect",
@@ -147,8 +258,10 @@ public class GeoWaveJavaSparkSQLIT extends
 			result = spark.sql(
 					"SELECT geomDisjoint('" + line1 + "', '" + line2 + "')").head();
 
-			boolean disjoint = result.getBoolean(0);
-			LOGGER.warn("geomDisjoint returned " + disjoint);
+			boolean disjoint = result.getBoolean(
+					0);
+			LOGGER.warn(
+					"geomDisjoint returned " + disjoint);
 
 			Assert.assertFalse(
 					"Lines should not be disjoint",
@@ -157,15 +270,18 @@ public class GeoWaveJavaSparkSQLIT extends
 		}
 		catch (final Exception e) {
 			e.printStackTrace();
-			TestUtils.deleteAll(dataStore);
+			TestUtils.deleteAll(
+					dataStore);
 			spark.close();
 			context.close();
-			Assert.fail("Error occurred while testing a bounding box query of spatial index: '"
-					+ e.getLocalizedMessage() + "'");
+			Assert.fail(
+					"Error occurred while testing a bounding box query of spatial index: '" + e.getLocalizedMessage()
+							+ "'");
 		}
 
 		// Clean up
-		TestUtils.deleteAll(dataStore);
+		TestUtils.deleteAll(
+				dataStore);
 
 		spark.close();
 		context.close();
@@ -174,9 +290,13 @@ public class GeoWaveJavaSparkSQLIT extends
 	// @Test
 	public void testSpatialJoin() {
 		// Set up Spark
-		SparkSession spark = SparkSession.builder().master(
-				"local[*]").appName(
-				"JavaSparkSqlIT").getOrCreate();
+		SparkSession spark = SparkSession
+				.builder()
+				.master(
+						"local[*]")
+				.appName(
+						"JavaSparkSqlIT")
+				.getOrCreate();
 
 		JavaSparkContext context = new JavaSparkContext(
 				spark.sparkContext());
@@ -193,7 +313,8 @@ public class GeoWaveJavaSparkSQLIT extends
 
 			// Load first RDD using spatial query (bbox)
 			String leftBboxStr = "POLYGON ((-94 34, -93 34, -93 35, -94 35, -94 34))";
-			Geometry leftBox = wktReader.read(leftBboxStr);
+			Geometry leftBox = wktReader.read(
+					leftBboxStr);
 			SpatialQuery leftBoxQuery = new SpatialQuery(
 					leftBox);
 
@@ -209,21 +330,27 @@ public class GeoWaveJavaSparkSQLIT extends
 			if (!leftDataFrame.init(
 					dataStore,
 					null)) {
-				Assert.fail("Failed to initialize dataframe");
+				Assert.fail(
+						"Failed to initialize dataframe");
 			}
 
-			Dataset<Row> dfLeft = leftDataFrame.getDataFrame(leftRdd);
+			Dataset<Row> dfLeft = leftDataFrame.getDataFrame(
+					leftRdd);
 
-			dfLeft.createOrReplaceTempView("left");
+			dfLeft.createOrReplaceTempView(
+					"left");
 
-			Dataset<Row> leftDistinct = spark.sql("SELECT distinct geom FROM left");
+			Dataset<Row> leftDistinct = spark.sql(
+					"SELECT distinct geom FROM left");
 
 			long leftCount = leftDistinct.count();
-			LOGGER.warn("Left dataframe loaded with " + leftCount + " unique points.");
+			LOGGER.warn(
+					"Left dataframe loaded with " + leftCount + " unique points.");
 
 			// Load second RDD using spatial query (bbox) for 1/2-deg overlap
 			String rightBboxStr = "POLYGON ((-93.5 34, -92.5 34, -92.5 35, -93.5 35, -93.5 34))";
-			Geometry rightBox = wktReader.read(rightBboxStr);
+			Geometry rightBox = wktReader.read(
+					rightBboxStr);
 			SpatialQuery rightBoxQuery = new SpatialQuery(
 					rightBox);
 
@@ -239,36 +366,45 @@ public class GeoWaveJavaSparkSQLIT extends
 			if (!rightDataFrame.init(
 					dataStore,
 					null)) {
-				Assert.fail("Failed to initialize dataframe");
+				Assert.fail(
+						"Failed to initialize dataframe");
 			}
 
-			Dataset<Row> dfRight = rightDataFrame.getDataFrame(rightRdd);
+			Dataset<Row> dfRight = rightDataFrame.getDataFrame(
+					rightRdd);
 
-			dfRight.createOrReplaceTempView("right");
+			dfRight.createOrReplaceTempView(
+					"right");
 
-			Dataset<Row> rightDistinct = spark.sql("SELECT distinct geom FROM right");
+			Dataset<Row> rightDistinct = spark.sql(
+					"SELECT distinct geom FROM right");
 
 			long rightCount = rightDistinct.count();
-			LOGGER.warn("Right dataframe loaded with " + rightCount + " unique points.");
+			LOGGER.warn(
+					"Right dataframe loaded with " + rightCount + " unique points.");
 
 			// Do a spatial join to find the overlap
-			Dataset<Row> results = spark
-					.sql("SELECT distinct left.geom FROM left INNER JOIN right ON geomIntersects(left.geom, right.geom)");
+			Dataset<Row> results = spark.sql(
+					"SELECT distinct left.geom FROM left INNER JOIN right ON geomIntersects(left.geom, right.geom)");
 
 			long overlapCount = results.count();
-			LOGGER.warn("Got " + overlapCount + " for spatial join intersection test");
+			LOGGER.warn(
+					"Got " + overlapCount + " for spatial join intersection test");
 		}
 		catch (final Exception e) {
 			e.printStackTrace();
-			TestUtils.deleteAll(dataStore);
+			TestUtils.deleteAll(
+					dataStore);
 			spark.close();
 			context.close();
-			Assert.fail("Error occurred while testing a bounding box query of spatial index: '"
-					+ e.getLocalizedMessage() + "'");
+			Assert.fail(
+					"Error occurred while testing a bounding box query of spatial index: '" + e.getLocalizedMessage()
+							+ "'");
 		}
 
 		// Clean up
-		TestUtils.deleteAll(dataStore);
+		TestUtils.deleteAll(
+				dataStore);
 
 		spark.close();
 		context.close();

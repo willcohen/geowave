@@ -6,9 +6,11 @@ import java.util.List;
 
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SaveMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
@@ -123,7 +125,7 @@ public class SparkSqlCommand extends
 					false);
 		}
 
-		System.out.println(
+		JCommander.getConsole().println(
 				"GeoWave SparkSQL query returned " + results.count() + " results");
 
 		if (outputDataStore != null) {
@@ -140,12 +142,29 @@ public class SparkSqlCommand extends
 				typeName = "sqlresults";
 			}
 
-			System.out.print(
-					"Writing GeoWave SparkSQL query results...");
+			JCommander.getConsole().println(
+					"Writing GeoWave SparkSQL query results to datastore...");
 			sqlResultsWriter.writeResults(
 					typeName);
-			System.out.println(
-					"Done.");
+			JCommander.getConsole().println(
+					"Datastore write complete.");
+		}
+
+		if (sparkSqlOptions.getCsvOutputFile() != null) {
+			results
+					.repartition(
+							1)
+					.write()
+					.format(
+							"com.databricks.spark.csv")
+					.option(
+							"header",
+							"true")
+					.mode(
+							SaveMode.Overwrite)
+					.save(
+							sparkSqlOptions.getCsvOutputFile());
+
 		}
 	}
 

@@ -22,21 +22,22 @@ import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.util.MergingEntryIterator;
-import mil.nga.giat.geowave.datastore.hbase.operations.HBaseWriterOrig;
+import mil.nga.giat.geowave.datastore.hbase.operations.HBaseWriter;
 
 public class RewritingMergingEntryIterator<T> extends
 		MergingEntryIterator<T>
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(RewritingMergingEntryIterator.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(
+			RewritingMergingEntryIterator.class);
 
-	private final HBaseWriterOrig writer;
-	
+	private final HBaseWriter writer;
+
 	public RewritingMergingEntryIterator(
 			final AdapterStore adapterStore,
 			final PrimaryIndex index,
 			final Iterator<GeoWaveRow> scannerIt,
 			final Map<ByteArrayId, RowMergingDataAdapter> mergingAdapters,
-			final HBaseWriterOrig writer ) {
+			final HBaseWriter writer ) {
 		super(
 				adapterStore,
 				index,

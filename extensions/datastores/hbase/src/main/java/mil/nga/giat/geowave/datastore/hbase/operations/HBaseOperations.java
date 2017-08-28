@@ -129,7 +129,7 @@ public class HBaseOperations implements
 				tableName);
 	}
 
-	public HBaseWriterOrig createWriter(
+	public HBaseWriter createWriter(
 			final String sTableName,
 			final String[] columnFamilies,
 			final boolean createTable )
@@ -141,7 +141,7 @@ public class HBaseOperations implements
 				null);
 	}
 
-	public HBaseWriterOrig createWriter(
+	public HBaseWriter createWriter(
 			final String sTableName,
 			final String[] columnFamilies,
 			final boolean createTable,
@@ -158,7 +158,7 @@ public class HBaseOperations implements
 					splits);
 		}
 
-		return new HBaseWriterOrig(
+		return new HBaseWriter(
 				conn.getAdmin(),
 				qTableName);
 	}
@@ -450,10 +450,8 @@ public class HBaseOperations implements
 			int regionsLeft;
 
 			do {
-				regionsLeft = admin
-						.getAlterStatus(
-								tableName)
-						.getFirst();
+				regionsLeft = admin.getAlterStatus(
+						tableName).getFirst();
 				LOGGER.debug(
 						regionsLeft + " regions remaining in table modify");
 
@@ -473,16 +471,12 @@ public class HBaseOperations implements
 			LOGGER.debug(
 					"Successfully added coprocessor");
 
-			coprocessorCache
-					.get(
-							tableNameStr)
-					.add(
+			coprocessorCache.get(
+					tableNameStr).add(
 							coprocessorName);
 
-			coprocessorCache
-					.get(
-							tableNameStr)
-					.add(
+			coprocessorCache.get(
+					tableNameStr).add(
 							coprocessorName);
 		}
 		catch (final IOException e) {
@@ -521,10 +515,8 @@ public class HBaseOperations implements
 			while (it.hasNext()) {
 				final DataAdapter a = it.next();
 				if (a instanceof RowMergingDataAdapter) {
-					if (adapterIndexMappingStore
-							.getIndicesForAdapter(
-									a.getAdapterId())
-							.contains(
+					if (adapterIndexMappingStore.getIndicesForAdapter(
+							a.getAdapterId()).contains(
 									index.getId())) {
 						map.put(
 								a.getAdapterId(),
@@ -547,8 +539,8 @@ public class HBaseOperations implements
 			return false;
 		}
 		final String table = index.getId().getString();
-		try (HBaseWriterOrig writer = createWriter(
-				table,
+		try (HBaseWriter writer = createWriter(
+				index.getId(),
 				columnFamilies.toArray(
 						new String[] {}),
 				false)) {
@@ -597,7 +589,7 @@ public class HBaseOperations implements
 			if (options.isCreateTable()) {
 				String[] columnFamilies = new String[1];
 				columnFamilies[0] = adapterId.getString();
-				
+
 				createTable(
 						columnFamilies,
 						tableName,
@@ -655,8 +647,13 @@ public class HBaseOperations implements
 			final ByteArrayId indexId,
 			final String... authorizations )
 			throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+		final TableName tableName = getTableName(
+				indexId.getString());
+
+		return new HBaseDeleter(
+				getBufferedMutator(
+						tableName),
+				false);
 	}
 
 	@Override

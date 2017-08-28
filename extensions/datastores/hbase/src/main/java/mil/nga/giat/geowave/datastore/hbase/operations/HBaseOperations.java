@@ -10,8 +10,6 @@
  ******************************************************************************/
 package mil.nga.giat.geowave.datastore.hbase.operations;
 
-import static org.apache.hadoop.hbase.security.visibility.VisibilityConstants.LABELS_TABLE_FAMILY;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,12 +24,12 @@ import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableExistsException;
 import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.BufferedMutator;
 import org.apache.hadoop.hbase.client.BufferedMutatorParams;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.RegionLocator;
-import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
@@ -54,6 +52,7 @@ import mil.nga.giat.geowave.core.store.operations.MetadataWriter;
 import mil.nga.giat.geowave.core.store.operations.Reader;
 import mil.nga.giat.geowave.core.store.operations.ReaderParams;
 import mil.nga.giat.geowave.core.store.operations.Writer;
+import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseOptions;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseRequiredOptions;
 import mil.nga.giat.geowave.datastore.hbase.util.ConnectionPool;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils;
@@ -64,7 +63,8 @@ import mil.nga.giat.geowave.mapreduce.splits.RecordReaderParams;
 public class HBaseOperations implements
 		MapReduceDataStoreOperations
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(HBaseOperations.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(
+			HBaseOperations.class);
 	protected static final String DEFAULT_TABLE_NAMESPACE = "";
 	public static final Object ADMIN_MUTEX = new Object();
 	private static final long SLEEP_INTERVAL = 10000L;
@@ -73,10 +73,12 @@ public class HBaseOperations implements
 	private final String tableNamespace;
 	private final boolean schemaUpdateEnabled;
 	private final HashMap<String, List<String>> coprocessorCache = new HashMap<String, List<String>>();
+	private final HBaseOptions options;
 
 	public HBaseOperations(
 			final Connection connection,
-			final String geowaveNamespace )
+			final String geowaveNamespace,
+			final HBaseOptions options )
 			throws IOException {
 		conn = connection;
 		tableNamespace = geowaveNamespace;
@@ -84,11 +86,14 @@ public class HBaseOperations implements
 		schemaUpdateEnabled = conn.getConfiguration().getBoolean(
 				"hbase.online.schema.update.enable",
 				false);
+
+		this.options = options;
 	}
 
 	public HBaseOperations(
 			final String zookeeperInstances,
-			final String geowaveNamespace )
+			final String geowaveNamespace,
+			final HBaseOptions options )
 			throws IOException {
 		conn = ConnectionPool.getInstance().getConnection(
 				zookeeperInstances);
@@ -97,6 +102,8 @@ public class HBaseOperations implements
 		schemaUpdateEnabled = conn.getConfiguration().getBoolean(
 				"hbase.online.schema.update.enable",
 				false);
+
+		this.options = options;
 	}
 
 	public static HBaseOperations createOperations(
@@ -104,7 +111,8 @@ public class HBaseOperations implements
 			throws IOException {
 		return new HBaseOperations(
 				options.getZookeeper(),
-				options.getGeowaveNamespace());
+				options.getGeowaveNamespace(),
+				(HBaseOptions) options.getStoreOptions());
 	}
 
 	public Configuration getConfig() {
@@ -266,35 +274,36 @@ public class HBaseOperations implements
 			final ByteArrayId indexId,
 			final ByteArrayId adapterId,
 			final String... additionalAuthorizations ) {
-//		final String qName = getQualifiedTableName(
-//				indexId.getString());
-//		try {
-//			conn.getAdmin().deleteTable(
-//					getTableName(
-//							qName));
-//			return true;
-//		}
-//		catch (final IOException ex) {
-//			LOGGER.warn(
-//					"Unable to delete table '" + qName + "'",
-//					ex);
-//		}
-//		return false;
-//		final TableName[] tableNamesArr = conn.getAdmin().listTableNames();
-//		for (final TableName tableName : tableNamesArr) {
-//			if ((tableNamespace == null) || tableName.getNameAsString().startsWith(
-//					tableNamespace)) {
-//				synchronized (ADMIN_MUTEX) {
-//					if (conn.getAdmin().isTableAvailable(
-//							tableName)) {
-//						conn.getAdmin().disableTable(
-//								tableName);
-//						conn.getAdmin().deleteTable(
-//								tableName);
-//					}
-//				}
-//			}
-//		}
+		// final String qName = getQualifiedTableName(
+		// indexId.getString());
+		// try {
+		// conn.getAdmin().deleteTable(
+		// getTableName(
+		// qName));
+		// return true;
+		// }
+		// catch (final IOException ex) {
+		// LOGGER.warn(
+		// "Unable to delete table '" + qName + "'",
+		// ex);
+		// }
+		// return false;
+		// final TableName[] tableNamesArr = conn.getAdmin().listTableNames();
+		// for (final TableName tableName : tableNamesArr) {
+		// if ((tableNamespace == null) ||
+		// tableName.getNameAsString().startsWith(
+		// tableNamespace)) {
+		// synchronized (ADMIN_MUTEX) {
+		// if (conn.getAdmin().isTableAvailable(
+		// tableName)) {
+		// conn.getAdmin().disableTable(
+		// tableName);
+		// conn.getAdmin().deleteTable(
+		// tableName);
+		// }
+		// }
+		// }
+		// }
 		return false;
 	}
 
@@ -441,8 +450,10 @@ public class HBaseOperations implements
 			int regionsLeft;
 
 			do {
-				regionsLeft = admin.getAlterStatus(
-						tableName).getFirst();
+				regionsLeft = admin
+						.getAlterStatus(
+								tableName)
+						.getFirst();
 				LOGGER.debug(
 						regionsLeft + " regions remaining in table modify");
 
@@ -462,13 +473,17 @@ public class HBaseOperations implements
 			LOGGER.debug(
 					"Successfully added coprocessor");
 
-			coprocessorCache.get(
-					tableNameStr).add(
-					coprocessorName);
+			coprocessorCache
+					.get(
+							tableNameStr)
+					.add(
+							coprocessorName);
 
-			coprocessorCache.get(
-					tableNameStr).add(
-					coprocessorName);
+			coprocessorCache
+					.get(
+							tableNameStr)
+					.add(
+							coprocessorName);
 		}
 		catch (final IOException e) {
 			LOGGER.error(
@@ -493,6 +508,7 @@ public class HBaseOperations implements
 							qName));
 		}
 	}
+
 	@Override
 	public boolean mergeData(
 			final PrimaryIndex index,
@@ -505,13 +521,16 @@ public class HBaseOperations implements
 			while (it.hasNext()) {
 				final DataAdapter a = it.next();
 				if (a instanceof RowMergingDataAdapter) {
-					if (adapterIndexMappingStore.getIndicesForAdapter(
-							a.getAdapterId()).contains(
-							index.getId())) {
+					if (adapterIndexMappingStore
+							.getIndicesForAdapter(
+									a.getAdapterId())
+							.contains(
+									index.getId())) {
 						map.put(
 								a.getAdapterId(),
 								(RowMergingDataAdapter) a);
-						columnFamilies.add(a.getAdapterId().getString());
+						columnFamilies.add(
+								a.getAdapterId().getString());
 					}
 				}
 			}
@@ -523,18 +542,21 @@ public class HBaseOperations implements
 			return false;
 		}
 		if (columnFamilies.isEmpty()) {
-			LOGGER.warn("There is no mergeable data found in datastore");
+			LOGGER.warn(
+					"There is no mergeable data found in datastore");
 			return false;
 		}
 		final String table = index.getId().getString();
 		try (HBaseWriterOrig writer = createWriter(
 				table,
-				columnFamilies.toArray(new String[] {}),
+				columnFamilies.toArray(
+						new String[] {}),
 				false)) {
 			final Scan scanner = new Scan();
 			for (final String cf : columnFamilies) {
-				scanner.addFamily(new ByteArrayId(
-						cf).getBytes());
+				scanner.addFamily(
+						new ByteArrayId(
+								cf).getBytes());
 			}
 			final ResultScanner rs = getScannedResults(
 					scanner,
@@ -569,6 +591,34 @@ public class HBaseOperations implements
 	public Writer createWriter(
 			final ByteArrayId indexId,
 			final ByteArrayId adapterId ) {
+		final TableName tableName = getTableName(
+				indexId.getString());
+		try {
+			if (options.isCreateTable()) {
+				String[] columnFamilies = new String[1];
+				columnFamilies[0] = adapterId.getString();
+				
+				createTable(
+						columnFamilies,
+						tableName,
+						null); // splits?
+			}
+
+			return new HBaseWriter(
+					getBufferedMutator(
+							tableName));
+		}
+		catch (final TableNotFoundException e) {
+			LOGGER.error(
+					"Table does not exist",
+					e);
+		}
+		catch (IOException e) {
+			LOGGER.error(
+					"Error creating table: " + indexId.getString(),
+					e);
+		}
+
 		return null;
 	}
 
@@ -617,7 +667,12 @@ public class HBaseOperations implements
 	}
 
 	public BufferedMutator getBufferedMutator(
-			BufferedMutatorParams params ) throws IOException {
-		return conn.getBufferedMutator(params);
+			TableName tableName )
+			throws IOException {
+		final BufferedMutatorParams params = new BufferedMutatorParams(
+				tableName);
+
+		return conn.getBufferedMutator(
+				params);
 	}
 }

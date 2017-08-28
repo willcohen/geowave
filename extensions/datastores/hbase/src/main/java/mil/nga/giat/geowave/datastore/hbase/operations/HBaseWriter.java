@@ -1,14 +1,9 @@
 package mil.nga.giat.geowave.datastore.hbase.operations;
 
-
 import java.io.IOException;
 
-import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.BufferedMutator;
-import org.apache.hadoop.hbase.client.BufferedMutator.ExceptionListener;
-import org.apache.hadoop.hbase.client.BufferedMutatorParams;
 import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.RetriesExhaustedWithDetailsException;
 import org.apache.hadoop.hbase.client.RowMutations;
 import org.apache.hadoop.hbase.security.visibility.CellVisibility;
 import org.apache.log4j.Logger;
@@ -28,18 +23,13 @@ import mil.nga.giat.geowave.core.store.operations.Writer;
 public class HBaseWriter implements
 		Writer
 {
-	private final static Logger LOGGER = Logger.getLogger(HBaseWriter.class);
-	private final HBaseOperations operations;
-	private final String tableNameString;
-	
-	private BufferedMutator mutator;
-
+	private final static Logger LOGGER = Logger.getLogger(
+			HBaseWriter.class);
+	private final BufferedMutator mutator;
 
 	public HBaseWriter(
-			final HBaseOperations operations,
-			final String tableName ) {
-		this.operations = operations;
-		this.tableNameString = tableName;
+			final BufferedMutator mutator ) {
+		this.mutator = mutator;
 	}
 
 	@Override
@@ -47,7 +37,6 @@ public class HBaseWriter implements
 		try {
 			if (mutator != null) {
 				mutator.close();
-				mutator = null;
 			}
 		}
 		catch (final IOException e) {
@@ -88,11 +77,11 @@ public class HBaseWriter implements
 				rowToMutation(
 						row));
 	}
-	
+
 	public void writeMutations(
 			final RowMutations rowMutation ) {
 		try {
-			getBufferedMutator().mutate(
+			mutator.mutate(
 					rowMutation.getMutations());
 		}
 		catch (final IOException e) {
@@ -100,37 +89,6 @@ public class HBaseWriter implements
 					"Unable to write mutation.",
 					e);
 		}
-	}
-
-	public BufferedMutator getBufferedMutator()
-			throws IOException {
-		if (mutator == null) {
-			final BufferedMutatorParams params = new BufferedMutatorParams(
-					TableName.valueOf(
-							tableNameString));
-
-			params.listener(
-					new ExceptionListener() {
-						@Override
-						public void onException(
-								final RetriesExhaustedWithDetailsException exception,
-								final BufferedMutator mutator )
-								throws RetriesExhaustedWithDetailsException {
-							LOGGER.error(
-									"Error in buffered mutator",
-									exception);
-							// Get details
-							for (final Throwable cause : exception.getCauses()) {
-								cause.printStackTrace();
-							}
-						}
-					});
-			
-			mutator = operations.getBufferedMutator(
-					params);
-		}
-		
-		return mutator;
 	}
 
 	public static RowMutations rowToMutation(

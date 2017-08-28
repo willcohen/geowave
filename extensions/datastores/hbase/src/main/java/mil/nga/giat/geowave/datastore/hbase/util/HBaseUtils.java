@@ -49,7 +49,7 @@ import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.util.DataStoreUtils;
 import mil.nga.giat.geowave.datastore.hbase.HBaseRow;
-import mil.nga.giat.geowave.datastore.hbase.operations.HBaseWriter;
+import mil.nga.giat.geowave.datastore.hbase.operations.HBaseWriterOrig;
 
 @SuppressWarnings("rawtypes")
 public class HBaseUtils
@@ -233,7 +233,7 @@ public class HBaseUtils
 			final WritableDataAdapter<T> writableAdapter,
 			final DataStoreEntryInfo entryInfo,
 			final T entry,
-			final HBaseWriter writer ) {
+			final HBaseWriterOrig writer ) {
 
 		final byte[] adapterId = writableAdapter.getAdapterId().getBytes();
 		final byte[] dataId = writableAdapter.getDataId(

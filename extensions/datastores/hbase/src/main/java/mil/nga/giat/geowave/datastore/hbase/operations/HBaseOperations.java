@@ -27,6 +27,8 @@ import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableExistsException;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.BufferedMutator;
+import org.apache.hadoop.hbase.client.BufferedMutatorParams;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.RegionLocator;
 import org.apache.hadoop.hbase.client.Result;
@@ -119,7 +121,7 @@ public class HBaseOperations implements
 				tableName);
 	}
 
-	public HBaseWriter createWriter(
+	public HBaseWriterOrig createWriter(
 			final String sTableName,
 			final String[] columnFamilies,
 			final boolean createTable )
@@ -131,7 +133,7 @@ public class HBaseOperations implements
 				null);
 	}
 
-	public HBaseWriter createWriter(
+	public HBaseWriterOrig createWriter(
 			final String sTableName,
 			final String[] columnFamilies,
 			final boolean createTable,
@@ -148,7 +150,7 @@ public class HBaseOperations implements
 					splits);
 		}
 
-		return new HBaseWriter(
+		return new HBaseWriterOrig(
 				conn.getAdmin(),
 				qTableName);
 	}
@@ -293,6 +295,7 @@ public class HBaseOperations implements
 //				}
 //			}
 //		}
+		return false;
 	}
 
 	public boolean columnFamilyExists(
@@ -467,12 +470,6 @@ public class HBaseOperations implements
 					tableNameStr).add(
 					coprocessorName);
 		}
-		catch (
-
-			coprocessorCache.get(
-					tableNameStr).add(
-							coprocessorName);
-		}
 		catch (final IOException e) {
 			LOGGER.error(
 					"Error verifying/adding coprocessor.",
@@ -530,7 +527,7 @@ public class HBaseOperations implements
 			return false;
 		}
 		final String table = index.getId().getString();
-		try (HBaseWriter writer = createWriter(
+		try (HBaseWriterOrig writer = createWriter(
 				table,
 				columnFamilies.toArray(new String[] {}),
 				false)) {
@@ -619,4 +616,8 @@ public class HBaseOperations implements
 		return null;
 	}
 
+	public BufferedMutator getBufferedMutator(
+			BufferedMutatorParams params ) throws IOException {
+		return conn.getBufferedMutator(params);
+	}
 }

@@ -12,17 +12,17 @@ import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo;
 import mil.nga.giat.geowave.core.store.operations.Deleter;
-import mil.nga.giat.geowave.datastore.hbase.operations.HBaseWriter;
+import mil.nga.giat.geowave.datastore.hbase.operations.HBaseWriterOrig;
 
 public class HBaseRowDeleter implements
 		Deleter<Object>
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(HBaseRowDeleter.class);
-	private final HBaseWriter writer;
+	private final HBaseWriterOrig writer;
 	private final boolean isAltIndex;
 
 	public HBaseRowDeleter(
-			final HBaseWriter writer,
+			final HBaseWriterOrig writer,
 			final boolean isAltIndex ) {
 		this.writer = writer;
 		this.isAltIndex = isAltIndex;

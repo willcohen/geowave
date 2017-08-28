@@ -33,7 +33,7 @@ import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.metadata.AbstractGeoWavePersistence;
 import mil.nga.giat.geowave.datastore.hbase.operations.HBaseOperations;
-import mil.nga.giat.geowave.datastore.hbase.operations.HBaseWriter;
+import mil.nga.giat.geowave.datastore.hbase.operations.HBaseWriterOrig;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils.ScannerClosableWrapper;
 
@@ -199,7 +199,7 @@ public abstract class AbstractHBasePersistence<T extends Persistable> extends
 				object);
 		try {
 
-			final HBaseWriter writer = operations.createWriter(
+			final HBaseWriterOrig writer = operations.createWriter(
 					getTablename(),
 					// create table with all possible column families initially
 					// because it is known
@@ -257,7 +257,7 @@ public abstract class AbstractHBasePersistence<T extends Persistable> extends
 				l.add(deleteMutations);
 
 			}
-			try (final HBaseWriter deleter = operations.createWriter(
+			try (final HBaseWriterOrig deleter = operations.createWriter(
 					getTablename(),
 					METADATA_CFS,
 					false)) {

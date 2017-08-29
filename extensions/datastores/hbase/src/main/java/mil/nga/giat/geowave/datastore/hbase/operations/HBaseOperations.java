@@ -45,6 +45,7 @@ import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
+import mil.nga.giat.geowave.core.store.metadata.AbstractGeoWavePersistence;
 import mil.nga.giat.geowave.core.store.operations.Deleter;
 import mil.nga.giat.geowave.core.store.operations.MetadataDeleter;
 import mil.nga.giat.geowave.core.store.operations.MetadataReader;
@@ -654,7 +655,29 @@ public class HBaseOperations implements
 	@Override
 	public MetadataWriter createMetadataWriter(
 			final MetadataType metadataType ) {
-		// TODO Auto-generated method stub
+		final TableName tableName = getTableName(
+				AbstractGeoWavePersistence.METADATA_TABLE);
+		try {
+			if (options.isCreateTable()) {
+				String[] columnFamilies = new String[1];
+				columnFamilies[0] = metadataType.name();
+
+				createTable(
+						columnFamilies,
+						tableName);
+			}
+
+			return new HBaseMetadataWriter(
+					getBufferedMutator(
+							tableName),
+					metadataType);
+		}
+		catch (IOException e) {
+			LOGGER.error(
+					"Error creating metadata table: " + AbstractGeoWavePersistence.METADATA_TABLE,
+					e);
+		}
+
 		return null;
 	}
 

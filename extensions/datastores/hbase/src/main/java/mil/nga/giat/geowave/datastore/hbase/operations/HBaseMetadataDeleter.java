@@ -59,7 +59,8 @@ public class HBaseMetadataDeleter implements
 		}
 		catch (IOException e) {
 			LOGGER.error(
-					"Error deleting metadata: " + e.getMessage());
+					"Error deleting metadata",
+					e);
 		}
 
 		return false;

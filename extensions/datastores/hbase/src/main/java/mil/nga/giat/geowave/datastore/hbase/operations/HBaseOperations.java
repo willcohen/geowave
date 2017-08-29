@@ -13,6 +13,7 @@ package mil.nga.giat.geowave.datastore.hbase.operations;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -72,7 +73,9 @@ public class HBaseOperations implements
 	private final Connection conn;
 	private final String tableNamespace;
 	private final boolean schemaUpdateEnabled;
-	private final HashMap<String, List<String>> coprocessorCache = new HashMap<String, List<String>>();
+	private final HashMap<String, List<String>> coprocessorCache = new HashMap<>();
+	private final Map<String, Set<ByteArrayId>> partitionCache = new HashMap<>();
+
 	private final HBaseOptions options;
 
 	public HBaseOperations(
@@ -154,8 +157,7 @@ public class HBaseOperations implements
 			createTable(
 					columnFamilies,
 					getTableName(
-							qTableName),
-					splits);
+							qTableName));
 		}
 
 		return new HBaseWriter(
@@ -165,8 +167,7 @@ public class HBaseOperations implements
 
 	public void createTable(
 			final String[] columnFamilies,
-			final TableName name,
-			final Set<ByteArrayId> splits )
+			final TableName name )
 			throws IOException {
 		synchronized (ADMIN_MUTEX) {
 			if (!conn.getAdmin().isTableAvailable(
@@ -180,20 +181,8 @@ public class HBaseOperations implements
 				}
 
 				try {
-					if ((splits != null) && !splits.isEmpty()) {
-						final byte[][] splitKeys = new byte[splits.size()][];
-						int i = 0;
-						for (final ByteArrayId split : splits) {
-							splitKeys[i++] = split.getBytes();
-						}
-						conn.getAdmin().createTable(
-								desc,
-								splitKeys);
-					}
-					else {
-						conn.getAdmin().createTable(
-								desc);
-					}
+					conn.getAdmin().createTable(
+							desc);
 				}
 				catch (final Exception e) {
 					// We can ignore TableExists on create
@@ -572,6 +561,52 @@ public class HBaseOperations implements
 		return false;
 	}
 
+	public void insurePartition(
+			final ByteArrayId partition,
+			final String tableNameStr ) {
+		TableName tableName = getTableName(
+				tableNameStr);
+		Set<ByteArrayId> existingPartitions = partitionCache.get(
+				tableNameStr);
+
+		try {
+			synchronized (partitionCache) {
+				if (existingPartitions == null) {
+					RegionLocator regionLocator = conn.getRegionLocator(
+							tableName);
+					existingPartitions = new HashSet<>();
+
+					for (byte[] startKey : regionLocator.getStartKeys()) {
+						existingPartitions.add(
+								new ByteArrayId(
+										startKey));
+					}
+
+					partitionCache.put(
+							tableNameStr,
+							existingPartitions);
+				}
+
+				if (!existingPartitions.contains(
+						partition)) {
+					Admin admin = conn.getAdmin();
+
+					admin.split(
+							tableName,
+							partition.getBytes());
+
+					// TODO: split is async - do we need to wait?
+					// (See the alter table wait loop in verifyCoprocessor)
+					admin.close();
+				}
+			}
+		}
+		catch (IOException e) {
+			LOGGER.error(
+					"Error accessing region info: " + e.getMessage());
+		}
+	}
+
 	@Override
 	public boolean insureAuthorizations(
 			final String clientUser,
@@ -592,13 +627,14 @@ public class HBaseOperations implements
 
 				createTable(
 						columnFamilies,
-						tableName,
-						null); // splits?
+						tableName);
 			}
 
 			return new HBaseWriter(
 					getBufferedMutator(
-							tableName));
+							tableName),
+					this,
+					indexId.getString());
 		}
 		catch (final TableNotFoundException e) {
 			LOGGER.error(

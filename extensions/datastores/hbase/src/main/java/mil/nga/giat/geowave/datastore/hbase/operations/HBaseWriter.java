@@ -8,6 +8,7 @@ import org.apache.hadoop.hbase.client.RowMutations;
 import org.apache.hadoop.hbase.security.visibility.CellVisibility;
 import org.apache.log4j.Logger;
 
+import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveKey;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
@@ -26,10 +27,16 @@ public class HBaseWriter implements
 	private final static Logger LOGGER = Logger.getLogger(
 			HBaseWriter.class);
 	private final BufferedMutator mutator;
+	private final HBaseOperations operations;
+	private final String tableName;
 
 	public HBaseWriter(
-			final BufferedMutator mutator ) {
+			final BufferedMutator mutator,
+			final HBaseOperations operations,
+			final String tableName ) {
 		this.mutator = mutator;
+		this.operations = operations;
+		this.tableName = tableName;
 	}
 
 	@Override
@@ -64,15 +71,22 @@ public class HBaseWriter implements
 	public void write(
 			final GeoWaveRow[] rows ) {
 		for (GeoWaveRow row : rows) {
-			writeMutations(
-					rowToMutation(
-							row));
+			write(
+					row);
 		}
 	}
 
 	@Override
 	public void write(
 			final GeoWaveRow row ) {
+		final byte[] partition = row.getPartitionKey();
+		if ((partition != null) && (partition.length > 0)) {
+			operations.insurePartition(
+					new ByteArrayId(
+							partition),
+					tableName);
+		}
+
 		writeMutations(
 				rowToMutation(
 						row));

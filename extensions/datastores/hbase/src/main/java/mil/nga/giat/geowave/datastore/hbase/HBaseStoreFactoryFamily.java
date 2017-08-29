@@ -13,18 +13,8 @@ package mil.nga.giat.geowave.datastore.hbase;
 import mil.nga.giat.geowave.core.store.BaseDataStoreFamily;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.GenericStoreFactory;
-import mil.nga.giat.geowave.core.store.StoreFactoryFamilySpi;
-import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
-import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
-import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
-import mil.nga.giat.geowave.core.store.index.IndexStore;
 import mil.nga.giat.geowave.core.store.index.SecondaryIndexDataStore;
-import mil.nga.giat.geowave.core.store.operations.DataStoreOperations;
 import mil.nga.giat.geowave.datastore.hbase.index.secondary.HBaseSecondaryIndexDataStoreFactory;
-import mil.nga.giat.geowave.datastore.hbase.metadata.HBaseAdapterIndexMappingStoreFactory;
-import mil.nga.giat.geowave.datastore.hbase.metadata.HBaseAdapterStoreFactory;
-import mil.nga.giat.geowave.datastore.hbase.metadata.HBaseDataStatisticsStoreFactory;
-import mil.nga.giat.geowave.datastore.hbase.metadata.HBaseIndexStoreFactory;
 
 public class HBaseStoreFactoryFamily extends
 		BaseDataStoreFamily
@@ -41,7 +31,7 @@ public class HBaseStoreFactoryFamily extends
 
 	@Override
 	public GenericStoreFactory<DataStore> getDataStoreFactory() {
-		return new AccumuloDataStoreFactory(
+		return new HBaseDataStoreFactory(
 				TYPE,
 				DESCRIPTION,
 				new HBaseFactoryHelper());
@@ -49,7 +39,7 @@ public class HBaseStoreFactoryFamily extends
 
 	@Override
 	public GenericStoreFactory<SecondaryIndexDataStore> getSecondaryIndexDataStore() {
-		return new AccumuloSecondaryIndexDataStoreFactory(
+		return new HBaseSecondaryIndexDataStoreFactory(
 				TYPE,
 				DESCRIPTION,
 				new HBaseFactoryHelper());

@@ -42,9 +42,7 @@ public class HBaseWriter implements
 	@Override
 	public void close() {
 		try {
-			if (mutator != null) {
-				mutator.close();
-			}
+			mutator.close();
 		}
 		catch (final IOException e) {
 			LOGGER.warn(
@@ -56,9 +54,7 @@ public class HBaseWriter implements
 	@Override
 	public void flush() {
 		try {
-			if (mutator != null) {
-				mutator.flush();
-			}
+			mutator.flush();
 		}
 		catch (final IOException e) {
 			LOGGER.warn(

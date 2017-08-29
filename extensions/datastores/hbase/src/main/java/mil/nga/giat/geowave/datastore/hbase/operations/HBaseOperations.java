@@ -150,19 +150,19 @@ public class HBaseOperations implements
 			final boolean createTable,
 			final Set<ByteArrayId> splits )
 			throws IOException {
-		final String qTableName = getQualifiedTableName(
-				sTableName);
+		final TableName tableName = getTableName(getQualifiedTableName(
+				sTableName));
 
 		if (createTable) {
 			createTable(
 					columnFamilies,
-					getTableName(
-							qTableName));
+					tableName);
 		}
 
 		return new HBaseWriter(
-				conn.getAdmin(),
-				qTableName);
+				getBufferedMutator(tableName),
+				this,
+				sTableName);
 	}
 
 	public void createTable(
@@ -529,7 +529,7 @@ public class HBaseOperations implements
 		}
 		final String table = index.getId().getString();
 		try (HBaseWriter writer = createWriter(
-				index.getId(),
+				index.getId().getString(),
 				columnFamilies.toArray(
 						new String[] {}),
 				false)) {
@@ -542,15 +542,16 @@ public class HBaseOperations implements
 			final ResultScanner rs = getScannedResults(
 					scanner,
 					table);
-			final RewritingMergingEntryIterator iterator = new RewritingMergingEntryIterator<>(
-					adapterStore,
-					index,
-					rs.iterator(),
-					map,
-					writer);
-			while (iterator.hasNext()) {
-				iterator.next();
-			}
+			// TODO: need a GeoWaveRow iterator from ResultScanner
+//			final RewritingMergingEntryIterator iterator = new RewritingMergingEntryIterator<>(
+//					adapterStore,
+//					index,
+//					rs.iterator(),
+//					map,
+//					writer);
+//			while (iterator.hasNext()) {
+//				iterator.next();
+//			}
 			return true;
 		}
 		catch (final IOException e) {

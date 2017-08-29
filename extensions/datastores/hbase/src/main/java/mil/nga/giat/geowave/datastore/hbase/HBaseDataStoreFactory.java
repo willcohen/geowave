@@ -11,14 +11,27 @@
 package mil.nga.giat.geowave.datastore.hbase;
 
 import mil.nga.giat.geowave.core.store.DataStore;
+import mil.nga.giat.geowave.core.store.DataStoreFactory;
+import mil.nga.giat.geowave.core.store.StoreFactoryHelper;
 import mil.nga.giat.geowave.core.store.StoreFactoryOptions;
+import mil.nga.giat.geowave.core.store.operations.DataStoreOperations;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseOptions;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseRequiredOptions;
 import mil.nga.giat.geowave.datastore.hbase.operations.HBaseOperations;
 
 public class HBaseDataStoreFactory extends
-		AbstractHBaseStoreFactory<DataStore>
+		DataStoreFactory
 {
+	public HBaseDataStoreFactory(
+			final String typeName,
+			final String description,
+			final StoreFactoryHelper helper ) {
+		super(
+				typeName,
+				description,
+				helper);
+	}
+
 	@Override
 	public DataStore createStore(
 			final StoreFactoryOptions options ) {
@@ -32,10 +45,11 @@ public class HBaseDataStoreFactory extends
 					new HBaseOptions());
 		}
 
-		final HBaseOperations hbaseOperations = createOperations(
+		final DataStoreOperations hbaseOperations = helper.createOperations(
 				opts);
+
 		return new HBaseDataStore(
-				hbaseOperations,
+				(HBaseOperations) hbaseOperations,
 				(HBaseOptions) opts.getStoreOptions());
 
 	}

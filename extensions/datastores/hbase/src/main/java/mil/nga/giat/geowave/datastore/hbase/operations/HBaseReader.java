@@ -1,14 +1,9 @@
 package mil.nga.giat.geowave.datastore.hbase.operations;
 
-import java.io.IOException;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
-import org.apache.hadoop.hbase.client.Scan;
 import org.apache.log4j.Logger;
 
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;

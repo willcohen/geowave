@@ -12,6 +12,7 @@ package mil.nga.giat.geowave.datastore.hbase.mapreduce;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
@@ -40,10 +41,11 @@ import mil.nga.giat.geowave.core.store.operations.DataStoreOperations;
 import mil.nga.giat.geowave.core.store.query.DistributableQuery;
 import mil.nga.giat.geowave.core.store.util.DataStoreUtils;
 import mil.nga.giat.geowave.datastore.hbase.operations.HBaseOperations;
-import mil.nga.giat.geowave.mapreduce.splits.GeoWaveInputSplit;
+import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils;
 import mil.nga.giat.geowave.mapreduce.splits.GeoWaveRowRange;
 import mil.nga.giat.geowave.mapreduce.splits.IntermediateSplitInfo;
 import mil.nga.giat.geowave.mapreduce.splits.RangeLocationPair;
+import mil.nga.giat.geowave.mapreduce.splits.SplitInfo;
 import mil.nga.giat.geowave.mapreduce.splits.SplitsProvider;
 
 public class HBaseSplitsProvider extends
@@ -51,65 +53,6 @@ public class HBaseSplitsProvider extends
 {
 	private final static Logger LOGGER = LoggerFactory.getLogger(
 			HBaseSplitsProvider.class);
-
-	public static GeoWaveRowRange wrapRange(
-			final ByteArrayRange range ) {
-		return new HBaseRowRange(
-				range);
-	}
-
-	public static ByteArrayRange unwrapRange(
-			final GeoWaveRowRange range ) {
-		if (range instanceof HBaseRowRange) {
-			return ((HBaseRowRange) range).getRange();
-		}
-		LOGGER.error(
-				"HBaseSplitsProvider requires use of HBaseRowRange type.");
-		return null;
-	}
-
-	@Override
-	protected GeoWaveRowRange constructRange(
-			final byte[] startKey,
-			final boolean isStartKeyInclusive,
-			final byte[] endKey,
-			final boolean isEndKeyInclusive ) {
-		return new HBaseRowRange(
-				new ByteArrayRange(
-						new ByteArrayId(
-								startKey),
-						new ByteArrayId(
-								endKey)));
-	}
-
-	@Override
-	protected GeoWaveRowRange defaultConstructRange() {
-		return new HBaseRowRange();
-	}
-
-	@Override
-	protected RangeLocationPair constructRangeLocationPair(
-			final GeoWaveRowRange range,
-			final String location,
-			final double cardinality ) {
-		return new HBaseRangeLocationPair(
-				range,
-				location,
-				cardinality);
-	}
-
-	@Override
-	public GeoWaveInputSplit constructInputSplit(
-			final Map<PrimaryIndex, List<RangeLocationPair>> splitInfo,
-			final String[] locations ) {
-		return new GeoWaveHBaseInputSplit(
-				splitInfo,
-				locations);
-	}
-
-	public static RangeLocationPair defaultConstructRangeLocationPair() {
-		return new HBaseRangeLocationPair();
-	}
 
 	@Override
 	protected TreeSet<IntermediateSplitInfo> populateIntermediateSplits(
@@ -139,38 +82,46 @@ public class HBaseSplitsProvider extends
 				index)) {
 			return splits;
 		}
-		final ByteArrayRange fullrange = unwrapRange(
+
+		final NumericIndexStrategy indexStrategy = index.getIndexStrategy();
+		final int partitionKeyLength = indexStrategy.getPartitionKeyLength();
+
+		final RowRange fullrange = toHBaseRange(
 				new GeoWaveRowRange(
 						null,
 						null,
 						null,
 						true,
-						true));
+						true),
+				partitionKeyLength);
 
 		final String tableName = index.getId().getString();
-		final NumericIndexStrategy indexStrategy = index.getIndexStrategy();
 
 		// Build list of row ranges from query
-		List<ByteArrayRange> ranges = new ArrayList<ByteArrayRange>();
+		List<RowRange> ranges = new ArrayList<RowRange>();
 		final List<ByteArrayRange> constraintRanges;
 		if (query != null) {
 			final List<MultiDimensionalNumericData> indexConstraints = query.getIndexConstraints(
 					indexStrategy);
 			if ((maxSplits != null) && (maxSplits > 0)) {
-				constraintRanges = DataStoreUtils.constraintsToByteArrayRanges(
+				constraintRanges = DataStoreUtils.constraintsToQueryRanges(
 						indexConstraints,
 						indexStrategy,
-						maxSplits);
+						maxSplits).getCompositeQueryRanges();
 			}
 			else {
-				constraintRanges = DataStoreUtils.constraintsToByteArrayRanges(
+				constraintRanges = DataStoreUtils.constraintsToQueryRanges(
 						indexConstraints,
 						indexStrategy,
-						-1);
+						-1).getCompositeQueryRanges();
 			}
 			for (final ByteArrayRange constraintRange : constraintRanges) {
 				ranges.add(
-						constraintRange);
+						new RowRange(
+								constraintRange.getStart().getBytes(),
+								true,
+								constraintRange.getEnd().getBytes(),
+								false));
 			}
 		}
 		else {
@@ -182,7 +133,7 @@ public class HBaseSplitsProvider extends
 			}
 		}
 
-		final Map<HRegionLocation, Map<HRegionInfo, List<ByteArrayRange>>> binnedRanges = new HashMap<HRegionLocation, Map<HRegionInfo, List<ByteArrayRange>>>();
+		final Map<HRegionLocation, Map<HRegionInfo, List<RowRange>>> binnedRanges = new HashMap<HRegionLocation, Map<HRegionInfo, List<RowRange>>>();
 		final RegionLocator regionLocator = hbaseOperations.getRegionLocator(
 				tableName);
 
@@ -199,17 +150,17 @@ public class HBaseSplitsProvider extends
 					regionLocator);
 		}
 
-		for (final Entry<HRegionLocation, Map<HRegionInfo, List<ByteArrayRange>>> locationEntry : binnedRanges
-				.entrySet()) {
+		for (final Entry<HRegionLocation, Map<HRegionInfo, List<RowRange>>> locationEntry : binnedRanges.entrySet()) {
 			final String hostname = locationEntry.getKey().getHostname();
 
-			for (final Entry<HRegionInfo, List<ByteArrayRange>> regionEntry : locationEntry.getValue().entrySet()) {
-				final Map<PrimaryIndex, List<RangeLocationPair>> splitInfo = new HashMap<PrimaryIndex, List<RangeLocationPair>>();
+			for (final Entry<HRegionInfo, List<RowRange>> regionEntry : locationEntry.getValue().entrySet()) {
+				final Map<ByteArrayId, SplitInfo> splitInfo = new HashMap<ByteArrayId, SplitInfo>();
 				final List<RangeLocationPair> rangeList = new ArrayList<RangeLocationPair>();
 
-				for (final ByteArrayRange range : regionEntry.getValue()) {
-					GeoWaveRowRange rowRange = wrapRange(
-							range);
+				for (final RowRange range : regionEntry.getValue()) {
+					GeoWaveRowRange rowRange = fromHBaseRange(
+							range,
+							partitionKeyLength);
 
 					final double cardinality = getCardinality(
 							getHistStats(
@@ -219,12 +170,14 @@ public class HBaseSplitsProvider extends
 									statsStore,
 									statsCache,
 									authorizations),
-							rowRange);
+							rowRange,
+							index.getIndexStrategy().getPartitionKeyLength());
 
-					if (range.intersects(
+					if (HBaseUtils.rangesIntersect(
+							range,
 							fullrange)) {
 						rangeList.add(
-								constructRangeLocationPair(
+								new RangeLocationPair(
 										rowRange,
 										hostname,
 										cardinality < 1 ? 1.0 : cardinality));
@@ -242,8 +195,10 @@ public class HBaseSplitsProvider extends
 
 				if (!rangeList.isEmpty()) {
 					splitInfo.put(
-							index,
-							rangeList);
+							index.getId(),
+							new SplitInfo(
+									index,
+									rangeList));
 					splits.add(
 							new IntermediateSplitInfo(
 									splitInfo,
@@ -255,70 +210,105 @@ public class HBaseSplitsProvider extends
 		return splits;
 	}
 
-	private static List<ByteArrayRange> binRanges(
-			final List<ByteArrayRange> inputRanges,
-			final Map<HRegionLocation, Map<HRegionInfo, List<ByteArrayRange>>> binnedRanges,
+	private static List<RowRange> binRanges(
+			final List<RowRange> inputRanges,
+			final Map<HRegionLocation, Map<HRegionInfo, List<RowRange>>> binnedRanges,
 			final RegionLocator regionLocator )
 			throws IOException {
 
 		// Loop through ranges, getting RegionLocation and RegionInfo for
 		// startKey, clipping range by that regionInfo's extent, and leaving
 		// remainder in the List to be region'd
-		final ListIterator<ByteArrayRange> i = inputRanges.listIterator();
+		final ListIterator<RowRange> i = inputRanges.listIterator();
 		while (i.hasNext()) {
-			final ByteArrayRange range = i.next();
+			final RowRange range = i.next();
 
 			final HRegionLocation location = regionLocator.getRegionLocation(
-					range.getStart().getBytes());
+					range.getStartRow());
 
-			Map<HRegionInfo, List<ByteArrayRange>> regionInfoMap = binnedRanges.get(
+			Map<HRegionInfo, List<RowRange>> regionInfoMap = binnedRanges.get(
 					location);
 			if (regionInfoMap == null) {
-				regionInfoMap = new HashMap<HRegionInfo, List<ByteArrayRange>>();
+				regionInfoMap = new HashMap<HRegionInfo, List<RowRange>>();
 				binnedRanges.put(
 						location,
 						regionInfoMap);
 			}
 
 			final HRegionInfo regionInfo = location.getRegionInfo();
-			List<ByteArrayRange> rangeList = regionInfoMap.get(
+			List<RowRange> rangeList = regionInfoMap.get(
 					regionInfo);
 			if (rangeList == null) {
-				rangeList = new ArrayList<ByteArrayRange>();
+				rangeList = new ArrayList<RowRange>();
 				regionInfoMap.put(
 						regionInfo,
 						rangeList);
 			}
 
 			if (regionInfo.containsRange(
-					range.getStart().getBytes(),
-					range.getEnd().getBytes())) {
+					range.getStartRow(),
+					range.getStopRow())) {
 				rangeList.add(
 						range);
 				i.remove();
 			}
 			else {
-				final ByteArrayRange overlappingRange = range.intersection(
-						new ByteArrayRange(
-								new ByteArrayId(
-										regionInfo.getStartKey()),
-								new ByteArrayId(
-										regionInfo.getEndKey())));
+				ByteArrayRange thisRange = new ByteArrayRange(
+						new ByteArrayId(
+								range.getStartRow()),
+						new ByteArrayId(
+								range.getStopRow()));
+				ByteArrayRange regionRange = new ByteArrayRange(
+						new ByteArrayId(
+								regionInfo.getStartKey()),
+						new ByteArrayId(
+								regionInfo.getEndKey()));
+
+				final ByteArrayRange overlappingRange = thisRange.intersection(
+						regionRange);
+
 				rangeList.add(
-						overlappingRange);
+						new RowRange(
+								overlappingRange.getStart().getBytes(),
+								true,
+								overlappingRange.getEnd().getBytes(),
+								false));
 				i.remove();
 
-				final ByteArrayRange uncoveredRange = new ByteArrayRange(
-						new ByteArrayId(
-								regionInfo.getEndKey()),
-						range.getEnd());
-
 				i.add(
-						uncoveredRange);
+						new RowRange(
+								regionInfo.getEndKey(),
+								true,
+								range.getStopRow(),
+								false));
 			}
 		}
 
 		return inputRanges;
+	}
+	
+	protected static RowRange rangeIntersection(
+			final RowRange thisRange,
+			final RowRange otherRange) {
+		ByteArrayRange thisByteArrayRange = new ByteArrayRange(
+				new ByteArrayId(
+						thisRange.getStartRow()),
+				new ByteArrayId(
+						thisRange.getStopRow()));
+		ByteArrayRange otherByteArrayRange = new ByteArrayRange(
+				new ByteArrayId(
+						otherRange.getStartRow()),
+				new ByteArrayId(
+						otherRange.getStopRow()));
+
+		final ByteArrayRange overlappingRange = thisByteArrayRange.intersection(
+				otherByteArrayRange);
+
+		return new RowRange(
+						overlappingRange.getStart().getBytes(),
+						true,
+						overlappingRange.getEnd().getBytes(),
+						false);		
 	}
 
 	public static RowRange toHBaseRange(
@@ -328,20 +318,74 @@ public class HBaseSplitsProvider extends
 			return new RowRange(
 					(range.getStartSortKey() == null) ? null : range.getStartSortKey(),
 					range.isStartSortKeyInclusive(),
-					(range.getEndSortKey() == null) ? null :  range.getEndSortKey(),
+					(range.getEndSortKey() == null) ? null : range.getEndSortKey(),
 					range.isEndSortKeyInclusive());
 		}
 		else {
 			return new RowRange(
-					(range.getStartSortKey() == null) ? null :  ArrayUtils.addAll(
-									range.getPartitionKey(),
-									range.getStartSortKey()),
+					(range.getStartSortKey() == null) ? null : ArrayUtils.addAll(
+							range.getPartitionKey(),
+							range.getStartSortKey()),
 					range.isStartSortKeyInclusive(),
-					(range.getEndSortKey() == null) ?  new ByteArrayId(
-									range.getPartitionKey()).getNextPrefix() :  ArrayUtils.addAll(
+					(range.getEndSortKey() == null) ? new ByteArrayId(
+							range.getPartitionKey()).getNextPrefix()
+							: ArrayUtils.addAll(
 									range.getPartitionKey(),
 									range.getEndSortKey()),
 					(range.getEndSortKey() != null) && range.isEndSortKeyInclusive());
+		}
+	}
+
+	public static GeoWaveRowRange fromHBaseRange(
+			final RowRange range,
+			final int partitionKeyLength ) {
+		if (partitionKeyLength <= 0) {
+			return new GeoWaveRowRange(
+					null,
+					range.getStartRow() == null ? null : range.getStartRow(),
+					range.getStopRow() == null ? null : range.getStopRow(),
+					range.isStartRowInclusive(),
+					range.isStopRowInclusive());
+		}
+		else {
+			byte[] partitionKey;
+			boolean partitionKeyDiffers = false;
+			if ((range.getStartRow() == null) && (range.getStopRow() == null)) {
+				return null;
+			}
+			else if (range.getStartRow() != null) {
+				partitionKey = ArrayUtils.subarray(
+						range.getStartRow(),
+						0,
+						partitionKeyLength);
+				if (range.getStopRow() != null) {
+					partitionKeyDiffers = !Arrays.equals(
+							partitionKey,
+							ArrayUtils.subarray(
+									range.getStopRow(),
+									0,
+									partitionKeyLength));
+				}
+			}
+			else {
+				partitionKey = ArrayUtils.subarray(
+						range.getStopRow(),
+						0,
+						partitionKeyLength);
+			}
+			return new GeoWaveRowRange(
+					partitionKey,
+					range.getStartRow() == null ? null : ArrayUtils.subarray(
+							range.getStartRow(),
+							partitionKeyLength,
+							range.getStartRow().length),
+					partitionKeyDiffers ? null : range.getStopRow() == null ? null : ArrayUtils.subarray(
+							range.getStopRow(),
+							partitionKeyLength,
+							range.getStopRow().length),
+					range.isStartRowInclusive(),
+					partitionKeyDiffers ? true : range.isStopRowInclusive());
+
 		}
 	}
 

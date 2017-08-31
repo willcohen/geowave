@@ -24,6 +24,7 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.RowMutations;
+import org.apache.hadoop.hbase.filter.MultiRowRangeFilter.RowRange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -323,5 +324,23 @@ public class HBaseUtils
 				scanner.close();
 			}
 		}
+	}
+
+	public static boolean rangesIntersect(
+			RowRange range1,
+			RowRange range2 ) {
+		ByteArrayRange thisRange = new ByteArrayRange(
+				new ByteArrayId(
+						range1.getStartRow()),
+				new ByteArrayId(
+						range1.getStopRow()));
+		
+		ByteArrayRange otherRange = new ByteArrayRange(
+				new ByteArrayId(
+						range2.getStartRow()),
+				new ByteArrayId(
+						range2.getStopRow()));
+
+		return thisRange.intersects(otherRange);
 	}
 }

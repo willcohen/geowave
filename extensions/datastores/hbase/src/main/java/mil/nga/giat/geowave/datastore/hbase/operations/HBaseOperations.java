@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,6 +32,7 @@ import org.apache.hadoop.hbase.client.BufferedMutator;
 import org.apache.hadoop.hbase.client.BufferedMutatorParams;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.RegionLocator;
+import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
@@ -38,12 +40,16 @@ import org.apache.hadoop.hbase.security.visibility.Authorizations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Iterators;
+
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
+import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.metadata.AbstractGeoWavePersistence;
 import mil.nga.giat.geowave.core.store.operations.Deleter;
@@ -54,10 +60,12 @@ import mil.nga.giat.geowave.core.store.operations.MetadataWriter;
 import mil.nga.giat.geowave.core.store.operations.Reader;
 import mil.nga.giat.geowave.core.store.operations.ReaderParams;
 import mil.nga.giat.geowave.core.store.operations.Writer;
+import mil.nga.giat.geowave.datastore.hbase.HBaseRow;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseOptions;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseRequiredOptions;
 import mil.nga.giat.geowave.datastore.hbase.util.ConnectionPool;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils;
+import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils.ScannerClosableWrapper;
 import mil.nga.giat.geowave.datastore.hbase.util.RewritingMergingEntryIterator;
 import mil.nga.giat.geowave.mapreduce.MapReduceDataStoreOperations;
 import mil.nga.giat.geowave.mapreduce.splits.RecordReaderParams;
@@ -151,8 +159,9 @@ public class HBaseOperations implements
 			final boolean createTable,
 			final Set<ByteArrayId> splits )
 			throws IOException {
-		final TableName tableName = getTableName(getQualifiedTableName(
-				sTableName));
+		final TableName tableName = getTableName(
+				getQualifiedTableName(
+						sTableName));
 
 		if (createTable) {
 			createTable(
@@ -161,7 +170,8 @@ public class HBaseOperations implements
 		}
 
 		return new HBaseWriter(
-				getBufferedMutator(tableName),
+				getBufferedMutator(
+						tableName),
 				this,
 				sTableName);
 	}
@@ -543,16 +553,33 @@ public class HBaseOperations implements
 			final ResultScanner rs = getScannedResults(
 					scanner,
 					table);
-			// TODO: need a GeoWaveRow iterator from ResultScanner
-//			final RewritingMergingEntryIterator iterator = new RewritingMergingEntryIterator<>(
-//					adapterStore,
-//					index,
-//					rs.iterator(),
-//					map,
-//					writer);
-//			while (iterator.hasNext()) {
-//				iterator.next();
-//			}
+
+			// Get a GeoWaveRow iterator from ResultScanner
+			final Iterator<GeoWaveRow> it = new CloseableIteratorWrapper<>(
+					new ScannerClosableWrapper(
+							rs),
+					Iterators.transform(
+							rs.iterator(),
+							new com.google.common.base.Function<Result, GeoWaveRow>() {
+								@Override
+								public GeoWaveRow apply(
+										Result result ) {
+									return new HBaseRow(
+											result,
+											index.getIndexStrategy().getPartitionKeyLength());
+								}
+
+							}));
+
+			final RewritingMergingEntryIterator iterator = new RewritingMergingEntryIterator<>(
+					adapterStore,
+					index,
+					it,
+					map,
+					writer);
+			while (iterator.hasNext()) {
+				iterator.next();
+			}
 			return true;
 		}
 		catch (final IOException e) {
@@ -684,20 +711,30 @@ public class HBaseOperations implements
 	@Override
 	public MetadataReader createMetadataReader(
 			final MetadataType metadataType ) {
-		// TODO Auto-generated method stub
-		return null;
+		return new HBaseMetadataReader(
+				this,
+				options,
+				metadataType);
 	}
 
 	@Override
 	public MetadataDeleter createMetadataDeleter(
 			final MetadataType metadataType ) {
+		return new HBaseMetadataDeleter(
+				this,
+				metadataType);
+	}
+
+	@Override
+	public Reader createReader(
+			final ReaderParams readerParams ) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Reader createReader(
-			final ReaderParams readerParams ) {
+			final RecordReaderParams readerParams ) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -714,13 +751,6 @@ public class HBaseOperations implements
 				getBufferedMutator(
 						tableName),
 				false);
-	}
-
-	@Override
-	public Reader createReader(
-			final RecordReaderParams readerParams ) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	public BufferedMutator getBufferedMutator(

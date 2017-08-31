@@ -21,6 +21,8 @@ import org.apache.hadoop.hbase.client.Result;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRowImpl;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveKey;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveKeyImpl;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
@@ -80,8 +82,13 @@ public class HBaseInputFormatIteratorWrapper<T> implements
 			final Result row,
 			final QueryFilter clientFilter,
 			final PrimaryIndex index ) {
-		final GeoWaveKeyImpl tempRow = new GeoWaveKeyImpl(
-				row.getRow());
+		final GeoWaveKey tempKey = new GeoWaveKeyImpl(
+				row.getRow(),
+				index.getIndexStrategy().getPartitionKeyLength());
+
+		final GeoWaveRow tempRow = new GeoWaveRowImpl(
+				tempKey,
+				null);
 
 		final Object value = HBaseUtils.decodeRow(
 				row,
@@ -98,7 +105,8 @@ public class HBaseInputFormatIteratorWrapper<T> implements
 				tempRow.getAdapterId());
 		final T result = (T) (isOutputWritable ? serializationTool.getHadoopWritableSerializerForAdapter(
 				adapterId).toWritable(
-				value) : value);
+						value)
+				: value);
 		final GeoWaveInputKey key = new GeoWaveInputKey(
 				adapterId,
 				new ByteArrayId(
@@ -106,13 +114,14 @@ public class HBaseInputFormatIteratorWrapper<T> implements
 						// ID with the index ID concatenated with the insertion
 						// ID to gaurantee uniqueness and effectively disable
 						// aggregating by only the data ID
-						tempRow.isDeduplicationEnabled() ? tempRow.getDataId() : ArrayUtils.addAll(
+						(tempRow.getNumberOfDuplicates() > 0) ? tempRow.getDataId() : ArrayUtils.addAll(
 								ArrayUtils.addAll(
 										index.getId().getBytes(),
-										tempRow.getIndex()),
+										tempRow.getAdapterId()),
 								tempRow.getDataId())));
-		key.setInsertionId(new ByteArrayId(
-				tempRow.getIndex()));
+		key.setDataId(
+				new ByteArrayId(
+						tempRow.getDataId()));
 		return new GeoWaveInputFormatEntry(
 				key,
 				result);

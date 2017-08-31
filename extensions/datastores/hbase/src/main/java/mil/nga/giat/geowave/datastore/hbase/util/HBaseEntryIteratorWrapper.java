@@ -24,6 +24,7 @@ import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.base.BaseDataStore;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.flatten.BitmaskUtils;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
@@ -47,7 +48,7 @@ public class HBaseEntryIteratorWrapper<T> extends
 			final BaseDataStore dataStore,
 			final AdapterStore adapterStore,
 			final PrimaryIndex index,
-			final Iterator<Result> scannerIt,
+			final Iterator<GeoWaveRow> scannerIt,
 			final QueryFilter clientFilter,
 			final ScanCallback<T, ?> scanCallback,
 			final Pair<List<String>, DataAdapter<?>> fieldIds,
@@ -55,8 +56,6 @@ public class HBaseEntryIteratorWrapper<T> extends
 			final boolean decodePersistenceEncoding,
 			final boolean hasSkippingFilter ) {
 		super(
-				true,
-				dataStore,
 				adapterStore,
 				index,
 				scannerIt,
@@ -82,13 +81,13 @@ public class HBaseEntryIteratorWrapper<T> extends
 
 	@Override
 	protected T decodeRow(
-			final Object row,
-			final QueryFilter clientFilter,
-			final PrimaryIndex index,
-			final boolean wholeRowEncoding ) {
+			GeoWaveRow row,
+			QueryFilter clientFilter,
+			PrimaryIndex index ) {
 		Result result = null;
 		try {
-			result = (Result) row;
+			// TODO: construct GeoWaveRow from Result
+			result = null;
 		}
 		catch (final ClassCastException e) {
 			LOGGER.error(
@@ -98,16 +97,13 @@ public class HBaseEntryIteratorWrapper<T> extends
 		}
 
 		if (passesResolutionSkippingFilter(result)) {
-			return (T) dataStore.decodeRow(
+			return (T) HBaseUtils.decodeRow(
 					result,
-					wholeRowEncoding,
-					clientFilter,
-					null, // get data adapter from input row
+					row,
 					adapterStore,
+					clientFilter,
 					index,
-					scanCallback,
-					fieldSubsetBitmask,
-					decodePersistenceEncoding);
+					false);
 		}
 		return null;
 	}
@@ -151,5 +147,4 @@ public class HBaseEntryIteratorWrapper<T> extends
 					maxResolutionSubsamplingPerDimension);
 		}
 	}
-
 }

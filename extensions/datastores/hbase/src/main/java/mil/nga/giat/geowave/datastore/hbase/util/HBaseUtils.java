@@ -132,7 +132,6 @@ public class HBaseUtils
 			adapterId = null;
 		}
 		final NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> map = row.getMap();
-		final List<FieldInfo<?>> fieldInfoList = new ArrayList<FieldInfo<?>>();
 
 		for (final Entry<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> cfEntry : map.entrySet()) {
 			// the column family is the data element's type ID

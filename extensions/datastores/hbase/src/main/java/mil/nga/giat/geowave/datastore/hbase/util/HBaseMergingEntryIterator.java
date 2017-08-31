@@ -36,8 +36,10 @@ import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter.RowTransform;
 import mil.nga.giat.geowave.core.store.base.BaseDataStore;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
-import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveKey;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveKeyImpl;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRowImpl;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.util.DataStoreUtils;
@@ -45,7 +47,8 @@ import mil.nga.giat.geowave.core.store.util.DataStoreUtils;
 public class HBaseMergingEntryIterator<T> extends
 		HBaseEntryIteratorWrapper<T>
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(HBaseMergingEntryIterator.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(
+			HBaseMergingEntryIterator.class);
 
 	private final Map<ByteArrayId, RowMergingDataAdapter> mergingAdapters;
 	private final Map<ByteArrayId, RowTransform> transforms;
@@ -56,7 +59,7 @@ public class HBaseMergingEntryIterator<T> extends
 			final BaseDataStore dataStore,
 			final AdapterStore adapterStore,
 			final PrimaryIndex index,
-			final Iterator<Result> scannerIt,
+			final Iterator<GeoWaveRow> scannerIt,
 			final QueryFilter clientFilter,
 			final ScanCallback<T, ?> scanCallback,
 			final Map<ByteArrayId, RowMergingDataAdapter> mergingAdapters,
@@ -79,7 +82,7 @@ public class HBaseMergingEntryIterator<T> extends
 	}
 
 	@Override
-	protected Object getNextEncodedResult() {
+	protected GeoWaveRow getNextEncodedResult() {
 
 		// Get next result from scanner
 		// We may have already peeked at it
@@ -92,28 +95,34 @@ public class HBaseMergingEntryIterator<T> extends
 		}
 		peekedValue = null;
 
-		final GeoWaveRow rowId = new GeoWaveKeyImpl(
-				nextResult.getRow());
+		final GeoWaveKey rowKey = new GeoWaveKeyImpl(
+				nextResult.getRow(),
+				index.getIndexStrategy().getPartitionKeyLength());
+
 		final ByteArrayId adapterId = new ByteArrayId(
-				rowId.getAdapterId());
-		final RowMergingDataAdapter mergingAdapter = mergingAdapters.get(adapterId);
+				rowKey.getAdapterId());
+		final RowMergingDataAdapter mergingAdapter = mergingAdapters.get(
+				adapterId);
 
 		final ArrayList<Result> resultsToMerge = new ArrayList<Result>();
 
 		if ((mergingAdapter != null) && (mergingAdapter.getTransform() != null)) {
 
-			resultsToMerge.add(nextResult);
+			resultsToMerge.add(
+					nextResult);
 
 			// Peek ahead to see if it needs to be merged with the next result
 			while (scannerIt.hasNext()) {
 				peekedValue = (Result) scannerIt.next();
-				final GeoWaveRow nextRowId = new GeoWaveKeyImpl(
-						peekedValue.getRow());
+				final GeoWaveKey nextRowKey = new GeoWaveKeyImpl(
+						peekedValue.getRow(),
+						index.getIndexStrategy().getPartitionKeyLength());
 
 				if (DataStoreUtils.rowIdsMatch(
-						rowId,
-						nextRowId)) {
-					resultsToMerge.add(peekedValue);
+						rowKey,
+						nextRowKey)) {
+					resultsToMerge.add(
+							peekedValue);
 					peekedValue = null;
 				}
 				else {
@@ -123,7 +132,9 @@ public class HBaseMergingEntryIterator<T> extends
 								resultsToMerge);
 					}
 					resultsToMerge.clear();
-					return nextResult;
+					return new GeoWaveRowImpl(
+							nextRowKey,
+							null); // TODO: this is wrong. need to get values
 				}
 			}
 			// If the last results in the scanner are mergeable, merge them
@@ -135,7 +146,9 @@ public class HBaseMergingEntryIterator<T> extends
 			resultsToMerge.clear();
 		}
 
-		return nextResult;
+		return new GeoWaveRowImpl(
+				nextRowKey,
+				null); // TODO: this is wrong. need to get values
 	}
 
 	protected Result mergeResults(
@@ -149,12 +162,16 @@ public class HBaseMergingEntryIterator<T> extends
 					public int compare(
 							final Result row1,
 							final Result row2 ) {
-						final ByteBuffer buf1 = ByteBuffer.wrap(new GeoWaveKeyImpl(
-								row1.getRow()).getDataId());
-						final ByteBuffer buf2 = ByteBuffer.wrap(new GeoWaveKeyImpl(
-								row2.getRow()).getDataId());
-						buf1.position(buf1.remaining() - DataStoreUtils.UNIQUE_ADDED_BYTES + 1);
-						buf2.position(buf2.remaining() - DataStoreUtils.UNIQUE_ADDED_BYTES + 1);
+						final ByteBuffer buf1 = ByteBuffer.wrap(
+								new GeoWaveKeyImpl(
+										row1.getRow()).getDataId());
+						final ByteBuffer buf2 = ByteBuffer.wrap(
+								new GeoWaveKeyImpl(
+										row2.getRow()).getDataId());
+						buf1.position(
+								buf1.remaining() - DataStoreUtils.UNIQUE_ADDED_BYTES + 1);
+						buf2.position(
+								buf2.remaining() - DataStoreUtils.UNIQUE_ADDED_BYTES + 1);
 
 						final long ts1 = buf1.getLong();
 						final long ts2 = buf2.getLong();
@@ -182,12 +199,15 @@ public class HBaseMergingEntryIterator<T> extends
 			final Result row,
 			final Result rowToMerge ) {
 
-		RowTransform transform = transforms.get(mergingAdapter.getAdapterId());
+		RowTransform transform = transforms.get(
+				mergingAdapter.getAdapterId());
 		if (transform == null) {
 			transform = mergingAdapter.getTransform();
 			// set strategy
 			try {
-				transform.initOptions(mergingAdapter.getOptions(null));
+				transform.initOptions(
+						mergingAdapter.getOptions(
+								null));
 			}
 			catch (final IOException e) {
 				LOGGER.error(
@@ -208,35 +228,47 @@ public class HBaseMergingEntryIterator<T> extends
 
 			final Mergeable mergeable = transform.getRowAsMergeableObject(
 					new ByteArrayId(
-							CellUtil.cloneFamily(cell)),
+							CellUtil.cloneFamily(
+									cell)),
 					new ByteArrayId(
-							CellUtil.cloneQualifier(cell)),
-					CellUtil.cloneValue(cell));
+							CellUtil.cloneQualifier(
+									cell)),
+					CellUtil.cloneValue(
+							cell));
 
-			mergeable.merge(transform.getRowAsMergeableObject(
-					new ByteArrayId(
-							CellUtil.cloneFamily(cellToMerge)),
-					new ByteArrayId(
-							CellUtil.cloneQualifier(cellToMerge)),
-					CellUtil.cloneValue(cellToMerge)));
+			mergeable.merge(
+					transform.getRowAsMergeableObject(
+							new ByteArrayId(
+									CellUtil.cloneFamily(
+											cellToMerge)),
+							new ByteArrayId(
+									CellUtil.cloneQualifier(
+											cellToMerge)),
+							CellUtil.cloneValue(
+									cellToMerge)));
 			GeoWaveRow tempRow = new GeoWaveKeyImpl(
 					row.getRow());
 			mergedCells[cellNum] = CellUtil.createCell(
 					new GeoWaveKeyImpl(
-							DataStoreUtils.removeUniqueId(tempRow.getDataId()),
+							DataStoreUtils.removeUniqueId(
+									tempRow.getDataId()),
 							tempRow.getAdapterId(),
 							tempRow.getIndex(),
 							tempRow.getNumberOfDuplicates()).getRowId(),
-					CellUtil.cloneFamily(cell),
-					CellUtil.cloneQualifier(cell),
+					CellUtil.cloneFamily(
+							cell),
+					CellUtil.cloneQualifier(
+							cell),
 					cell.getTimestamp(),
 					cell.getTypeByte(),
-					transform.getBinaryFromMergedObject(mergeable));
+					transform.getBinaryFromMergedObject(
+							mergeable));
 
 			cellNum++;
 		}
 
-		return Result.create(mergedCells);
+		return Result.create(
+				mergedCells);
 	}
 
 	@Override

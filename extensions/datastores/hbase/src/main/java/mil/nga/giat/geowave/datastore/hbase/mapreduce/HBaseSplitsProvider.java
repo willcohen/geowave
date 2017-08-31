@@ -19,9 +19,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeSet;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.HRegionLocation;
 import org.apache.hadoop.hbase.client.RegionLocator;
+import org.apache.hadoop.hbase.filter.MultiRowRangeFilter.RowRange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +49,8 @@ import mil.nga.giat.geowave.mapreduce.splits.SplitsProvider;
 public class HBaseSplitsProvider extends
 		SplitsProvider
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(HBaseSplitsProvider.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(
+			HBaseSplitsProvider.class);
 
 	public static GeoWaveRowRange wrapRange(
 			final ByteArrayRange range ) {
@@ -60,7 +63,8 @@ public class HBaseSplitsProvider extends
 		if (range instanceof HBaseRowRange) {
 			return ((HBaseRowRange) range).getRange();
 		}
-		LOGGER.error("HBaseSplitsProvider requires use of HBaseRowRange type.");
+		LOGGER.error(
+				"HBaseSplitsProvider requires use of HBaseRowRange type.");
 		return null;
 	}
 
@@ -126,19 +130,22 @@ public class HBaseSplitsProvider extends
 			hbaseOperations = (HBaseOperations) operations;
 		}
 		else {
-			LOGGER.error("HBaseSplitsProvider requires BasicHBaseOperations object.");
+			LOGGER.error(
+					"HBaseSplitsProvider requires BasicHBaseOperations object.");
 			return splits;
 		}
 
-		if ((query != null) && !query.isSupported(index)) {
+		if ((query != null) && !query.isSupported(
+				index)) {
 			return splits;
 		}
-		final ByteArrayRange fullrange = unwrapRange(new GeoWaveRowRange(
-				null,
-				null,
-				null,
-				true,
-				true));
+		final ByteArrayRange fullrange = unwrapRange(
+				new GeoWaveRowRange(
+						null,
+						null,
+						null,
+						true,
+						true));
 
 		final String tableName = index.getId().getString();
 		final NumericIndexStrategy indexStrategy = index.getIndexStrategy();
@@ -147,7 +154,8 @@ public class HBaseSplitsProvider extends
 		List<ByteArrayRange> ranges = new ArrayList<ByteArrayRange>();
 		final List<ByteArrayRange> constraintRanges;
 		if (query != null) {
-			final List<MultiDimensionalNumericData> indexConstraints = query.getIndexConstraints(indexStrategy);
+			final List<MultiDimensionalNumericData> indexConstraints = query.getIndexConstraints(
+					indexStrategy);
 			if ((maxSplits != null) && (maxSplits > 0)) {
 				constraintRanges = DataStoreUtils.constraintsToByteArrayRanges(
 						indexConstraints,
@@ -161,21 +169,26 @@ public class HBaseSplitsProvider extends
 						-1);
 			}
 			for (final ByteArrayRange constraintRange : constraintRanges) {
-				ranges.add(constraintRange);
+				ranges.add(
+						constraintRange);
 			}
 		}
 		else {
-			ranges.add(fullrange);
+			ranges.add(
+					fullrange);
 			if (LOGGER.isTraceEnabled()) {
-				LOGGER.trace("Protected range: " + fullrange);
+				LOGGER.trace(
+						"Protected range: " + fullrange);
 			}
 		}
 
 		final Map<HRegionLocation, Map<HRegionInfo, List<ByteArrayRange>>> binnedRanges = new HashMap<HRegionLocation, Map<HRegionInfo, List<ByteArrayRange>>>();
-		final RegionLocator regionLocator = hbaseOperations.getRegionLocator(tableName);
+		final RegionLocator regionLocator = hbaseOperations.getRegionLocator(
+				tableName);
 
 		if (regionLocator == null) {
-			LOGGER.error("Unable to retrieve RegionLocator for " + tableName);
+			LOGGER.error(
+					"Unable to retrieve RegionLocator for " + tableName);
 			return splits;
 		}
 
@@ -195,7 +208,8 @@ public class HBaseSplitsProvider extends
 				final List<RangeLocationPair> rangeList = new ArrayList<RangeLocationPair>();
 
 				for (final ByteArrayRange range : regionEntry.getValue()) {
-					GeoWaveRowRange rowRange = wrapRange(range);
+					GeoWaveRowRange rowRange = wrapRange(
+							range);
 
 					final double cardinality = getCardinality(
 							getHistStats(
@@ -207,18 +221,22 @@ public class HBaseSplitsProvider extends
 									authorizations),
 							rowRange);
 
-					if (range.intersects(fullrange)) {
-						rangeList.add(constructRangeLocationPair(
-								rowRange,
-								hostname,
-								cardinality < 1 ? 1.0 : cardinality));
+					if (range.intersects(
+							fullrange)) {
+						rangeList.add(
+								constructRangeLocationPair(
+										rowRange,
+										hostname,
+										cardinality < 1 ? 1.0 : cardinality));
 					}
 					else {
-						LOGGER.info("Query split outside of range");
+						LOGGER.info(
+								"Query split outside of range");
 					}
 					if (LOGGER.isTraceEnabled()) {
-						LOGGER.warn("Clipped range: " + rangeList.get(
-								rangeList.size() - 1).getRange());
+						LOGGER.warn(
+								"Clipped range: " + rangeList.get(
+										rangeList.size() - 1).getRange());
 					}
 				}
 
@@ -226,9 +244,10 @@ public class HBaseSplitsProvider extends
 					splitInfo.put(
 							index,
 							rangeList);
-					splits.add(new IntermediateSplitInfo(
-							splitInfo,
-							this));
+					splits.add(
+							new IntermediateSplitInfo(
+									splitInfo,
+									this));
 				}
 			}
 		}
@@ -249,9 +268,11 @@ public class HBaseSplitsProvider extends
 		while (i.hasNext()) {
 			final ByteArrayRange range = i.next();
 
-			final HRegionLocation location = regionLocator.getRegionLocation(range.getStart().getBytes());
+			final HRegionLocation location = regionLocator.getRegionLocation(
+					range.getStart().getBytes());
 
-			Map<HRegionInfo, List<ByteArrayRange>> regionInfoMap = binnedRanges.get(location);
+			Map<HRegionInfo, List<ByteArrayRange>> regionInfoMap = binnedRanges.get(
+					location);
 			if (regionInfoMap == null) {
 				regionInfoMap = new HashMap<HRegionInfo, List<ByteArrayRange>>();
 				binnedRanges.put(
@@ -260,7 +281,8 @@ public class HBaseSplitsProvider extends
 			}
 
 			final HRegionInfo regionInfo = location.getRegionInfo();
-			List<ByteArrayRange> rangeList = regionInfoMap.get(regionInfo);
+			List<ByteArrayRange> rangeList = regionInfoMap.get(
+					regionInfo);
 			if (rangeList == null) {
 				rangeList = new ArrayList<ByteArrayRange>();
 				regionInfoMap.put(
@@ -271,16 +293,19 @@ public class HBaseSplitsProvider extends
 			if (regionInfo.containsRange(
 					range.getStart().getBytes(),
 					range.getEnd().getBytes())) {
-				rangeList.add(range);
+				rangeList.add(
+						range);
 				i.remove();
 			}
 			else {
-				final ByteArrayRange overlappingRange = range.intersection(new ByteArrayRange(
-						new ByteArrayId(
-								regionInfo.getStartKey()),
-						new ByteArrayId(
-								regionInfo.getEndKey())));
-				rangeList.add(overlappingRange);
+				final ByteArrayRange overlappingRange = range.intersection(
+						new ByteArrayRange(
+								new ByteArrayId(
+										regionInfo.getStartKey()),
+								new ByteArrayId(
+										regionInfo.getEndKey())));
+				rangeList.add(
+						overlappingRange);
 				i.remove();
 
 				final ByteArrayRange uncoveredRange = new ByteArrayRange(
@@ -288,10 +313,36 @@ public class HBaseSplitsProvider extends
 								regionInfo.getEndKey()),
 						range.getEnd());
 
-				i.add(uncoveredRange);
+				i.add(
+						uncoveredRange);
 			}
 		}
 
 		return inputRanges;
 	}
+
+	public static RowRange toHBaseRange(
+			final GeoWaveRowRange range,
+			final int partitionKeyLength ) {
+		if ((range.getPartitionKey() == null) || (range.getPartitionKey().length == 0)) {
+			return new RowRange(
+					(range.getStartSortKey() == null) ? null : range.getStartSortKey(),
+					range.isStartSortKeyInclusive(),
+					(range.getEndSortKey() == null) ? null :  range.getEndSortKey(),
+					range.isEndSortKeyInclusive());
+		}
+		else {
+			return new RowRange(
+					(range.getStartSortKey() == null) ? null :  ArrayUtils.addAll(
+									range.getPartitionKey(),
+									range.getStartSortKey()),
+					range.isStartSortKeyInclusive(),
+					(range.getEndSortKey() == null) ?  new ByteArrayId(
+									range.getPartitionKey()).getNextPrefix() :  ArrayUtils.addAll(
+									range.getPartitionKey(),
+									range.getEndSortKey()),
+					(range.getEndSortKey() != null) && range.isEndSortKeyInclusive());
+		}
+	}
+
 }

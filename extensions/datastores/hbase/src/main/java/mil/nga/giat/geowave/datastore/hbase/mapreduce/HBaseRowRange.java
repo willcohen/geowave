@@ -21,10 +21,9 @@ import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.mapreduce.splits.GeoWaveRowRange;
 
-public class HBaseRowRange implements
+public class HBaseRowRange extends
 		GeoWaveRowRange
 {
-
 	private ByteArrayRange range;
 	private boolean infiniteStartKey = false;
 	private boolean infiniteEndKey = false;
@@ -113,7 +112,7 @@ public class HBaseRowRange implements
 	}
 
 	@Override
-	public byte[] getStartKey() {
+	public byte[] getStartSortKey() {
 		if (!infiniteStartKey) {
 			return range.getStart().getBytes();
 		}
@@ -121,7 +120,7 @@ public class HBaseRowRange implements
 	}
 
 	@Override
-	public byte[] getEndKey() {
+	public byte[] getEndSortKey() {
 		if (!infiniteEndKey) {
 			return range.getEnd().getBytes();
 		}

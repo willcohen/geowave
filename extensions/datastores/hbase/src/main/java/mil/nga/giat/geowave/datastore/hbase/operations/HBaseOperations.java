@@ -23,6 +23,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.Coprocessor;
 import org.apache.hadoop.hbase.HColumnDescriptor;
+import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableExistsException;
 import org.apache.hadoop.hbase.TableName;
@@ -36,6 +37,8 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.filter.MultiRowRangeFilter;
+import org.apache.hadoop.hbase.filter.MultiRowRangeFilter.RowRange;
 import org.apache.hadoop.hbase.security.visibility.Authorizations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Iterators;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
@@ -133,6 +137,29 @@ public class HBaseOperations implements
 
 	public boolean isSchemaUpdateEnabled() {
 		return schemaUpdateEnabled;
+	}
+	
+	public boolean isEnableCustomFilters() {
+		return (options != null && !options.isServerSideDisabled());
+	}
+
+	public int getScanCacheSize() {
+		if (options != null) {
+			if (options.getScanCacheSize() != HConstants.DEFAULT_HBASE_CLIENT_SCANNER_CACHING) {
+				return options.getScanCacheSize();
+			}
+		}
+
+		// Need to get default from config.
+		return 10000;
+	}
+
+	public boolean isEnableBlockCache() {
+		if (options != null) {
+			return options.isEnableBlockCache();
+		}
+
+		return true;
 	}
 
 	public static TableName getTableName(
@@ -728,15 +755,17 @@ public class HBaseOperations implements
 	@Override
 	public Reader createReader(
 			final ReaderParams readerParams ) {
-		// TODO Auto-generated method stub
-		return null;
+		return new HBaseReader(
+				readerParams,
+				this);
 	}
 
 	@Override
 	public Reader createReader(
-			final RecordReaderParams readerParams ) {
-		// TODO Auto-generated method stub
-		return null;
+			final RecordReaderParams recordReaderParams ) {
+		return new HBaseReader(
+				recordReaderParams,
+				this);
 	}
 
 	@Override

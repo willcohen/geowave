@@ -182,7 +182,8 @@ public class HBaseUtils
 		}
 
 		HBaseRow hbaseRow = new HBaseRow(
-				row.getRow());
+				row,
+				index.getIndexStrategy().getPartitionKeyLength());
 
 		final IndexedAdapterPersistenceEncoding encodedRow = new IndexedAdapterPersistenceEncoding(
 				adapterId,

@@ -39,7 +39,7 @@ public class HBaseMetadataDeleter implements
 			final MetadataQuery query ) {
 		// the nature of metadata deleter is that primary ID is always
 		// well-defined and it is deleting a single entry at a time
-		TableName tableName = HBaseOperations.getTableName(
+		TableName tableName = operations.getTableName(
 				AbstractGeoWavePersistence.METADATA_TABLE);
 
 		try {

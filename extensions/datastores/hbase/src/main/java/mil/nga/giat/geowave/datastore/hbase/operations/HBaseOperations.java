@@ -37,8 +37,6 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
-import org.apache.hadoop.hbase.filter.MultiRowRangeFilter;
-import org.apache.hadoop.hbase.filter.MultiRowRangeFilter.RowRange;
 import org.apache.hadoop.hbase.security.visibility.Authorizations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +44,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Iterators;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
-import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
@@ -90,6 +87,15 @@ public class HBaseOperations implements
 	private final Map<String, Set<ByteArrayId>> partitionCache = new HashMap<>();
 
 	private final HBaseOptions options;
+
+	public static final String[] METADATA_CFS = new String[] {
+		MetadataType.AIM.name(),
+		MetadataType.ADAPTER.name(),
+		MetadataType.STATS.name(),
+		MetadataType.INDEX.name()
+	};
+	
+	private static final boolean ASYNC_WAIT = false;
 
 	public HBaseOperations(
 			final Connection connection,
@@ -138,7 +144,7 @@ public class HBaseOperations implements
 	public boolean isSchemaUpdateEnabled() {
 		return schemaUpdateEnabled;
 	}
-	
+
 	public boolean isEnableCustomFilters() {
 		return (options != null && !options.isServerSideDisabled());
 	}
@@ -162,10 +168,11 @@ public class HBaseOperations implements
 		return true;
 	}
 
-	public static TableName getTableName(
+	public TableName getTableName(
 			final String tableName ) {
 		return TableName.valueOf(
-				tableName);
+				getQualifiedTableName(
+						tableName));
 	}
 
 	public HBaseWriter createWriter(
@@ -187,8 +194,7 @@ public class HBaseOperations implements
 			final Set<ByteArrayId> splits )
 			throws IOException {
 		final TableName tableName = getTableName(
-				getQualifiedTableName(
-						sTableName));
+				sTableName);
 
 		if (createTable) {
 			createTable(
@@ -338,12 +344,10 @@ public class HBaseOperations implements
 			final String tableName,
 			final String columnFamily )
 			throws IOException {
-		final String qName = getQualifiedTableName(
-				tableName);
 		synchronized (ADMIN_MUTEX) {
 			final HTableDescriptor descriptor = conn.getAdmin().getTableDescriptor(
 					getTableName(
-							qName));
+							tableName));
 
 			if (descriptor != null) {
 				for (final HColumnDescriptor hColumnDescriptor : descriptor.getColumnFamilies()) {
@@ -370,8 +374,7 @@ public class HBaseOperations implements
 
 		final Table table = conn.getTable(
 				getTableName(
-						getQualifiedTableName(
-								tableName)));
+						tableName));
 
 		final ResultScanner results = table.getScanner(
 				scanner);
@@ -386,8 +389,7 @@ public class HBaseOperations implements
 			throws IOException {
 		return conn.getRegionLocator(
 				getTableName(
-						getQualifiedTableName(
-								tableName)));
+						tableName));
 	}
 
 	public Table getTable(
@@ -395,8 +397,7 @@ public class HBaseOperations implements
 			throws IOException {
 		return conn.getTable(
 				getTableName(
-						getQualifiedTableName(
-								tableName)));
+						tableName));
 	}
 
 	public boolean verifyCoprocessor(
@@ -421,8 +422,7 @@ public class HBaseOperations implements
 
 			final Admin admin = conn.getAdmin();
 			final TableName tableName = getTableName(
-					getQualifiedTableName(
-							tableNameStr));
+					tableNameStr);
 			final HTableDescriptor td = admin.getTableDescriptor(
 					tableName);
 
@@ -521,12 +521,10 @@ public class HBaseOperations implements
 	public boolean indexExists(
 			final ByteArrayId indexId )
 			throws IOException {
-		final String qName = getQualifiedTableName(
-				indexId.getString());
 		synchronized (ADMIN_MUTEX) {
 			return conn.getAdmin().isTableAvailable(
 					getTableName(
-							qName));
+							indexId.getString()));
 		}
 	}
 
@@ -633,9 +631,11 @@ public class HBaseOperations implements
 					existingPartitions = new HashSet<>();
 
 					for (byte[] startKey : regionLocator.getStartKeys()) {
-						existingPartitions.add(
-								new ByteArrayId(
-										startKey));
+						if (startKey.length > 0) {
+							existingPartitions.add(
+									new ByteArrayId(
+											startKey));
+						}
 					}
 
 					partitionCache.put(
@@ -651,8 +651,32 @@ public class HBaseOperations implements
 							tableName,
 							partition.getBytes());
 
-					// TODO: split is async - do we need to wait?
-					// (See the alter table wait loop in verifyCoprocessor)
+					existingPartitions.add(
+							partition);
+
+					// Split is async - do we need to wait?
+					if (ASYNC_WAIT) {
+						int regionsLeft;
+
+						do {
+							regionsLeft = admin.getAlterStatus(
+									tableName).getFirst();
+							LOGGER.debug(
+									regionsLeft + " regions remaining in table modify");
+
+							try {
+								Thread.sleep(
+										SLEEP_INTERVAL);
+							}
+							catch (final InterruptedException e) {
+								LOGGER.warn(
+										"Sleeping while coprocessor add interrupted",
+										e);
+							}
+						}
+						while (regionsLeft > 0);
+					}
+
 					admin.close();
 				}
 			}
@@ -713,11 +737,9 @@ public class HBaseOperations implements
 				AbstractGeoWavePersistence.METADATA_TABLE);
 		try {
 			if (options.isCreateTable()) {
-				String[] columnFamilies = new String[1];
-				columnFamilies[0] = metadataType.name();
 
 				createTable(
-						columnFamilies,
+						METADATA_CFS,
 						tableName);
 			}
 

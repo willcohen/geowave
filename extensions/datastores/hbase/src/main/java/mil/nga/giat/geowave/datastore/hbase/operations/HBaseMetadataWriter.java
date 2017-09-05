@@ -49,10 +49,12 @@ public class HBaseMetadataWriter implements
 
 		final Put put = new Put(
 				metadata.getPrimaryId());
+		
+		byte[] secondaryBytes = metadata.getSecondaryId() != null ? metadata.getSecondaryId() : new byte[0];
 
 		put.addColumn(
 				metadataTypeBytes,
-				metadata.getSecondaryId(),
+				secondaryBytes,
 				metadata.getValue());
 
 		if (metadata.getVisibility() != null) {

@@ -94,7 +94,7 @@ public class HBaseOperations implements
 		MetadataType.STATS.name(),
 		MetadataType.INDEX.name()
 	};
-	
+
 	private static final boolean ASYNC_WAIT = false;
 
 	public HBaseOperations(
@@ -235,10 +235,15 @@ public class HBaseOperations implements
 					}
 				}
 			}
+			else { // add any missing column families
+				addColumnFamilies(
+						columnFamilies,
+						name.getNameAsString());
+			}
 		}
 	}
 
-	public void addColumnFamiles(
+	protected void addColumnFamilies(
 			final String[] columnFamilies,
 			final String tableName )
 			throws IOException {

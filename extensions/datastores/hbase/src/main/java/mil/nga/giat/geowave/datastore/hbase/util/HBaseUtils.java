@@ -58,6 +58,10 @@ public class HBaseUtils
 	public static String getQualifiedTableName(
 			final String tableNamespace,
 			final String unqualifiedTableName ) {
+		if (unqualifiedTableName.contains(tableNamespace)) {
+			return unqualifiedTableName;
+		}
+		
 		return ((tableNamespace == null) || tableNamespace.isEmpty()) ? unqualifiedTableName : tableNamespace + "_"
 				+ unqualifiedTableName;
 	}

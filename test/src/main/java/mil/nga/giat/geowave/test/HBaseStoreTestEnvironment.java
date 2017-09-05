@@ -48,7 +48,7 @@ public class HBaseStoreTestEnvironment extends
 	private static HBaseStoreTestEnvironment singletonInstance = null;
 
 	// TODO: Research the impact of vis setup on the other ITs
-	private static boolean enableVisibility = true;
+	private static boolean enableVisibility = false;
 
 	public static synchronized HBaseStoreTestEnvironment getInstance() {
 		if (singletonInstance == null) {

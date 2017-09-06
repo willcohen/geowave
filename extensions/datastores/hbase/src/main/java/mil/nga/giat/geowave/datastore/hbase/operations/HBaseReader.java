@@ -17,8 +17,12 @@ import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.index.IndexUtils;
 import mil.nga.giat.geowave.core.index.Mergeable;
 import mil.nga.giat.geowave.core.index.MultiDimensionalCoordinateRangesArray;
+import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRowImpl;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveValue;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveValueImpl;
 import mil.nga.giat.geowave.core.store.filter.DistributableQueryFilter;
 import mil.nga.giat.geowave.core.store.operations.Reader;
 import mil.nga.giat.geowave.core.store.operations.ReaderParams;
@@ -35,6 +39,10 @@ public class HBaseReader implements
 	private final static Logger LOGGER = Logger.getLogger(
 			HBaseReader.class);
 
+	private static final long SERVER_AGGREGATION_POLLING_INTERVAL = 1000L;
+	private static final int SERVER_AGGREGATION_POLLING_MAX_TRIES = 60;
+	private int pollingTriesRemaining;
+
 	private final ReaderParams readerParams;
 	private final RecordReaderParams recordReaderParams;
 	private final HBaseOperations operations;
@@ -45,6 +53,7 @@ public class HBaseReader implements
 	private final int partitionKeyLength;
 
 	private Mergeable aggTotal = null;
+	private List<ByteArrayId> regionIdList = null;
 
 	public HBaseReader(
 			final ReaderParams readerParams,
@@ -102,9 +111,47 @@ public class HBaseReader implements
 					entry,
 					partitionKeyLength);
 		}
-		
-		// TODO: wrap the aggTotal in a GeoWaveRow and return it
-		return null;
+
+		// Otherwise, server-side aggregation
+		return getAggregationResult();
+	}
+
+	private GeoWaveRow getAggregationResult() {
+		// Wait for server side to complete
+		while (regionIdList != null && regionIdList.size() > 0 && pollingTriesRemaining > 0) {
+			pollingTriesRemaining--;
+
+			try {
+				Thread.sleep(
+						SERVER_AGGREGATION_POLLING_INTERVAL);
+			}
+			catch (InterruptedException e) {
+				// Just move on...
+			}
+		}
+
+		if (regionIdList != null && regionIdList.size() > 0) {
+			LOGGER.error(
+					"Error: server-side aggregation timed out");
+		}
+
+		// Wrap the mergeable result in a GeoWaveRow and return it
+		final byte[] value = PersistenceUtils.toBinary(
+				aggTotal);
+		GeoWaveValueImpl gwValue = new GeoWaveValueImpl(
+				null,
+				null,
+				value);
+
+		GeoWaveValue[] fieldValues = new GeoWaveValueImpl[1];
+		fieldValues[0] = gwValue;
+
+		aggTotal = null;
+		regionIdList = null;
+
+		return new GeoWaveRowImpl(
+				null,
+				fieldValues);
 	}
 
 	protected ResultScanner initRecordScanner() {
@@ -367,16 +414,25 @@ public class HBaseReader implements
 		return scanner;
 	}
 
-	
 	private void aggregateAsync() {
 		aggTotal = null;
 
+		// Get the region list for the table
+		final String tableName = StringUtils.stringFromBinary(
+				readerParams.getIndex().getId().getBytes());
+
+		regionIdList = operations.getTableRegions(
+				tableName);
+		pollingTriesRemaining = SERVER_AGGREGATION_POLLING_MAX_TRIES;
+
 		// TODO: How do we know when we're done?
+		// Region counting?
 		operations.aggregateServerSide(
 				readerParams,
 				new HBaseAggregationListener() {
 					@Override
 					public void aggregationUpdate(
+							ByteArrayId regionId,
 							Mergeable value ) {
 						if (aggTotal == null) {
 							aggTotal = value;
@@ -385,6 +441,9 @@ public class HBaseReader implements
 							aggTotal.merge(
 									value);
 						}
+
+						regionIdList.remove(
+								regionId);
 					}
 				});
 	}

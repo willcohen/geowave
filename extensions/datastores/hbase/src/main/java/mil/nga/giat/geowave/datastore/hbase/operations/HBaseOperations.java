@@ -24,6 +24,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.Coprocessor;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HConstants;
+import org.apache.hadoop.hbase.HRegionLocation;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableExistsException;
 import org.apache.hadoop.hbase.TableName;
@@ -1029,6 +1030,7 @@ public class HBaseOperations implements
 							}
 
 							listener.aggregationUpdate(
+									new ByteArrayId(region),
 									mvalue);
 						}
 					});
@@ -1047,5 +1049,29 @@ public class HBaseOperations implements
 		// return new Wrapper(
 		// total != null ? Iterators.singletonIterator(total) :
 		// Iterators.emptyIterator());
+	}
+
+	public List<ByteArrayId> getTableRegions(
+			String tableNameStr ) {
+		ArrayList<ByteArrayId> regionIdList = new ArrayList();
+		TableName tableName = getTableName(
+				tableNameStr);
+
+		try {
+			RegionLocator locator = conn.getRegionLocator(
+					tableName);
+			for (HRegionLocation regionLocation : locator.getAllRegionLocations()) {
+				regionIdList.add(
+						new ByteArrayId(
+								regionLocation.getRegionInfo().getRegionName()));
+			}
+		}
+		catch (IOException e) {
+			LOGGER.error(
+					"Error accessing region locator for " + tableNameStr,
+					e);
+		}
+
+		return regionIdList;
 	}
 }

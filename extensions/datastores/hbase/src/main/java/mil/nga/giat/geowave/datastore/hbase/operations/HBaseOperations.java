@@ -888,7 +888,6 @@ public class HBaseOperations implements
 			final HBaseAggregationListener listener ) {
 		final String tableName = StringUtils.stringFromBinary(
 				readerParams.getIndex().getId().getBytes());
-		Mergeable total = null;
 
 		try {
 			// Use the row count coprocessor

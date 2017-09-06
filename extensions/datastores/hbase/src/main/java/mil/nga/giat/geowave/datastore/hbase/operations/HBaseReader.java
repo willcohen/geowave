@@ -367,6 +367,7 @@ public class HBaseReader implements
 		return scanner;
 	}
 
+	
 	private void aggregateAsync() {
 		aggTotal = null;
 

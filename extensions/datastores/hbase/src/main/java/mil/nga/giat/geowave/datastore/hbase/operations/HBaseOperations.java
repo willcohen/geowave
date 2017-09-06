@@ -37,13 +37,23 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.client.coprocessor.Batch;
+import org.apache.hadoop.hbase.filter.MultiRowRangeFilter;
+import org.apache.hadoop.hbase.filter.MultiRowRangeFilter.RowRange;
+import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
 import org.apache.hadoop.hbase.security.visibility.Authorizations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterators;
+import com.google.protobuf.ByteString;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.index.ByteArrayRange;
+import mil.nga.giat.geowave.core.index.Mergeable;
+import mil.nga.giat.geowave.core.index.MultiDimensionalCoordinateRangesArray;
+import mil.nga.giat.geowave.core.index.PersistenceUtils;
+import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
@@ -61,9 +71,14 @@ import mil.nga.giat.geowave.core.store.operations.MetadataWriter;
 import mil.nga.giat.geowave.core.store.operations.Reader;
 import mil.nga.giat.geowave.core.store.operations.ReaderParams;
 import mil.nga.giat.geowave.core.store.operations.Writer;
+import mil.nga.giat.geowave.core.store.query.aggregate.Aggregation;
+import mil.nga.giat.geowave.core.store.query.aggregate.CommonIndexAggregation;
 import mil.nga.giat.geowave.datastore.hbase.HBaseRow;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseOptions;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseRequiredOptions;
+import mil.nga.giat.geowave.datastore.hbase.query.AggregationEndpoint;
+import mil.nga.giat.geowave.datastore.hbase.query.HBaseNumericIndexStrategyFilter;
+import mil.nga.giat.geowave.datastore.hbase.query.protobuf.AggregationProtos;
 import mil.nga.giat.geowave.datastore.hbase.util.ConnectionPool;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils.ScannerClosableWrapper;
@@ -145,7 +160,7 @@ public class HBaseOperations implements
 		return schemaUpdateEnabled;
 	}
 
-	public boolean isEnableCustomFilters() {
+	public boolean isServerSideDisabled() {
 		return (options != null && !options.isServerSideDisabled());
 	}
 
@@ -817,5 +832,221 @@ public class HBaseOperations implements
 
 		return conn.getBufferedMutator(
 				params);
+	}
+
+	public MultiRowRangeFilter getMultiRowRangeFilter(
+			final List<ByteArrayRange> ranges ) {
+		// create the multi-row filter
+		final List<RowRange> rowRanges = new ArrayList<RowRange>();
+		if ((ranges == null) || ranges.isEmpty()) {
+			rowRanges.add(
+					new RowRange(
+							HConstants.EMPTY_BYTE_ARRAY,
+							true,
+							HConstants.EMPTY_BYTE_ARRAY,
+							false));
+		}
+		else {
+			for (final ByteArrayRange range : ranges) {
+				if (range.getStart() != null) {
+					final byte[] startRow = range.getStart().getBytes();
+					byte[] stopRow;
+					if (!range.isSingleValue()) {
+						stopRow = range.getEndAsNextPrefix().getBytes();
+					}
+					else {
+						stopRow = range.getStart().getNextPrefix();
+					}
+
+					final RowRange rowRange = new RowRange(
+							startRow,
+							true,
+							stopRow,
+							false);
+
+					rowRanges.add(
+							rowRange);
+				}
+			}
+		}
+
+		// Create the multi-range filter
+		try {
+			return new MultiRowRangeFilter(
+					rowRanges);
+		}
+		catch (final IOException e) {
+			LOGGER.error(
+					"Error creating range filter.",
+					e);
+		}
+		return null;
+	}
+
+	public void aggregateServerSide(
+			final ReaderParams readerParams,
+			final HBaseAggregationListener listener ) {
+		final String tableName = StringUtils.stringFromBinary(
+				readerParams.getIndex().getId().getBytes());
+		Mergeable total = null;
+
+		try {
+			// Use the row count coprocessor
+			if (options.isVerifyCoprocessors()) {
+				verifyCoprocessor(
+						tableName,
+						AggregationEndpoint.class.getName(),
+						options.getCoprocessorJar());
+			}
+
+			final Aggregation aggregation = readerParams.getAggregation().getRight();
+
+			final AggregationProtos.AggregationType.Builder aggregationBuilder = AggregationProtos.AggregationType
+					.newBuilder();
+			aggregationBuilder.setName(
+					aggregation.getClass().getName());
+
+			if (aggregation.getParameters() != null) {
+				final byte[] paramBytes = PersistenceUtils.toBinary(
+						aggregation.getParameters());
+				aggregationBuilder.setParams(
+						ByteString.copyFrom(
+								paramBytes));
+			}
+
+			final AggregationProtos.AggregationRequest.Builder requestBuilder = AggregationProtos.AggregationRequest
+					.newBuilder();
+			requestBuilder.setAggregation(
+					aggregationBuilder.build());
+			if (readerParams.getFilter() != null) {
+				final ByteString filterByteString = ByteString.copyFrom(
+						readerParams.getFilter().toBinary());
+				requestBuilder.setFilter(
+						filterByteString);
+			}
+			else {
+				final List<MultiDimensionalCoordinateRangesArray> coords = readerParams.getCoordinateRanges();
+				if (!coords.isEmpty()) {
+					final byte[] filterBytes = new HBaseNumericIndexStrategyFilter(
+							readerParams.getIndex().getIndexStrategy(),
+							coords.toArray(
+									new MultiDimensionalCoordinateRangesArray[] {})).toByteArray();
+					final ByteString filterByteString = ByteString.copyFrom(
+							new byte[] {
+								0
+							}).concat(
+									ByteString.copyFrom(
+											filterBytes));
+
+					requestBuilder.setNumericIndexStrategyFilter(
+							filterByteString);
+				}
+			}
+			requestBuilder.setModel(
+					ByteString.copyFrom(
+							PersistenceUtils.toBinary(
+									readerParams.getIndex().getIndexModel())));
+
+			final MultiRowRangeFilter multiFilter = getMultiRowRangeFilter(
+					readerParams.getQueryRanges().getCompositeQueryRanges());
+			if (multiFilter != null) {
+				requestBuilder.setRangeFilter(
+						ByteString.copyFrom(
+								multiFilter.toByteArray()));
+			}
+			if (readerParams.getAggregation().getLeft() != null) {
+				final ByteArrayId adapterId = readerParams.getAggregation().getLeft().getAdapterId();
+				if (readerParams.getAggregation().getRight() instanceof CommonIndexAggregation) {
+					requestBuilder.setAdapterId(
+							ByteString.copyFrom(
+									adapterId.getBytes()));
+				}
+				// else {
+				// final DataAdapter dataAdapter =
+				// adapterStore.getAdapter(adapterId);
+				// requestBuilder.setAdapter(ByteString.copyFrom(PersistenceUtils.toBinary(dataAdapter)));
+				// }
+			}
+
+			if (readerParams.getAdditionalAuthorizations() != null
+					&& readerParams.getAdditionalAuthorizations().length > 0) {
+				requestBuilder.setVisLabels(
+						ByteString.copyFrom(
+								StringUtils.stringsToBinary(
+										readerParams.getAdditionalAuthorizations())));
+			}
+
+			// if (wholeRowIterator) {
+			// requestBuilder.setWholeRowFilter(true);
+			// }
+
+			final AggregationProtos.AggregationRequest request = requestBuilder.build();
+
+			final Table table = getTable(
+					tableName);
+
+			byte[] startRow = null;
+			byte[] endRow = null;
+
+			final List<ByteArrayRange> ranges = readerParams.getQueryRanges().getCompositeQueryRanges();
+			if ((ranges != null) && !ranges.isEmpty()) {
+				final ByteArrayRange aggRange = ranges.get(
+						0);
+				startRow = aggRange.getStart().getBytes();
+				endRow = aggRange.getEnd().getBytes();
+			}
+
+			table.coprocessorService(
+					AggregationProtos.AggregationService.class,
+					startRow,
+					endRow,
+					new Batch.Call<AggregationProtos.AggregationService, ByteString>() {
+						@Override
+						public ByteString call(
+								final AggregationProtos.AggregationService counter )
+								throws IOException {
+							final BlockingRpcCallback<AggregationProtos.AggregationResponse> rpcCallback = new BlockingRpcCallback<AggregationProtos.AggregationResponse>();
+							counter.aggregate(
+									null,
+									request,
+									rpcCallback);
+							final AggregationProtos.AggregationResponse response = rpcCallback.get();
+							return response.hasValue() ? response.getValue() : null;
+						}
+					},
+					new Batch.Callback<ByteString>() {
+						@Override
+						public void update(
+								byte[] region,
+								byte[] row,
+								ByteString result ) {
+							Mergeable mvalue = null;
+
+							if ((result != null) && !result.isEmpty()) {
+								final byte[] bvalue = result.toByteArray();
+								mvalue = PersistenceUtils.fromBinary(
+										bvalue,
+										Mergeable.class);
+							}
+
+							listener.aggregationUpdate(
+									mvalue);
+						}
+					});
+		}
+		catch (final Exception e) {
+			LOGGER.error(
+					"Error during aggregation.",
+					e);
+		}
+		catch (final Throwable e) {
+			LOGGER.error(
+					"Error during aggregation.",
+					e);
+		}
+
+		// return new Wrapper(
+		// total != null ? Iterators.singletonIterator(total) :
+		// Iterators.emptyIterator());
 	}
 }

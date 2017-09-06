@@ -2,10 +2,8 @@ package mil.nga.giat.geowave.datastore.hbase.operations;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
@@ -17,6 +15,7 @@ import org.apache.log4j.Logger;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.index.IndexUtils;
+import mil.nga.giat.geowave.core.index.Mergeable;
 import mil.nga.giat.geowave.core.index.MultiDimensionalCoordinateRangesArray;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
@@ -41,10 +40,11 @@ public class HBaseReader implements
 	private final HBaseOperations operations;
 
 	private final ResultScanner scanner;
-	private final Iterator<Result> it;
 
 	private final boolean wholeRowEncoding;
 	private final int partitionKeyLength;
+
+	private Mergeable aggTotal = null;
 
 	public HBaseReader(
 			final ReaderParams readerParams,
@@ -56,8 +56,13 @@ public class HBaseReader implements
 		this.partitionKeyLength = readerParams.getIndex().getIndexStrategy().getPartitionKeyLength();
 		this.wholeRowEncoding = readerParams.isMixedVisibility() && !readerParams.isServersideAggregation();
 
-		this.scanner = initScanner();
-		it = scanner.iterator();
+		if (readerParams.isServersideAggregation()) {
+			this.scanner = null;
+			aggregateAsync();
+		}
+		else {
+			this.scanner = initScanner();
+		}
 	}
 
 	public HBaseReader(
@@ -71,7 +76,6 @@ public class HBaseReader implements
 		this.wholeRowEncoding = recordReaderParams.isMixedVisibility() && !recordReaderParams.isServersideAggregation();
 
 		this.scanner = initRecordScanner();
-		it = scanner.iterator();
 	}
 
 	@Override
@@ -82,16 +86,25 @@ public class HBaseReader implements
 
 	@Override
 	public boolean hasNext() {
-		return it.hasNext();
+		if (scanner != null) { // not aggregation
+			return scanner.iterator().hasNext();
+		}
+
+		return aggTotal != null;
 	}
 
 	@Override
 	public GeoWaveRow next() {
-		final Result entry = it.next();
+		if (scanner != null) { // not aggregation
+			final Result entry = scanner.iterator().next();
 
-		return new HBaseRow(
-				entry,
-				partitionKeyLength);
+			return new HBaseRow(
+					entry,
+					partitionKeyLength);
+		}
+		
+		// TODO: wrap the aggTotal in a GeoWaveRow and return it
+		return null;
 	}
 
 	protected ResultScanner initRecordScanner() {
@@ -106,7 +119,7 @@ public class HBaseReader implements
 		scanner.setStopRow(
 				range.getEndSortKey());
 
-		if (operations.isEnableCustomFilters()) {
+		if (!operations.isServerSideDisabled()) {
 			// Add skipping filter if requested
 			if (readerParams.getMaxResolutionSubsamplingPerDimension() != null) {
 				if (readerParams.getMaxResolutionSubsamplingPerDimension().length != readerParams
@@ -197,7 +210,7 @@ public class HBaseReader implements
 				readerParams.getLimit(),
 				readerParams.getMaxResolutionSubsamplingPerDimension());
 
-		if (operations.isEnableCustomFilters()) {
+		if (!operations.isServerSideDisabled()) {
 			// Add skipping filter if requested
 			if (readerParams.getMaxResolutionSubsamplingPerDimension() != null) {
 				if (readerParams.getMaxResolutionSubsamplingPerDimension().length != readerParams
@@ -289,7 +302,7 @@ public class HBaseReader implements
 
 		final List<ByteArrayRange> ranges = readerParams.getQueryRanges().getCompositeQueryRanges();
 
-		final MultiRowRangeFilter filter = getMultiRowRangeFilter(
+		final MultiRowRangeFilter filter = operations.getMultiRowRangeFilter(
 				ranges);
 		if (filter != null) {
 			filterList.addFilter(
@@ -354,52 +367,24 @@ public class HBaseReader implements
 		return scanner;
 	}
 
-	protected MultiRowRangeFilter getMultiRowRangeFilter(
-			final List<ByteArrayRange> ranges ) {
-		// create the multi-row filter
-		final List<RowRange> rowRanges = new ArrayList<RowRange>();
-		if ((ranges == null) || ranges.isEmpty()) {
-			rowRanges.add(
-					new RowRange(
-							HConstants.EMPTY_BYTE_ARRAY,
-							true,
-							HConstants.EMPTY_BYTE_ARRAY,
-							false));
-		}
-		else {
-			for (final ByteArrayRange range : ranges) {
-				if (range.getStart() != null) {
-					final byte[] startRow = range.getStart().getBytes();
-					byte[] stopRow;
-					if (!range.isSingleValue()) {
-						stopRow = range.getEndAsNextPrefix().getBytes();
+	private void aggregateAsync() {
+		aggTotal = null;
+
+		// TODO: How do we know when we're done?
+		operations.aggregateServerSide(
+				readerParams,
+				new HBaseAggregationListener() {
+					@Override
+					public void aggregationUpdate(
+							Mergeable value ) {
+						if (aggTotal == null) {
+							aggTotal = value;
+						}
+						else {
+							aggTotal.merge(
+									value);
+						}
 					}
-					else {
-						stopRow = range.getStart().getNextPrefix();
-					}
-
-					final RowRange rowRange = new RowRange(
-							startRow,
-							true,
-							stopRow,
-							false);
-
-					rowRanges.add(
-							rowRange);
-				}
-			}
-		}
-
-		// Create the multi-range filter
-		try {
-			return new MultiRowRangeFilter(
-					rowRanges);
-		}
-		catch (final IOException e) {
-			LOGGER.error(
-					"Error creating range filter.",
-					e);
-		}
-		return null;
+				});
 	}
 }

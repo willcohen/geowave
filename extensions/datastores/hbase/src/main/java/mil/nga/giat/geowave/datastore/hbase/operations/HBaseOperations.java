@@ -1045,10 +1045,6 @@ public class HBaseOperations implements
 					"Error during aggregation.",
 					e);
 		}
-
-		// return new Wrapper(
-		// total != null ? Iterators.singletonIterator(total) :
-		// Iterators.emptyIterator());
 	}
 
 	public List<ByteArrayId> getTableRegions(

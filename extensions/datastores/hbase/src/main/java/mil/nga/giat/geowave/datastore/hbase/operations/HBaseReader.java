@@ -41,7 +41,7 @@ public class HBaseReader implements
 
 	private static final long SERVER_AGGREGATION_POLLING_INTERVAL = 1000L;
 	private static final int SERVER_AGGREGATION_POLLING_MAX_TRIES = 60;
-	private int pollingTriesRemaining;
+	private int pollingTriesRemaining = SERVER_AGGREGATION_POLLING_MAX_TRIES;
 
 	private final ReaderParams readerParams;
 	private final RecordReaderParams recordReaderParams;
@@ -146,9 +146,12 @@ public class HBaseReader implements
 		GeoWaveValue[] fieldValues = new GeoWaveValueImpl[1];
 		fieldValues[0] = gwValue;
 
+		// Reset polling
 		aggTotal = null;
 		regionIdList = null;
+		pollingTriesRemaining = SERVER_AGGREGATION_POLLING_MAX_TRIES;
 
+		// Need to collect rowkey info from coprocessor?
 		return new GeoWaveRowImpl(
 				null,
 				fieldValues);
@@ -425,8 +428,7 @@ public class HBaseReader implements
 				tableName);
 		pollingTriesRemaining = SERVER_AGGREGATION_POLLING_MAX_TRIES;
 
-		// TODO: How do we know when we're done?
-		// Region counting?
+		// Region counting may be sufficient (rather than marking off region ids)
 		operations.aggregateServerSide(
 				readerParams,
 				new HBaseAggregationListener() {

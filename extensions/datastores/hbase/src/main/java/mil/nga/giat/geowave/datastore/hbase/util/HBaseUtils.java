@@ -61,7 +61,7 @@ public class HBaseUtils
 		if (unqualifiedTableName.contains(tableNamespace)) {
 			return unqualifiedTableName;
 		}
-		
+
 		return ((tableNamespace == null) || tableNamespace.isEmpty()) ? unqualifiedTableName : tableNamespace + "_"
 				+ unqualifiedTableName;
 	}
@@ -338,7 +338,7 @@ public class HBaseUtils
 						range1.getStartRow()),
 				new ByteArrayId(
 						range1.getStopRow()));
-		
+
 		ByteArrayRange otherRange = new ByteArrayRange(
 				new ByteArrayId(
 						range2.getStartRow()),

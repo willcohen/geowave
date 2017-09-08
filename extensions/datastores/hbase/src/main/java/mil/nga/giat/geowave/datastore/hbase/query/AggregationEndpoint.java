@@ -163,6 +163,10 @@ public class AggregationEndpoint extends
 					if (request.hasWholeRowFilter()) {
 						hdFilter.setWholeRowFilter(request.getWholeRowFilter());
 					}
+					
+					if (request.hasPartitionKeyLength()) {
+						hdFilter.setPartitionKeyLength(request.getPartitionKeyLength());
+					}
 
 					final byte[] filterBytes;
 					if (request.hasFilter()) {

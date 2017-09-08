@@ -62,6 +62,7 @@ import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
+import mil.nga.giat.geowave.core.store.filter.DistributableQueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.metadata.AbstractGeoWavePersistence;
 import mil.nga.giat.geowave.core.store.operations.Deleter;
@@ -78,6 +79,7 @@ import mil.nga.giat.geowave.datastore.hbase.HBaseRow;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseOptions;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseRequiredOptions;
 import mil.nga.giat.geowave.datastore.hbase.query.AggregationEndpoint;
+import mil.nga.giat.geowave.datastore.hbase.query.HBaseDistributableFilter;
 import mil.nga.giat.geowave.datastore.hbase.query.HBaseNumericIndexStrategyFilter;
 import mil.nga.giat.geowave.datastore.hbase.query.protobuf.AggregationProtos;
 import mil.nga.giat.geowave.datastore.hbase.util.ConnectionPool;
@@ -884,9 +886,8 @@ public class HBaseOperations implements
 		return null;
 	}
 
-	public void aggregateServerSide(
-			final ReaderParams readerParams,
-			final HBaseAggregationListener listener ) {
+	public Mergeable aggregateServerSide(
+			final ReaderParams readerParams ) {
 		final String tableName = StringUtils.stringFromBinary(
 				readerParams.getIndex().getId().getBytes());
 
@@ -919,8 +920,12 @@ public class HBaseOperations implements
 			requestBuilder.setAggregation(
 					aggregationBuilder.build());
 			if (readerParams.getFilter() != null) {
-				final ByteString filterByteString = ByteString.copyFrom(
-						readerParams.getFilter().toBinary());
+				final List<DistributableQueryFilter> distFilters = new ArrayList();
+				distFilters.add(
+						readerParams.getFilter());
+
+				final byte[] filterBytes = PersistenceUtils.toBinary(distFilters);
+				final ByteString filterByteString = ByteString.copyFrom(filterBytes);
 				requestBuilder.setFilter(
 						filterByteString);
 			}
@@ -980,6 +985,9 @@ public class HBaseOperations implements
 			// requestBuilder.setWholeRowFilter(true);
 			// }
 
+			requestBuilder.setPartitionKeyLength(
+					readerParams.getIndex().getIndexStrategy().getPartitionKeyLength());
+
 			final AggregationProtos.AggregationRequest request = requestBuilder.build();
 
 			final Table table = getTable(
@@ -996,7 +1004,7 @@ public class HBaseOperations implements
 				endRow = aggRange.getEnd().getBytes();
 			}
 
-			table.coprocessorService(
+			final Map<byte[], ByteString> results = table.coprocessorService(
 					AggregationProtos.AggregationService.class,
 					startRow,
 					endRow,
@@ -1013,27 +1021,39 @@ public class HBaseOperations implements
 							final AggregationProtos.AggregationResponse response = rpcCallback.get();
 							return response.hasValue() ? response.getValue() : null;
 						}
-					},
-					new Batch.Callback<ByteString>() {
-						@Override
-						public void update(
-								byte[] region,
-								byte[] row,
-								ByteString result ) {
-							Mergeable mvalue = null;
-
-							if ((result != null) && !result.isEmpty()) {
-								final byte[] bvalue = result.toByteArray();
-								mvalue = PersistenceUtils.fromBinary(
-										bvalue,
-										Mergeable.class);
-							}
-
-							listener.aggregationUpdate(
-									new ByteArrayId(region),
-									mvalue);
-						}
 					});
+
+			Mergeable total = null;
+
+			int regionCount = 0;
+			for (final Map.Entry<byte[], ByteString> entry : results.entrySet()) {
+				regionCount++;
+
+				final ByteString value = entry.getValue();
+				if ((value != null) && !value.isEmpty()) {
+					final byte[] bvalue = value.toByteArray();
+					final Mergeable mvalue = PersistenceUtils.fromBinary(
+							bvalue,
+							Mergeable.class);
+
+					LOGGER.debug(
+							"Value from region " + regionCount + " is " + mvalue);
+
+					if (total == null) {
+						total = mvalue;
+					}
+					else {
+						total.merge(
+								mvalue);
+					}
+				}
+				else {
+					LOGGER.debug(
+							"Empty response for region " + regionCount);
+				}
+			}
+
+			return total;
 		}
 		catch (final Exception e) {
 			LOGGER.error(
@@ -1045,6 +1065,8 @@ public class HBaseOperations implements
 					"Error during aggregation.",
 					e);
 		}
+
+		return null;
 	}
 
 	public List<ByteArrayId> getTableRegions(

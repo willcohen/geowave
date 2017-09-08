@@ -31,8 +31,7 @@ import mil.nga.giat.geowave.datastore.hbase.operations.HBaseOperations;
 public class HBaseSecondaryIndexDataStore extends
 		BaseSecondaryIndexDataStore
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			HBaseSecondaryIndexDataStore.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(HBaseSecondaryIndexDataStore.class);
 	private final HBaseOperations hbaseOperations;
 	@SuppressWarnings("unused")
 	private final HBaseOptions hbaseOptions;

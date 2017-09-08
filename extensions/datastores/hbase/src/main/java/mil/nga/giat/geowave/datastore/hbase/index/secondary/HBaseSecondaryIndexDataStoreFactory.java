@@ -41,11 +41,9 @@ public class HBaseSecondaryIndexDataStoreFactory extends
 		}
 		final HBaseRequiredOptions opts = (HBaseRequiredOptions) options;
 		if (opts.getStoreOptions() == null) {
-			opts.setStoreOptions(
-					new HBaseOptions());
+			opts.setStoreOptions(new HBaseOptions());
 		}
-		final DataStoreOperations hbaseOperations = helper.createOperations(
-				opts);
+		final DataStoreOperations hbaseOperations = helper.createOperations(opts);
 
 		return new HBaseSecondaryIndexDataStore(
 				(HBaseOperations) hbaseOperations,

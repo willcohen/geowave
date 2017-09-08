@@ -15,8 +15,7 @@ import mil.nga.giat.geowave.core.store.operations.Deleter;
 public class HBaseDeleter implements
 		Deleter
 {
-	private static Logger LOGGER = LoggerFactory.getLogger(
-			HBaseDeleter.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(HBaseDeleter.class);
 	private final BufferedMutator deleter;
 	private final boolean isAltIndex;
 
@@ -46,12 +45,10 @@ public class HBaseDeleter implements
 			final GeoWaveRow row,
 			final DataAdapter<?> adapter ) {
 		final Delete delete = new Delete(
-				GeoWaveKey.getCompositeId(
-						row));
+				GeoWaveKey.getCompositeId(row));
 
 		try {
-			deleter.mutate(
-					delete);
+			deleter.mutate(delete);
 		}
 		catch (IOException e) {
 			LOGGER.warn(

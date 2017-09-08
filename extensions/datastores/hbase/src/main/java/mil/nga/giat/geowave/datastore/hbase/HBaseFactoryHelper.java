@@ -14,8 +14,7 @@ import mil.nga.giat.geowave.datastore.hbase.operations.HBaseOperations;
 public class HBaseFactoryHelper implements
 		StoreFactoryHelper
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			HBaseFactoryHelper.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(HBaseFactoryHelper.class);
 
 	@Override
 	public StoreFactoryOptions createOptionsInstance() {
@@ -26,8 +25,7 @@ public class HBaseFactoryHelper implements
 	public DataStoreOperations createOperations(
 			final StoreFactoryOptions options ) {
 		try {
-			return HBaseOperations.createOperations(
-					(HBaseRequiredOptions) options);
+			return HBaseOperations.createOperations((HBaseRequiredOptions) options);
 		}
 		catch (IOException e) {
 			LOGGER.error(

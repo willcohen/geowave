@@ -27,8 +27,7 @@ import mil.nga.giat.geowave.datastore.hbase.operations.HBaseWriter;
 public class RewritingMergingEntryIterator<T> extends
 		MergingEntryIterator<T>
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			RewritingMergingEntryIterator.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(RewritingMergingEntryIterator.class);
 
 	private final HBaseWriter writer;
 

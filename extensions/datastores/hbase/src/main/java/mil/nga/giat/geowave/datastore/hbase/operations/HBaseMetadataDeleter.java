@@ -16,8 +16,7 @@ import mil.nga.giat.geowave.core.store.operations.MetadataType;
 public class HBaseMetadataDeleter implements
 		MetadataDeleter
 {
-	private final static Logger LOGGER = Logger.getLogger(
-			HBaseMetadataDeleter.class);
+	private final static Logger LOGGER = Logger.getLogger(HBaseMetadataDeleter.class);
 
 	private final HBaseOperations operations;
 	private final String metadataTypeName;
@@ -39,22 +38,18 @@ public class HBaseMetadataDeleter implements
 			final MetadataQuery query ) {
 		// the nature of metadata deleter is that primary ID is always
 		// well-defined and it is deleting a single entry at a time
-		TableName tableName = operations.getTableName(
-				AbstractGeoWavePersistence.METADATA_TABLE);
+		TableName tableName = operations.getTableName(AbstractGeoWavePersistence.METADATA_TABLE);
 
 		try {
-			BufferedMutator deleter = operations.getBufferedMutator(
-					tableName);
+			BufferedMutator deleter = operations.getBufferedMutator(tableName);
 
 			Delete delete = new Delete(
 					query.getPrimaryId());
 			delete.addColumn(
-					StringUtils.stringToBinary(
-							metadataTypeName),
+					StringUtils.stringToBinary(metadataTypeName),
 					query.getSecondaryId());
 
-			deleter.mutate(
-					delete);
+			deleter.mutate(delete);
 			return true;
 		}
 		catch (IOException e) {

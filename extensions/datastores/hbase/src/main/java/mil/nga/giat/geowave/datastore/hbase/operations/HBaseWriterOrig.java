@@ -45,8 +45,7 @@ import mil.nga.giat.geowave.core.store.operations.Writer;
 public class HBaseWriterOrig implements
 		Writer
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			HBaseWriterOrig.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(HBaseWriterOrig.class);
 	private final TableName tableName;
 	private final Admin admin;
 	private static final long SLEEP_INTERVAL_FOR_CF_VERIFY = 100L;
@@ -60,8 +59,7 @@ public class HBaseWriterOrig implements
 			final Admin admin,
 			final String tableName ) {
 		this.admin = admin;
-		this.tableName = TableName.valueOf(
-				tableName);
+		this.tableName = TableName.valueOf(tableName);
 
 		cfMap = new HashMap<String, Boolean>();
 
@@ -72,19 +70,16 @@ public class HBaseWriterOrig implements
 		if (admin.getConfiguration().getInt(
 				"hfile.format.version",
 				0) != 3) {
-			LOGGER.error(
-					"Incorrect HFile version (should be 3)");
+			LOGGER.error("Incorrect HFile version (should be 3)");
 		}
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(
-					"Schema Update Enabled = " + schemaUpdateEnabled);
+			LOGGER.debug("Schema Update Enabled = " + schemaUpdateEnabled);
 
 			final String check = admin.getConfiguration().get(
 					"hbase.online.schema.update.enable");
 			if (check == null) {
-				LOGGER.debug(
-						"'hbase.online.schema.update.enable' property should be true for best performance");
+				LOGGER.debug("'hbase.online.schema.update.enable' property should be true for best performance");
 			}
 		}
 	}
@@ -95,22 +90,21 @@ public class HBaseWriterOrig implements
 			final BufferedMutatorParams params = new BufferedMutatorParams(
 					tableName);
 
-			params.listener(
-					new ExceptionListener() {
-						@Override
-						public void onException(
-								final RetriesExhaustedWithDetailsException exception,
-								final BufferedMutator mutator )
-								throws RetriesExhaustedWithDetailsException {
-							LOGGER.error(
-									"Error in buffered mutator",
-									exception);
-							// Get details
-							for (final Throwable cause : exception.getCauses()) {
-								cause.printStackTrace();
-							}
-						}
-					});
+			params.listener(new ExceptionListener() {
+				@Override
+				public void onException(
+						final RetriesExhaustedWithDetailsException exception,
+						final BufferedMutator mutator )
+						throws RetriesExhaustedWithDetailsException {
+					LOGGER.error(
+							"Error in buffered mutator",
+							exception);
+					// Get details
+					for (final Throwable cause : exception.getCauses()) {
+						cause.printStackTrace();
+					}
+				}
+			});
 			mutator = admin.getConnection().getBufferedMutator(
 					params);
 
@@ -150,12 +144,10 @@ public class HBaseWriterOrig implements
 			final Iterable<RowMutations> iterable,
 			final String columnFamily )
 			throws IOException {
-		addColumnFamilyIfNotExist(
-				columnFamily);
+		addColumnFamilyIfNotExist(columnFamily);
 
 		for (final RowMutations rowMutation : iterable) {
-			write(
-					rowMutation);
+			write(rowMutation);
 		}
 	}
 
@@ -163,8 +155,7 @@ public class HBaseWriterOrig implements
 			final List<Put> puts,
 			final String columnFamily )
 			throws IOException {
-		addColumnFamilyIfNotExist(
-				columnFamily);
+		addColumnFamilyIfNotExist(columnFamily);
 
 		getBufferedMutator().mutate(
 				puts);
@@ -174,8 +165,7 @@ public class HBaseWriterOrig implements
 			final String columnFamily )
 			throws IOException {
 		synchronized (HBaseOperations.ADMIN_MUTEX) {
-			if (!columnFamilyExists(
-					columnFamily)) {
+			if (!columnFamilyExists(columnFamily)) {
 				addColumnFamilyToTable(
 						tableName,
 						columnFamily);
@@ -187,8 +177,7 @@ public class HBaseWriterOrig implements
 			final RowMutations mutation,
 			final String columnFamily ) {
 		try {
-			addColumnFamilyIfNotExist(
-					columnFamily);
+			addColumnFamilyIfNotExist(columnFamily);
 		}
 		catch (final IOException e) {
 			LOGGER.warn(
@@ -196,8 +185,7 @@ public class HBaseWriterOrig implements
 					e);
 		}
 
-		write(
-				mutation);
+		write(mutation);
 	}
 
 	private boolean columnFamilyExists(
@@ -205,27 +193,21 @@ public class HBaseWriterOrig implements
 		Boolean found = false;
 
 		try {
-			found = cfMap.get(
-					columnFamily);
+			found = cfMap.get(columnFamily);
 
 			if (found == null) {
 				found = Boolean.FALSE;
 			}
 
 			if (!found) {
-				if (!schemaUpdateEnabled && !admin.isTableEnabled(
-						tableName)) {
-					admin.enableTable(
-							tableName);
+				if (!schemaUpdateEnabled && !admin.isTableEnabled(tableName)) {
+					admin.enableTable(tableName);
 				}
 
 				// update the table descriptor
-				final HTableDescriptor tableDescriptor = admin.getTableDescriptor(
-						tableName);
+				final HTableDescriptor tableDescriptor = admin.getTableDescriptor(tableName);
 
-				found = tableDescriptor.hasFamily(
-						columnFamily.getBytes(
-								StringUtils.UTF8_CHAR_SET));
+				found = tableDescriptor.hasFamily(columnFamily.getBytes(StringUtils.UTF8_CHAR_SET));
 
 				cfMap.put(
 						columnFamily,
@@ -245,16 +227,13 @@ public class HBaseWriterOrig implements
 			final TableName tableName,
 			final String columnFamilyName )
 			throws IOException {
-		LOGGER.debug(
-				"Creating column family: " + columnFamilyName);
+		LOGGER.debug("Creating column family: " + columnFamilyName);
 
 		final HColumnDescriptor cfDescriptor = new HColumnDescriptor(
 				columnFamilyName);
 
-		if (!schemaUpdateEnabled && !admin.isTableDisabled(
-				tableName)) {
-			admin.disableTable(
-					tableName);
+		if (!schemaUpdateEnabled && !admin.isTableDisabled(tableName)) {
+			admin.disableTable(tableName);
 		}
 
 		// Try adding column family to the table descriptor instead
@@ -265,8 +244,7 @@ public class HBaseWriterOrig implements
 		if (schemaUpdateEnabled) {
 			do {
 				try {
-					Thread.sleep(
-							SLEEP_INTERVAL_FOR_CF_VERIFY);
+					Thread.sleep(SLEEP_INTERVAL_FOR_CF_VERIFY);
 				}
 				catch (final InterruptedException e) {
 					LOGGER.warn(
@@ -274,10 +252,8 @@ public class HBaseWriterOrig implements
 							e);
 				}
 			}
-			while (admin
-					.getAlterStatus(
-							tableName)
-					.getFirst() > 0);
+			while (admin.getAlterStatus(
+					tableName).getFirst() > 0);
 		}
 		cfMap.put(
 				columnFamilyName,
@@ -285,8 +261,7 @@ public class HBaseWriterOrig implements
 
 		// Enable table once done
 		if (!schemaUpdateEnabled) {
-			admin.enableTable(
-					tableName);
+			admin.enableTable(tableName);
 		}
 	}
 
@@ -294,8 +269,7 @@ public class HBaseWriterOrig implements
 			final Iterable<RowMutations> iterable )
 			throws IOException {
 		for (final RowMutations rowMutation : iterable) {
-			write(
-					rowMutation);
+			write(rowMutation);
 		}
 	}
 
@@ -331,24 +305,19 @@ public class HBaseWriterOrig implements
 	public void write(
 			final GeoWaveRow[] rows ) {
 		for (GeoWaveRow row : rows) {
-			write(
-					rowToMutation(
-							row));
+			write(rowToMutation(row));
 		}
 	}
 
 	@Override
 	public void write(
 			final GeoWaveRow row ) {
-		write(
-				rowToMutation(
-						row));
+		write(rowToMutation(row));
 	}
 
 	public static RowMutations rowToMutation(
 			final GeoWaveRow row ) {
-		final byte[] rowBytes = GeoWaveKey.getCompositeId(
-				row);
+		final byte[] rowBytes = GeoWaveKey.getCompositeId(row);
 		final RowMutations mutation = new RowMutations(
 				rowBytes);
 		for (final GeoWaveValue value : row.getFieldValues()) {
@@ -361,19 +330,15 @@ public class HBaseWriterOrig implements
 					value.getValue());
 
 			if ((value.getVisibility() != null) && (value.getVisibility().length > 0)) {
-				put.setCellVisibility(
-						new CellVisibility(
-								StringUtils.stringFromBinary(
-										value.getVisibility())));
+				put.setCellVisibility(new CellVisibility(
+						StringUtils.stringFromBinary(value.getVisibility())));
 			}
 
 			try {
-				mutation.add(
-						put);
+				mutation.add(put);
 			}
 			catch (IOException e) {
-				LOGGER.error(
-						"Error creating HBase row mutation: " + e.getMessage());
+				LOGGER.error("Error creating HBase row mutation: " + e.getMessage());
 			}
 		}
 

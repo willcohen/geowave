@@ -2,6 +2,7 @@ package mil.nga.giat.geowave.datastore.hbase.operations;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.hadoop.hbase.client.Result;
@@ -39,21 +40,18 @@ public class HBaseReader implements
 	private final static Logger LOGGER = Logger.getLogger(
 			HBaseReader.class);
 
-	private static final long SERVER_AGGREGATION_POLLING_INTERVAL = 1000L;
-	private static final int SERVER_AGGREGATION_POLLING_MAX_TRIES = 60;
-	private int pollingTriesRemaining = SERVER_AGGREGATION_POLLING_MAX_TRIES;
-
 	private final ReaderParams readerParams;
 	private final RecordReaderParams recordReaderParams;
 	private final HBaseOperations operations;
 
 	private final ResultScanner scanner;
+	private final Iterator<Result> scanIt;
 
 	private final boolean wholeRowEncoding;
 	private final int partitionKeyLength;
 
 	private Mergeable aggTotal = null;
-	private List<ByteArrayId> regionIdList = null;
+	private boolean aggReady = false;
 
 	public HBaseReader(
 			final ReaderParams readerParams,
@@ -67,10 +65,14 @@ public class HBaseReader implements
 
 		if (readerParams.isServersideAggregation()) {
 			this.scanner = null;
-			aggregateAsync();
+			this.scanIt = null;
+			aggTotal = operations.aggregateServerSide(
+					readerParams);
+			aggReady = true;
 		}
 		else {
 			this.scanner = initScanner();
+			this.scanIt = scanner.iterator();
 		}
 	}
 
@@ -85,27 +87,30 @@ public class HBaseReader implements
 		this.wholeRowEncoding = recordReaderParams.isMixedVisibility() && !recordReaderParams.isServersideAggregation();
 
 		this.scanner = initRecordScanner();
+		this.scanIt = scanner.iterator();
 	}
 
 	@Override
 	public void close()
 			throws Exception {
-		scanner.close();
+		if (scanner != null) {
+			scanner.close();
+		}
 	}
 
 	@Override
 	public boolean hasNext() {
 		if (scanner != null) { // not aggregation
-			return scanner.iterator().hasNext();
+			return scanIt.hasNext();
 		}
 
-		return aggTotal != null;
+		return aggReady;
 	}
 
 	@Override
 	public GeoWaveRow next() {
 		if (scanner != null) { // not aggregation
-			final Result entry = scanner.iterator().next();
+			final Result entry = scanIt.next();
 
 			return new HBaseRow(
 					entry,
@@ -113,48 +118,18 @@ public class HBaseReader implements
 		}
 
 		// Otherwise, server-side aggregation
-		return getAggregationResult();
-	}
-
-	private GeoWaveRow getAggregationResult() {
-		// Wait for server side to complete
-		while (regionIdList != null && regionIdList.size() > 0 && pollingTriesRemaining > 0) {
-			pollingTriesRemaining--;
-
-			try {
-				Thread.sleep(
-						SERVER_AGGREGATION_POLLING_INTERVAL);
-			}
-			catch (InterruptedException e) {
-				// Just move on...
-			}
-		}
-
-		if (regionIdList != null && regionIdList.size() > 0) {
-			LOGGER.error(
-					"Error: server-side aggregation timed out");
-		}
-
 		// Wrap the mergeable result in a GeoWaveRow and return it
-		final byte[] value = PersistenceUtils.toBinary(
-				aggTotal);
-		GeoWaveValueImpl gwValue = new GeoWaveValueImpl(
-				null,
-				null,
-				value);
+		aggReady = false;
 
-		GeoWaveValue[] fieldValues = new GeoWaveValueImpl[1];
-		fieldValues[0] = gwValue;
-
-		// Reset polling
-		aggTotal = null;
-		regionIdList = null;
-		pollingTriesRemaining = SERVER_AGGREGATION_POLLING_MAX_TRIES;
-
-		// Need to collect rowkey info from coprocessor?
 		return new GeoWaveRowImpl(
 				null,
-				fieldValues);
+				new GeoWaveValue[] {
+					new GeoWaveValueImpl(
+							null,
+							null,
+							PersistenceUtils.toBinary(
+									aggTotal))
+				});
 	}
 
 	protected ResultScanner initRecordScanner() {
@@ -206,6 +181,9 @@ public class HBaseReader implements
 					hbdFilter.setWholeRowFilter(
 							true);
 				}
+
+				hbdFilter.setPartitionKeyLength(
+						partitionKeyLength);
 
 				final List<DistributableQueryFilter> distFilters = new ArrayList();
 				distFilters.add(
@@ -297,6 +275,9 @@ public class HBaseReader implements
 					hbdFilter.setWholeRowFilter(
 							true);
 				}
+
+				hbdFilter.setPartitionKeyLength(
+						partitionKeyLength);
 
 				final List<DistributableQueryFilter> distFilters = new ArrayList();
 				distFilters.add(
@@ -415,38 +396,5 @@ public class HBaseReader implements
 		}
 
 		return scanner;
-	}
-
-	private void aggregateAsync() {
-		aggTotal = null;
-
-		// Get the region list for the table
-		final String tableName = StringUtils.stringFromBinary(
-				readerParams.getIndex().getId().getBytes());
-
-		regionIdList = operations.getTableRegions(
-				tableName);
-		pollingTriesRemaining = SERVER_AGGREGATION_POLLING_MAX_TRIES;
-
-		// Region counting may be sufficient (rather than marking off region ids)
-		operations.aggregateServerSide(
-				readerParams,
-				new HBaseAggregationListener() {
-					@Override
-					public void aggregationUpdate(
-							ByteArrayId regionId,
-							Mergeable value ) {
-						if (aggTotal == null) {
-							aggTotal = value;
-						}
-						else {
-							aggTotal.merge(
-									value);
-						}
-
-						regionIdList.remove(
-								regionId);
-					}
-				});
 	}
 }

@@ -51,8 +51,7 @@ import mil.nga.giat.geowave.mapreduce.splits.SplitsProvider;
 public class HBaseSplitsProvider extends
 		SplitsProvider
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			HBaseSplitsProvider.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(HBaseSplitsProvider.class);
 
 	@Override
 	protected TreeSet<IntermediateSplitInfo> populateIntermediateSplits(
@@ -73,13 +72,11 @@ public class HBaseSplitsProvider extends
 			hbaseOperations = (HBaseOperations) operations;
 		}
 		else {
-			LOGGER.error(
-					"HBaseSplitsProvider requires BasicHBaseOperations object.");
+			LOGGER.error("HBaseSplitsProvider requires BasicHBaseOperations object.");
 			return splits;
 		}
 
-		if ((query != null) && !query.isSupported(
-				index)) {
+		if ((query != null) && !query.isSupported(index)) {
 			return splits;
 		}
 
@@ -101,8 +98,7 @@ public class HBaseSplitsProvider extends
 		List<RowRange> ranges = new ArrayList<RowRange>();
 		final List<ByteArrayRange> constraintRanges;
 		if (query != null) {
-			final List<MultiDimensionalNumericData> indexConstraints = query.getIndexConstraints(
-					indexStrategy);
+			final List<MultiDimensionalNumericData> indexConstraints = query.getIndexConstraints(indexStrategy);
 			if ((maxSplits != null) && (maxSplits > 0)) {
 				constraintRanges = DataStoreUtils.constraintsToQueryRanges(
 						indexConstraints,
@@ -116,30 +112,25 @@ public class HBaseSplitsProvider extends
 						-1).getCompositeQueryRanges();
 			}
 			for (final ByteArrayRange constraintRange : constraintRanges) {
-				ranges.add(
-						new RowRange(
-								constraintRange.getStart().getBytes(),
-								true,
-								constraintRange.getEnd().getBytes(),
-								false));
+				ranges.add(new RowRange(
+						constraintRange.getStart().getBytes(),
+						true,
+						constraintRange.getEnd().getBytes(),
+						false));
 			}
 		}
 		else {
-			ranges.add(
-					fullrange);
+			ranges.add(fullrange);
 			if (LOGGER.isTraceEnabled()) {
-				LOGGER.trace(
-						"Protected range: " + fullrange);
+				LOGGER.trace("Protected range: " + fullrange);
 			}
 		}
 
 		final Map<HRegionLocation, Map<HRegionInfo, List<RowRange>>> binnedRanges = new HashMap<HRegionLocation, Map<HRegionInfo, List<RowRange>>>();
-		final RegionLocator regionLocator = hbaseOperations.getRegionLocator(
-				tableName);
+		final RegionLocator regionLocator = hbaseOperations.getRegionLocator(tableName);
 
 		if (regionLocator == null) {
-			LOGGER.error(
-					"Unable to retrieve RegionLocator for " + tableName);
+			LOGGER.error("Unable to retrieve RegionLocator for " + tableName);
 			return splits;
 		}
 
@@ -176,20 +167,17 @@ public class HBaseSplitsProvider extends
 					if (HBaseUtils.rangesIntersect(
 							range,
 							fullrange)) {
-						rangeList.add(
-								new RangeLocationPair(
-										rowRange,
-										hostname,
-										cardinality < 1 ? 1.0 : cardinality));
+						rangeList.add(new RangeLocationPair(
+								rowRange,
+								hostname,
+								cardinality < 1 ? 1.0 : cardinality));
 					}
 					else {
-						LOGGER.info(
-								"Query split outside of range");
+						LOGGER.info("Query split outside of range");
 					}
 					if (LOGGER.isTraceEnabled()) {
-						LOGGER.warn(
-								"Clipped range: " + rangeList.get(
-										rangeList.size() - 1).getRange());
+						LOGGER.warn("Clipped range: " + rangeList.get(
+								rangeList.size() - 1).getRange());
 					}
 				}
 
@@ -199,10 +187,9 @@ public class HBaseSplitsProvider extends
 							new SplitInfo(
 									index,
 									rangeList));
-					splits.add(
-							new IntermediateSplitInfo(
-									splitInfo,
-									this));
+					splits.add(new IntermediateSplitInfo(
+							splitInfo,
+							this));
 				}
 			}
 		}
@@ -223,11 +210,9 @@ public class HBaseSplitsProvider extends
 		while (i.hasNext()) {
 			final RowRange range = i.next();
 
-			final HRegionLocation location = regionLocator.getRegionLocation(
-					range.getStartRow());
+			final HRegionLocation location = regionLocator.getRegionLocation(range.getStartRow());
 
-			Map<HRegionInfo, List<RowRange>> regionInfoMap = binnedRanges.get(
-					location);
+			Map<HRegionInfo, List<RowRange>> regionInfoMap = binnedRanges.get(location);
 			if (regionInfoMap == null) {
 				regionInfoMap = new HashMap<HRegionInfo, List<RowRange>>();
 				binnedRanges.put(
@@ -236,8 +221,7 @@ public class HBaseSplitsProvider extends
 			}
 
 			final HRegionInfo regionInfo = location.getRegionInfo();
-			List<RowRange> rangeList = regionInfoMap.get(
-					regionInfo);
+			List<RowRange> rangeList = regionInfoMap.get(regionInfo);
 			if (rangeList == null) {
 				rangeList = new ArrayList<RowRange>();
 				regionInfoMap.put(
@@ -248,8 +232,7 @@ public class HBaseSplitsProvider extends
 			if (regionInfo.containsRange(
 					range.getStartRow(),
 					range.getStopRow())) {
-				rangeList.add(
-						range);
+				rangeList.add(range);
 				i.remove();
 			}
 			else {
@@ -264,32 +247,29 @@ public class HBaseSplitsProvider extends
 						new ByteArrayId(
 								regionInfo.getEndKey()));
 
-				final ByteArrayRange overlappingRange = thisRange.intersection(
-						regionRange);
+				final ByteArrayRange overlappingRange = thisRange.intersection(regionRange);
 
-				rangeList.add(
-						new RowRange(
-								overlappingRange.getStart().getBytes(),
-								true,
-								overlappingRange.getEnd().getBytes(),
-								false));
+				rangeList.add(new RowRange(
+						overlappingRange.getStart().getBytes(),
+						true,
+						overlappingRange.getEnd().getBytes(),
+						false));
 				i.remove();
 
-				i.add(
-						new RowRange(
-								regionInfo.getEndKey(),
-								true,
-								range.getStopRow(),
-								false));
+				i.add(new RowRange(
+						regionInfo.getEndKey(),
+						true,
+						range.getStopRow(),
+						false));
 			}
 		}
 
 		return inputRanges;
 	}
-	
+
 	protected static RowRange rangeIntersection(
 			final RowRange thisRange,
-			final RowRange otherRange) {
+			final RowRange otherRange ) {
 		ByteArrayRange thisByteArrayRange = new ByteArrayRange(
 				new ByteArrayId(
 						thisRange.getStartRow()),
@@ -301,14 +281,13 @@ public class HBaseSplitsProvider extends
 				new ByteArrayId(
 						otherRange.getStopRow()));
 
-		final ByteArrayRange overlappingRange = thisByteArrayRange.intersection(
-				otherByteArrayRange);
+		final ByteArrayRange overlappingRange = thisByteArrayRange.intersection(otherByteArrayRange);
 
 		return new RowRange(
-						overlappingRange.getStart().getBytes(),
-						true,
-						overlappingRange.getEnd().getBytes(),
-						false);		
+				overlappingRange.getStart().getBytes(),
+				true,
+				overlappingRange.getEnd().getBytes(),
+				false);
 	}
 
 	public static RowRange toHBaseRange(
@@ -328,10 +307,9 @@ public class HBaseSplitsProvider extends
 							range.getStartSortKey()),
 					range.isStartSortKeyInclusive(),
 					(range.getEndSortKey() == null) ? new ByteArrayId(
-							range.getPartitionKey()).getNextPrefix()
-							: ArrayUtils.addAll(
-									range.getPartitionKey(),
-									range.getEndSortKey()),
+							range.getPartitionKey()).getNextPrefix() : ArrayUtils.addAll(
+							range.getPartitionKey(),
+							range.getEndSortKey()),
 					(range.getEndSortKey() != null) && range.isEndSortKeyInclusive());
 		}
 	}

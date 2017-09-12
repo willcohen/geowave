@@ -57,8 +57,8 @@ public class GeoWaveBasicSpatialVectorIT extends
 	protected DataStorePluginOptions dataStore;
 
 	private static long startMillis;
-	private static final boolean POINTS_ONLY = true;
-
+	private static final boolean POINTS_ONLY = false;
+	
 	@BeforeClass
 	public static void reportTestStart() {
 		startMillis = System.currentTimeMillis();
@@ -100,7 +100,10 @@ public class GeoWaveBasicSpatialVectorIT extends
 			final int nthreads ) {
 		long mark = System.currentTimeMillis();
 
-		LOGGER.debug(
+//		org.apache.log4j.Logger.getRootLogger().setLevel(
+//				org.apache.log4j.Level.INFO);
+
+		LOGGER.info(
 				"Testing DataStore Type: " + dataStore.getType());
 
 		// ingest both lines and points
@@ -109,10 +112,14 @@ public class GeoWaveBasicSpatialVectorIT extends
 				DimensionalityType.SPATIAL,
 				HAIL_SHAPEFILE_FILE,
 				nthreads);
+		
 
 		long dur = (System.currentTimeMillis() - mark);
-		LOGGER.debug(
+		LOGGER.info(
 				"Ingest (points) duration = " + dur + " ms with " + nthreads + " thread(s).");
+
+//		org.apache.log4j.Logger.getRootLogger().setLevel(
+//				org.apache.log4j.Level.WARN);
 
 		if (!POINTS_ONLY) {
 			mark = System.currentTimeMillis();

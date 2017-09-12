@@ -79,7 +79,6 @@ import mil.nga.giat.geowave.datastore.hbase.HBaseRow;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseOptions;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseRequiredOptions;
 import mil.nga.giat.geowave.datastore.hbase.query.AggregationEndpoint;
-import mil.nga.giat.geowave.datastore.hbase.query.HBaseDistributableFilter;
 import mil.nga.giat.geowave.datastore.hbase.query.HBaseNumericIndexStrategyFilter;
 import mil.nga.giat.geowave.datastore.hbase.query.protobuf.AggregationProtos;
 import mil.nga.giat.geowave.datastore.hbase.util.ConnectionPool;
@@ -94,6 +93,7 @@ public class HBaseOperations implements
 {
 	private final static Logger LOGGER = LoggerFactory.getLogger(
 			HBaseOperations.class);
+
 	protected static final String DEFAULT_TABLE_NAMESPACE = "";
 	public static final Object ADMIN_MUTEX = new Object();
 	private static final long SLEEP_INTERVAL = 10000L;
@@ -103,6 +103,7 @@ public class HBaseOperations implements
 	private final boolean schemaUpdateEnabled;
 	private final HashMap<String, List<String>> coprocessorCache = new HashMap<>();
 	private final Map<String, Set<ByteArrayId>> partitionCache = new HashMap<>();
+	private final HashSet<String> cfCache = new HashSet<>();
 
 	private final HBaseOptions options;
 
@@ -240,6 +241,9 @@ public class HBaseOperations implements
 					desc.addFamily(
 							new HColumnDescriptor(
 									columnFamily));
+
+					cfCache.add(
+							columnFamily);
 				}
 
 				try {
@@ -254,17 +258,33 @@ public class HBaseOperations implements
 				}
 			}
 			else { // add any missing column families
-				addColumnFamilies(
+				verifyOrAddColumnFamilies(
 						columnFamilies,
 						name.getNameAsString());
 			}
 		}
 	}
 
-	protected void addColumnFamilies(
+	protected void verifyOrAddColumnFamilies(
 			final String[] columnFamilies,
 			final String tableName )
 			throws IOException {
+		// Check the cache first and create the update list
+		ArrayList<String> newCFs = new ArrayList<>();
+
+		for (final String columnFamily : columnFamilies) {
+			if (!cfCache.contains(
+					columnFamily)) {
+				newCFs.add(
+						columnFamily);
+			}
+		}
+
+		// Nothing to add
+		if (newCFs.isEmpty()) {
+			return;
+		}
+
 		final TableName table = getTableName(
 				tableName);
 		final List<String> existingColumnFamilies = new ArrayList<>();
@@ -279,21 +299,28 @@ public class HBaseOperations implements
 					existingColumnFamilies.add(
 							hColumnDescriptor.getNameAsString());
 				}
-				for (final String columnFamily : columnFamilies) {
+				for (final String columnFamily : newCFs) {
 					if (!existingColumnFamilies.contains(
 							columnFamily)) {
 						newColumnFamilies.add(
 								columnFamily);
 					}
 				}
-				for (final String newColumnFamily : newColumnFamilies) {
-					existingTableDescriptor.addFamily(
-							new HColumnDescriptor(
-									newColumnFamily));
+
+				if (!newColumnFamilies.isEmpty()) {
+					for (final String newColumnFamily : newColumnFamilies) {
+						existingTableDescriptor.addFamily(
+								new HColumnDescriptor(
+										newColumnFamily));
+
+						cfCache.add(
+								newColumnFamily);
+					}
+
+					conn.getAdmin().modifyTable(
+							table,
+							existingTableDescriptor);
 				}
-				conn.getAdmin().modifyTable(
-						table,
-						existingTableDescriptor);
 			}
 		}
 	}
@@ -360,27 +387,6 @@ public class HBaseOperations implements
 		// }
 		// }
 		// }
-		return false;
-	}
-
-	public boolean columnFamilyExists(
-			final String tableName,
-			final String columnFamily )
-			throws IOException {
-		synchronized (ADMIN_MUTEX) {
-			final HTableDescriptor descriptor = conn.getAdmin().getTableDescriptor(
-					getTableName(
-							tableName));
-
-			if (descriptor != null) {
-				for (final HColumnDescriptor hColumnDescriptor : descriptor.getColumnFamilies()) {
-					if (hColumnDescriptor.getNameAsString().equalsIgnoreCase(
-							columnFamily)) {
-						return true;
-					}
-				}
-			}
-		}
 		return false;
 	}
 
@@ -924,8 +930,10 @@ public class HBaseOperations implements
 				distFilters.add(
 						readerParams.getFilter());
 
-				final byte[] filterBytes = PersistenceUtils.toBinary(distFilters);
-				final ByteString filterByteString = ByteString.copyFrom(filterBytes);
+				final byte[] filterBytes = PersistenceUtils.toBinary(
+						distFilters);
+				final ByteString filterByteString = ByteString.copyFrom(
+						filterBytes);
 				requestBuilder.setFilter(
 						filterByteString);
 			}

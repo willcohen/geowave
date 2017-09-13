@@ -63,6 +63,7 @@ import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.filter.DistributableQueryFilter;
+import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.metadata.AbstractGeoWavePersistence;
 import mil.nga.giat.geowave.core.store.operations.Deleter;
@@ -82,6 +83,8 @@ import mil.nga.giat.geowave.datastore.hbase.query.AggregationEndpoint;
 import mil.nga.giat.geowave.datastore.hbase.query.HBaseNumericIndexStrategyFilter;
 import mil.nga.giat.geowave.datastore.hbase.query.protobuf.AggregationProtos;
 import mil.nga.giat.geowave.datastore.hbase.util.ConnectionPool;
+import mil.nga.giat.geowave.datastore.hbase.util.HBaseEntryIteratorWrapper;
+import mil.nga.giat.geowave.datastore.hbase.util.HBaseMergingEntryIterator;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils.ScannerClosableWrapper;
 import mil.nga.giat.geowave.datastore.hbase.util.RewritingMergingEntryIterator;
@@ -163,9 +166,13 @@ public class HBaseOperations implements
 	public boolean isSchemaUpdateEnabled() {
 		return schemaUpdateEnabled;
 	}
+	
+	public boolean isServerSideLibraryEnabled() {
+		if (options != null) {
+			return options.isServerSideLibraryEnabled();
+		}
 
-	public boolean isServerSideDisabled() {
-		return (options != null && !options.isServerSideDisabled());
+		return true;
 	}
 
 	public int getScanCacheSize() {

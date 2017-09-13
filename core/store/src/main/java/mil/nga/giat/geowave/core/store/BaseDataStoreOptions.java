@@ -33,6 +33,9 @@ public class BaseDataStoreOptions implements
 	@Parameter(names = "--enableBlockCache", hidden = true, arity = 1)
 	protected boolean enableBlockCache = true;
 
+	@Parameter(names = "--enableServerSideLibrary", hidden = true, arity = 1)
+	protected boolean enableServerSideLibrary = false;
+
 	@Override
 	public boolean isPersistDataStatistics() {
 		return persistDataStatistics;
@@ -95,7 +98,11 @@ public class BaseDataStoreOptions implements
 
 	@Override
 	public boolean isServerSideLibraryEnabled() {
-		return false;
+		return enableServerSideLibrary;
 	}
 
+	public void setServerSideLibraryEnabled(
+			final boolean enableServerSideLibrary ) {
+		this.enableServerSideLibrary = enableServerSideLibrary;
+	}
 }

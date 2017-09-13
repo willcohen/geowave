@@ -25,6 +25,7 @@ import mil.nga.giat.geowave.core.store.entities.GeoWaveRowImpl;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveValue;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveValueImpl;
 import mil.nga.giat.geowave.core.store.filter.DistributableQueryFilter;
+import mil.nga.giat.geowave.core.store.operations.BaseReaderParams;
 import mil.nga.giat.geowave.core.store.operations.Reader;
 import mil.nga.giat.geowave.core.store.operations.ReaderParams;
 import mil.nga.giat.geowave.datastore.hbase.HBaseRow;
@@ -44,8 +45,8 @@ public class HBaseReader implements
 	private final RecordReaderParams recordReaderParams;
 	private final HBaseOperations operations;
 
-	private final ResultScanner scanner;
-	private final Iterator<Result> scanIt;
+	private ResultScanner scanner;
+	private Iterator<Result> scanIt;
 
 	private final boolean wholeRowEncoding;
 	private final int partitionKeyLength;
@@ -71,8 +72,7 @@ public class HBaseReader implements
 			aggReady = true;
 		}
 		else {
-			this.scanner = initScanner();
-			this.scanIt = scanner.iterator();
+			initScanner();
 		}
 	}
 
@@ -86,8 +86,7 @@ public class HBaseReader implements
 		this.partitionKeyLength = recordReaderParams.getIndex().getIndexStrategy().getPartitionKeyLength();
 		this.wholeRowEncoding = recordReaderParams.isMixedVisibility() && !recordReaderParams.isServersideAggregation();
 
-		this.scanner = initRecordScanner();
-		this.scanIt = scanner.iterator();
+		initRecordScanner();
 	}
 
 	@Override
@@ -104,6 +103,12 @@ public class HBaseReader implements
 			return scanIt.hasNext();
 		}
 
+		// This is a broken scanner situation
+		if (!operations.isServerSideLibraryEnabled()) {
+			return false;
+		}
+
+		// ready for agg result
 		return aggReady;
 	}
 
@@ -132,174 +137,84 @@ public class HBaseReader implements
 				});
 	}
 
-	protected ResultScanner initRecordScanner() {
+	protected void initRecordScanner() {
 		final FilterList filterList = new FilterList();
 		final GeoWaveRowRange range = recordReaderParams.getRowRange();
 		final String tableName = StringUtils.stringFromBinary(
 				recordReaderParams.getIndex().getId().getBytes());
 
-		final Scan scanner = createStandardScanner();
-		scanner.setStartRow(
+		final Scan rscanner = createStandardScanner(
+				recordReaderParams);
+		rscanner.setStartRow(
 				range.getStartSortKey());
-		scanner.setStopRow(
+		rscanner.setStopRow(
 				range.getEndSortKey());
 
-		if (!operations.isServerSideDisabled()) {
-			// Add skipping filter if requested
-			if (readerParams.getMaxResolutionSubsamplingPerDimension() != null) {
-				if (readerParams.getMaxResolutionSubsamplingPerDimension().length != readerParams
-						.getIndex()
-						.getIndexStrategy()
-						.getOrderedDimensionDefinitions().length) {
-					LOGGER.warn(
-							"Unable to subsample for table '" + readerParams.getIndex().getId().getString()
-									+ "'. Subsample dimensions = "
-									+ readerParams.getMaxResolutionSubsamplingPerDimension().length
-									+ " when indexed dimensions = " + readerParams
-											.getIndex()
-											.getIndexStrategy()
-											.getOrderedDimensionDefinitions().length);
-				}
-				else {
-					final int cardinalityToSubsample = IndexUtils.getBitPositionFromSubsamplingArray(
-							readerParams.getIndex().getIndexStrategy(),
-							readerParams.getMaxResolutionSubsamplingPerDimension());
-
-					final FixedCardinalitySkippingFilter skippingFilter = new FixedCardinalitySkippingFilter(
-							cardinalityToSubsample);
-					filterList.addFilter(
-							skippingFilter);
-				}
-			}
+		if (operations.isServerSideLibraryEnabled()) {
+			addSkipFilter(
+					recordReaderParams,
+					filterList);
 
 			// Add distributable filters if requested, this has to be last
 			// in the filter list for the dedupe filter to work correctly
 
-			if (readerParams.getFilter() != null) {
-				final HBaseDistributableFilter hbdFilter = new HBaseDistributableFilter();
-				if (wholeRowEncoding) {
-					hbdFilter.setWholeRowFilter(
-							true);
-				}
-
-				hbdFilter.setPartitionKeyLength(
-						partitionKeyLength);
-
-				final List<DistributableQueryFilter> distFilters = new ArrayList();
-				distFilters.add(
-						readerParams.getFilter());
-				hbdFilter.init(
-						distFilters,
-						readerParams.getIndex().getIndexModel(),
-						readerParams.getAdditionalAuthorizations());
-
-				filterList.addFilter(
-						hbdFilter);
+			if (recordReaderParams.getFilter() != null) {
+				addDistFilter(
+						recordReaderParams,
+						filterList);
 			}
 			else {
-				final List<MultiDimensionalCoordinateRangesArray> coords = readerParams.getCoordinateRanges();
-				if ((coords != null) && !coords.isEmpty()) {
-					final HBaseNumericIndexStrategyFilter numericIndexFilter = new HBaseNumericIndexStrategyFilter(
-							readerParams.getIndex().getIndexStrategy(),
-							coords.toArray(
-									new MultiDimensionalCoordinateRangesArray[] {}));
-					filterList.addFilter(
-							numericIndexFilter);
-				}
+				addIndexFilter(
+						recordReaderParams,
+						filterList);
 			}
 		}
 
 		if (!filterList.getFilters().isEmpty()) {
-			scanner.setFilter(
+			rscanner.setFilter(
 					filterList);
 		}
 
 		try {
-			final ResultScanner resultScanner = operations.getScannedResults(
-					scanner,
-					readerParams.getIndex().getId().getString(),
-					readerParams.getAdditionalAuthorizations());
-
-			return resultScanner;
+			this.scanner = operations.getScannedResults(
+					rscanner,
+					recordReaderParams.getIndex().getId().getString(),
+					recordReaderParams.getAdditionalAuthorizations());
 		}
 		catch (final IOException e) {
-			LOGGER.warn(
+			LOGGER.error(
 					"Could not get the results from scanner",
 					e);
+			this.scanner = null;
+			return;
 		}
-		return null;
+
+		this.scanIt = scanner.iterator();
 	}
 
-	protected ResultScanner initScanner() {
+	protected void initScanner() {
 		final FilterList filterList = new FilterList();
 
 		final Scan multiScanner = getMultiScanner(
-				filterList,
-				readerParams.getLimit(),
-				readerParams.getMaxResolutionSubsamplingPerDimension());
+				filterList);
 
-		if (!operations.isServerSideDisabled()) {
-			// Add skipping filter if requested
-			if (readerParams.getMaxResolutionSubsamplingPerDimension() != null) {
-				if (readerParams.getMaxResolutionSubsamplingPerDimension().length != readerParams
-						.getIndex()
-						.getIndexStrategy()
-						.getOrderedDimensionDefinitions().length) {
-					LOGGER.warn(
-							"Unable to subsample for table '" + readerParams.getIndex().getId().getString()
-									+ "'. Subsample dimensions = "
-									+ readerParams.getMaxResolutionSubsamplingPerDimension().length
-									+ " when indexed dimensions = " + readerParams
-											.getIndex()
-											.getIndexStrategy()
-											.getOrderedDimensionDefinitions().length);
-				}
-				else {
-					final int cardinalityToSubsample = IndexUtils.getBitPositionFromSubsamplingArray(
-							readerParams.getIndex().getIndexStrategy(),
-							readerParams.getMaxResolutionSubsamplingPerDimension());
-
-					final FixedCardinalitySkippingFilter skippingFilter = new FixedCardinalitySkippingFilter(
-							cardinalityToSubsample);
-					filterList.addFilter(
-							skippingFilter);
-				}
-			}
+		if (operations.isServerSideLibraryEnabled()) {
+			addSkipFilter(
+					readerParams,
+					filterList);
 
 			// Add distributable filters if requested, this has to be last
 			// in the filter list for the dedupe filter to work correctly
 
 			if (readerParams.getFilter() != null) {
-				final HBaseDistributableFilter hbdFilter = new HBaseDistributableFilter();
-				if (wholeRowEncoding) {
-					hbdFilter.setWholeRowFilter(
-							true);
-				}
-
-				hbdFilter.setPartitionKeyLength(
-						partitionKeyLength);
-
-				final List<DistributableQueryFilter> distFilters = new ArrayList();
-				distFilters.add(
-						readerParams.getFilter());
-				hbdFilter.init(
-						distFilters,
-						readerParams.getIndex().getIndexModel(),
-						readerParams.getAdditionalAuthorizations());
-
-				filterList.addFilter(
-						hbdFilter);
+				addDistFilter(
+						readerParams,
+						filterList);
 			}
 			else {
-				final List<MultiDimensionalCoordinateRangesArray> coords = readerParams.getCoordinateRanges();
-				if ((coords != null) && !coords.isEmpty()) {
-					final HBaseNumericIndexStrategyFilter numericIndexFilter = new HBaseNumericIndexStrategyFilter(
-							readerParams.getIndex().getIndexStrategy(),
-							coords.toArray(
-									new MultiDimensionalCoordinateRangesArray[] {}));
-					filterList.addFilter(
-							numericIndexFilter);
-				}
+				addIndexFilter(
+						readerParams,
+						filterList);
 			}
 		}
 
@@ -309,27 +224,94 @@ public class HBaseReader implements
 		}
 
 		try {
-			final ResultScanner resultScanner = operations.getScannedResults(
+			this.scanner = operations.getScannedResults(
 					multiScanner,
 					readerParams.getIndex().getId().getString(),
 					readerParams.getAdditionalAuthorizations());
-
-			return resultScanner;
 		}
 		catch (final IOException e) {
-			LOGGER.warn(
+			LOGGER.error(
 					"Could not get the results from scanner",
 					e);
+
+			this.scanner = null;
+			return;
 		}
-		return null;
+
+		this.scanIt = scanner.iterator();
+	}
+
+	private void addSkipFilter(
+			BaseReaderParams params,
+			FilterList filterList ) {
+		// Add skipping filter if requested
+		if (params.getMaxResolutionSubsamplingPerDimension() != null) {
+			if (params.getMaxResolutionSubsamplingPerDimension().length != params
+					.getIndex()
+					.getIndexStrategy()
+					.getOrderedDimensionDefinitions().length) {
+				LOGGER.warn(
+						"Unable to subsample for table '" + params.getIndex().getId().getString()
+								+ "'. Subsample dimensions = " + params.getMaxResolutionSubsamplingPerDimension().length
+								+ " when indexed dimensions = "
+								+ params.getIndex().getIndexStrategy().getOrderedDimensionDefinitions().length);
+			}
+			else {
+				final int cardinalityToSubsample = IndexUtils.getBitPositionFromSubsamplingArray(
+						params.getIndex().getIndexStrategy(),
+						params.getMaxResolutionSubsamplingPerDimension());
+
+				final FixedCardinalitySkippingFilter skippingFilter = new FixedCardinalitySkippingFilter(
+						cardinalityToSubsample);
+				filterList.addFilter(
+						skippingFilter);
+			}
+		}
+	}
+
+	private void addDistFilter(
+			BaseReaderParams params,
+			FilterList filterList ) {
+		final HBaseDistributableFilter hbdFilter = new HBaseDistributableFilter();
+		if (wholeRowEncoding) {
+			hbdFilter.setWholeRowFilter(
+					true);
+		}
+
+		hbdFilter.setPartitionKeyLength(
+				partitionKeyLength);
+
+		final List<DistributableQueryFilter> distFilters = new ArrayList();
+		distFilters.add(
+				params.getFilter());
+		hbdFilter.init(
+				distFilters,
+				params.getIndex().getIndexModel(),
+				params.getAdditionalAuthorizations());
+
+		filterList.addFilter(
+				hbdFilter);
+	}
+
+	private void addIndexFilter(
+			BaseReaderParams params,
+			FilterList filterList ) {
+		final List<MultiDimensionalCoordinateRangesArray> coords = params.getCoordinateRanges();
+		if ((coords != null) && !coords.isEmpty()) {
+			final HBaseNumericIndexStrategyFilter numericIndexFilter = new HBaseNumericIndexStrategyFilter(
+					params.getIndex().getIndexStrategy(),
+					coords.toArray(
+							new MultiDimensionalCoordinateRangesArray[] {}));
+			filterList.addFilter(
+					numericIndexFilter);
+		}
 	}
 
 	protected Scan getMultiScanner(
-			final FilterList filterList,
-			final Integer limit,
-			final double[] maxResolutionSubsamplingPerDimension ) {
+			final FilterList filterList ) {
 		// Single scan w/ multiple ranges
-		final Scan multiScanner = createStandardScanner();
+		final Scan multiScanner = createStandardScanner(
+				readerParams);
 
 		final List<ByteArrayRange> ranges = readerParams.getQueryRanges().getCompositeQueryRanges();
 
@@ -369,7 +351,8 @@ public class HBaseReader implements
 		return multiScanner;
 	}
 
-	protected Scan createStandardScanner() {
+	protected Scan createStandardScanner(
+			BaseReaderParams readerParams ) {
 		final Scan scanner = new Scan();
 
 		// Performance tuning per store options

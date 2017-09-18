@@ -106,8 +106,7 @@ public class HBaseMetadataReader implements
 					}
 				}
 
-				// TODO: If more than one result, write the merged result back
-				// and requery
+				// If more than one result, write the merged result back
 				if (statRecs > 1) {
 					operations.updateStats(
 							query,
@@ -117,7 +116,7 @@ public class HBaseMetadataReader implements
 							"NEED TO UPDATE STATS");
 				}
 
-				// Requery after scanning.
+				// Requery 
 				rS = operations.getScannedResults(
 						scanner,
 						AbstractGeoWavePersistence.METADATA_TABLE,

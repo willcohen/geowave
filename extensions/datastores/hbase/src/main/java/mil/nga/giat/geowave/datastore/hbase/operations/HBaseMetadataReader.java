@@ -24,7 +24,8 @@ import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils.ScannerClosableWrapp
 public class HBaseMetadataReader implements
 		MetadataReader
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(HBaseMetadataReader.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(
+			HBaseMetadataReader.class);
 	private final HBaseOperations operations;
 	private final DataStoreOptions options;
 	private final MetadataType metadataType;
@@ -44,7 +45,8 @@ public class HBaseMetadataReader implements
 		final Scan scanner = new Scan();
 
 		try {
-			final byte[] columnFamily = StringUtils.stringToBinary(metadataType.name());
+			final byte[] columnFamily = StringUtils.stringToBinary(
+					metadataType.name());
 			final byte[] columnQualifier = query.getSecondaryId();
 
 			if (columnFamily != null) {
@@ -54,13 +56,18 @@ public class HBaseMetadataReader implements
 							columnQualifier);
 				}
 				else {
-					scanner.addFamily(columnFamily);
+					scanner.addFamily(
+							columnFamily);
 				}
 			}
 
 			if (query.getPrimaryId() != null) {
-				scanner.setStartRow(query.getPrimaryId());
-				scanner.setStopRow(query.getPrimaryId());
+				scanner.setMaxVersions(
+						1);
+				scanner.setStartRow(
+						query.getPrimaryId());
+				scanner.setStopRow(
+						query.getPrimaryId());
 			}
 
 			final ResultScanner rS = operations.getScannedResults(
@@ -84,7 +91,6 @@ public class HBaseMetadataReader implements
 											null,
 											result.value());
 								}
-
 							}));
 
 		}

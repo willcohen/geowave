@@ -54,12 +54,13 @@ public class GeoWaveBasicSpatialVectorIT extends
 		GeoWaveStoreType.DYNAMODB,
 		GeoWaveStoreType.HBASE
 	}, options = {
-		"enableServerSideLibrary=false"
+		"enableServerSideLibrary=true"
 	})
 	protected DataStorePluginOptions dataStore;
 
 	private static long startMillis;
 	private static final boolean POINTS_ONLY = false;
+	private static final int NUM_THREADS = 4;
 	
 	@BeforeClass
 	public static void reportTestStart() {
@@ -95,7 +96,7 @@ public class GeoWaveBasicSpatialVectorIT extends
 	@Test
 	public void testMultiThreadedIngestAndQuerySpatialPointsAndLines() {
 		testIngestAndQuerySpatialPointsAndLines(
-				4);
+				NUM_THREADS);
 	}
 
 	public void testIngestAndQuerySpatialPointsAndLines(
@@ -133,7 +134,7 @@ public class GeoWaveBasicSpatialVectorIT extends
 					nthreads);
 
 			dur = (System.currentTimeMillis() - mark);
-			LOGGER.debug(
+			LOGGER.info(
 					"Ingest (lines) duration = " + dur + " ms with " + nthreads + " thread(s).");
 		}
 
@@ -164,7 +165,7 @@ public class GeoWaveBasicSpatialVectorIT extends
 					"bounding box constraint only");
 
 			dur = (System.currentTimeMillis() - mark);
-			LOGGER.debug(
+			LOGGER.info(
 					"BBOX query duration = " + dur + " ms.");
 		}
 		catch (final Exception e) {
@@ -202,7 +203,7 @@ public class GeoWaveBasicSpatialVectorIT extends
 					"polygon constraint only");
 
 			dur = (System.currentTimeMillis() - mark);
-			LOGGER.debug(
+			LOGGER.info(
 					"POLY query duration = " + dur + " ms.");
 		}
 		catch (final Exception e) {

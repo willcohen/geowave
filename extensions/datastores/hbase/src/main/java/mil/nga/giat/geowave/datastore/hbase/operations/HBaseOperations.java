@@ -61,13 +61,14 @@ import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveMetadata;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.filter.DistributableQueryFilter;
-import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.metadata.AbstractGeoWavePersistence;
 import mil.nga.giat.geowave.core.store.operations.Deleter;
 import mil.nga.giat.geowave.core.store.operations.MetadataDeleter;
+import mil.nga.giat.geowave.core.store.operations.MetadataQuery;
 import mil.nga.giat.geowave.core.store.operations.MetadataReader;
 import mil.nga.giat.geowave.core.store.operations.MetadataType;
 import mil.nga.giat.geowave.core.store.operations.MetadataWriter;
@@ -83,8 +84,6 @@ import mil.nga.giat.geowave.datastore.hbase.query.AggregationEndpoint;
 import mil.nga.giat.geowave.datastore.hbase.query.HBaseNumericIndexStrategyFilter;
 import mil.nga.giat.geowave.datastore.hbase.query.protobuf.AggregationProtos;
 import mil.nga.giat.geowave.datastore.hbase.util.ConnectionPool;
-import mil.nga.giat.geowave.datastore.hbase.util.HBaseEntryIteratorWrapper;
-import mil.nga.giat.geowave.datastore.hbase.util.HBaseMergingEntryIterator;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils.ScannerClosableWrapper;
 import mil.nga.giat.geowave.datastore.hbase.util.RewritingMergingEntryIterator;
@@ -129,7 +128,7 @@ public class HBaseOperations implements
 
 		schemaUpdateEnabled = conn.getConfiguration().getBoolean(
 				"hbase.online.schema.update.enable",
-				false);
+				true);
 
 		this.options = options;
 	}
@@ -245,9 +244,13 @@ public class HBaseOperations implements
 				final HTableDescriptor desc = new HTableDescriptor(
 						name);
 				for (final String columnFamily : columnFamilies) {
+					final HColumnDescriptor column = new HColumnDescriptor(
+							columnFamily);
+					
+					column.setMaxVersions(1);
+					
 					desc.addFamily(
-							new HColumnDescriptor(
-									columnFamily));
+							column);
 
 					cfCache.add(
 							columnFamily);
@@ -780,6 +783,7 @@ public class HBaseOperations implements
 			}
 
 			return new HBaseMetadataWriter(
+					this,
 					getBufferedMutator(
 							tableName),
 					metadataType);
@@ -1106,5 +1110,46 @@ public class HBaseOperations implements
 		}
 
 		return regionIdList;
+	}
+
+	public Mergeable mergeStatValue(
+			GeoWaveMetadata metadata ) {
+		// TODO: Handle authorizations
+		String[] authorizations = null;
+		
+		// Get the incoming stat value
+		Mergeable value = PersistenceUtils.fromBinary(
+				metadata.getValue(),
+				Mergeable.class);
+
+		final MetadataReader reader = createMetadataReader(MetadataType.STATS);
+		try (final CloseableIterator<GeoWaveMetadata> it = reader.query(new MetadataQuery(
+				metadata.getPrimaryId(),
+				metadata.getSecondaryId(),
+				authorizations))) {
+			if (!it.hasNext()) {				
+				return value;
+			}
+			
+			final GeoWaveMetadata entry = it.next();
+			Mergeable mergeable = PersistenceUtils.fromBinary(
+					entry.getValue(),
+					Mergeable.class);
+			if (mergeable != null) {
+				if (value == null) {
+					value = mergeable;
+				}
+				else {
+					value.merge(mergeable);
+				}
+			}
+
+			return value;
+		}
+		catch (final IOException e) {
+			// OK to ignore
+		}
+		
+		return value;
 	}
 }

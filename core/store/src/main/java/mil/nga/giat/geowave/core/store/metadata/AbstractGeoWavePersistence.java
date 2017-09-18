@@ -182,14 +182,6 @@ public abstract class AbstractGeoWavePersistence<T extends Persistable>
 				secondaryId,
 				object);
 		
-		if (!options.isServerSideLibraryEnabled() && getType() == MetadataType.STATS) {
-			DataStatistics existingStat = (DataStatistics) getObject(id, secondaryId);
-			if (existingStat != null) {
-				DataStatistics inputStat = (DataStatistics)object;
-				inputStat.merge(existingStat);
-			}
-		}
-
 		try (final MetadataWriter writer = operations.createMetadataWriter(getType())) {
 			if (writer != null) {
 				final GeoWaveMetadata metadata = new GeoWaveMetadata(

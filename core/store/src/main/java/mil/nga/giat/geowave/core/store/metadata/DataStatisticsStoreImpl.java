@@ -10,9 +10,6 @@
  ******************************************************************************/
 package mil.nga.giat.geowave.core.store.metadata;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStoreOptions;
@@ -51,7 +48,14 @@ public class DataStatisticsStoreImpl extends
 	public void incorporateStatistics(
 			final DataStatistics<?> statistics ) {
 		// because we're using the combiner, we should simply be able to add the
-		// object
+		// object (unless the server side is disabled)
+		if (!options.isServerSideLibraryEnabled()) {
+			DataStatistics existingStat = (DataStatistics) getObject(getPrimaryId(statistics), getSecondaryId(statistics));
+			if (existingStat != null) {
+				statistics.merge(existingStat);
+			}
+		}
+		
 		addObject(statistics);
 
 		// TODO if we do allow caching after we add a statistic to Accumulo we

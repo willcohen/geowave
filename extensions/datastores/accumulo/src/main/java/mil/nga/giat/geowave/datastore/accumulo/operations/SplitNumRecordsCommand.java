@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -23,7 +23,6 @@ import com.beust.jcommander.Parameters;
 
 import mil.nga.giat.geowave.core.cli.annotations.GeowaveOperation;
 import mil.nga.giat.geowave.core.cli.api.Command;
-import mil.nga.giat.geowave.core.cli.api.OperationParams;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.datastore.accumulo.split.AbstractAccumuloSplitsOperation;
 import mil.nga.giat.geowave.datastore.accumulo.util.AccumuloUtils;
@@ -35,7 +34,8 @@ public class SplitNumRecordsCommand extends
 		Command
 {
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(SplitNumRecordsCommand.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(
+			SplitNumRecordsCommand.class);
 
 	@Override
 	public void doSplit()
@@ -69,10 +69,4 @@ public class SplitNumRecordsCommand extends
 		}.runOperation();
 	}
 
-	@Override
-	public Object computeResults(
-			OperationParams params ) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 }

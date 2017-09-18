@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -23,36 +23,28 @@ import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
 
-import mil.nga.giat.geowave.core.cli.annotations.GeowaveOperation;
-import mil.nga.giat.geowave.core.cli.annotations.RestParameters;
-import mil.nga.giat.geowave.core.cli.api.Command;
-import mil.nga.giat.geowave.core.cli.api.DefaultOperation;
 import mil.nga.giat.geowave.core.cli.api.OperationParams;
+import mil.nga.giat.geowave.core.cli.api.ServiceEnabledCommand;
 import mil.nga.giat.geowave.core.cli.operations.config.ConfigSection;
 import mil.nga.giat.geowave.core.cli.operations.config.options.ConfigOptions;
 import mil.nga.giat.geowave.core.store.operations.remote.options.DataStorePluginOptions;
 import mil.nga.giat.geowave.datastore.accumulo.operations.config.AccumuloRequiredOptions;
 
-@GeowaveOperation(name = "addstore/accumulo", parentOperation = ConfigSection.class, restEnabled = GeowaveOperation.RestEnabledType.POST)
 @Parameters(commandDescription = "Create a store within Geowave")
 public class AddAccumuloStoreCommand extends
-		DefaultOperation<Void> implements
-		Command
+		ServiceEnabledCommand<Void>
 {
 	/**
-	 * A REST Operation for the AddStoreCommand where --type=accumulo 
+	 * A REST Operation for the AddStoreCommand where --type=accumulo
 	 */
-	
-	private final static Logger LOGGER = LoggerFactory.getLogger(AddAccumuloStoreCommand.class);
+
+	private final static Logger LOGGER = LoggerFactory.getLogger(
+			AddAccumuloStoreCommand.class);
 
 	public static final String PROPERTIES_CONTEXT = "properties";
 
-
-	//Default AddStore Options
+	// Default AddStore Options
 	@Parameter(description = "<name>")
-	@RestParameters(names = {
-		"name"
-	})
 	private List<String> parameters = new ArrayList<String>();
 
 	@Parameter(names = {
@@ -62,16 +54,18 @@ public class AddAccumuloStoreCommand extends
 	private Boolean makeDefault;
 
 	private DataStorePluginOptions pluginOptions = new DataStorePluginOptions();
-	
+
 	@ParametersDelegate
 	private AccumuloRequiredOptions requiredOptions;
-	
+
 	@Override
 	public boolean prepare(
 			final OperationParams params ) {
 
-		pluginOptions.selectPlugin("accumulo");
-		pluginOptions.setFactoryOptions(requiredOptions);
+		pluginOptions.selectPlugin(
+				"accumulo");
+		pluginOptions.setFactoryOptions(
+				requiredOptions);
 
 		return true;
 	}
@@ -79,7 +73,8 @@ public class AddAccumuloStoreCommand extends
 	@Override
 	public void execute(
 			final OperationParams params ) {
-		computeResults(params);
+		computeResults(
+				params);
 	}
 
 	@Override
@@ -98,9 +93,6 @@ public class AddAccumuloStoreCommand extends
 					"Must specify store name");
 		}
 
-		
-
-
 		// Make sure we're not already in the index.
 		final DataStorePluginOptions existingOptions = new DataStorePluginOptions();
 		if (existingOptions.load(
@@ -116,7 +108,8 @@ public class AddAccumuloStoreCommand extends
 				getNamespace());
 
 		// Make default?
-		if (Boolean.TRUE.equals(makeDefault)) {
+		if (Boolean.TRUE.equals(
+				makeDefault)) {
 			existingProps.setProperty(
 					DataStorePluginOptions.DEFAULT_PROPERTY_NAMESPACE,
 					getPluginName());
@@ -135,21 +128,34 @@ public class AddAccumuloStoreCommand extends
 	}
 
 	public String getPluginName() {
-		return parameters.get(0);
+		return parameters.get(
+				0);
 	}
 
 	public String getNamespace() {
-		return DataStorePluginOptions.getStoreNamespace(getPluginName());
+		return DataStorePluginOptions.getStoreNamespace(
+				getPluginName());
 	}
 
 	public List<String> getParameters() {
 		return parameters;
 	}
 
+	@Override
+	public String getId() {
+		return ConfigSection.class.getName() + ".addstore/accumulo";
+	}
+
+	@Override
+	public String getPath() {
+		return "config/addstore/accumulo";
+	}
+
 	public void setParameters(
 			final String storeName ) {
 		parameters = new ArrayList<String>();
-		parameters.add(storeName);
+		parameters.add(
+				storeName);
 	}
 
 	public Boolean getMakeDefault() {
@@ -164,7 +170,6 @@ public class AddAccumuloStoreCommand extends
 	public String getStoreType() {
 		return "accumulo";
 	}
-
 
 	public void setPluginOptions(
 			final DataStorePluginOptions pluginOptions ) {

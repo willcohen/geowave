@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -20,19 +20,17 @@ import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
 
 import mil.nga.giat.geowave.core.cli.annotations.GeowaveOperation;
-import mil.nga.giat.geowave.core.cli.api.Command;
-import mil.nga.giat.geowave.core.cli.api.DefaultOperation;
 import mil.nga.giat.geowave.core.cli.api.OperationParams;
+import mil.nga.giat.geowave.core.cli.api.ServiceEnabledCommand;
 import mil.nga.giat.geowave.core.ingest.avro.AvroFormatPlugin;
 import mil.nga.giat.geowave.core.ingest.hdfs.StageToHdfsDriver;
 import mil.nga.giat.geowave.core.ingest.local.LocalInputCommandLineOptions;
 import mil.nga.giat.geowave.core.ingest.operations.options.IngestFormatPluginOptions;
 
-@GeowaveOperation(name = "localToHdfs", parentOperation = IngestSection.class, restEnabled = GeowaveOperation.RestEnabledType.POST)
+@GeowaveOperation(name = "localToHdfs", parentOperation = IngestSection.class)
 @Parameters(commandDescription = "Stage supported files in local file system to HDFS")
 public class LocalToHdfsCommand extends
-		DefaultOperation<Void> implements
-		Command
+		ServiceEnabledCommand<Void>
 {
 
 	@Parameter(description = "<file or directory> <hdfs host:port> <path to base directory to write to>")
@@ -48,25 +46,27 @@ public class LocalToHdfsCommand extends
 
 	@Override
 	public boolean prepare(
-			OperationParams params ) {
+			final OperationParams params ) {
 
 		// Based on the selected formats, select the format plugins
-		pluginFormats.selectPlugin(localInputOptions.getFormats());
+		pluginFormats.selectPlugin(
+				localInputOptions.getFormats());
 
 		return true;
 	}
 
 	/**
 	 * Prep the driver & run the operation.
-	 * 
+	 *
 	 * @throws Exception
 	 */
 	@Override
 	public void execute(
-			OperationParams params )
+			final OperationParams params )
 			throws Exception {
 
-		computeResults(params);
+		computeResults(
+				params);
 	}
 
 	public List<String> getParameters() {
@@ -74,13 +74,16 @@ public class LocalToHdfsCommand extends
 	}
 
 	public void setParameters(
-			String fileOrDirectory,
-			String hdfsHostPort,
-			String hdfsPath ) {
+			final String fileOrDirectory,
+			final String hdfsHostPort,
+			final String hdfsPath ) {
 		parameters = new ArrayList<String>();
-		parameters.add(fileOrDirectory);
-		parameters.add(hdfsHostPort);
-		parameters.add(hdfsPath);
+		parameters.add(
+				fileOrDirectory);
+		parameters.add(
+				hdfsHostPort);
+		parameters.add(
+				hdfsPath);
 	}
 
 	public IngestFormatPluginOptions getPluginFormats() {
@@ -88,7 +91,7 @@ public class LocalToHdfsCommand extends
 	}
 
 	public void setPluginFormats(
-			IngestFormatPluginOptions pluginFormats ) {
+			final IngestFormatPluginOptions pluginFormats ) {
 		this.pluginFormats = pluginFormats;
 	}
 
@@ -97,13 +100,13 @@ public class LocalToHdfsCommand extends
 	}
 
 	public void setLocalInputOptions(
-			LocalInputCommandLineOptions localInputOptions ) {
+			final LocalInputCommandLineOptions localInputOptions ) {
 		this.localInputOptions = localInputOptions;
 	}
 
 	@Override
 	public Void computeResults(
-			OperationParams params )
+			final OperationParams params )
 			throws Exception {
 		// Ensure we have all the required arguments
 		if (parameters.size() != 3) {
@@ -111,27 +114,32 @@ public class LocalToHdfsCommand extends
 					"Requires arguments: <file or directory> <hdfs host:port> <path to base directory to write to>");
 		}
 
-		String inputPath = parameters.get(0);
-		String hdfsHostPort = parameters.get(1);
-		String basePath = parameters.get(2);
+		final String inputPath = parameters.get(
+				0);
+		String hdfsHostPort = parameters.get(
+				1);
+		final String basePath = parameters.get(
+				2);
 
 		// Ensures that the url starts with hdfs://
-		if (!hdfsHostPort.contains("://")) {
+		if (!hdfsHostPort.contains(
+				"://")) {
 			hdfsHostPort = "hdfs://" + hdfsHostPort;
 		}
 
 		// Ingest Plugins
-		Map<String, AvroFormatPlugin<?, ?>> ingestPlugins = pluginFormats.createAvroPlugins();
+		final Map<String, AvroFormatPlugin<?, ?>> ingestPlugins = pluginFormats.createAvroPlugins();
 
 		// Driver
-		StageToHdfsDriver driver = new StageToHdfsDriver(
+		final StageToHdfsDriver driver = new StageToHdfsDriver(
 				ingestPlugins,
 				hdfsHostPort,
 				basePath,
 				localInputOptions);
 
 		// Execute
-		if (!driver.runOperation(inputPath)) {
+		if (!driver.runOperation(
+				inputPath)) {
 			throw new RuntimeException(
 					"Ingest failed to execute");
 		}

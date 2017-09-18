@@ -2,15 +2,17 @@ package mil.nga.giat.geowave.service.rest;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.restlet.data.Form;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
+import org.restlet.resource.Delete;
 import org.restlet.resource.Get;
+import org.restlet.resource.Patch;
 import org.restlet.resource.Post;
+import org.restlet.resource.Put;
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,9 +20,9 @@ import org.slf4j.LoggerFactory;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
 
-import mil.nga.giat.geowave.core.cli.annotations.GeowaveOperation;
-import mil.nga.giat.geowave.core.cli.api.DefaultOperation;
 import mil.nga.giat.geowave.core.cli.api.OperationParams;
+import mil.nga.giat.geowave.core.cli.api.ServiceEnabledCommand;
+import mil.nga.giat.geowave.core.cli.api.ServiceEnabledCommand.HttpMethod;
 import mil.nga.giat.geowave.core.cli.operations.config.options.ConfigOptions;
 import mil.nga.giat.geowave.core.cli.parser.ManualOperationParams;
 import scala.actors.threadpool.Arrays;
@@ -30,18 +32,19 @@ public class GeoWaveOperationServiceWrapper<T> extends
 {
 	private final static Logger LOGGER = LoggerFactory.getLogger(
 			GeoWaveOperationServiceWrapper.class);
-	private final DefaultOperation<T> operation;
+	private final ServiceEnabledCommand<T> operation;
 
 	public GeoWaveOperationServiceWrapper(
-			final DefaultOperation<T> operation ) {
+			final ServiceEnabledCommand<T> operation ) {
 		this.operation = operation;
 	}
 
 	@Get("json")
 	public T restGet()
 			throws Exception {
-		if (operation.getClass().getAnnotation(
-				GeowaveOperation.class).restEnabled() == GeowaveOperation.RestEnabledType.GET) {
+		if (HttpMethod.GET.equals(
+				operation.getMethod())) {
+			// TODO is this null correct?
 			return handleRequest(
 					null);
 		}
@@ -56,9 +59,64 @@ public class GeoWaveOperationServiceWrapper<T> extends
 	public T restPost(
 			final Representation request )
 			throws Exception {
-		if (operation.getClass().getAnnotation(
-				GeowaveOperation.class).restEnabled() == GeowaveOperation.RestEnabledType.POST) {
+		if (HttpMethod.POST.equals(
+				operation.getMethod())) {
 
+			final Form form = new Form(
+					request);
+			return handleRequest(
+					form);
+		}
+		else {
+			setStatus(
+					Status.CLIENT_ERROR_METHOD_NOT_ALLOWED);
+			return null;
+		}
+	}
+
+	@Delete("form:json")
+	public T restDelete(
+			final Representation request )
+			throws Exception {
+		if (HttpMethod.DELETE.equals(
+				operation.getMethod())) {
+
+			final Form form = new Form(
+					request);
+			return handleRequest(
+					form);
+		}
+		else {
+			setStatus(
+					Status.CLIENT_ERROR_METHOD_NOT_ALLOWED);
+			return null;
+		}
+	}
+
+	@Patch("form:json")
+	public T restPatch(
+			final Representation request )
+			throws Exception {
+		if (HttpMethod.PATCH.equals(
+				operation.getMethod())) {
+			final Form form = new Form(
+					request);
+			return handleRequest(
+					form);
+		}
+		else {
+			setStatus(
+					Status.CLIENT_ERROR_METHOD_NOT_ALLOWED);
+			return null;
+		}
+	}
+
+	@Put("form:json")
+	public T restPut(
+			final Representation request )
+			throws Exception {
+		if (HttpMethod.PUT.equals(
+				operation.getMethod())) {
 			final Form form = new Form(
 					request);
 			return handleRequest(
@@ -87,33 +145,32 @@ public class GeoWaveOperationServiceWrapper<T> extends
 	 * @throws InstantiationException
 	 */
 	private void injectParameters(
-			final Form form ,
-			Object instance)
+			final Form form,
+			final Object instance )
 			throws MissingArgumentException,
 			InstantiationException,
 			IllegalAccessException {
-		
+
 		for (final Field field : FieldUtils.getFieldsWithAnnotation(
 				// TODO Take out this loop?
 				instance.getClass(),
 				Parameter.class)) {
-				processField(
+			processField(
 					form,
 					instance,
 					field);
 
-
 		}
 
-		 for (final Field field : FieldUtils.getFieldsWithAnnotation(
-		 // TODO Take out this loop?
-				 instance.getClass(),
-		 ParametersDelegate.class)) {
-		 processField(
-		 form,
-		 instance,
-		 field);
-		 }
+		for (final Field field : FieldUtils.getFieldsWithAnnotation(
+				// TODO Take out this loop?
+				instance.getClass(),
+				ParametersDelegate.class)) {
+			processField(
+					form,
+					instance,
+					field);
+		}
 	}
 
 	private void processField(
@@ -124,33 +181,35 @@ public class GeoWaveOperationServiceWrapper<T> extends
 			InstantiationException,
 			IllegalAccessException {
 		final Parameter parameter = field.getAnnotation(
-						Parameter.class);
+				Parameter.class);
 
 		ParametersDelegate parametersDelegate = null;
 		parametersDelegate = field.getAnnotation(
-						ParametersDelegate.class);
-		
+				ParametersDelegate.class);
+
 		if (parameter != null) {
-			if(field.getType().isEnum()){
+			if (field.getType().isEnum()) {
 				final String value = getFieldValue(
 						form,
 						field.getName());
 				if (value != null) {
 					field.setAccessible(
-									true); // Get around restrictions on
-										   // private fields. JCommander
-										   // does this too.
-					try {					
-						Enum<?> retv = Enum.valueOf((Class<Enum>)field.getType(), value);
-				
+							true); // Get around restrictions on
+									// private fields. JCommander
+									// does this too.
+					try {
+						final Enum<?> retv = Enum.valueOf(
+								(Class<Enum>) field.getType(),
+								value);
+
 						field.set(
-							instance,
-							retv);
-						}
+								instance,
+								retv);
+					}
 					catch (final IllegalAccessException e) {
 						throw new RuntimeException(
 								e);
-					}				
+					}
 				}
 				else if (parameter.required()) {
 					throw new MissingArgumentException(
@@ -164,9 +223,9 @@ public class GeoWaveOperationServiceWrapper<T> extends
 						field.getName());
 				if (value != null) {
 					field.setAccessible(
-									true); // Get around restrictions on
-										   // private fields. JCommander
-										   // does this too.
+							true); // Get around restrictions on
+									// private fields. JCommander
+									// does this too.
 					try {
 						field.set(
 								instance,
@@ -234,11 +293,12 @@ public class GeoWaveOperationServiceWrapper<T> extends
 						field.getName());
 				if (value != null) {
 					field.setAccessible(
-									true);
+							true);
 					try {
 						field.set(
 								instance,
-								Long.valueOf(value));
+								Long.valueOf(
+										value));
 					}
 					catch (final IllegalAccessException e) {
 						throw new RuntimeException(
@@ -253,7 +313,7 @@ public class GeoWaveOperationServiceWrapper<T> extends
 			else if (field.getType() == List.class) {
 				field.setAccessible(
 						true);
-				String[] parameters = getFieldValues(
+				final String[] parameters = getFieldValues(
 						form,
 						field.getName());
 
@@ -274,12 +334,13 @@ public class GeoWaveOperationServiceWrapper<T> extends
 			}
 		}
 		else if (parametersDelegate != null) {
-			Object delegateObj = field.getType().newInstance();
+			final Object delegateObj = field.getType().newInstance();
 
 			injectParameters(
 					form,
 					delegateObj);
-			field.setAccessible(true);
+			field.setAccessible(
+					true);
 			field.set(
 					instance,
 					delegateObj);
@@ -295,7 +356,7 @@ public class GeoWaveOperationServiceWrapper<T> extends
 			val = form.getValuesArray(
 					name);
 		}
-		if (val == null || val.length == 0) {
+		if ((val == null) || (val.length == 0)) {
 			val = getQuery().getValuesArray(
 					name);
 		}
@@ -333,9 +394,11 @@ public class GeoWaveOperationServiceWrapper<T> extends
 				configFile);
 
 		try {
-			injectParameters(form,operation);
+			injectParameters(
+					form,
+					operation);
 		}
-		
+
 		catch (final MissingArgumentException e) {
 			setStatus(
 					Status.CLIENT_ERROR_BAD_REQUEST,

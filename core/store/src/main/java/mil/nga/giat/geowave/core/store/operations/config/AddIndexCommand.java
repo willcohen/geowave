@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -24,7 +24,6 @@ import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
 
 import mil.nga.giat.geowave.core.cli.annotations.GeowaveOperation;
-import mil.nga.giat.geowave.core.cli.annotations.RestParameters;
 import mil.nga.giat.geowave.core.cli.api.Command;
 import mil.nga.giat.geowave.core.cli.api.DefaultOperation;
 import mil.nga.giat.geowave.core.cli.api.OperationParams;
@@ -32,18 +31,16 @@ import mil.nga.giat.geowave.core.cli.operations.config.ConfigSection;
 import mil.nga.giat.geowave.core.cli.operations.config.options.ConfigOptions;
 import mil.nga.giat.geowave.core.store.operations.remote.options.IndexPluginOptions;
 
-@GeowaveOperation(name = "addindex", parentOperation = ConfigSection.class, restEnabled = GeowaveOperation.RestEnabledType.POST)
+@GeowaveOperation(name = "addindex", parentOperation = ConfigSection.class)
 @Parameters(commandDescription = "Configure an index for usage in GeoWave")
 public class AddIndexCommand extends
-		DefaultOperation<Void> implements
+		DefaultOperation implements
 		Command
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(AddIndexCommand.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(
+			AddIndexCommand.class);
 
 	@Parameter(description = "<name>", required = true)
-	@RestParameters(names = {
-		"name"
-	})
 	private List<String> parameters = new ArrayList<String>();
 
 	@Parameter(names = {
@@ -67,7 +64,8 @@ public class AddIndexCommand extends
 
 		// Load SPI options for the given type into pluginOptions.
 		if (type != null) {
-			pluginOptions.selectPlugin(type);
+			pluginOptions.selectPlugin(
+					type);
 		}
 		else {
 			// Try to load the 'default' options.
@@ -78,14 +76,16 @@ public class AddIndexCommand extends
 					configFile,
 					null);
 
-			final String defaultIndex = existingProps.getProperty(IndexPluginOptions.DEFAULT_PROPERTY_NAMESPACE);
+			final String defaultIndex = existingProps.getProperty(
+					IndexPluginOptions.DEFAULT_PROPERTY_NAMESPACE);
 
 			// Load the default index.
 			if (defaultIndex != null) {
 				try {
 					if (pluginOptions.load(
 							existingProps,
-							IndexPluginOptions.getIndexNamespace(defaultIndex))) {
+							IndexPluginOptions.getIndexNamespace(
+									defaultIndex))) {
 						// Set the required type option.
 						type = pluginOptions.getType();
 					}
@@ -105,7 +105,8 @@ public class AddIndexCommand extends
 	@Override
 	public void execute(
 			final OperationParams params ) {
-		computeResults(params);
+		computeResults(
+				params);
 	}
 
 	public IndexPluginOptions getPluginOptions() {
@@ -113,11 +114,13 @@ public class AddIndexCommand extends
 	}
 
 	public String getPluginName() {
-		return parameters.get(0);
+		return parameters.get(
+				0);
 	}
 
 	public String getNamespace() {
-		return IndexPluginOptions.getIndexNamespace(getPluginName());
+		return IndexPluginOptions.getIndexNamespace(
+				getPluginName());
 	}
 
 	public List<String> getParameters() {
@@ -127,7 +130,8 @@ public class AddIndexCommand extends
 	public void setParameters(
 			final String indexName ) {
 		parameters = new ArrayList<String>();
-		parameters.add(indexName);
+		parameters.add(
+				indexName);
 	}
 
 	public Boolean getMakeDefault() {
@@ -153,13 +157,13 @@ public class AddIndexCommand extends
 		this.pluginOptions = pluginOptions;
 	}
 
-	@Override
-	public Void computeResults(
+	public void computeResults(
 			final OperationParams params ) {
 
 		// Ensure that a name is chosen.
 		if (getParameters().size() < 1) {
-			System.out.println(getParameters());
+			System.out.println(
+					getParameters());
 			throw new ParameterException(
 					"Must specify index name");
 		}
@@ -190,7 +194,8 @@ public class AddIndexCommand extends
 				namespace);
 
 		// Make default?
-		if (Boolean.TRUE.equals(makeDefault)) {
+		if (Boolean.TRUE.equals(
+				makeDefault)) {
 
 			existingProps.setProperty(
 					IndexPluginOptions.DEFAULT_PROPERTY_NAMESPACE,
@@ -201,7 +206,5 @@ public class AddIndexCommand extends
 		ConfigOptions.writeProperties(
 				propFile,
 				existingProps);
-
-		return null;
 	}
 }

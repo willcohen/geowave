@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -19,8 +19,8 @@ import org.slf4j.LoggerFactory;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.ParametersDelegate;
 
-import mil.nga.giat.geowave.core.cli.api.DefaultOperation;
 import mil.nga.giat.geowave.core.cli.api.OperationParams;
+import mil.nga.giat.geowave.core.cli.api.ServiceEnabledCommand;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
@@ -32,32 +32,37 @@ import mil.nga.giat.geowave.core.store.operations.remote.options.StoreLoader;
 /**
  * Common methods for dumping, manipulating and calculating stats.
  */
-public abstract class AbstractStatsCommand extends
-		DefaultOperation
+public abstract class AbstractStatsCommand<T> extends
+		ServiceEnabledCommand<T>
 {
-	private static final Logger LOGGER = LoggerFactory.getLogger(RecalculateStatsCommand.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(
+			RecalculateStatsCommand.class);
 
 	@ParametersDelegate
-	private StatsCommandLineOptions statsOptions = new StatsCommandLineOptions();
+	private final StatsCommandLineOptions statsOptions = new StatsCommandLineOptions();
 
 	private DataStorePluginOptions inputStoreOptions = null;
 
 	public void run(
-			OperationParams params,
-			List<String> parameters ) {
+			final OperationParams params,
+			final List<String> parameters ) {
 
-		String storeName = parameters.get(0);
+		final String storeName = parameters.get(
+				0);
 		String adapterIdName = null;
 		if (parameters.size() > 1) {
-			adapterIdName = parameters.get(1);
+			adapterIdName = parameters.get(
+					1);
 		}
 
 		// Attempt to load input store if not already provided (test purposes).
 
 		if (inputStoreOptions == null) {
-			StoreLoader inputStoreLoader = new StoreLoader(
+			final StoreLoader inputStoreLoader = new StoreLoader(
 					storeName);
-			if (!inputStoreLoader.loadFromConfig(getGeoWaveConfigFile(params))) {
+			if (!inputStoreLoader.loadFromConfig(
+					getGeoWaveConfigFile(
+							params))) {
 				throw new ParameterException(
 						"Cannot find store name: " + inputStoreLoader.getStoreName());
 			}
@@ -66,12 +71,13 @@ public abstract class AbstractStatsCommand extends
 
 		try {
 			// Various stores needed
-			AdapterStore adapterStore = inputStoreOptions.createAdapterStore();
+			final AdapterStore adapterStore = inputStoreOptions.createAdapterStore();
 
 			if (adapterIdName != null) {
 				final ByteArrayId adapterId = new ByteArrayId(
 						adapterIdName);
-				DataAdapter<?> adapter = adapterStore.getAdapter(adapterId);
+				DataAdapter<?> adapter = adapterStore.getAdapter(
+						adapterId);
 				if (adapter != null) {
 					performStatsCommand(
 							inputStoreOptions,
@@ -81,17 +87,19 @@ public abstract class AbstractStatsCommand extends
 				else {
 					// If this adapter is not known, provide list of available
 					// adapters
-					LOGGER.error("Unknown adapter " + adapterId);
+					LOGGER.error(
+							"Unknown adapter " + adapterId);
 					final CloseableIterator<DataAdapter<?>> it = adapterStore.getAdapters();
 					final StringBuffer buffer = new StringBuffer();
 					while (it.hasNext()) {
 						adapter = it.next();
 						buffer.append(
 								adapter.getAdapterId().getString()).append(
-								' ');
+										' ');
 					}
 					it.close();
-					LOGGER.info("Available adapters: " + buffer.toString());
+					LOGGER.info(
+							"Available adapters: " + buffer.toString());
 				}
 			}
 			else {
@@ -103,8 +111,9 @@ public abstract class AbstractStatsCommand extends
 								inputStoreOptions,
 								adapter,
 								statsOptions)) {
-							LOGGER.info("Unable to calculate statistics for adapter: "
-									+ adapter.getAdapterId().getString());
+							LOGGER.info(
+									"Unable to calculate statistics for adapter: "
+											+ adapter.getAdapterId().getString());
 						}
 					}
 				}
@@ -130,7 +139,7 @@ public abstract class AbstractStatsCommand extends
 	/**
 	 * Helper method to extract a list of authorizations from a string passed in
 	 * from the command line
-	 * 
+	 *
 	 * @param auths
 	 *            - String to be parsed
 	 */
@@ -139,7 +148,8 @@ public abstract class AbstractStatsCommand extends
 		if ((auths == null) || (auths.length() == 0)) {
 			return new String[0];
 		}
-		final String[] authsArray = auths.split(",");
+		final String[] authsArray = auths.split(
+				",");
 		for (int i = 0; i < authsArray.length; i++) {
 			authsArray[i] = authsArray[i].trim();
 		}
@@ -147,7 +157,7 @@ public abstract class AbstractStatsCommand extends
 	}
 
 	public void setInputStoreOptions(
-			DataStorePluginOptions inputStoreOptions ) {
+			final DataStorePluginOptions inputStoreOptions ) {
 		this.inputStoreOptions = inputStoreOptions;
 	}
 

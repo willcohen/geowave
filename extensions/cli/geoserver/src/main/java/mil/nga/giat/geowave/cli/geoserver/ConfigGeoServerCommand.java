@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -32,9 +32,8 @@ import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
 
 import mil.nga.giat.geowave.core.cli.annotations.GeowaveOperation;
-import mil.nga.giat.geowave.core.cli.api.Command;
-import mil.nga.giat.geowave.core.cli.api.DefaultOperation;
 import mil.nga.giat.geowave.core.cli.api.OperationParams;
+import mil.nga.giat.geowave.core.cli.api.ServiceEnabledCommand;
 import mil.nga.giat.geowave.core.cli.converters.GeoWaveBaseConverter;
 import mil.nga.giat.geowave.core.cli.converters.OptionalPasswordConverter;
 import mil.nga.giat.geowave.core.cli.operations.config.ConfigSection;
@@ -43,11 +42,10 @@ import mil.nga.giat.geowave.core.cli.prefix.JCommanderPrefixTranslator;
 import mil.nga.giat.geowave.core.cli.prefix.JCommanderTranslationMap;
 import mil.nga.giat.geowave.core.cli.prefix.TranslationEntry;
 
-@GeowaveOperation(name = "geoserver", parentOperation = ConfigSection.class, restEnabled = GeowaveOperation.RestEnabledType.POST)
+@GeowaveOperation(name = "geoserver", parentOperation = ConfigSection.class)
 @Parameters(commandDescription = "Create a local configuration for GeoServer")
 public class ConfigGeoServerCommand extends
-		DefaultOperation<Void> implements
-		Command
+		ServiceEnabledCommand<Void>
 {
 	@Parameter(names = {
 		"-u",
@@ -59,7 +57,8 @@ public class ConfigGeoServerCommand extends
 	@Parameter(names = {
 		"-p",
 		"--password"
-	}, description = "GeoServer Password - " + OptionalPasswordConverter.DEFAULT_PASSWORD_DESCRIPTION, converter = OptionalPasswordConverter.class)
+	}, description = "GeoServer Password - "
+			+ OptionalPasswordConverter.DEFAULT_PASSWORD_DESCRIPTION, converter = OptionalPasswordConverter.class)
 	private String pass;
 
 	@Parameter(names = {
@@ -69,7 +68,7 @@ public class ConfigGeoServerCommand extends
 	private String workspace;
 
 	@Parameter(description = "GeoServer URL (for example http://localhost:8080/geoserver or https://localhost:8443/geoserver), or simply host:port and appropriate assumptions are made")
-	private List<String> parameters = new ArrayList<String>();
+	private final List<String> parameters = new ArrayList<String>();
 	private String url = null;
 
 	@ParametersDelegate
@@ -77,28 +76,35 @@ public class ConfigGeoServerCommand extends
 
 	@Override
 	public boolean prepare(
-			OperationParams params ) {
+			final OperationParams params ) {
 		boolean retval = true;
-		retval |= super.prepare(params);
+		retval |= super.prepare(
+				params);
 
-		String username = getName();
-		String password = getPass();
+		final String username = getName();
+		final String password = getPass();
 
-		boolean usernameSpecified = username != null && !"".equals(username.trim());
-		boolean passwordSpecified = password != null && !"".equals(password.trim());
+		final boolean usernameSpecified = (username != null) && !"".equals(
+				username.trim());
+		final boolean passwordSpecified = (password != null) && !"".equals(
+				password.trim());
 		if (usernameSpecified || passwordSpecified) {
 			if (usernameSpecified && !passwordSpecified) {
-				setPass(GeoWaveBaseConverter.promptAndReadPassword("Please enter a password for username [" + username
-						+ "]: "));
-				if (getPass() == null || "".equals(getPass().trim())) {
+				setPass(
+						GeoWaveBaseConverter.promptAndReadPassword(
+								"Please enter a password for username [" + username + "]: "));
+				if ((getPass() == null) || "".equals(
+						getPass().trim())) {
 					throw new ParameterException(
 							"Password cannot be null or empty if username is specified");
 				}
 			}
 			else if (passwordSpecified && !usernameSpecified) {
-				setName(GeoWaveBaseConverter
-						.promptAndReadValue("Please enter a username associated with specified password: "));
-				if (getName() == null || "".equals(getName().trim())) {
+				setName(
+						GeoWaveBaseConverter.promptAndReadValue(
+								"Please enter a username associated with specified password: "));
+				if ((getName() == null) || "".equals(
+						getName().trim())) {
 					throw new ParameterException(
 							"Username cannot be null or empty if password is specified");
 				}
@@ -110,15 +116,17 @@ public class ConfigGeoServerCommand extends
 
 	@Override
 	public void execute(
-			OperationParams params )
+			final OperationParams params )
 			throws Exception {
 
 		if (parameters.size() != 1) {
 			throw new ParameterException(
 					"Requires argument: <GeoServer URL>");
 		}
-		url = parameters.get(0);
-		Properties existingProps = getGeoWaveConfigProperties(params);
+		url = parameters.get(
+				0);
+		final Properties existingProps = getGeoWaveConfigProperties(
+				params);
 
 		// all switches are optional
 		if (url != null) {
@@ -146,11 +154,13 @@ public class ConfigGeoServerCommand extends
 		}
 
 		// save properties from ssl configurations
-		sslConfigOptions.saveProperties(existingProps);
+		sslConfigOptions.saveProperties(
+				existingProps);
 
 		// Write properties file
 		ConfigOptions.writeProperties(
-				getGeoWaveConfigFile(params),
+				getGeoWaveConfigFile(
+						params),
 				existingProps,
 				this.getClass(),
 				GEOSERVER_NAMESPACE_PREFIX);
@@ -161,8 +171,8 @@ public class ConfigGeoServerCommand extends
 	}
 
 	public void setName(
-			String name ) {
-		this.username = name;
+			final String name ) {
+		username = name;
 	}
 
 	public String getPass() {
@@ -170,7 +180,7 @@ public class ConfigGeoServerCommand extends
 	}
 
 	public void setPass(
-			String pass ) {
+			final String pass ) {
 		this.pass = pass;
 	}
 
@@ -179,7 +189,7 @@ public class ConfigGeoServerCommand extends
 	}
 
 	public void setWorkspace(
-			String workspace ) {
+			final String workspace ) {
 		this.workspace = workspace;
 	}
 
@@ -196,10 +206,11 @@ public class ConfigGeoServerCommand extends
 	public String usage() {
 		StringBuilder builder = new StringBuilder();
 
-		List<String> nameArray = new ArrayList<String>();
-		JCommanderPrefixTranslator translator = new JCommanderPrefixTranslator();
-		translator.addObject(this);
-		JCommanderTranslationMap map = translator.translate();
+		final List<String> nameArray = new ArrayList<String>();
+		final JCommanderPrefixTranslator translator = new JCommanderPrefixTranslator();
+		translator.addObject(
+				this);
+		final JCommanderTranslationMap map = translator.translate();
 		map.createFacadeObjects();
 
 		// Copy default parameters over for help display.
@@ -207,65 +218,79 @@ public class ConfigGeoServerCommand extends
 
 		JCommander jc = new JCommander();
 
-		Map<String, TranslationEntry> translations = map.getEntries();
-		for (Object obj : map.getObjects()) {
-			for (Field field : obj.getClass().getDeclaredFields()) {
-				TranslationEntry tEntry = translations.get(field.getName());
-				if (tEntry != null && tEntry.getObject() instanceof ConfigGeoServerCommand) {
-					jc.addObject(obj);
+		final Map<String, TranslationEntry> translations = map.getEntries();
+		for (final Object obj : map.getObjects()) {
+			for (final Field field : obj.getClass().getDeclaredFields()) {
+				final TranslationEntry tEntry = translations.get(
+						field.getName());
+				if ((tEntry != null) && (tEntry.getObject() instanceof ConfigGeoServerCommand)) {
+					jc.addObject(
+							obj);
 					break;
 				}
 			}
 		}
 
-		String programName = StringUtils.join(
+		final String programName = StringUtils.join(
 				nameArray,
 				" ");
-		jc.setProgramName(programName);
-		jc.usage(builder);
+		jc.setProgramName(
+				programName);
+		jc.usage(
+				builder);
 
 		// Trim excess newlines.
-		String operations = builder.toString().trim();
+		final String operations = builder.toString().trim();
 
 		builder = new StringBuilder();
-		builder.append(operations);
-		builder.append("\n\n");
-		builder.append("  ");
+		builder.append(
+				operations);
+		builder.append(
+				"\n\n");
+		builder.append(
+				"  ");
 
 		jc = new JCommander();
 
-		for (Object obj : map.getObjects()) {
-			for (Field field : obj.getClass().getDeclaredFields()) {
-				TranslationEntry tEntry = translations.get(field.getName());
-				if (tEntry != null && !(tEntry.getObject() instanceof ConfigGeoServerCommand)) {
-					Parameters parameters = tEntry.getObject().getClass().getAnnotation(
+		for (final Object obj : map.getObjects()) {
+			for (final Field field : obj.getClass().getDeclaredFields()) {
+				final TranslationEntry tEntry = translations.get(
+						field.getName());
+				if ((tEntry != null) && !(tEntry.getObject() instanceof ConfigGeoServerCommand)) {
+					final Parameters parameters = tEntry.getObject().getClass().getAnnotation(
 							Parameters.class);
 					if (parameters != null) {
-						builder.append(parameters.commandDescription());
+						builder.append(
+								parameters.commandDescription());
 					}
 					else {
-						builder.append("Additional Parameters");
+						builder.append(
+								"Additional Parameters");
 					}
-					jc.addObject(obj);
+					jc.addObject(
+							obj);
 					break;
 				}
 			}
 		}
 
-		jc.setProgramName(programName);
-		jc.usage(builder);
-		builder.append("\n\n");
+		jc.setProgramName(
+				programName);
+		jc.usage(
+				builder);
+		builder.append(
+				"\n\n");
 
 		return builder.toString().trim();
 	}
 
 	@Override
 	public Void computeResults(
-			OperationParams params )
+			final OperationParams params )
 			throws Exception {
-		File propFile = (File) params.getContext().get(
+		final File propFile = (File) params.getContext().get(
 				ConfigOptions.PROPERTIES_FILE_CONTEXT);
-		Properties existingProps = ConfigOptions.loadProperties(
+		final Properties existingProps = ConfigOptions.loadProperties(
 				propFile,
 				null);
 

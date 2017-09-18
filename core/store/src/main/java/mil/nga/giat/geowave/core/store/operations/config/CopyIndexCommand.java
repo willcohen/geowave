@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -9,8 +9,6 @@
  * http://www.apache.org/licenses/LICENSE-2.0.txt
  ******************************************************************************/
 package mil.nga.giat.geowave.core.store.operations.config;
-
-import static mil.nga.giat.geowave.core.cli.annotations.GeowaveOperation.RestEnabledType.POST;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -23,29 +21,18 @@ import com.beust.jcommander.Parameters;
 import com.beust.jcommander.ParametersDelegate;
 
 import mil.nga.giat.geowave.core.cli.annotations.GeowaveOperation;
-import mil.nga.giat.geowave.core.cli.annotations.RestParameters;
-import mil.nga.giat.geowave.core.cli.api.Command;
-import mil.nga.giat.geowave.core.cli.api.DefaultOperation;
 import mil.nga.giat.geowave.core.cli.api.OperationParams;
+import mil.nga.giat.geowave.core.cli.api.ServiceEnabledCommand;
 import mil.nga.giat.geowave.core.cli.operations.config.ConfigSection;
 import mil.nga.giat.geowave.core.cli.operations.config.options.ConfigOptions;
 import mil.nga.giat.geowave.core.store.operations.remote.options.IndexPluginOptions;
 
-@GeowaveOperation(name = "cpindex", parentOperation = ConfigSection.class, restEnabled = POST)
+@GeowaveOperation(name = "cpindex", parentOperation = ConfigSection.class)
 @Parameters(commandDescription = "Copy and modify existing index configuration")
 public class CopyIndexCommand extends
-		DefaultOperation<Void> implements
-		Command
+		ServiceEnabledCommand<Void>
 {
-	private static int SUCCESS = 0;
-	private static int USAGE_ERROR = -1;
-	private static int INDEX_EXISTS = -2;
-
 	@Parameter(description = "<name> <new name>")
-	@RestParameters(names = {
-		"name",
-		"newname"
-	})
 	private List<String> parameters = new ArrayList<String>();
 
 	@Parameter(names = {
@@ -73,10 +60,12 @@ public class CopyIndexCommand extends
 		// Load the old index, so that we can override the values
 		String oldIndex = null;
 		if (parameters.size() >= 1) {
-			oldIndex = parameters.get(0);
+			oldIndex = parameters.get(
+					0);
 			if (!newPluginOptions.load(
 					existingProps,
-					IndexPluginOptions.getIndexNamespace(oldIndex))) {
+					IndexPluginOptions.getIndexNamespace(
+							oldIndex))) {
 				throw new ParameterException(
 						"Could not find index: " + oldIndex);
 			}
@@ -89,7 +78,8 @@ public class CopyIndexCommand extends
 	@Override
 	public void execute(
 			final OperationParams params ) {
-		copyIndex(params);
+		copyIndex(
+				params);
 
 	}
 
@@ -98,7 +88,8 @@ public class CopyIndexCommand extends
 			final OperationParams params ) {
 
 		try {
-			copyIndex(params);
+			copyIndex(
+					params);
 		}
 		catch (WritePropertiesException | ParameterException e) {
 			// TODO GEOWAVE-rest-project server error status message
@@ -124,8 +115,10 @@ public class CopyIndexCommand extends
 		}
 
 		// This is the new index name.
-		final String newIndex = parameters.get(1);
-		final String newIndexNamespace = IndexPluginOptions.getIndexNamespace(newIndex);
+		final String newIndex = parameters.get(
+				1);
+		final String newIndexNamespace = IndexPluginOptions.getIndexNamespace(
+				newIndex);
 
 		// Make sure we're not already in the index.
 		final IndexPluginOptions existPlugin = new IndexPluginOptions();
@@ -142,7 +135,8 @@ public class CopyIndexCommand extends
 				newIndexNamespace);
 
 		// Make default?
-		if (Boolean.TRUE.equals(makeDefault)) {
+		if (Boolean.TRUE.equals(
+				makeDefault)) {
 			existingProps.setProperty(
 					IndexPluginOptions.DEFAULT_PROPERTY_NAMESPACE,
 					newIndex);
@@ -165,8 +159,10 @@ public class CopyIndexCommand extends
 			final String existingIndex,
 			final String newIndex ) {
 		parameters = new ArrayList<String>();
-		parameters.add(existingIndex);
-		parameters.add(newIndex);
+		parameters.add(
+				existingIndex);
+		parameters.add(
+				newIndex);
 	}
 
 	private static class WritePropertiesException extends

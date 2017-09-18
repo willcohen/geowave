@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -14,9 +14,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONException;
-import net.sf.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,23 +31,28 @@ import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
 import mil.nga.giat.geowave.core.store.operations.remote.options.DataStorePluginOptions;
 import mil.nga.giat.geowave.core.store.operations.remote.options.StatsCommandLineOptions;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONException;
+import net.sf.json.JSONObject;
 
-@GeowaveOperation(name = "liststats", parentOperation = RemoteSection.class, restEnabled = GeowaveOperation.RestEnabledType.POST)
+@GeowaveOperation(name = "liststats", parentOperation = RemoteSection.class)
 @Parameters(commandDescription = "Print statistics of an existing GeoWave dataset to standard output.  ")
 public class ListStatsCommand extends
-		AbstractStatsCommand implements
+		AbstractStatsCommand<Void> implements
 		Command
 {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ListStatsCommand.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(
+			ListStatsCommand.class);
 
 	@Parameter(description = "<store name> [<adapter name>]")
 	private List<String> parameters = new ArrayList<String>();
 
 	@Override
 	public void execute(
-			OperationParams params ) {
-		computeResults(params);
+			final OperationParams params ) {
+		computeResults(
+				params);
 	}
 
 	@Override
@@ -65,15 +67,17 @@ public class ListStatsCommand extends
 					"Provided adapter is null");
 		}
 
-		DataStatisticsStore statsStore = storeOptions.createDataStatisticsStore();
-		final String[] authorizations = getAuthorizations(statsOptions.getAuthorizations());
+		final DataStatisticsStore statsStore = storeOptions.createDataStatisticsStore();
+		final String[] authorizations = getAuthorizations(
+				statsOptions.getAuthorizations());
 
-		StringBuilder builder = new StringBuilder();
+		final StringBuilder builder = new StringBuilder();
 
-		try (CloseableIterator<DataStatistics<?>> statsIt = statsStore.getAllDataStatistics(authorizations)) {
+		try (CloseableIterator<DataStatistics<?>> statsIt = statsStore.getAllDataStatistics(
+				authorizations)) {
 			if (statsOptions.getJsonFormatFlag()) {
-				JSONArray resultsArray = new JSONArray();
-				JSONObject outputObject = new JSONObject();
+				final JSONArray resultsArray = new JSONArray();
+				final JSONObject outputObject = new JSONObject();
 
 				try {
 					// Output as JSON formatted strings
@@ -86,12 +90,14 @@ public class ListStatsCommand extends
 								adapter.getAdapterId())) {
 							continue;
 						}
-						resultsArray.add(stats.toJSONObject());
+						resultsArray.add(
+								stats.toJSONObject());
 					}
 					outputObject.put(
 							"stats",
 							resultsArray);
-					builder.append(outputObject.toString());
+					builder.append(
+							outputObject.toString());
 				}
 				catch (final JSONException ex) {
 					LOGGER.error(
@@ -107,13 +113,18 @@ public class ListStatsCommand extends
 							adapter.getAdapterId())) {
 						continue;
 					}
-					builder.append("[");
-					builder.append(String.format(
-							"%1$-20s",
-							stats.getStatisticsId().getString()));
-					builder.append("] ");
-					builder.append(stats.toString());
-					builder.append("\n");
+					builder.append(
+							"[");
+					builder.append(
+							String.format(
+									"%1$-20s",
+									stats.getStatisticsId().getString()));
+					builder.append(
+							"] ");
+					builder.append(
+							stats.toString());
+					builder.append(
+							"\n");
 				}
 			}
 			JCommander.getConsole().println(
@@ -129,18 +140,20 @@ public class ListStatsCommand extends
 	}
 
 	public void setParameters(
-			String storeName,
-			String adapterName ) {
-		this.parameters = new ArrayList<String>();
-		this.parameters.add(storeName);
+			final String storeName,
+			final String adapterName ) {
+		parameters = new ArrayList<String>();
+		parameters.add(
+				storeName);
 		if (adapterName != null) {
-			this.parameters.add(adapterName);
+			parameters.add(
+					adapterName);
 		}
 	}
 
 	@Override
 	public Void computeResults(
-			OperationParams params ) {
+			final OperationParams params ) {
 		// Ensure we have all the required arguments
 		if (parameters.size() < 1) {
 			throw new ParameterException(

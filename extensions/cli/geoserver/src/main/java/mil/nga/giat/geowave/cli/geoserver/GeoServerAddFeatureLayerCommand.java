@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -16,22 +16,20 @@ import java.util.List;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import mil.nga.giat.geowave.core.cli.annotations.GeowaveOperation;
-import mil.nga.giat.geowave.core.cli.api.Command;
-import mil.nga.giat.geowave.core.cli.api.DefaultOperation;
-import mil.nga.giat.geowave.core.cli.api.OperationParams;
-import net.sf.json.JSONObject;
-
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 
-@GeowaveOperation(name = "addfl", parentOperation = GeoServerSection.class, restEnabled = GeowaveOperation.RestEnabledType.POST)
+import mil.nga.giat.geowave.core.cli.annotations.GeowaveOperation;
+import mil.nga.giat.geowave.core.cli.api.OperationParams;
+import mil.nga.giat.geowave.core.cli.api.ServiceEnabledCommand;
+import net.sf.json.JSONObject;
+
+@GeowaveOperation(name = "addfl", parentOperation = GeoServerSection.class)
 @Parameters(commandDescription = "Add a GeoServer feature layer")
 public class GeoServerAddFeatureLayerCommand extends
-		DefaultOperation implements
-		Command
+		ServiceEnabledCommand<String>
 {
 	private GeoServerRestClient geoserverClient = null;
 
@@ -45,21 +43,23 @@ public class GeoServerAddFeatureLayerCommand extends
 		"-ds",
 		"--datastore"
 	}, required = true, description = "<datastore name>")
-	private String datastore = null;
+	private final String datastore = null;
 
 	@Parameter(description = "<layer name>")
-	private List<String> parameters = new ArrayList<String>();
+	private final List<String> parameters = new ArrayList<String>();
 	private String layerName = null;
 
 	@Override
 	public boolean prepare(
-			OperationParams params ) {
-		super.prepare(params);
+			final OperationParams params ) {
+		super.prepare(
+				params);
 		if (geoserverClient == null) {
 			// Create the rest client
 			geoserverClient = new GeoServerRestClient(
 					new GeoServerConfig(
-							getGeoWaveConfigFile(params)));
+							getGeoWaveConfigFile(
+									params)));
 		}
 
 		// Successfully prepared
@@ -68,35 +68,39 @@ public class GeoServerAddFeatureLayerCommand extends
 
 	@Override
 	public void execute(
-			OperationParams params )
+			final OperationParams params )
 			throws Exception {
 		JCommander.getConsole().println(
-				computeResults(params));
+				computeResults(
+						params));
 	}
 
 	@Override
 	public String computeResults(
-			OperationParams params ) {
+			final OperationParams params ) {
 		if (parameters.size() != 1) {
 			throw new ParameterException(
 					"Requires argument: <layer name>");
 		}
 
-		if (workspace == null || workspace.isEmpty()) {
+		if ((workspace == null) || workspace.isEmpty()) {
 			workspace = geoserverClient.getConfig().getWorkspace();
 		}
 
-		layerName = parameters.get(0);
+		layerName = parameters.get(
+				0);
 
-		Response addLayerResponse = geoserverClient.addFeatureLayer(
+		final Response addLayerResponse = geoserverClient.addFeatureLayer(
 				workspace,
 				datastore,
 				layerName,
 				null);
 
 		if (addLayerResponse.getStatus() == Status.CREATED.getStatusCode()) {
-			JSONObject listObj = JSONObject.fromObject(addLayerResponse.getEntity());
-			return "\nGeoServer add layer response " + layerName + ":" + listObj.toString(2);
+			final JSONObject listObj = JSONObject.fromObject(
+					addLayerResponse.getEntity());
+			return "\nGeoServer add layer response " + layerName + ":" + listObj.toString(
+					2);
 		}
 		return "Error adding GeoServer layer " + layerName + "; code = " + addLayerResponse.getStatus();
 	}

@@ -14,13 +14,13 @@ import com.beust.jcommander.ParametersDelegate;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-import mil.nga.giat.geowave.core.cli.annotations.GeowaveOperation;
-import mil.nga.giat.geowave.core.cli.api.DefaultOperation;
+import mil.nga.giat.geowave.core.cli.api.ServiceEnabledCommand;
 import scala.actors.threadpool.Arrays;
 
 public class SwaggerOperationParser<T>
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(SwaggerOperationParser.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(
+			SwaggerOperationParser.class);
 	/**
 	 * Reads Geowave CLI operations and parses class fields for particular
 	 * annotations ( @Parameter and @ParametersDelegate from JCommander) The
@@ -28,7 +28,7 @@ public class SwaggerOperationParser<T>
 	 * SwaggerApiParser
 	 */
 
-	private final DefaultOperation<T> operation;
+	private final ServiceEnabledCommand<T> operation;
 	private JsonObject json_obj = null;
 
 	public JsonObject getJsonObject() {
@@ -36,34 +36,40 @@ public class SwaggerOperationParser<T>
 	}
 
 	public SwaggerOperationParser(
-			DefaultOperation<T> op ) {
+			final ServiceEnabledCommand<T> op ) {
 		this.operation = op;
 		this.json_obj = parseParameters();
 	}
 
 	public JsonObject[] processField(
-			Field f ) {
+			final Field f ) {
 		Parameter parameter = null;
 		try {
-			parameter = f.getAnnotation(Parameter.class);
+			parameter = f.getAnnotation(
+					Parameter.class);
 		}
-		catch (NoClassDefFoundError e) {
-			LOGGER.error("Cannot get parameter",e);
+		catch (final NoClassDefFoundError e) {
+			LOGGER.error(
+					"Cannot get parameter",
+					e);
 		}
 
 		ParametersDelegate parametersDelegate = null;
 		try {
-			parametersDelegate = f.getAnnotation(ParametersDelegate.class);
+			parametersDelegate = f.getAnnotation(
+					ParametersDelegate.class);
 		}
-		catch (NoClassDefFoundError e) {
-			LOGGER.error("Cannot get parameter delegate", e);
+		catch (final NoClassDefFoundError e) {
+			LOGGER.error(
+					"Cannot get parameter delegate",
+					e);
 		}
 
 		if (parameter != null) {
-			JsonObject param_json = new JsonObject();
+			final JsonObject param_json = new JsonObject();
 
 			// first get the field name
-			String f_name = f.getName();
+			final String f_name = f.getName();
 			param_json.addProperty(
 					"name",
 					f_name);
@@ -74,15 +80,16 @@ public class SwaggerOperationParser<T>
 					"in",
 					"query");
 
-			String swaggerType = JavaToSwaggerType(f.getType());
-			String typeInfoForDescription = "";
+			final String swaggerType = JavaToSwaggerType(
+					f.getType());
+			final String typeInfoForDescription = "";
 			if (swaggerType == "array") {
 				// handle case for core params for a command
 				if (f.getName() == "parameters") {
 					param_json.addProperty(
 							"type",
 							swaggerType);
-					JsonObject items_json = new JsonObject();
+					final JsonObject items_json = new JsonObject();
 					items_json.addProperty(
 							"type",
 							"string");
@@ -94,10 +101,11 @@ public class SwaggerOperationParser<T>
 					param_json.addProperty(
 							"type",
 							swaggerType);
-					JsonObject items_json = new JsonObject();
+					final JsonObject items_json = new JsonObject();
 					items_json.addProperty(
 							"type",
-							JavaToSwaggerType(f.getType().getComponentType()));
+							JavaToSwaggerType(
+									f.getType().getComponentType()));
 					param_json.add(
 							"items",
 							items_json);
@@ -142,7 +150,7 @@ public class SwaggerOperationParser<T>
 			}
 
 			// find out if this parameter is required
-			if (parameter.required() || f_name == "parameters") {
+			if (parameter.required() || (f_name == "parameters")) {
 				param_json.addProperty(
 						"required",
 						true);
@@ -153,18 +161,25 @@ public class SwaggerOperationParser<T>
 						false);
 			}
 
-			return new JsonObject[]{param_json};
+			return new JsonObject[] {
+				param_json
+			};
 		}
 		else if (parametersDelegate != null) {
 			// return;
-			List<JsonObject> delegateList = new ArrayList<>(); 
-			for (Field field : FieldUtils.getAllFields(f.getType())) {
-				JsonObject[] fieldArray = processField(field);
-				if (fieldArray != null){
-					delegateList.addAll(Arrays.asList(fieldArray));
+			final List<JsonObject> delegateList = new ArrayList<>();
+			for (final Field field : FieldUtils.getAllFields(
+					f.getType())) {
+				final JsonObject[] fieldArray = processField(
+						field);
+				if (fieldArray != null) {
+					delegateList.addAll(
+							Arrays.asList(
+									fieldArray));
 				}
 			}
-			return delegateList.toArray(new JsonObject[0]);
+			return delegateList.toArray(
+					new JsonObject[0]);
 		}
 		return null;
 	}
@@ -173,15 +188,13 @@ public class SwaggerOperationParser<T>
 
 		// get the high level attributes from the annotation for the operation
 		// (name and description)
-		JsonObject op_json = new JsonObject();
-		GeowaveOperation gw_annotation = this.operation.getClass().getAnnotation(
-				GeowaveOperation.class);
-		String opId = gw_annotation.parentOperation().getName() + "." + gw_annotation.name();
+		final JsonObject op_json = new JsonObject();
+		final String opId = operation.getId();
 		op_json.addProperty(
 				"operationId",
 				opId);
 
-		Parameters command_annotation = this.operation.getClass().getAnnotation(
+		final Parameters command_annotation = this.operation.getClass().getAnnotation(
 				Parameters.class);
 		op_json.addProperty(
 				"description",
@@ -189,12 +202,15 @@ public class SwaggerOperationParser<T>
 
 		// iterate over the parameters for this operation and add them to the
 		// json object
-		JsonArray fields_obj = new JsonArray();
-		for (final Field field : FieldUtils.getAllFields(this.operation.getClass())) {
-			JsonObject[] field_obj_array = processField(field);
+		final JsonArray fields_obj = new JsonArray();
+		for (final Field field : FieldUtils.getAllFields(
+				this.operation.getClass())) {
+			final JsonObject[] field_obj_array = processField(
+					field);
 			if (field_obj_array != null) {
-				for (JsonObject field_obj : field_obj_array){
-				fields_obj.add(field_obj);
+				for (final JsonObject field_obj : field_obj_array) {
+					fields_obj.add(
+							field_obj);
 				}
 			}
 		}
@@ -203,7 +219,7 @@ public class SwaggerOperationParser<T>
 				fields_obj);
 
 		// build up the response codes for this operation
-		JsonObject resp_json = new JsonObject();
+		final JsonObject resp_json = new JsonObject();
 		JsonObject codes_json = new JsonObject();
 		codes_json.addProperty(
 				"description",
@@ -236,28 +252,28 @@ public class SwaggerOperationParser<T>
 	}
 
 	private String JavaToSwaggerType(
-			Class<?> type ) {
+			final Class<?> type ) {
 		// note: array and enum types require deeper handling and
 		// thus should be processed outside this method as well
 		if (type == String.class) {
 			return "string";
 		}
-		else if (type == Integer.class || type == int.class) {
+		else if ((type == Integer.class) || (type == int.class)) {
 			return "integer";
 		}
-		else if (type == long.class || type == Long.class){
+		else if ((type == long.class) || (type == Long.class)) {
 			return "long";
 		}
-		else if (type == Float.class || type == float.class) {
+		else if ((type == Float.class) || (type == float.class)) {
 			return "number";
 		}
-		else if (type == Boolean.class || type == boolean.class) {
+		else if ((type == Boolean.class) || (type == boolean.class)) {
 			return "boolean";
 		}
-		else if (type!=null && ((Class<?>) type).isEnum()) {
+		else if ((type != null) && ((Class<?>) type).isEnum()) {
 			return "enum";
 		}
-		else if (type == List.class || (type!=null && ((Class<?>) type).isArray())) {
+		else if ((type == List.class) || ((type != null) && ((Class<?>) type).isArray())) {
 			return "array";
 		}
 		return "string";

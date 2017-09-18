@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -12,9 +12,15 @@ package mil.nga.giat.geowave.cli.debug;
 
 import java.io.IOException;
 
+import org.geotools.filter.text.cql2.CQLException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
+
 import mil.nga.giat.geowave.adapter.vector.GeotoolsFeatureDataAdapter;
 import mil.nga.giat.geowave.core.cli.annotations.GeowaveOperation;
-import mil.nga.giat.geowave.core.cli.api.OperationParams;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStore;
@@ -22,19 +28,13 @@ import mil.nga.giat.geowave.core.store.query.QueryOptions;
 import mil.nga.giat.geowave.core.store.query.aggregate.CountAggregation;
 import mil.nga.giat.geowave.core.store.query.aggregate.CountResult;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.geotools.filter.text.cql2.CQLException;
-
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.Parameters;
-
 @GeowaveOperation(name = "serverCql", parentOperation = DebugSection.class)
 @Parameters(commandDescription = "cql server-side")
 public class CQLQuery extends
 		AbstractGeoWaveQuery
 {
-	private static Logger LOGGER = LoggerFactory.getLogger(CQLQuery.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(
+			CQLQuery.class);
 
 	@Parameter(names = "--cql", required = true, description = "CQL Filter executed client side")
 	private String cqlStr;
@@ -43,7 +43,7 @@ public class CQLQuery extends
 		"--useAggregation",
 		"-agg"
 	}, description = "Compute count on the server side")
-	private Boolean useAggregation = Boolean.FALSE;
+	private final Boolean useAggregation = Boolean.FALSE;
 
 	@Override
 	protected long runQuery(
@@ -98,7 +98,8 @@ public class CQLQuery extends
 							null))) {
 				while (it.hasNext()) {
 					if (debug) {
-						System.out.println(it.next());
+						System.out.println(
+								it.next());
 					}
 					else {
 						it.next();
@@ -118,12 +119,5 @@ public class CQLQuery extends
 			}
 			return count;
 		}
-	}
-
-	@Override
-	public Object computeResults(
-			OperationParams params ) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }

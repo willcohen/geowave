@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -45,7 +45,7 @@ public class StageOSMToHDFSCommand extends
 
 	@Override
 	public void execute(
-			OperationParams params )
+			final OperationParams params )
 			throws Exception {
 
 		// Ensure we have all the required arguments
@@ -54,46 +54,63 @@ public class StageOSMToHDFSCommand extends
 					"Requires arguments: <file or directory> <hdfs host:port> <path to base directory to write to>");
 		}
 
-		String inputPath = parameters.get(0);
-		String hdfsHostPort = parameters.get(1);
-		String basePath = parameters.get(2);
+		final String inputPath = parameters.get(
+				0);
+		String hdfsHostPort = parameters.get(
+				1);
+		final String basePath = parameters.get(
+				2);
 
 		// Ensures that the url starts with hdfs://
-		if (!hdfsHostPort.contains("://")) {
+		if (!hdfsHostPort.contains(
+				"://")) {
 			hdfsHostPort = "hdfs://" + hdfsHostPort;
 		}
 
-		if (!basePath.startsWith("/")) {
+		if (!basePath.startsWith(
+				"/")) {
 			throw new ParameterException(
 					"HDFS Base path must start with forward slash /");
 		}
 
 		// These are set as main parameter arguments, to keep consistency with
 		// GeoWave.
-		parserOptions.setIngestDirectory(inputPath);
-		parserOptions.setHdfsBasePath(basePath);
-		parserOptions.setNameNode(hdfsHostPort);
+		parserOptions.setIngestDirectory(
+				inputPath);
+		parserOptions.setHdfsBasePath(
+				basePath);
+		parserOptions.setNameNode(
+				hdfsHostPort);
 
-		OsmPbfParser osmPbfParser = new OsmPbfParser();
-		Configuration conf = osmPbfParser.stageData(parserOptions);
+		final OsmPbfParser osmPbfParser = new OsmPbfParser();
+		final Configuration conf = osmPbfParser.stageData(
+				parserOptions);
 
-		ContentSummary cs = getHDFSFileSummary(
+		final ContentSummary cs = getHDFSFileSummary(
 				conf,
 				basePath);
-		System.out.println("**************************************************");
-		System.out.println("Directories: " + cs.getDirectoryCount());
-		System.out.println("Files: " + cs.getFileCount());
-		System.out.println("Nodes size: " + getHDFSFileSummary(
-				conf,
-				parserOptions.getNodesBasePath()).getLength());
-		System.out.println("Ways size: " + getHDFSFileSummary(
-				conf,
-				parserOptions.getWaysBasePath()).getLength());
-		System.out.println("Relations size: " + getHDFSFileSummary(
-				conf,
-				parserOptions.getRelationsBasePath()).getLength());
-		System.out.println("**************************************************");
-		System.out.println("finished osmpbf ingest");
+		System.out.println(
+				"**************************************************");
+		System.out.println(
+				"Directories: " + cs.getDirectoryCount());
+		System.out.println(
+				"Files: " + cs.getFileCount());
+		System.out.println(
+				"Nodes size: " + getHDFSFileSummary(
+						conf,
+						parserOptions.getNodesBasePath()).getLength());
+		System.out.println(
+				"Ways size: " + getHDFSFileSummary(
+						conf,
+						parserOptions.getWaysBasePath()).getLength());
+		System.out.println(
+				"Relations size: " + getHDFSFileSummary(
+						conf,
+						parserOptions.getRelationsBasePath()).getLength());
+		System.out.println(
+				"**************************************************");
+		System.out.println(
+				"finished osmpbf ingest");
 	}
 
 	public List<String> getParameters() {
@@ -101,13 +118,16 @@ public class StageOSMToHDFSCommand extends
 	}
 
 	public void setParameters(
-			String fileOrDirectory,
-			String hdfsHostPort,
-			String hdfsPath ) {
+			final String fileOrDirectory,
+			final String hdfsHostPort,
+			final String hdfsPath ) {
 		parameters = new ArrayList<String>();
-		parameters.add(fileOrDirectory);
-		parameters.add(hdfsHostPort);
-		parameters.add(hdfsPath);
+		parameters.add(
+				fileOrDirectory);
+		parameters.add(
+				hdfsHostPort);
+		parameters.add(
+				hdfsPath);
 	}
 
 	public OsmPbfParserOptions getParserOptions() {
@@ -115,26 +135,22 @@ public class StageOSMToHDFSCommand extends
 	}
 
 	public void setParserOptions(
-			OsmPbfParserOptions parserOptions ) {
+			final OsmPbfParserOptions parserOptions ) {
 		this.parserOptions = parserOptions;
 	}
 
 	private static ContentSummary getHDFSFileSummary(
-			Configuration conf,
-			String filename )
+			final Configuration conf,
+			final String filename )
 			throws IOException {
-		org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(
+		final org.apache.hadoop.fs.Path path = new org.apache.hadoop.fs.Path(
 				filename);
-		FileSystem file = path.getFileSystem(conf);
-		ContentSummary cs = file.getContentSummary(path);
+		final FileSystem file = path.getFileSystem(
+				conf);
+		final ContentSummary cs = file.getContentSummary(
+				path);
 		file.close();
 		return cs;
 	}
 
-	@Override
-	public Object computeResults(
-			OperationParams params ) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 }

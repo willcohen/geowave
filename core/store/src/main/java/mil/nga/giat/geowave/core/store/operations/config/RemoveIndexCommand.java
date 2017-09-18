@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -10,27 +10,24 @@
  ******************************************************************************/
 package mil.nga.giat.geowave.core.store.operations.config;
 
-import static mil.nga.giat.geowave.core.cli.annotations.GeowaveOperation.RestEnabledType.POST;
-
 import com.beust.jcommander.Parameters;
 
 import mil.nga.giat.geowave.core.cli.annotations.GeowaveOperation;
-import mil.nga.giat.geowave.core.cli.api.Command;
 import mil.nga.giat.geowave.core.cli.api.OperationParams;
 import mil.nga.giat.geowave.core.cli.operations.config.ConfigSection;
 import mil.nga.giat.geowave.core.store.operations.remote.options.IndexPluginOptions;
 
-@GeowaveOperation(name = "rmindex", parentOperation = ConfigSection.class, restEnabled = POST)
+@GeowaveOperation(name = "rmindex", parentOperation = ConfigSection.class)
 @Parameters(commandDescription = "Remove index configuration from Geowave configuration")
 public class RemoveIndexCommand extends
-		AbstractRemoveCommand implements
-		Command
+		AbstractRemoveCommand
 {
 
 	@Override
 	public void execute(
 			final OperationParams params ) {
-		computeResults(params);
+		computeResults(
+				params);
 
 	}
 
@@ -38,7 +35,9 @@ public class RemoveIndexCommand extends
 	public Void computeResults(
 			final OperationParams params ) {
 
-		pattern = IndexPluginOptions.getIndexNamespace(getEntryName());
-		return super.computeResults(params);
+		pattern = IndexPluginOptions.getIndexNamespace(
+				getEntryName());
+		return super.computeResults(
+				params);
 	}
 }

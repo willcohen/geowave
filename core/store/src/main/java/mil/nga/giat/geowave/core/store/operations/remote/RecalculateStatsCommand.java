@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -22,7 +22,6 @@ import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 
 import mil.nga.giat.geowave.core.cli.annotations.GeowaveOperation;
-import mil.nga.giat.geowave.core.cli.api.Command;
 import mil.nga.giat.geowave.core.cli.api.OperationParams;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStore;
@@ -37,24 +36,26 @@ import mil.nga.giat.geowave.core.store.operations.remote.options.StatsCommandLin
 import mil.nga.giat.geowave.core.store.query.Query;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
 
-@GeowaveOperation(name = "recalcstats", parentOperation = RemoteSection.class, restEnabled = GeowaveOperation.RestEnabledType.POST)
+@GeowaveOperation(name = "recalcstats", parentOperation = RemoteSection.class)
 @Parameters(commandDescription = "Calculate the statistics of an existing GeoWave dataset")
 public class RecalculateStatsCommand extends
-		AbstractStatsCommand implements
-		Command
+		AbstractStatsCommand<Void>
 {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(RecalculateStatsCommand.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(
+			RecalculateStatsCommand.class);
 
 	@Parameter(description = "<store name> [<adapter name>]")
 	private List<String> parameters = new ArrayList<String>();
 
 	@Override
 	public void execute(
-			OperationParams params ) {
-		computeResults(params);
+			final OperationParams params ) {
+		computeResults(
+				params);
 	}
 
+	@Override
 	protected boolean performStatsCommand(
 			final DataStorePluginOptions storeOptions,
 			final DataAdapter<?> adapter,
@@ -63,24 +64,26 @@ public class RecalculateStatsCommand extends
 
 		try {
 
-			AdapterIndexMappingStore mappingStore = storeOptions.createAdapterIndexMappingStore();
-			DataStore dataStore = storeOptions.createDataStore();
-			IndexStore indexStore = storeOptions.createIndexStore();
+			final AdapterIndexMappingStore mappingStore = storeOptions.createAdapterIndexMappingStore();
+			final DataStore dataStore = storeOptions.createDataStore();
+			final IndexStore indexStore = storeOptions.createIndexStore();
 
 			boolean isFirstTime = true;
 			for (final PrimaryIndex index : mappingStore.getIndicesForAdapter(
 					adapter.getAdapterId()).getIndices(
-					indexStore)) {
+							indexStore)) {
 
 				@SuppressWarnings({
 					"rawtypes",
 					"unchecked"
 				})
+				final
 				DataStoreStatisticsProvider provider = new DataStoreStatisticsProvider(
 						adapter,
 						index,
 						isFirstTime);
-				final String[] authorizations = getAuthorizations(statsOptions.getAuthorizations());
+				final String[] authorizations = getAuthorizations(
+						statsOptions.getAuthorizations());
 
 				try (StatsCompositionTool<?> statsTool = new StatsCompositionTool(
 						provider,
@@ -117,18 +120,20 @@ public class RecalculateStatsCommand extends
 	}
 
 	public void setParameters(
-			String storeName,
-			String adapterName ) {
-		this.parameters = new ArrayList<String>();
-		this.parameters.add(storeName);
+			final String storeName,
+			final String adapterName ) {
+		parameters = new ArrayList<String>();
+		parameters.add(
+				storeName);
 		if (adapterName != null) {
-			this.parameters.add(adapterName);
+			parameters.add(
+					adapterName);
 		}
 	}
 
 	@Override
 	public Void computeResults(
-			OperationParams params ) {
+			final OperationParams params ) {
 		// Ensure we have all the required arguments
 		if (parameters.size() < 1) {
 			throw new ParameterException(

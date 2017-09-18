@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -20,37 +20,26 @@ import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 
 import mil.nga.giat.geowave.core.cli.annotations.GeowaveOperation;
-import mil.nga.giat.geowave.core.cli.annotations.RestParameters;
-import mil.nga.giat.geowave.core.cli.api.Command;
-import mil.nga.giat.geowave.core.cli.api.DefaultOperation;
 import mil.nga.giat.geowave.core.cli.api.OperationParams;
+import mil.nga.giat.geowave.core.cli.api.ServiceEnabledCommand;
 import mil.nga.giat.geowave.core.cli.operations.config.ConfigSection;
 import mil.nga.giat.geowave.core.cli.operations.config.options.ConfigOptions;
 import mil.nga.giat.geowave.core.store.operations.remote.options.IndexGroupPluginOptions;
 import mil.nga.giat.geowave.core.store.operations.remote.options.IndexPluginOptions;
 
-@GeowaveOperation(name = "addindexgrp", parentOperation = ConfigSection.class, restEnabled = GeowaveOperation.RestEnabledType.POST)
+@GeowaveOperation(name = "addindexgrp", parentOperation = ConfigSection.class)
 @Parameters(commandDescription = "Create an index group for usage in GeoWave")
 public class AddIndexGroupCommand extends
-		DefaultOperation<Void> implements
-		Command
+		ServiceEnabledCommand<Void>
 {
-	private static int SUCCESS = 0;
-	private static int USAGE_ERROR = -1;
-	private static int INDEXING_ERROR = -2;
-	private static int GROUP_EXISTS = -3;
-
 	@Parameter(description = "<name> <comma separated list of indexes>")
-	@RestParameters(names = {
-		"name",
-		"names"
-	})
 	private List<String> parameters = new ArrayList<String>();
 
 	@Override
 	public void execute(
 			final OperationParams params ) {
-		addIndexGroup(params);
+		addIndexGroup(
+				params);
 	}
 
 	/**
@@ -64,7 +53,8 @@ public class AddIndexGroupCommand extends
 			final OperationParams params ) {
 
 		try {
-			addIndexGroup(params);
+			addIndexGroup(
+					params);
 		}
 		catch (WritePropertiesException | ParameterException e) {
 			// TODO GEOWAVE-rest-project server error status message
@@ -96,10 +86,11 @@ public class AddIndexGroupCommand extends
 		}
 
 		// New index group name
-		final String newGroupName = parameters.get(0);
+		final String newGroupName = parameters.get(
+				0);
 		final String[] indexes = parameters.get(
 				1).split(
-				",");
+						",");
 
 		// Make sure the existing group doesn't exist.
 		final IndexGroupPluginOptions groupOptions = new IndexGroupPluginOptions();
@@ -116,7 +107,8 @@ public class AddIndexGroupCommand extends
 			final IndexPluginOptions options = new IndexPluginOptions();
 			if (!options.load(
 					existingProps,
-					IndexPluginOptions.getIndexNamespace(indexes[i]))) {
+					IndexPluginOptions.getIndexNamespace(
+							indexes[i]))) {
 				throw new ParameterException(
 						"That index does not exist: " + indexes[i]);
 			}
@@ -140,11 +132,13 @@ public class AddIndexGroupCommand extends
 	}
 
 	public String getPluginName() {
-		return parameters.get(0);
+		return parameters.get(
+				0);
 	}
 
 	public String getNamespace() {
-		return IndexGroupPluginOptions.getIndexGroupNamespace(getPluginName());
+		return IndexGroupPluginOptions.getIndexGroupNamespace(
+				getPluginName());
 	}
 
 	public List<String> getParameters() {
@@ -155,8 +149,10 @@ public class AddIndexGroupCommand extends
 			final String name,
 			final String commaSeparatedIndexes ) {
 		parameters = new ArrayList<String>();
-		parameters.add(name);
-		parameters.add(commaSeparatedIndexes);
+		parameters.add(
+				name);
+		parameters.add(
+				commaSeparatedIndexes);
 	}
 
 	private static class WritePropertiesException extends

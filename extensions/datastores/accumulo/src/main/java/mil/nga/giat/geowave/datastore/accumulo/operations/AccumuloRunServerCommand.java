@@ -17,7 +17,8 @@ public class AccumuloRunServerCommand extends
 		DefaultOperation implements
 		Command
 {
-	private static final Logger LOGGER = LoggerFactory.getLogger(AccumuloRunServerCommand.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(
+			AccumuloRunServerCommand.class);
 
 	/**
 	 * Prep the driver & run the operation.
@@ -26,20 +27,13 @@ public class AccumuloRunServerCommand extends
 	public void execute(
 			final OperationParams params ) {
 		try {
-			AccumuloMiniCluster.main(new String[] {});
+			AccumuloMiniCluster.main(
+					new String[] {});
 		}
 		catch (final Exception e) {
 			LOGGER.error(
 					"Unable to run Accumulo mini cluster",
 					e);
 		}
-	}
-
-	@Override
-	public Object computeResults(
-			OperationParams params )
-			throws Exception {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }

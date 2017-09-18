@@ -14,6 +14,7 @@ import mil.nga.giat.geowave.core.index.Persistable;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStoreOptions;
+import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveMetadata;
 import mil.nga.giat.geowave.core.store.operations.DataStoreOperations;
 import mil.nga.giat.geowave.core.store.operations.MetadataDeleter;
@@ -180,6 +181,14 @@ public abstract class AbstractGeoWavePersistence<T extends Persistable>
 				id,
 				secondaryId,
 				object);
+		
+		if (!options.isServerSideLibraryEnabled() && getType() == MetadataType.STATS) {
+			DataStatistics existingStat = (DataStatistics) getObject(id, secondaryId);
+			if (existingStat != null) {
+				DataStatistics inputStat = (DataStatistics)object;
+				inputStat.merge(existingStat);
+			}
+		}
 
 		try (final MetadataWriter writer = operations.createMetadataWriter(getType())) {
 			if (writer != null) {

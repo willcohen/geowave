@@ -8,8 +8,6 @@ import org.apache.hadoop.hbase.security.visibility.CellVisibility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import mil.nga.giat.geowave.core.index.Mergeable;
-import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveMetadata;
 import mil.nga.giat.geowave.core.store.operations.MetadataType;
@@ -25,6 +23,8 @@ public class HBaseMetadataWriter implements
 	private final BufferedMutator writer;
 	private final MetadataType metadataType;
 	private final byte[] metadataTypeBytes;
+
+	private static final boolean MERGE_STATS = false;
 
 	public HBaseMetadataWriter(
 			final HBaseOperations operations,
@@ -53,20 +53,6 @@ public class HBaseMetadataWriter implements
 	@Override
 	public void write(
 			final GeoWaveMetadata metadata ) {
-		byte[] byteValue;
-
-		// Check for stats
-		if (metadataType == MetadataType.STATS) {
-			// Combine stats clients-side
-			Mergeable mergedValue = operations.mergeStatValue(
-					metadata);
-			byteValue = PersistenceUtils.toBinary(
-					mergedValue);
-		}
-		else {
-			byteValue = metadata.getValue();
-		}
-
 		final Put put = new Put(
 				metadata.getPrimaryId());
 
@@ -75,7 +61,7 @@ public class HBaseMetadataWriter implements
 		put.addColumn(
 				metadataTypeBytes,
 				secondaryBytes,
-				byteValue);
+				metadata.getValue());
 
 		if (metadata.getVisibility() != null) {
 			put.setCellVisibility(

@@ -61,14 +61,12 @@ import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
-import mil.nga.giat.geowave.core.store.entities.GeoWaveMetadata;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.filter.DistributableQueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.metadata.AbstractGeoWavePersistence;
 import mil.nga.giat.geowave.core.store.operations.Deleter;
 import mil.nga.giat.geowave.core.store.operations.MetadataDeleter;
-import mil.nga.giat.geowave.core.store.operations.MetadataQuery;
 import mil.nga.giat.geowave.core.store.operations.MetadataReader;
 import mil.nga.giat.geowave.core.store.operations.MetadataType;
 import mil.nga.giat.geowave.core.store.operations.MetadataWriter;
@@ -165,7 +163,7 @@ public class HBaseOperations implements
 	public boolean isSchemaUpdateEnabled() {
 		return schemaUpdateEnabled;
 	}
-	
+
 	public boolean isServerSideLibraryEnabled() {
 		if (options != null) {
 			return options.isServerSideLibraryEnabled();
@@ -246,9 +244,10 @@ public class HBaseOperations implements
 				for (final String columnFamily : columnFamilies) {
 					final HColumnDescriptor column = new HColumnDescriptor(
 							columnFamily);
-					
-					column.setMaxVersions(1);
-					
+
+					column.setMaxVersions(
+							1);
+
 					desc.addFamily(
 							column);
 
@@ -1110,46 +1109,5 @@ public class HBaseOperations implements
 		}
 
 		return regionIdList;
-	}
-
-	public Mergeable mergeStatValue(
-			GeoWaveMetadata metadata ) {
-		// TODO: Handle authorizations
-		String[] authorizations = null;
-		
-		// Get the incoming stat value
-		Mergeable value = PersistenceUtils.fromBinary(
-				metadata.getValue(),
-				Mergeable.class);
-
-		final MetadataReader reader = createMetadataReader(MetadataType.STATS);
-		try (final CloseableIterator<GeoWaveMetadata> it = reader.query(new MetadataQuery(
-				metadata.getPrimaryId(),
-				metadata.getSecondaryId(),
-				authorizations))) {
-			if (!it.hasNext()) {				
-				return value;
-			}
-			
-			final GeoWaveMetadata entry = it.next();
-			Mergeable mergeable = PersistenceUtils.fromBinary(
-					entry.getValue(),
-					Mergeable.class);
-			if (mergeable != null) {
-				if (value == null) {
-					value = mergeable;
-				}
-				else {
-					value.merge(mergeable);
-				}
-			}
-
-			return value;
-		}
-		catch (final IOException e) {
-			// OK to ignore
-		}
-		
-		return value;
 	}
 }

@@ -54,7 +54,7 @@ public class GeoWaveBasicSpatialVectorIT extends
 		GeoWaveStoreType.DYNAMODB,
 		GeoWaveStoreType.HBASE
 	}, options = {
-		"enableServerSideLibrary=true"
+		"enableServerSideLibrary=false"
 	})
 	protected DataStorePluginOptions dataStore;
 

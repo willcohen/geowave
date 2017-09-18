@@ -61,12 +61,15 @@ import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
+import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveMetadata;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.filter.DistributableQueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.metadata.AbstractGeoWavePersistence;
 import mil.nga.giat.geowave.core.store.operations.Deleter;
 import mil.nga.giat.geowave.core.store.operations.MetadataDeleter;
+import mil.nga.giat.geowave.core.store.operations.MetadataQuery;
 import mil.nga.giat.geowave.core.store.operations.MetadataReader;
 import mil.nga.giat.geowave.core.store.operations.MetadataType;
 import mil.nga.giat.geowave.core.store.operations.MetadataWriter;
@@ -236,6 +239,17 @@ public class HBaseOperations implements
 			final String[] columnFamilies,
 			final TableName name )
 			throws IOException {
+		createTable(
+				columnFamilies,
+				name,
+				1);
+	}
+
+	public void createTable(
+			final String[] columnFamilies,
+			final TableName name,
+			final int maxVersions )
+			throws IOException {
 		synchronized (ADMIN_MUTEX) {
 			if (!conn.getAdmin().isTableAvailable(
 					name)) {
@@ -246,7 +260,7 @@ public class HBaseOperations implements
 							columnFamily);
 
 					column.setMaxVersions(
-							1);
+							maxVersions);
 
 					desc.addFamily(
 							column);
@@ -775,10 +789,10 @@ public class HBaseOperations implements
 				AbstractGeoWavePersistence.METADATA_TABLE);
 		try {
 			if (options.isCreateTable()) {
-
 				createTable(
 						METADATA_CFS,
-						tableName);
+						tableName,
+						Integer.MAX_VALUE);
 			}
 
 			return new HBaseMetadataWriter(
@@ -1109,5 +1123,46 @@ public class HBaseOperations implements
 		}
 
 		return regionIdList;
+	}
+
+	/**
+	 * Whenever a stats query returns multiple versions, we combine them and rewrite the data
+	 * @param query
+	 * @param mergedStats
+	 */
+	public void updateStats(
+			MetadataQuery query,
+			DataStatistics mergedStats ) {
+		try (final MetadataDeleter deleter = createMetadataDeleter(
+				MetadataType.STATS)) {
+			if (deleter != null) {
+				deleter.delete(
+						query);
+			}
+		}
+		catch (final Exception e) {
+			LOGGER.warn(
+					"Unable to close metadata deleter",
+					e);
+		}
+
+		try (final MetadataWriter writer = createMetadataWriter(
+				MetadataType.STATS)) {
+			if (writer != null) {
+				final GeoWaveMetadata metadata = new GeoWaveMetadata(
+						query.getPrimaryId(),
+						query.getSecondaryId(),
+						null,
+						PersistenceUtils.toBinary(
+								mergedStats));
+				writer.write(
+						metadata);
+			}
+		}
+		catch (final Exception e) {
+			LOGGER.warn(
+					"Unable to close metadata writer",
+					e);
+		}
 	}
 }

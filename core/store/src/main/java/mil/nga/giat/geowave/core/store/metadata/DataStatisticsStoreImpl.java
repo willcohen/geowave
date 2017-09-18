@@ -48,14 +48,7 @@ public class DataStatisticsStoreImpl extends
 	public void incorporateStatistics(
 			final DataStatistics<?> statistics ) {
 		// because we're using the combiner, we should simply be able to add the
-		// object (unless the server side is disabled)
-		if (!options.isServerSideLibraryEnabled()) {
-			DataStatistics existingStat = (DataStatistics) getObject(getPrimaryId(statistics), getSecondaryId(statistics));
-			if (existingStat != null) {
-				statistics.merge(existingStat);
-			}
-		}
-		
+		// object
 		addObject(statistics);
 
 		// TODO if we do allow caching after we add a statistic to Accumulo we

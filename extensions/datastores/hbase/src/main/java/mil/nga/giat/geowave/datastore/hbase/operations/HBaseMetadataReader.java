@@ -2,6 +2,8 @@ package mil.nga.giat.geowave.datastore.hbase.operations;
 
 import java.util.Iterator;
 
+import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
@@ -10,10 +12,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterators;
 
+import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.DataStoreOptions;
+import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveMetadata;
 import mil.nga.giat.geowave.core.store.metadata.AbstractGeoWavePersistence;
 import mil.nga.giat.geowave.core.store.operations.MetadataQuery;
@@ -62,19 +66,65 @@ public class HBaseMetadataReader implements
 			}
 
 			if (query.getPrimaryId() != null) {
-				scanner.setMaxVersions(
-						1);
+				scanner.setMaxVersions(); // Get all versions
+
 				scanner.setStartRow(
 						query.getPrimaryId());
 				scanner.setStopRow(
 						query.getPrimaryId());
 			}
 
-			final ResultScanner rS = operations.getScannedResults(
+			ResultScanner rS = operations.getScannedResults(
 					scanner,
 					AbstractGeoWavePersistence.METADATA_TABLE,
 					query.getAuthorizations());
-			final Iterator<Result> it = rS.iterator();
+			Iterator<Result> it = rS.iterator();
+
+			// Client-side stats merge required?
+			DataStatistics mergedStats = null;
+			if (metadataType == MetadataType.STATS && query.getPrimaryId() != null) {
+				int statRecs = 0;
+				while (it.hasNext()) {
+					Result result = it.next();
+
+					for (Cell cell : result.listCells()) {
+						statRecs++;
+
+						byte[] byteValue = CellUtil.cloneValue(
+								cell);
+						DataStatistics stats = (DataStatistics) PersistenceUtils.fromBinary(
+								byteValue,
+								DataStatistics.class);
+
+						if (mergedStats != null) {
+							mergedStats.merge(
+									stats);
+						}
+						else {
+							mergedStats = stats;
+						}
+					}
+				}
+
+				// TODO: If more than one result, write the merged result back
+				// and requery
+				if (statRecs > 1) {
+					operations.updateStats(
+							query,
+							mergedStats);
+
+					LOGGER.warn(
+							"NEED TO UPDATE STATS");
+				}
+
+				// Requery after scanning.
+				rS = operations.getScannedResults(
+						scanner,
+						AbstractGeoWavePersistence.METADATA_TABLE,
+						query.getAuthorizations());
+				it = rS.iterator();
+
+			}
 
 			return new CloseableIteratorWrapper<>(
 					new ScannerClosableWrapper(

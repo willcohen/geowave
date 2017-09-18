@@ -111,9 +111,6 @@ public class HBaseMetadataReader implements
 					operations.updateStats(
 							query,
 							mergedStats);
-
-					LOGGER.warn(
-							"NEED TO UPDATE STATS");
 				}
 
 				// Requery 
@@ -122,7 +119,6 @@ public class HBaseMetadataReader implements
 						AbstractGeoWavePersistence.METADATA_TABLE,
 						query.getAuthorizations());
 				it = rS.iterator();
-
 			}
 
 			return new CloseableIteratorWrapper<>(

@@ -6,6 +6,7 @@ public abstract class ServiceEnabledCommand<T> extends
 		DefaultOperation implements
 		Command
 {
+	protected String path = null;
 
 	abstract public T computeResults(
 			OperationParams params )
@@ -17,6 +18,10 @@ public abstract class ServiceEnabledCommand<T> extends
 	 * @return the HTTP method
 	 */
 	public HttpMethod getMethod() {
+		final String path = getPath();
+		if (path.contains("get") || path.contains("list")) {
+			return HttpMethod.GET;
+		}
 		return HttpMethod.POST;
 	}
 
@@ -26,7 +31,10 @@ public abstract class ServiceEnabledCommand<T> extends
 	 * @return the path (use {param} for path encoded params)
 	 */
 	public String getPath() {
-		return defaultGetPath();
+		if (path == null) {
+			path = defaultGetPath();
+		}
+		return path;
 	}
 
 	public String getId() {
@@ -61,12 +69,11 @@ public abstract class ServiceEnabledCommand<T> extends
 
 	private String defaultGetPath() {
 		final Class<?> operation = getClass();
-		if (operation.isAnnotationPresent(
-				GeowaveOperation.class)) {
+		if (operation.isAnnotationPresent(GeowaveOperation.class)) {
 			return pathFor(
 					operation,
 					getName()).substring(
-							1);
+					1);
 		}
 		else if ((getName() != null) && !getName().trim().isEmpty()) {
 			return getName();
@@ -91,14 +98,12 @@ public abstract class ServiceEnabledCommand<T> extends
 			return "";
 		}
 
-		final GeowaveOperation operationInfo = operation.getAnnotation(
-				GeowaveOperation.class);
+		final GeowaveOperation operationInfo = operation.getAnnotation(GeowaveOperation.class);
 		return pathFor(
 				operationInfo.parentOperation(),
-				null) + "/"
-				+ resolveName(
-						operationInfo.name(),
-						resourcePathOverride);
+				null) + "/" + resolveName(
+				operationInfo.name(),
+				resourcePathOverride);
 	}
 
 	private static String resolveName(

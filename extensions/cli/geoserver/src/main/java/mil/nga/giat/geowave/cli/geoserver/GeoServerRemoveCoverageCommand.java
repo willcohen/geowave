@@ -37,13 +37,13 @@ public class GeoServerRemoveCoverageCommand extends
 	@Parameter(names = {
 		"-ws",
 		"--workspace"
-	}, required = false, description = "<workspace name>")
+	}, required = false, description = "workspace name")
 	private String workspace = null;
 
 	@Parameter(names = {
 		"-cs",
 		"--cvgstore"
-	}, required = true, description = "<coverage store name>")
+	}, required = true, description = "coverage store name")
 	private final String cvgstore = null;
 
 	@Parameter(description = "<coverage name>")
@@ -80,8 +80,7 @@ public class GeoServerRemoveCoverageCommand extends
 		}
 
 		JCommander.getConsole().println(
-				computeResults(
-						params));
+				computeResults(params));
 	}
 
 	@Override
@@ -92,8 +91,7 @@ public class GeoServerRemoveCoverageCommand extends
 			workspace = geoserverClient.getConfig().getWorkspace();
 		}
 
-		cvgName = parameters.get(
-				0);
+		cvgName = parameters.get(0);
 
 		final Response getCvgResponse = geoserverClient.deleteCoverage(
 				workspace,

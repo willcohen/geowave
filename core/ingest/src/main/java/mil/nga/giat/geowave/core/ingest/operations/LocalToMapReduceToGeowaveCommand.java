@@ -69,8 +69,7 @@ public class LocalToMapReduceToGeowaveCommand extends
 			final OperationParams params ) {
 
 		// Based on the selected formats, select the format plugins
-		pluginFormats.selectPlugin(
-				localInputOptions.getFormats());
+		pluginFormats.selectPlugin(localInputOptions.getFormats());
 
 		return true;
 	}
@@ -91,8 +90,7 @@ public class LocalToMapReduceToGeowaveCommand extends
 					"Requires arguments: <file or directory> <hdfs host:port> <path to base directory to write to> <store name> <comma delimited index/group list>");
 		}
 
-		computeResults(
-				params);
+		computeResults(params);
 	}
 
 	public List<String> getParameters() {
@@ -106,16 +104,11 @@ public class LocalToMapReduceToGeowaveCommand extends
 			final String storeName,
 			final String indexList ) {
 		parameters = new ArrayList<String>();
-		parameters.add(
-				fileOrDirectory);
-		parameters.add(
-				hdfsHostPort);
-		parameters.add(
-				pathToBaseDirectory);
-		parameters.add(
-				storeName);
-		parameters.add(
-				indexList);
+		parameters.add(fileOrDirectory);
+		parameters.add(hdfsHostPort);
+		parameters.add(pathToBaseDirectory);
+		parameters.add(storeName);
+		parameters.add(indexList);
 	}
 
 	public DataStorePluginOptions getInputStoreOptions() {
@@ -181,20 +174,14 @@ public class LocalToMapReduceToGeowaveCommand extends
 					"Requires job tracker or resource manager option (try geowave help <command>...)");
 		}
 
-		final String inputPath = parameters.get(
-				0);
-		String hdfsHostPort = parameters.get(
-				1);
-		final String basePath = parameters.get(
-				2);
-		final String inputStoreName = parameters.get(
-				3);
-		final String indexList = parameters.get(
-				4);
+		final String inputPath = parameters.get(0);
+		String hdfsHostPort = parameters.get(1);
+		final String basePath = parameters.get(2);
+		final String inputStoreName = parameters.get(3);
+		final String indexList = parameters.get(4);
 
 		// Ensures that the url starts with hdfs://
-		if (!hdfsHostPort.contains(
-				"://")) {
+		if (!hdfsHostPort.contains("://")) {
 			hdfsHostPort = "hdfs://" + hdfsHostPort;
 		}
 
@@ -206,8 +193,7 @@ public class LocalToMapReduceToGeowaveCommand extends
 		if (inputStoreOptions == null) {
 			final StoreLoader inputStoreLoader = new StoreLoader(
 					inputStoreName);
-			if (!inputStoreLoader.loadFromConfig(
-					configFile)) {
+			if (!inputStoreLoader.loadFromConfig(configFile)) {
 				throw new ParameterException(
 						"Cannot find store name: " + inputStoreLoader.getStoreName());
 			}
@@ -218,8 +204,7 @@ public class LocalToMapReduceToGeowaveCommand extends
 		if (inputIndexOptions == null) {
 			final IndexLoader indexLoader = new IndexLoader(
 					indexList);
-			if (!indexLoader.loadFromConfig(
-					configFile)) {
+			if (!indexLoader.loadFromConfig(configFile)) {
 				throw new ParameterException(
 						"Cannot find index(s) by name: " + indexList);
 			}
@@ -242,8 +227,7 @@ public class LocalToMapReduceToGeowaveCommand extends
 					localInputOptions);
 
 			// Execute
-			if (!driver.runOperation(
-					inputPath)) {
+			if (!driver.runOperation(inputPath)) {
 				throw new RuntimeException(
 						"Ingest failed to execute");
 			}

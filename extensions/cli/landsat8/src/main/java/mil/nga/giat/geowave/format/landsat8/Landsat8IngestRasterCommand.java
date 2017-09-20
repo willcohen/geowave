@@ -54,8 +54,7 @@ public class Landsat8IngestRasterCommand extends
 				downloadOptions,
 				ingestOptions,
 				parameters);
-		runner.runInternal(
-				params);
+		runner.runInternal(params);
 	}
 
 }

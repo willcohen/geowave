@@ -57,8 +57,7 @@ public class GeoServerListStylesCommand extends
 			final OperationParams params )
 			throws Exception {
 		JCommander.getConsole().println(
-				computeResults(
-						params));
+				computeResults(params));
 	}
 
 	@Override
@@ -68,12 +67,9 @@ public class GeoServerListStylesCommand extends
 		final Response listStylesResponse = geoserverClient.getStyles();
 
 		if (listStylesResponse.getStatus() == Status.OK.getStatusCode()) {
-			final JSONObject jsonResponse = JSONObject.fromObject(
-					listStylesResponse.getEntity());
-			final JSONArray styles = jsonResponse.getJSONArray(
-					"styles");
-			return "\nGeoServer styles list: " + styles.toString(
-					2);
+			final JSONObject jsonResponse = JSONObject.fromObject(listStylesResponse.getEntity());
+			final JSONArray styles = jsonResponse.getJSONArray("styles");
+			return "\nGeoServer styles list: " + styles.toString(2);
 		}
 		return "Error getting GeoServer styles list; code = " + listStylesResponse.getStatus();
 	}

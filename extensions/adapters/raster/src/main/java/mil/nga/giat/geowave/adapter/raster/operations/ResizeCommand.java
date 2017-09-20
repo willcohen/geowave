@@ -62,10 +62,8 @@ public class ResizeCommand extends
 					"Requires arguments: <input store name> <output store name>");
 		}
 
-		final String inputStoreName = parameters.get(
-				0);
-		final String outputStoreName = parameters.get(
-				1);
+		final String inputStoreName = parameters.get(0);
+		final String outputStoreName = parameters.get(1);
 
 		// Config file
 		final File configFile = (File) params.getContext().get(
@@ -75,8 +73,7 @@ public class ResizeCommand extends
 		if (inputStoreOptions == null) {
 			final StoreLoader inputStoreLoader = new StoreLoader(
 					inputStoreName);
-			if (!inputStoreLoader.loadFromConfig(
-					configFile)) {
+			if (!inputStoreLoader.loadFromConfig(configFile)) {
 				throw new ParameterException(
 						"Cannot find store name: " + inputStoreLoader.getStoreName());
 			}
@@ -87,8 +84,7 @@ public class ResizeCommand extends
 		if (outputStoreOptions == null) {
 			final StoreLoader outputStoreLoader = new StoreLoader(
 					outputStoreName);
-			if (!outputStoreLoader.loadFromConfig(
-					configFile)) {
+			if (!outputStoreLoader.loadFromConfig(configFile)) {
 				throw new ParameterException(
 						"Cannot find store name: " + outputStoreLoader.getStoreName());
 			}
@@ -110,10 +106,8 @@ public class ResizeCommand extends
 			final String inputStore,
 			final String outputStore ) {
 		parameters = new ArrayList<String>();
-		parameters.add(
-				inputStore);
-		parameters.add(
-				outputStore);
+		parameters.add(inputStore);
+		parameters.add(outputStore);
 	}
 
 	public RasterTileResizeCommandLineOptions getOptions() {

@@ -39,7 +39,7 @@ public class GeoServerAddStyleCommand extends
 	@Parameter(names = {
 		"-sld",
 		"--stylesld"
-	}, required = true, description = "<style sld file>")
+	}, required = true, description = "style sld file")
 	private final String stylesld = null;
 
 	@Parameter(description = "<GeoWave style name>")
@@ -49,14 +49,12 @@ public class GeoServerAddStyleCommand extends
 	@Override
 	public boolean prepare(
 			final OperationParams params ) {
-		super.prepare(
-				params);
+		super.prepare(params);
 		if (geoserverClient == null) {
 			// Create the rest client
 			geoserverClient = new GeoServerRestClient(
 					new GeoServerConfig(
-							getGeoWaveConfigFile(
-									params)));
+							getGeoWaveConfigFile(params)));
 		}
 
 		// Successfully prepared
@@ -68,8 +66,7 @@ public class GeoServerAddStyleCommand extends
 			final OperationParams params )
 			throws Exception {
 		JCommander.getConsole().println(
-				computeResults(
-						params));
+				computeResults(params));
 	}
 
 	@Override
@@ -82,8 +79,7 @@ public class GeoServerAddStyleCommand extends
 					"Requires argument: <style name>");
 		}
 
-		gwStyle = parameters.get(
-				0);
+		gwStyle = parameters.get(0);
 
 		if (gwStyle == null) {
 			throw new ParameterException(

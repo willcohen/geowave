@@ -66,8 +66,7 @@ public class GeoServerGetStoreAdapterCommand extends
 
 		JCommander.getConsole().println(
 				"Store " + storeName + " has these adapters:");
-		for (final String adapterId : computeResults(
-				params)) {
+		for (final String adapterId : computeResults(params)) {
 			JCommander.getConsole().println(
 					adapterId);
 		}
@@ -77,8 +76,7 @@ public class GeoServerGetStoreAdapterCommand extends
 	public List<String> computeResults(
 			final OperationParams params )
 			throws Exception {
-		storeName = parameters.get(
-				0);
+		storeName = parameters.get(0);
 		final ArrayList<String> adapterList = geoserverClient.getStoreAdapters(
 				storeName,
 				null);

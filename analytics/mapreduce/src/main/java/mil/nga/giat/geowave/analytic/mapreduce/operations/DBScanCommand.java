@@ -63,8 +63,7 @@ public class DBScanCommand extends
 					"Requires arguments: <storename>");
 		}
 
-		computeResults(
-				params);
+		computeResults(params);
 	}
 
 	public List<String> getParameters() {
@@ -74,8 +73,7 @@ public class DBScanCommand extends
 	public void setParameters(
 			final String storeName ) {
 		parameters = new ArrayList<String>();
-		parameters.add(
-				storeName);
+		parameters.add(storeName);
 	}
 
 	public CommonOptions getCommonOptions() {
@@ -109,8 +107,7 @@ public class DBScanCommand extends
 	public Void computeResults(
 			final OperationParams params )
 			throws Exception {
-		final String inputStoreName = parameters.get(
-				0);
+		final String inputStoreName = parameters.get(0);
 
 		// Config file
 		final File configFile = (File) params.getContext().get(
@@ -120,8 +117,7 @@ public class DBScanCommand extends
 		if (inputStoreOptions == null) {
 			final StoreLoader inputStoreLoader = new StoreLoader(
 					inputStoreName);
-			if (!inputStoreLoader.loadFromConfig(
-					configFile)) {
+			if (!inputStoreLoader.loadFromConfig(configFile)) {
 				throw new ParameterException(
 						"Cannot find store name: " + inputStoreLoader.getStoreName());
 			}
@@ -139,17 +135,14 @@ public class DBScanCommand extends
 		// Convert properties from DBScanOptions and CommonOptions
 		final PropertyManagementConverter converter = new PropertyManagementConverter(
 				properties);
-		converter.readProperties(
-				commonOptions);
-		converter.readProperties(
-				dbScanOptions);
+		converter.readProperties(commonOptions);
+		converter.readProperties(dbScanOptions);
 		properties.store(
 				Extract.QUERY_OPTIONS,
 				commonOptions.buildQueryOptions());
 
 		final DBScanIterationsJobRunner runner = new DBScanIterationsJobRunner();
-		final int status = runner.run(
-				properties);
+		final int status = runner.run(properties);
 		if (status != 0) {
 			throw new RuntimeException(
 					"Failed to execute: " + status);

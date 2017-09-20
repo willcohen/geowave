@@ -74,8 +74,7 @@ public class GeoServerRemoveDatastoreCommand extends
 		}
 
 		JCommander.getConsole().println(
-				computeResults(
-						params));
+				computeResults(params));
 	}
 
 	@Override
@@ -86,8 +85,7 @@ public class GeoServerRemoveDatastoreCommand extends
 			workspace = geoserverClient.getConfig().getWorkspace();
 		}
 
-		datastoreName = parameters.get(
-				0);
+		datastoreName = parameters.get(0);
 
 		final Response deleteStoreResponse = geoserverClient.deleteDatastore(
 				workspace,

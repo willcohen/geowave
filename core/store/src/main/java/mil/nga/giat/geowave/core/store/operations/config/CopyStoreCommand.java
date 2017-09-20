@@ -61,12 +61,10 @@ public class CopyStoreCommand extends
 		// Load the old store, so that we can override the values
 		String oldStore = null;
 		if (parameters.size() >= 1) {
-			oldStore = parameters.get(
-					0);
+			oldStore = parameters.get(0);
 			if (!newPluginOptions.load(
 					existingProps,
-					DataStorePluginOptions.getStoreNamespace(
-							oldStore))) {
+					DataStorePluginOptions.getStoreNamespace(oldStore))) {
 				throw new ParameterException(
 						"Could not find store: " + oldStore);
 			}
@@ -79,8 +77,7 @@ public class CopyStoreCommand extends
 	@Override
 	public void execute(
 			final OperationParams params ) {
-		computeResults(
-				params);
+		computeResults(params);
 	}
 
 	@Override
@@ -93,10 +90,8 @@ public class CopyStoreCommand extends
 		}
 
 		// This is the new store name.
-		final String newStore = parameters.get(
-				1);
-		final String newStoreNamespace = DataStorePluginOptions.getStoreNamespace(
-				newStore);
+		final String newStore = parameters.get(1);
+		final String newStoreNamespace = DataStorePluginOptions.getStoreNamespace(newStore);
 
 		// Make sure we're not already in the index.
 		final DataStorePluginOptions existPlugin = new DataStorePluginOptions();
@@ -113,8 +108,7 @@ public class CopyStoreCommand extends
 				newStoreNamespace);
 
 		// Make default?
-		if (Boolean.TRUE.equals(
-				makeDefault)) {
+		if (Boolean.TRUE.equals(makeDefault)) {
 			existingProps.setProperty(
 					DataStorePluginOptions.DEFAULT_PROPERTY_NAMESPACE,
 					newStore);
@@ -137,9 +131,7 @@ public class CopyStoreCommand extends
 			final String existingStore,
 			final String newStore ) {
 		parameters = new ArrayList<String>();
-		parameters.add(
-				existingStore);
-		parameters.add(
-				newStore);
+		parameters.add(existingStore);
+		parameters.add(newStore);
 	}
 }

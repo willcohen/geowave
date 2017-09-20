@@ -39,14 +39,12 @@ public class GeoServerAddWorkspaceCommand extends
 	@Override
 	public boolean prepare(
 			final OperationParams params ) {
-		super.prepare(
-				params);
+		super.prepare(params);
 		if (geoserverClient == null) {
 			// Create the rest client
 			geoserverClient = new GeoServerRestClient(
 					new GeoServerConfig(
-							getGeoWaveConfigFile(
-									params)));
+							getGeoWaveConfigFile(params)));
 		}
 
 		// Successfully prepared
@@ -58,8 +56,7 @@ public class GeoServerAddWorkspaceCommand extends
 			final OperationParams params )
 			throws Exception {
 		JCommander.getConsole().println(
-				computeResults(
-						params));
+				computeResults(params));
 	}
 
 	@Override
@@ -71,11 +68,9 @@ public class GeoServerAddWorkspaceCommand extends
 					"Requires argument: <workspace name>");
 		}
 
-		wsName = parameters.get(
-				0);
+		wsName = parameters.get(0);
 
-		final Response addWorkspaceResponse = geoserverClient.addWorkspace(
-				wsName);
+		final Response addWorkspaceResponse = geoserverClient.addWorkspace(wsName);
 		if (addWorkspaceResponse.getStatus() == Status.CREATED.getStatusCode()) {
 			return "Add workspace '" + wsName + "' to GeoServer: OK";
 		}

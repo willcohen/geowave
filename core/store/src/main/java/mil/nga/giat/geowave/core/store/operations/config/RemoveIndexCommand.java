@@ -26,8 +26,7 @@ public class RemoveIndexCommand extends
 	@Override
 	public void execute(
 			final OperationParams params ) {
-		computeResults(
-				params);
+		computeResults(params);
 
 	}
 
@@ -35,9 +34,7 @@ public class RemoveIndexCommand extends
 	public Void computeResults(
 			final OperationParams params ) {
 
-		pattern = IndexPluginOptions.getIndexNamespace(
-				getEntryName());
-		return super.computeResults(
-				params);
+		pattern = IndexPluginOptions.getIndexNamespace(getEntryName());
+		return super.computeResults(params);
 	}
 }

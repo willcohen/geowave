@@ -22,6 +22,7 @@ import com.beust.jcommander.Parameters;
 import mil.nga.giat.geowave.core.cli.annotations.GeowaveOperation;
 import mil.nga.giat.geowave.core.cli.api.OperationParams;
 import mil.nga.giat.geowave.core.cli.api.ServiceEnabledCommand;
+import mil.nga.giat.geowave.core.cli.api.ServiceEnabledCommand.HttpMethod;
 import mil.nga.giat.geowave.core.cli.operations.config.options.ConfigOptions;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.StoreFactoryOptions;
@@ -44,8 +45,7 @@ public class VersionCommand extends
 	public void execute(
 			final OperationParams params )
 			throws Exception {
-		computeResults(
-				params);
+		computeResults(params);
 	}
 
 	@Override
@@ -57,16 +57,14 @@ public class VersionCommand extends
 					"Must specify store name");
 		}
 
-		final String inputStoreName = parameters.get(
-				0);
+		final String inputStoreName = parameters.get(0);
 
 		final File configFile = (File) params.getContext().get(
 				ConfigOptions.PROPERTIES_FILE_CONTEXT);
 
 		final StoreLoader inputStoreLoader = new StoreLoader(
 				inputStoreName);
-		if (!inputStoreLoader.loadFromConfig(
-				configFile)) {
+		if (!inputStoreLoader.loadFromConfig(configFile)) {
 			JCommander.getConsole().println(
 					"Cannot find store name: " + inputStoreLoader.getStoreName());
 			return null;
@@ -84,8 +82,7 @@ public class VersionCommand extends
 						"Looking up remote datastore version for type [" + inputStoreOptions.getType() + "] and name ["
 								+ inputStoreName + "]");
 				final BaseDataStore baseDataStore = (BaseDataStore) dataStore;
-				version = baseDataStore.getVersion(
-						factoryOptions);
+				version = baseDataStore.getVersion(factoryOptions);
 			}
 			JCommander.getConsole().println(
 					"Version: " + version);
@@ -93,4 +90,8 @@ public class VersionCommand extends
 		return null;
 	}
 
+	@Override
+	public HttpMethod getMethod() {
+		return HttpMethod.GET;
+	}
 }

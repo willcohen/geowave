@@ -36,12 +36,12 @@ import mil.nga.giat.geowave.core.store.operations.remote.options.DataStorePlugin
 
 @GeowaveOperation(name = "addstore", parentOperation = ConfigSection.class)
 @Parameters(commandDescription = "Create a store within Geowave")
-public class AddStoreCommand extends DefaultOperation implements
+public class AddStoreCommand extends
+		DefaultOperation implements
 		Command
 {
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			AddStoreCommand.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(AddStoreCommand.class);
 
 	public static final String PROPERTIES_CONTEXT = "properties";
 
@@ -69,14 +69,12 @@ public class AddStoreCommand extends DefaultOperation implements
 
 		// Load SPI options for the given type into pluginOptions.
 		if (storeType != null) {
-			if (storeType.equals(
-					"memory")) {
+			if (storeType.equals("memory")) {
 				GeoWaveStoreFinder.getRegisteredStoreFactoryFamilies().put(
 						storeType,
 						new MemoryStoreFactoryFamily());
 			}
-			pluginOptions.selectPlugin(
-					storeType);
+			pluginOptions.selectPlugin(storeType);
 		}
 		else {
 			// Try to load the 'default' options.
@@ -87,16 +85,14 @@ public class AddStoreCommand extends DefaultOperation implements
 					configFile,
 					null);
 
-			final String defaultStore = existingProps.getProperty(
-					DataStorePluginOptions.DEFAULT_PROPERTY_NAMESPACE);
+			final String defaultStore = existingProps.getProperty(DataStorePluginOptions.DEFAULT_PROPERTY_NAMESPACE);
 
 			// Load the default index.
 			if (defaultStore != null) {
 				try {
 					if (pluginOptions.load(
 							existingProps,
-							DataStorePluginOptions.getStoreNamespace(
-									defaultStore))) {
+							DataStorePluginOptions.getStoreNamespace(defaultStore))) {
 						// Set the required type option.
 						storeType = pluginOptions.getType();
 					}
@@ -116,8 +112,7 @@ public class AddStoreCommand extends DefaultOperation implements
 	@Override
 	public void execute(
 			final OperationParams params ) {
-		computeResults(
-				params);
+		computeResults(params);
 	}
 
 	public void computeResults(
@@ -150,8 +145,7 @@ public class AddStoreCommand extends DefaultOperation implements
 				getNamespace());
 
 		// Make default?
-		if (Boolean.TRUE.equals(
-				makeDefault)) {
+		if (Boolean.TRUE.equals(makeDefault)) {
 			existingProps.setProperty(
 					DataStorePluginOptions.DEFAULT_PROPERTY_NAMESPACE,
 					getPluginName());
@@ -168,13 +162,11 @@ public class AddStoreCommand extends DefaultOperation implements
 	}
 
 	public String getPluginName() {
-		return parameters.get(
-				0);
+		return parameters.get(0);
 	}
 
 	public String getNamespace() {
-		return DataStorePluginOptions.getStoreNamespace(
-				getPluginName());
+		return DataStorePluginOptions.getStoreNamespace(getPluginName());
 	}
 
 	public List<String> getParameters() {
@@ -184,8 +176,7 @@ public class AddStoreCommand extends DefaultOperation implements
 	public void setParameters(
 			final String storeName ) {
 		parameters = new ArrayList<String>();
-		parameters.add(
-				storeName);
+		parameters.add(storeName);
 	}
 
 	public Boolean getMakeDefault() {

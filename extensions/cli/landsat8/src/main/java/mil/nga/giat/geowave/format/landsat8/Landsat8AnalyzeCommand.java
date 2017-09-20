@@ -35,8 +35,7 @@ public class Landsat8AnalyzeCommand extends
 			throws Exception {
 		final AnalyzeRunner runner = new AnalyzeRunner(
 				landsatOptions);
-		runner.runInternal(
-				params);
+		runner.runInternal(params);
 	}
 
 }

@@ -69,25 +69,20 @@ public class GeoServerRemoveFeatureLayerCommand extends
 		}
 
 		JCommander.getConsole().println(
-				computeResults(
-						params));
+				computeResults(params));
 	}
 
 	@Override
 	public String computeResults(
 			final OperationParams params )
 			throws Exception {
-		layerName = parameters.get(
-				0);
+		layerName = parameters.get(0);
 
-		final Response deleteLayerResponse = geoserverClient.deleteFeatureLayer(
-				layerName);
+		final Response deleteLayerResponse = geoserverClient.deleteFeatureLayer(layerName);
 
 		if (deleteLayerResponse.getStatus() == Status.OK.getStatusCode()) {
-			final JSONObject listObj = JSONObject.fromObject(
-					deleteLayerResponse.getEntity());
-			return "\nGeoServer delete layer response " + layerName + ": " + listObj.toString(
-					2);
+			final JSONObject listObj = JSONObject.fromObject(deleteLayerResponse.getEntity());
+			return "\nGeoServer delete layer response " + layerName + ": " + listObj.toString(2);
 		}
 		return "Error deleting GeoServer layer " + layerName + "; code = " + deleteLayerResponse.getStatus();
 	}

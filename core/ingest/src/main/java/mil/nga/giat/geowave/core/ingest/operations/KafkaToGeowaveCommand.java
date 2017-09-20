@@ -72,8 +72,7 @@ public class KafkaToGeowaveCommand extends
 		// anything for Kafka to Geowave
 
 		// Based on the selected formats, select the format plugins
-		pluginFormats.selectPlugin(
-				localInputOptions.getFormats());
+		pluginFormats.selectPlugin(localInputOptions.getFormats());
 
 		return true;
 	}
@@ -94,8 +93,7 @@ public class KafkaToGeowaveCommand extends
 					"Requires arguments: <store name> <comma delimited index/group list>");
 		}
 
-		computeResults(
-				params);
+		computeResults(params);
 	}
 
 	public IngestFromKafkaDriver getDriver() {
@@ -110,10 +108,8 @@ public class KafkaToGeowaveCommand extends
 			final String storeName,
 			final String commaSeparatedIndexes ) {
 		parameters = new ArrayList<String>();
-		parameters.add(
-				storeName);
-		parameters.add(
-				commaSeparatedIndexes);
+		parameters.add(storeName);
+		parameters.add(commaSeparatedIndexes);
 	}
 
 	public VisibilityOptions getIngestOptions() {
@@ -174,10 +170,8 @@ public class KafkaToGeowaveCommand extends
 	public Void computeResults(
 			final OperationParams params )
 			throws Exception {
-		final String inputStoreName = parameters.get(
-				0);
-		final String indexList = parameters.get(
-				1);
+		final String inputStoreName = parameters.get(0);
+		final String indexList = parameters.get(1);
 
 		// Config file
 		final File configFile = (File) params.getContext().get(
@@ -187,8 +181,7 @@ public class KafkaToGeowaveCommand extends
 		if (inputStoreOptions == null) {
 			final StoreLoader inputStoreLoader = new StoreLoader(
 					inputStoreName);
-			if (!inputStoreLoader.loadFromConfig(
-					configFile)) {
+			if (!inputStoreLoader.loadFromConfig(configFile)) {
 				throw new ParameterException(
 						"Cannot find store name: " + inputStoreLoader.getStoreName());
 			}
@@ -199,8 +192,7 @@ public class KafkaToGeowaveCommand extends
 		if (inputIndexOptions == null) {
 			final IndexLoader indexLoader = new IndexLoader(
 					indexList);
-			if (!indexLoader.loadFromConfig(
-					configFile)) {
+			if (!indexLoader.loadFromConfig(configFile)) {
 				throw new ParameterException(
 						"Cannot find index(s) by name: " + indexList);
 			}

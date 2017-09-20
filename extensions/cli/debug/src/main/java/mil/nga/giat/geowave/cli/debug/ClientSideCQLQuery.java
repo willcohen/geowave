@@ -34,8 +34,7 @@ import mil.nga.giat.geowave.core.store.query.QueryOptions;
 public class ClientSideCQLQuery extends
 		AbstractGeoWaveQuery
 {
-	private static Logger LOGGER = LoggerFactory.getLogger(
-			ClientSideCQLQuery.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(ClientSideCQLQuery.class);
 
 	@Parameter(names = "--cql", required = true, description = "CQL Filter executed client side")
 	private String cql;
@@ -44,8 +43,7 @@ public class ClientSideCQLQuery extends
 
 	private void getFilter() {
 		try {
-			filter = ECQL.toFilter(
-					cql);
+			filter = ECQL.toFilter(cql);
 		}
 		catch (final CQLException e) {
 			LOGGER.warn(
@@ -72,11 +70,9 @@ public class ClientSideCQLQuery extends
 			while (it.hasNext()) {
 				final Object o = it.next();
 				if (o instanceof SimpleFeature) {
-					if (filter.evaluate(
-							o)) {
+					if (filter.evaluate(o)) {
 						if (debug) {
-							System.out.println(
-									o);
+							System.out.println(o);
 						}
 						count++;
 					}

@@ -36,13 +36,13 @@ public class GeoServerAddFeatureLayerCommand extends
 	@Parameter(names = {
 		"-ws",
 		"--workspace"
-	}, required = false, description = "<workspace name>")
+	}, required = false, description = "workspace name")
 	private String workspace = null;
 
 	@Parameter(names = {
 		"-ds",
 		"--datastore"
-	}, required = true, description = "<datastore name>")
+	}, required = true, description = "datastore name")
 	private final String datastore = null;
 
 	@Parameter(description = "<layer name>")
@@ -52,14 +52,12 @@ public class GeoServerAddFeatureLayerCommand extends
 	@Override
 	public boolean prepare(
 			final OperationParams params ) {
-		super.prepare(
-				params);
+		super.prepare(params);
 		if (geoserverClient == null) {
 			// Create the rest client
 			geoserverClient = new GeoServerRestClient(
 					new GeoServerConfig(
-							getGeoWaveConfigFile(
-									params)));
+							getGeoWaveConfigFile(params)));
 		}
 
 		// Successfully prepared
@@ -71,8 +69,7 @@ public class GeoServerAddFeatureLayerCommand extends
 			final OperationParams params )
 			throws Exception {
 		JCommander.getConsole().println(
-				computeResults(
-						params));
+				computeResults(params));
 	}
 
 	@Override
@@ -87,8 +84,7 @@ public class GeoServerAddFeatureLayerCommand extends
 			workspace = geoserverClient.getConfig().getWorkspace();
 		}
 
-		layerName = parameters.get(
-				0);
+		layerName = parameters.get(0);
 
 		final Response addLayerResponse = geoserverClient.addFeatureLayer(
 				workspace,
@@ -97,10 +93,8 @@ public class GeoServerAddFeatureLayerCommand extends
 				null);
 
 		if (addLayerResponse.getStatus() == Status.CREATED.getStatusCode()) {
-			final JSONObject listObj = JSONObject.fromObject(
-					addLayerResponse.getEntity());
-			return "\nGeoServer add layer response " + layerName + ":" + listObj.toString(
-					2);
+			final JSONObject listObj = JSONObject.fromObject(addLayerResponse.getEntity());
+			return "\nGeoServer add layer response " + layerName + ":" + listObj.toString(2);
 		}
 		return "Error adding GeoServer layer " + layerName + "; code = " + addLayerResponse.getStatus();
 	}

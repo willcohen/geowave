@@ -35,13 +35,13 @@ public class GeoServerAddDatastoreCommand extends
 	@Parameter(names = {
 		"-ws",
 		"--workspace"
-	}, required = false, description = "<workspace name>")
+	}, required = false, description = "workspace name")
 	private String workspace = null;
 
 	@Parameter(names = {
 		"-ds",
 		"--datastore"
-	}, required = false, description = "<datastore name>")
+	}, required = false, description = "datastore name")
 	private final String datastore = null;
 
 	@Parameter(description = "<GeoWave store name>")
@@ -51,14 +51,12 @@ public class GeoServerAddDatastoreCommand extends
 	@Override
 	public boolean prepare(
 			final OperationParams params ) {
-		super.prepare(
-				params);
+		super.prepare(params);
 		if (geoserverClient == null) {
 			// Create the rest client
 			geoserverClient = new GeoServerRestClient(
 					new GeoServerConfig(
-							getGeoWaveConfigFile(
-									params)));
+							getGeoWaveConfigFile(params)));
 		}
 
 		// Successfully prepared
@@ -70,8 +68,7 @@ public class GeoServerAddDatastoreCommand extends
 			final OperationParams params )
 			throws Exception {
 		JCommander.getConsole().println(
-				computeResults(
-						params));
+				computeResults(params));
 	}
 
 	@Override
@@ -82,8 +79,7 @@ public class GeoServerAddDatastoreCommand extends
 					"Requires argument: <datastore name>");
 		}
 
-		gwStore = parameters.get(
-				0);
+		gwStore = parameters.get(0);
 
 		if ((workspace == null) || workspace.isEmpty()) {
 			workspace = geoserverClient.getConfig().getWorkspace();

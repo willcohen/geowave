@@ -34,8 +34,7 @@ public class PreSplitPartitionIdCommand extends
 		Command
 {
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			PreSplitPartitionIdCommand.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(PreSplitPartitionIdCommand.class);
 
 	@Override
 	public void doSplit()

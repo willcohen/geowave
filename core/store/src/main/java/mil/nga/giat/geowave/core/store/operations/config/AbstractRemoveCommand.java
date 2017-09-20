@@ -60,17 +60,14 @@ public abstract class AbstractRemoveCommand extends
 		// Find properties to remove
 		final Set<String> keysToRemove = new HashSet<String>();
 		for (final String key : existingProps.stringPropertyNames()) {
-			if (key.startsWith(
-					pattern)) {
-				keysToRemove.add(
-						key);
+			if (key.startsWith(pattern)) {
+				keysToRemove.add(key);
 			}
 		}
 
 		// Remove each property.
 		for (final String key : keysToRemove) {
-			existingProps.remove(
-					key);
+			existingProps.remove(key);
 		}
 
 		// Write properties file
@@ -84,7 +81,6 @@ public abstract class AbstractRemoveCommand extends
 	public void setEntryName(
 			final String entryName ) {
 		parameters = new ArrayList<String>();
-		parameters.add(
-				entryName);
+		parameters.add(entryName);
 	}
 }

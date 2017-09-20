@@ -35,8 +35,7 @@ import mil.nga.giat.geowave.core.cli.operations.config.security.utils.SecurityUt
 public class SetCommand extends
 		ServiceEnabledCommand<Object>
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			SetCommand.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(SetCommand.class);
 
 	@Parameter(description = "<name> <value>")
 	private List<String> parameters = new ArrayList<String>();
@@ -51,13 +50,10 @@ public class SetCommand extends
 	@Override
 	public void execute(
 			final OperationParams params ) {
-		if ((password != null) && !"".equals(
-				password.trim())) {
-			isPassword = Boolean.parseBoolean(
-					password.trim());
+		if ((password != null) && !"".equals(password.trim())) {
+			isPassword = Boolean.parseBoolean(password.trim());
 		}
-		computeResults(
-				params);
+		computeResults(params);
 	}
 
 	/**
@@ -71,8 +67,7 @@ public class SetCommand extends
 	public Object computeResults(
 			final OperationParams params ) {
 		try {
-			return setKeyValue(
-					params);
+			return setKeyValue(params);
 		}
 		catch (WritePropertiesException | ParameterException e) {
 			// TODO GEOWAVE-rest-project server error status message
@@ -100,19 +95,16 @@ public class SetCommand extends
 		String value = null;
 		if ((parameters.size() == 1) && (parameters.get(
 				0).indexOf(
-						"=") != -1)) {
+				"=") != -1)) {
 			final String[] parts = StringUtils.split(
-					parameters.get(
-							0),
+					parameters.get(0),
 					"=");
 			key = parts[0];
 			value = parts[1];
 		}
 		else if (parameters.size() == 2) {
-			key = parameters.get(
-					0);
-			value = parameters.get(
-					1);
+			key = parameters.get(0);
+			value = parameters.get(1);
 		}
 		else {
 			throw new ParameterException(
@@ -121,18 +113,15 @@ public class SetCommand extends
 
 		if (isPassword) {
 			// check if encryption is enabled in configuration
-			if (Boolean.parseBoolean(
-					p.getProperty(
-							Constants.ENCRYPTION_ENABLED_KEY,
-							Constants.ENCRYPTION_ENABLED_DEFAULT))) {
+			if (Boolean.parseBoolean(p.getProperty(
+					Constants.ENCRYPTION_ENABLED_KEY,
+					Constants.ENCRYPTION_ENABLED_DEFAULT))) {
 				try {
-					final File tokenFile = SecurityUtils.getFormattedTokenKeyFileForConfig(
-							getGeoWaveConfigFile());
+					final File tokenFile = SecurityUtils.getFormattedTokenKeyFileForConfig(getGeoWaveConfigFile());
 					value = SecurityUtils.encryptAndHexEncodeValue(
 							value,
 							tokenFile.getAbsolutePath());
-					LOGGER.debug(
-							"Value was successfully encrypted");
+					LOGGER.debug("Value was successfully encrypted");
 				}
 				catch (final Exception e) {
 					LOGGER.error(
@@ -171,10 +160,8 @@ public class SetCommand extends
 			final String key,
 			final String value ) {
 		parameters = new ArrayList<String>();
-		parameters.add(
-				key);
-		parameters.add(
-				value);
+		parameters.add(key);
+		parameters.add(value);
 	}
 
 	private static class WritePropertiesException extends

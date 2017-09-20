@@ -58,8 +58,7 @@ public class Landsat8IngestCommand extends
 				ingestOptions,
 				vectorOverrideOptions,
 				parameters);
-		runner.runInternal(
-				params);
+		runner.runInternal(params);
 	}
 
 }

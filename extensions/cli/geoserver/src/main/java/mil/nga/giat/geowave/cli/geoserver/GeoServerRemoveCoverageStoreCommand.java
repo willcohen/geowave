@@ -74,8 +74,7 @@ public class GeoServerRemoveCoverageStoreCommand extends
 		}
 
 		JCommander.getConsole().println(
-				computeResults(
-						params));
+				computeResults(params));
 	}
 
 	@Override
@@ -86,8 +85,7 @@ public class GeoServerRemoveCoverageStoreCommand extends
 			workspace = geoserverClient.getConfig().getWorkspace();
 		}
 
-		cvgstoreName = parameters.get(
-				0);
+		cvgstoreName = parameters.get(0);
 
 		final Response deleteCvgStoreResponse = geoserverClient.deleteCoverageStore(
 				workspace,

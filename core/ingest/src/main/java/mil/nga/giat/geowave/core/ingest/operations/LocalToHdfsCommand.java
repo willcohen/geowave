@@ -49,8 +49,7 @@ public class LocalToHdfsCommand extends
 			final OperationParams params ) {
 
 		// Based on the selected formats, select the format plugins
-		pluginFormats.selectPlugin(
-				localInputOptions.getFormats());
+		pluginFormats.selectPlugin(localInputOptions.getFormats());
 
 		return true;
 	}
@@ -65,8 +64,7 @@ public class LocalToHdfsCommand extends
 			final OperationParams params )
 			throws Exception {
 
-		computeResults(
-				params);
+		computeResults(params);
 	}
 
 	public List<String> getParameters() {
@@ -78,12 +76,9 @@ public class LocalToHdfsCommand extends
 			final String hdfsHostPort,
 			final String hdfsPath ) {
 		parameters = new ArrayList<String>();
-		parameters.add(
-				fileOrDirectory);
-		parameters.add(
-				hdfsHostPort);
-		parameters.add(
-				hdfsPath);
+		parameters.add(fileOrDirectory);
+		parameters.add(hdfsHostPort);
+		parameters.add(hdfsPath);
 	}
 
 	public IngestFormatPluginOptions getPluginFormats() {
@@ -114,16 +109,12 @@ public class LocalToHdfsCommand extends
 					"Requires arguments: <file or directory> <hdfs host:port> <path to base directory to write to>");
 		}
 
-		final String inputPath = parameters.get(
-				0);
-		String hdfsHostPort = parameters.get(
-				1);
-		final String basePath = parameters.get(
-				2);
+		final String inputPath = parameters.get(0);
+		String hdfsHostPort = parameters.get(1);
+		final String basePath = parameters.get(2);
 
 		// Ensures that the url starts with hdfs://
-		if (!hdfsHostPort.contains(
-				"://")) {
+		if (!hdfsHostPort.contains("://")) {
 			hdfsHostPort = "hdfs://" + hdfsHostPort;
 		}
 
@@ -138,8 +129,7 @@ public class LocalToHdfsCommand extends
 				localInputOptions);
 
 		// Execute
-		if (!driver.runOperation(
-				inputPath)) {
+		if (!driver.runOperation(inputPath)) {
 			throw new RuntimeException(
 					"Ingest failed to execute");
 		}

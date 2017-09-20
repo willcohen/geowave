@@ -38,8 +38,7 @@ public class AddIndexGroupCommand extends
 	@Override
 	public void execute(
 			final OperationParams params ) {
-		addIndexGroup(
-				params);
+		addIndexGroup(params);
 	}
 
 	/**
@@ -53,8 +52,7 @@ public class AddIndexGroupCommand extends
 			final OperationParams params ) {
 
 		try {
-			addIndexGroup(
-					params);
+			addIndexGroup(params);
 		}
 		catch (WritePropertiesException | ParameterException e) {
 			// TODO GEOWAVE-rest-project server error status message
@@ -86,11 +84,10 @@ public class AddIndexGroupCommand extends
 		}
 
 		// New index group name
-		final String newGroupName = parameters.get(
-				0);
+		final String newGroupName = parameters.get(0);
 		final String[] indexes = parameters.get(
 				1).split(
-						",");
+				",");
 
 		// Make sure the existing group doesn't exist.
 		final IndexGroupPluginOptions groupOptions = new IndexGroupPluginOptions();
@@ -107,8 +104,7 @@ public class AddIndexGroupCommand extends
 			final IndexPluginOptions options = new IndexPluginOptions();
 			if (!options.load(
 					existingProps,
-					IndexPluginOptions.getIndexNamespace(
-							indexes[i]))) {
+					IndexPluginOptions.getIndexNamespace(indexes[i]))) {
 				throw new ParameterException(
 						"That index does not exist: " + indexes[i]);
 			}
@@ -132,13 +128,11 @@ public class AddIndexGroupCommand extends
 	}
 
 	public String getPluginName() {
-		return parameters.get(
-				0);
+		return parameters.get(0);
 	}
 
 	public String getNamespace() {
-		return IndexGroupPluginOptions.getIndexGroupNamespace(
-				getPluginName());
+		return IndexGroupPluginOptions.getIndexGroupNamespace(getPluginName());
 	}
 
 	public List<String> getParameters() {
@@ -149,10 +143,8 @@ public class AddIndexGroupCommand extends
 			final String name,
 			final String commaSeparatedIndexes ) {
 		parameters = new ArrayList<String>();
-		parameters.add(
-				name);
-		parameters.add(
-				commaSeparatedIndexes);
+		parameters.add(name);
+		parameters.add(commaSeparatedIndexes);
 	}
 
 	private static class WritePropertiesException extends

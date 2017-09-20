@@ -34,8 +34,7 @@ public class SplitQuantileCommand extends
 		Command
 {
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			SplitQuantileCommand.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(SplitQuantileCommand.class);
 
 	@Override
 	public void doSplit()

@@ -29,8 +29,7 @@ import mil.nga.giat.geowave.core.store.query.QueryOptions;
 public class FullTableScan extends
 		AbstractGeoWaveQuery
 {
-	private static Logger LOGGER = LoggerFactory.getLogger(
-			FullTableScan.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(FullTableScan.class);
 
 	@Override
 	protected long runQuery(
@@ -47,8 +46,7 @@ public class FullTableScan extends
 				null)) {
 			while (it.hasNext()) {
 				if (debug) {
-					System.out.println(
-							it.next());
+					System.out.println(it.next());
 				}
 				else {
 					it.next();

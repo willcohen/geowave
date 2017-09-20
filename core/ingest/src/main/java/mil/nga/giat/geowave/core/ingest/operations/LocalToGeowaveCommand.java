@@ -69,8 +69,7 @@ public class LocalToGeowaveCommand extends
 			final OperationParams params ) {
 
 		// Based on the selected formats, select the format plugins
-		pluginFormats.selectPlugin(
-				localInputOptions.getFormats());
+		pluginFormats.selectPlugin(localInputOptions.getFormats());
 
 		return true;
 	}
@@ -81,8 +80,7 @@ public class LocalToGeowaveCommand extends
 	@Override
 	public void execute(
 			final OperationParams params ) {
-		computeResults(
-				params);
+		computeResults(params);
 	}
 
 	public List<String> getParameters() {
@@ -94,12 +92,9 @@ public class LocalToGeowaveCommand extends
 			final String storeName,
 			final String commaDelimitedIndexes ) {
 		parameters = new ArrayList<String>();
-		parameters.add(
-				fileOrDirectory);
-		parameters.add(
-				storeName);
-		parameters.add(
-				commaDelimitedIndexes);
+		parameters.add(fileOrDirectory);
+		parameters.add(storeName);
+		parameters.add(commaDelimitedIndexes);
 	}
 
 	public VisibilityOptions getIngestOptions() {
@@ -165,12 +160,9 @@ public class LocalToGeowaveCommand extends
 					"Requires arguments: <file or directory> <storename> <comma delimited index/group list>");
 		}
 
-		final String inputPath = parameters.get(
-				0);
-		final String inputStoreName = parameters.get(
-				1);
-		final String indexList = parameters.get(
-				2);
+		final String inputPath = parameters.get(0);
+		final String inputStoreName = parameters.get(1);
+		final String indexList = parameters.get(2);
 
 		// Config file
 		final File configFile = (File) params.getContext().get(
@@ -180,8 +172,7 @@ public class LocalToGeowaveCommand extends
 		if (inputStoreOptions == null) {
 			final StoreLoader inputStoreLoader = new StoreLoader(
 					inputStoreName);
-			if (!inputStoreLoader.loadFromConfig(
-					configFile)) {
+			if (!inputStoreLoader.loadFromConfig(configFile)) {
 				throw new ParameterException(
 						"Cannot find store name: " + inputStoreLoader.getStoreName());
 			}
@@ -192,8 +183,7 @@ public class LocalToGeowaveCommand extends
 		if (inputIndexOptions == null) {
 			final IndexLoader indexLoader = new IndexLoader(
 					indexList);
-			if (!indexLoader.loadFromConfig(
-					configFile)) {
+			if (!indexLoader.loadFromConfig(configFile)) {
 				throw new ParameterException(
 						"Cannot find index(s) by name: " + indexList);
 			}
@@ -213,8 +203,7 @@ public class LocalToGeowaveCommand extends
 				threads);
 
 		// Execute
-		if (!driver.runOperation(
-				inputPath)) {
+		if (!driver.runOperation(inputPath)) {
 			throw new RuntimeException(
 					"Ingest failed to execute");
 		}

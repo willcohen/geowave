@@ -59,8 +59,7 @@ public class GeoServerListWorkspacesCommand extends
 	public void execute(
 			final OperationParams params )
 			throws Exception {
-		for (final String string : computeResults(
-				params)) {
+		for (final String string : computeResults(params)) {
 			JCommander.getConsole().println(
 					string);
 		}
@@ -74,28 +73,22 @@ public class GeoServerListWorkspacesCommand extends
 
 		final ArrayList<String> results = new ArrayList<>();
 		if (getWorkspacesResponse.getStatus() == Status.OK.getStatusCode()) {
-			results.add(
-					"\nList of GeoServer workspaces:");
+			results.add("\nList of GeoServer workspaces:");
 
-			final JSONObject jsonResponse = JSONObject.fromObject(
-					getWorkspacesResponse.getEntity());
+			final JSONObject jsonResponse = JSONObject.fromObject(getWorkspacesResponse.getEntity());
 
-			final JSONArray workspaces = jsonResponse.getJSONArray(
-					"workspaces");
+			final JSONArray workspaces = jsonResponse.getJSONArray("workspaces");
 			for (int i = 0; i < workspaces.size(); i++) {
 				final String wsName = workspaces.getJSONObject(
 						i).getString(
-								"name");
-				results.add(
-						"  > " + wsName);
+						"name");
+				results.add("  > " + wsName);
 			}
 
-			results.add(
-					"---\n");
+			results.add("---\n");
 		}
 		else {
-			results.add(
-					"Error getting GeoServer workspace list; code = " + getWorkspacesResponse.getStatus());
+			results.add("Error getting GeoServer workspace list; code = " + getWorkspacesResponse.getStatus());
 		}
 		return results;
 	}

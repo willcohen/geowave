@@ -38,7 +38,7 @@ public class GeoServerGetCoverageStoreCommand extends
 	@Parameter(names = {
 		"-ws",
 		"--workspace"
-	}, required = false, description = "<workspace name>")
+	}, required = false, description = "workspace name")
 	private String workspace;
 
 	@Parameter(description = "<coverage store name>")
@@ -70,8 +70,7 @@ public class GeoServerGetCoverageStoreCommand extends
 			final OperationParams params )
 			throws Exception {
 		JCommander.getConsole().println(
-				computeResults(
-						params));
+				computeResults(params));
 	}
 
 	@Override
@@ -87,20 +86,16 @@ public class GeoServerGetCoverageStoreCommand extends
 			workspace = geoserverClient.getConfig().getWorkspace();
 		}
 
-		csName = parameters.get(
-				0);
+		csName = parameters.get(0);
 
 		final Response getCvgStoreResponse = geoserverClient.getCoverageStore(
 				workspace,
 				csName);
 
 		if (getCvgStoreResponse.getStatus() == Status.OK.getStatusCode()) {
-			final JSONObject jsonResponse = JSONObject.fromObject(
-					getCvgStoreResponse.getEntity());
-			final JSONObject cvgstore = jsonResponse.getJSONObject(
-					"coverageStore");
-			return "\nGeoServer coverage store info for '" + csName + "': " + cvgstore.toString(
-					2);
+			final JSONObject jsonResponse = JSONObject.fromObject(getCvgStoreResponse.getEntity());
+			final JSONObject cvgstore = jsonResponse.getJSONObject("coverageStore");
+			return "\nGeoServer coverage store info for '" + csName + "': " + cvgstore.toString(2);
 		}
 		return "Error getting GeoServer coverage store info for '" + csName + "'; code = "
 				+ getCvgStoreResponse.getStatus();

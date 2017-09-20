@@ -38,8 +38,7 @@ public class AddAccumuloStoreCommand extends
 	 * A REST Operation for the AddStoreCommand where --type=accumulo
 	 */
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			AddAccumuloStoreCommand.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(AddAccumuloStoreCommand.class);
 
 	public static final String PROPERTIES_CONTEXT = "properties";
 
@@ -62,10 +61,8 @@ public class AddAccumuloStoreCommand extends
 	public boolean prepare(
 			final OperationParams params ) {
 
-		pluginOptions.selectPlugin(
-				"accumulo");
-		pluginOptions.setFactoryOptions(
-				requiredOptions);
+		pluginOptions.selectPlugin("accumulo");
+		pluginOptions.setFactoryOptions(requiredOptions);
 
 		return true;
 	}
@@ -73,8 +70,7 @@ public class AddAccumuloStoreCommand extends
 	@Override
 	public void execute(
 			final OperationParams params ) {
-		computeResults(
-				params);
+		computeResults(params);
 	}
 
 	@Override
@@ -108,8 +104,7 @@ public class AddAccumuloStoreCommand extends
 				getNamespace());
 
 		// Make default?
-		if (Boolean.TRUE.equals(
-				makeDefault)) {
+		if (Boolean.TRUE.equals(makeDefault)) {
 			existingProps.setProperty(
 					DataStorePluginOptions.DEFAULT_PROPERTY_NAMESPACE,
 					getPluginName());
@@ -128,13 +123,11 @@ public class AddAccumuloStoreCommand extends
 	}
 
 	public String getPluginName() {
-		return parameters.get(
-				0);
+		return parameters.get(0);
 	}
 
 	public String getNamespace() {
-		return DataStorePluginOptions.getStoreNamespace(
-				getPluginName());
+		return DataStorePluginOptions.getStoreNamespace(getPluginName());
 	}
 
 	public List<String> getParameters() {
@@ -154,8 +147,7 @@ public class AddAccumuloStoreCommand extends
 	public void setParameters(
 			final String storeName ) {
 		parameters = new ArrayList<String>();
-		parameters.add(
-				storeName);
+		parameters.add(storeName);
 	}
 
 	public Boolean getMakeDefault() {

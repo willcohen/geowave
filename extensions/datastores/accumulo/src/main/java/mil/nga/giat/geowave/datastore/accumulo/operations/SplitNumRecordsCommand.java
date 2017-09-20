@@ -34,8 +34,7 @@ public class SplitNumRecordsCommand extends
 		Command
 {
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			SplitNumRecordsCommand.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(SplitNumRecordsCommand.class);
 
 	@Override
 	public void doSplit()

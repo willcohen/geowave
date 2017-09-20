@@ -53,8 +53,7 @@ public class LocalToKafkaCommand extends
 			final OperationParams params ) {
 
 		// Based on the selected formats, select the format plugins
-		pluginFormats.selectPlugin(
-				localInputOptions.getFormats());
+		pluginFormats.selectPlugin(localInputOptions.getFormats());
 
 		return true;
 	}
@@ -68,8 +67,7 @@ public class LocalToKafkaCommand extends
 	public void execute(
 			final OperationParams params )
 			throws Exception {
-		computeResults(
-				params);
+		computeResults(params);
 	}
 
 	public List<String> getParameters() {
@@ -79,8 +77,7 @@ public class LocalToKafkaCommand extends
 	public void setParameters(
 			final String fileOrDirectory ) {
 		parameters = new ArrayList<String>();
-		parameters.add(
-				fileOrDirectory);
+		parameters.add(fileOrDirectory);
 	}
 
 	public KafkaProducerCommandLineOptions getKafkaOptions() {
@@ -120,8 +117,7 @@ public class LocalToKafkaCommand extends
 					"Requires arguments: <file or directory>");
 		}
 
-		final String inputPath = parameters.get(
-				0);
+		final String inputPath = parameters.get(0);
 
 		// Ingest Plugins
 		final Map<String, LocalFileIngestPlugin<?>> ingestPlugins = pluginFormats.createLocalIngestPlugins();
@@ -133,8 +129,7 @@ public class LocalToKafkaCommand extends
 				localInputOptions);
 
 		// Execute
-		if (!driver.runOperation(
-				inputPath)) {
+		if (!driver.runOperation(inputPath)) {
 			throw new RuntimeException(
 					"Ingest failed to execute");
 		}

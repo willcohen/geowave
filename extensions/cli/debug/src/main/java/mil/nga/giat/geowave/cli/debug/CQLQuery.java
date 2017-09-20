@@ -33,8 +33,7 @@ import mil.nga.giat.geowave.core.store.query.aggregate.CountResult;
 public class CQLQuery extends
 		AbstractGeoWaveQuery
 {
-	private static Logger LOGGER = LoggerFactory.getLogger(
-			CQLQuery.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(CQLQuery.class);
 
 	@Parameter(names = "--cql", required = true, description = "CQL Filter executed client side")
 	private String cqlStr;
@@ -98,8 +97,7 @@ public class CQLQuery extends
 							null))) {
 				while (it.hasNext()) {
 					if (debug) {
-						System.out.println(
-								it.next());
+						System.out.println(it.next());
 					}
 					else {
 						it.next();

@@ -49,8 +49,7 @@ public class MinimalFullTable extends
 		DefaultOperation implements
 		Command
 {
-	private static Logger LOGGER = LoggerFactory.getLogger(
-			MinimalFullTable.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(MinimalFullTable.class);
 
 	@Parameter(description = "<storename>")
 	private final List<String> parameters = new ArrayList<String>();
@@ -70,23 +69,19 @@ public class MinimalFullTable extends
 					"Requires arguments: <storename>");
 		}
 
-		final String storeName = parameters.get(
-				0);
+		final String storeName = parameters.get(0);
 
 		// Attempt to load store.
 		final StoreLoader storeOptions = new StoreLoader(
 				storeName);
-		if (!storeOptions.loadFromConfig(
-				getGeoWaveConfigFile(
-						params))) {
+		if (!storeOptions.loadFromConfig(getGeoWaveConfigFile(params))) {
 			throw new ParameterException(
 					"Cannot find store name: " + storeOptions.getStoreName());
 		}
 
 		final String storeType = storeOptions.getDataStorePlugin().getType();
 
-		if (storeType.equals(
-				AccumuloDataStore.TYPE)) {
+		if (storeType.equals(AccumuloDataStore.TYPE)) {
 			try {
 				final AccumuloRequiredOptions opts = (AccumuloRequiredOptions) storeOptions.getFactoryOptions();
 
@@ -98,11 +93,8 @@ public class MinimalFullTable extends
 						opts.getGeowaveNamespace());
 
 				long results = 0;
-				final BatchScanner scanner = ops.createBatchScanner(
-						indexId);
-				scanner.setRanges(
-						Collections.singleton(
-								new Range()));
+				final BatchScanner scanner = ops.createBatchScanner(indexId);
+				scanner.setRanges(Collections.singleton(new Range()));
 				final Iterator<Entry<Key, Value>> it = scanner.iterator();
 
 				stopWatch.start();
@@ -113,8 +105,7 @@ public class MinimalFullTable extends
 				stopWatch.stop();
 
 				scanner.close();
-				System.out.println(
-						"Got " + results + " results in " + stopWatch.toString());
+				System.out.println("Got " + results + " results in " + stopWatch.toString());
 			}
 			catch (AccumuloException | AccumuloSecurityException | TableNotFoundException e) {
 				LOGGER.error(
@@ -122,8 +113,7 @@ public class MinimalFullTable extends
 						e);
 			}
 		}
-		else if (storeType.equals(
-				HBaseDataStore.TYPE)) {
+		else if (storeType.equals(HBaseDataStore.TYPE)) {
 			throw new UnsupportedOperationException(
 					"full scan for store type " + storeType + " not yet implemented.");
 		}

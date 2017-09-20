@@ -48,8 +48,7 @@ public class KdeCommand extends
 	public void execute(
 			final OperationParams params )
 			throws Exception {
-		computeResults(
-				params);
+		computeResults(params);
 	}
 
 	public KDEJobRunner createRunner(
@@ -60,10 +59,8 @@ public class KdeCommand extends
 					"Requires arguments: <input storename> <output storename>");
 		}
 
-		final String inputStore = parameters.get(
-				0);
-		final String outputStore = parameters.get(
-				1);
+		final String inputStore = parameters.get(0);
+		final String outputStore = parameters.get(1);
 		// Config file
 		final File configFile = (File) params.getContext().get(
 				ConfigOptions.PROPERTIES_FILE_CONTEXT);
@@ -72,8 +69,7 @@ public class KdeCommand extends
 		if (inputStoreOptions == null) {
 			final StoreLoader inputStoreLoader = new StoreLoader(
 					inputStore);
-			if (!inputStoreLoader.loadFromConfig(
-					configFile)) {
+			if (!inputStoreLoader.loadFromConfig(configFile)) {
 				throw new ParameterException(
 						"Cannot find store name: " + inputStoreLoader.getStoreName());
 			}
@@ -84,8 +80,7 @@ public class KdeCommand extends
 		if (outputStoreOptions == null) {
 			final StoreLoader outputStoreLoader = new StoreLoader(
 					outputStore);
-			if (!outputStoreLoader.loadFromConfig(
-					configFile)) {
+			if (!outputStoreLoader.loadFromConfig(configFile)) {
 				throw new ParameterException(
 						"Cannot find store name: " + outputStoreLoader.getStoreName());
 			}
@@ -107,10 +102,8 @@ public class KdeCommand extends
 			final String inputStore,
 			final String outputStore ) {
 		parameters = new ArrayList<String>();
-		parameters.add(
-				inputStore);
-		parameters.add(
-				outputStore);
+		parameters.add(inputStore);
+		parameters.add(outputStore);
 	}
 
 	public KDECommandLineOptions getKdeOptions() {
@@ -144,8 +137,7 @@ public class KdeCommand extends
 	public Void computeResults(
 			final OperationParams params )
 			throws Exception {
-		final KDEJobRunner runner = createRunner(
-				params);
+		final KDEJobRunner runner = createRunner(params);
 		final int status = runner.runJob();
 		if (status != 0) {
 			throw new RuntimeException(

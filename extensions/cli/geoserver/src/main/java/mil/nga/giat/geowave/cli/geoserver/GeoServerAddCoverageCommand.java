@@ -35,13 +35,13 @@ public class GeoServerAddCoverageCommand extends
 	@Parameter(names = {
 		"-ws",
 		"--workspace"
-	}, required = false, description = "<workspace name>")
+	}, required = false, description = "workspace name")
 	private String workspace = null;
 
 	@Parameter(names = {
 		"-cs",
 		"--cvgstore"
-	}, required = true, description = "<coverage store name>")
+	}, required = true, description = "coverage store name")
 	private final String cvgstore = null;
 
 	@Parameter(description = "<coverage name>")
@@ -51,15 +51,13 @@ public class GeoServerAddCoverageCommand extends
 	@Override
 	public boolean prepare(
 			final OperationParams params ) {
-		super.prepare(
-				params);
+		super.prepare(params);
 
 		if (geoserverClient == null) {
 			// Create the rest client
 			geoserverClient = new GeoServerRestClient(
 					new GeoServerConfig(
-							getGeoWaveConfigFile(
-									params)));
+							getGeoWaveConfigFile(params)));
 		}
 
 		// Successfully prepared
@@ -71,8 +69,7 @@ public class GeoServerAddCoverageCommand extends
 			final OperationParams params )
 			throws Exception {
 		JCommander.getConsole().println(
-				computeResults(
-						params));
+				computeResults(params));
 	}
 
 	@Override
@@ -87,8 +84,7 @@ public class GeoServerAddCoverageCommand extends
 			workspace = geoserverClient.getConfig().getWorkspace();
 		}
 
-		cvgName = parameters.get(
-				0);
+		cvgName = parameters.get(0);
 
 		final Response addLayerResponse = geoserverClient.addCoverage(
 				workspace,

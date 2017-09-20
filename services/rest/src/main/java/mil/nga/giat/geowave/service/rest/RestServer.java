@@ -1,5 +1,6 @@
 package mil.nga.giat.geowave.service.rest;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -31,8 +32,7 @@ import mil.nga.giat.geowave.core.cli.api.ServiceEnabledCommand;
 public class RestServer extends
 		ServerResource
 {
-	private static final Logger LOGGER = LoggerFactory.getLogger(
-			RestServer.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(RestServer.class);
 	private final ArrayList<RestRoute> availableRoutes;
 
 	/**
@@ -42,20 +42,19 @@ public class RestServer extends
 	public static void main(
 			final String[] args ) {
 		final RestServer server = new RestServer();
-		server.run(
-				5152);
+		server.run(5152);
 	}
 
 	public RestServer() {
 		availableRoutes = new ArrayList<RestRoute>();
 
 		for (final Class<? extends ServiceEnabledCommand> operation : new Reflections(
-				"mil.nga.giat.geowave").getSubTypesOf(
-						ServiceEnabledCommand.class)) {
+				"mil.nga.giat.geowave").getSubTypesOf(ServiceEnabledCommand.class)) {
 			try {
-				availableRoutes.add(
-						new RestRoute(
-								operation.newInstance()));
+				if (!Modifier.isAbstract(operation.getModifiers())) {
+					availableRoutes.add(new RestRoute(
+							operation.newInstance()));
+				}
 			}
 
 			catch (InstantiationException | IllegalAccessException e) {
@@ -64,8 +63,7 @@ public class RestServer extends
 						e);
 			}
 		}
-		Collections.sort(
-				availableRoutes);
+		Collections.sort(availableRoutes);
 
 	}
 
@@ -76,8 +74,7 @@ public class RestServer extends
 				"Available Routes:<br>");
 
 		for (final RestRoute route : availableRoutes) {
-			routeStringBuilder.append(
-					route.getPath() + " --> " + route.getOperation() + "<br>");
+			routeStringBuilder.append(route.getPath() + " --> " + route.getOperation() + "<br>");
 		}
 		return "<b>404</b>: Route not found<br><br>" + routeStringBuilder.toString();
 	}
@@ -98,26 +95,22 @@ public class RestServer extends
 					new GeoWaveOperationFinder(
 							route.getOperation()));
 
-			apiParser.addRoute(
-					route);
+			apiParser.addRoute(route);
 		}
 		router.attach(
 				"fileupload",
 				FileUpload.class);
 
-		apiParser.serializeSwaggerJson(
-				"swagger.json");
+		apiParser.serializeSwaggerJson("swagger.json");
 		// Provide basic 404 error page for unknown route
-		router.attachDefault(
-				RestServer.class);
+		router.attachDefault(RestServer.class);
 
 		// Setup router
 		final Application myApp = new SwaggerApplication() {
 
 			@Override
 			public Restlet createInboundRoot() {
-				router.setContext(
-						getContext());
+				router.setContext(getContext());
 
 				attachSwaggerSpecificationRestlet(
 						router,
@@ -164,12 +157,9 @@ public class RestServer extends
 		// TODO I don't know exactly what we want to do, but I added this for my
 		// ease at the moment
 		final CorsService corsService = new CorsService();
-		corsService.setAllowedOrigins(
-				new HashSet(
-						Arrays.asList(
-								"*")));
-		corsService.setAllowedCredentials(
-				true);
+		corsService.setAllowedOrigins(new HashSet(
+				Arrays.asList("*")));
+		corsService.setAllowedCredentials(true);
 		myApp.getServices().add(
 				corsService);
 		component.getDefaultHost().attach(
@@ -186,8 +176,7 @@ public class RestServer extends
 		}
 		catch (final Exception e) {
 			e.printStackTrace();
-			System.out.println(
-					"Could not create Restlet server - is the port already bound?");
+			System.out.println("Could not create Restlet server - is the port already bound?");
 		}
 
 		// return router;

@@ -38,8 +38,7 @@ public class ListAdapterCommand extends
 		ServiceEnabledCommand<String>
 {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(
-			RecalculateStatsCommand.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(RecalculateStatsCommand.class);
 
 	@Parameter(description = "<store name>")
 	private List<String> parameters = new ArrayList<String>();
@@ -50,8 +49,7 @@ public class ListAdapterCommand extends
 	public void execute(
 			final OperationParams params ) {
 		JCommander.getConsole().println(
-				"Available adapters: " + computeResults(
-						params));
+				"Available adapters: " + computeResults(params));
 	}
 
 	public List<String> getParameters() {
@@ -61,8 +59,7 @@ public class ListAdapterCommand extends
 	public void setParameters(
 			final String storeName ) {
 		parameters = new ArrayList<String>();
-		parameters.add(
-				storeName);
+		parameters.add(storeName);
 	}
 
 	public DataStorePluginOptions getInputStoreOptions() {
@@ -82,8 +79,7 @@ public class ListAdapterCommand extends
 					"Must specify store name");
 		}
 
-		final String inputStoreName = parameters.get(
-				0);
+		final String inputStoreName = parameters.get(0);
 
 		// Attempt to load store.
 		final File configFile = (File) params.getContext().get(
@@ -93,8 +89,7 @@ public class ListAdapterCommand extends
 		if (inputStoreOptions == null) {
 			final StoreLoader inputStoreLoader = new StoreLoader(
 					inputStoreName);
-			if (!inputStoreLoader.loadFromConfig(
-					configFile)) {
+			if (!inputStoreLoader.loadFromConfig(configFile)) {
 				throw new ParameterException(
 						"Cannot find store name: " + inputStoreLoader.getStoreName());
 			}
@@ -107,7 +102,7 @@ public class ListAdapterCommand extends
 			final DataAdapter<?> adapter = it.next();
 			buffer.append(
 					adapter.getAdapterId().getString()).append(
-							' ');
+					' ');
 		}
 		try {
 			it.close();

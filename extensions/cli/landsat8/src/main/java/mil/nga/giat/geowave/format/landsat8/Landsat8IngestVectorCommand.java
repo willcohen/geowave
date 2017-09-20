@@ -44,8 +44,7 @@ public class Landsat8IngestVectorCommand extends
 		final VectorIngestRunner runner = new VectorIngestRunner(
 				analyzeOptions,
 				parameters);
-		runner.runInternal(
-				params);
+		runner.runInternal(params);
 	}
 
 }

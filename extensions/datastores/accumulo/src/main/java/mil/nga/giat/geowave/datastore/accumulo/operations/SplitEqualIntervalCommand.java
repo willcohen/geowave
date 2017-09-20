@@ -34,8 +34,7 @@ public class SplitEqualIntervalCommand extends
 		Command
 {
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			SplitEqualIntervalCommand.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(SplitEqualIntervalCommand.class);
 
 	@Override
 	public void doSplit()

@@ -36,7 +36,7 @@ public class GeoServerListDatastoresCommand extends
 	@Parameter(names = {
 		"-ws",
 		"--workspace"
-	}, required = false, description = "<workspace name>")
+	}, required = false, description = "workspace name")
 	private String workspace;
 
 	@Override
@@ -64,8 +64,7 @@ public class GeoServerListDatastoresCommand extends
 			final OperationParams params )
 			throws Exception {
 		JCommander.getConsole().println(
-				computeResults(
-						params));
+				computeResults(params));
 	}
 
 	@Override
@@ -76,16 +75,12 @@ public class GeoServerListDatastoresCommand extends
 			workspace = geoserverClient.getConfig().getWorkspace();
 		}
 
-		final Response listStoresResponse = geoserverClient.getDatastores(
-				workspace);
+		final Response listStoresResponse = geoserverClient.getDatastores(workspace);
 
 		if (listStoresResponse.getStatus() == Status.OK.getStatusCode()) {
-			final JSONObject jsonResponse = JSONObject.fromObject(
-					listStoresResponse.getEntity());
-			final JSONArray datastores = jsonResponse.getJSONArray(
-					"dataStores");
-			return "\nGeoServer stores list for '" + workspace + "': " + datastores.toString(
-					2);
+			final JSONObject jsonResponse = JSONObject.fromObject(listStoresResponse.getEntity());
+			final JSONArray datastores = jsonResponse.getJSONArray("dataStores");
+			return "\nGeoServer stores list for '" + workspace + "': " + datastores.toString(2);
 		}
 		return "Error getting GeoServer stores list for '" + workspace + "'; code = " + listStoresResponse.getStatus();
 	}

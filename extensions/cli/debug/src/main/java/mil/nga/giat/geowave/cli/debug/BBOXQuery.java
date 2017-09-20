@@ -37,8 +37,7 @@ import mil.nga.giat.geowave.core.store.query.aggregate.CountResult;
 public class BBOXQuery extends
 		AbstractGeoWaveQuery
 {
-	private static Logger LOGGER = LoggerFactory.getLogger(
-			BBOXQuery.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(BBOXQuery.class);
 
 	@Parameter(names = {
 		"-e",
@@ -73,12 +72,11 @@ public class BBOXQuery extends
 	private Geometry geom;
 
 	private void getBoxGeom() {
-		geom = new GeometryFactory().toGeometry(
-				new Envelope(
-						west,
-						east,
-						south,
-						north));
+		geom = new GeometryFactory().toGeometry(new Envelope(
+				west,
+				east,
+				south,
+				north));
 	}
 
 	@Override
@@ -126,16 +124,14 @@ public class BBOXQuery extends
 							geom));
 
 			stopWatch.stop();
-			System.out.println(
-					"Ran BBOX query in " + stopWatch.toString());
+			System.out.println("Ran BBOX query in " + stopWatch.toString());
 
 			stopWatch.reset();
 			stopWatch.start();
 
 			while (it.hasNext()) {
 				if (debug) {
-					System.out.println(
-							it.next());
+					System.out.println(it.next());
 				}
 				else {
 					it.next();
@@ -144,8 +140,7 @@ public class BBOXQuery extends
 			}
 
 			stopWatch.stop();
-			System.out.println(
-					"BBOX query results iteration took " + stopWatch.toString());
+			System.out.println("BBOX query results iteration took " + stopWatch.toString());
 		}
 		return count;
 	}

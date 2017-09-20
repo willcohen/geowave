@@ -35,7 +35,7 @@ public class GeoServerListCoverageStoresCommand extends
 	@Parameter(names = {
 		"-ws",
 		"--workspace"
-	}, required = false, description = "<workspace name>")
+	}, required = false, description = "workspace name")
 	private String workspace;
 
 	@Override
@@ -73,16 +73,12 @@ public class GeoServerListCoverageStoresCommand extends
 			workspace = geoserverClient.getConfig().getWorkspace();
 		}
 
-		final Response listCvgStoresResponse = geoserverClient.getCoverageStores(
-				workspace);
+		final Response listCvgStoresResponse = geoserverClient.getCoverageStores(workspace);
 
 		if (listCvgStoresResponse.getStatus() == Status.OK.getStatusCode()) {
-			final JSONObject jsonResponse = JSONObject.fromObject(
-					listCvgStoresResponse.getEntity());
-			final JSONArray cvgStores = jsonResponse.getJSONArray(
-					"coverageStores");
-			return "\nGeoServer coverage stores list for '" + workspace + "': " + cvgStores.toString(
-					2);
+			final JSONObject jsonResponse = JSONObject.fromObject(listCvgStoresResponse.getEntity());
+			final JSONArray cvgStores = jsonResponse.getJSONArray("coverageStores");
+			return "\nGeoServer coverage stores list for '" + workspace + "': " + cvgStores.toString(2);
 		}
 		return "Error getting GeoServer coverage stores list for '" + workspace + "'; code = "
 				+ listCvgStoresResponse.getStatus();

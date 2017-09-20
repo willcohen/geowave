@@ -40,8 +40,7 @@ public class AddSpatialIndexCommand extends
 	 * A REST Operation for the AddIndexCommand where --type=spatial
 	 */
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			AddIndexCommand.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(AddIndexCommand.class);
 
 	@Parameter(description = "<name>", required = true)
 	private List<String> parameters = new ArrayList<String>();
@@ -64,25 +63,23 @@ public class AddSpatialIndexCommand extends
 	public boolean prepare(
 			final OperationParams params ) {
 
-		pluginOptions.selectPlugin(
-				"spatial");
-		pluginOptions.setBasicIndexOptions(
-				basicIndexOptions);
-		pluginOptions.setDimensionalityTypeOptions(
-				opts);
+		pluginOptions.selectPlugin("spatial");
+		pluginOptions.setBasicIndexOptions(basicIndexOptions);
+		pluginOptions.setDimensionalityTypeOptions(opts);
 		return true;
 	}
 
 	@Override
 	public void execute(
 			final OperationParams params ) {
-		computeResults(
-				params);
+		computeResults(params);
 	}
+
 	@Override
 	public String getId() {
 		return ConfigSection.class.getName() + ".addindex/spatial";
 	}
+
 	@Override
 	public String getPath() {
 		return "config/addindex/spatial";
@@ -93,13 +90,11 @@ public class AddSpatialIndexCommand extends
 	}
 
 	public String getPluginName() {
-		return parameters.get(
-				0);
+		return parameters.get(0);
 	}
 
 	public String getNamespace() {
-		return IndexPluginOptions.getIndexNamespace(
-				getPluginName());
+		return IndexPluginOptions.getIndexNamespace(getPluginName());
 	}
 
 	public List<String> getParameters() {
@@ -109,8 +104,7 @@ public class AddSpatialIndexCommand extends
 	public void setParameters(
 			final String indexName ) {
 		parameters = new ArrayList<String>();
-		parameters.add(
-				indexName);
+		parameters.add(indexName);
 	}
 
 	public Boolean getMakeDefault() {
@@ -137,8 +131,7 @@ public class AddSpatialIndexCommand extends
 
 		// Ensure that a name is chosen.
 		if (getParameters().size() < 1) {
-			System.out.println(
-					getParameters());
+			System.out.println(getParameters());
 			throw new ParameterException(
 					"Must specify index name");
 		}
@@ -168,8 +161,7 @@ public class AddSpatialIndexCommand extends
 				getNamespace());
 
 		// Make default?
-		if (Boolean.TRUE.equals(
-				makeDefault)) {
+		if (Boolean.TRUE.equals(makeDefault)) {
 
 			existingProps.setProperty(
 					IndexPluginOptions.DEFAULT_PROPERTY_NAMESPACE,

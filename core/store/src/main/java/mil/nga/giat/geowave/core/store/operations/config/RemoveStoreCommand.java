@@ -28,17 +28,14 @@ public class RemoveStoreCommand extends
 			final OperationParams params ) {
 
 		// Search for properties relevant to the given name
-		pattern = DataStorePluginOptions.getStoreNamespace(
-				getEntryName());
-		return super.computeResults(
-				params);
+		pattern = DataStorePluginOptions.getStoreNamespace(getEntryName());
+		return super.computeResults(params);
 
 	}
 
 	@Override
 	public void execute(
 			final OperationParams params ) {
-		computeResults(
-				params);
+		computeResults(params);
 	}
 }

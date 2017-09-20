@@ -42,17 +42,19 @@ public class RecalculateStatsCommand extends
 		AbstractStatsCommand<Void>
 {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(
-			RecalculateStatsCommand.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(RecalculateStatsCommand.class);
+	@Parameter(names = {
+		"--adapterId"
+	}, description = "Optionally recalculate a single adapter's stats")
+	private String adapterId = "";
 
-	@Parameter(description = "<store name> [<adapter name>]")
+	@Parameter(description = "<store name>")
 	private List<String> parameters = new ArrayList<String>();
 
 	@Override
 	public void execute(
 			final OperationParams params ) {
-		computeResults(
-				params);
+		computeResults(params);
 	}
 
 	@Override
@@ -71,19 +73,17 @@ public class RecalculateStatsCommand extends
 			boolean isFirstTime = true;
 			for (final PrimaryIndex index : mappingStore.getIndicesForAdapter(
 					adapter.getAdapterId()).getIndices(
-							indexStore)) {
+					indexStore)) {
 
 				@SuppressWarnings({
 					"rawtypes",
 					"unchecked"
 				})
-				final
-				DataStoreStatisticsProvider provider = new DataStoreStatisticsProvider(
+				final DataStoreStatisticsProvider provider = new DataStoreStatisticsProvider(
 						adapter,
 						index,
 						isFirstTime);
-				final String[] authorizations = getAuthorizations(
-						statsOptions.getAuthorizations());
+				final String[] authorizations = getAuthorizations(statsOptions.getAuthorizations());
 
 				try (StatsCompositionTool<?> statsTool = new StatsCompositionTool(
 						provider,
@@ -123,11 +123,9 @@ public class RecalculateStatsCommand extends
 			final String storeName,
 			final String adapterName ) {
 		parameters = new ArrayList<String>();
-		parameters.add(
-				storeName);
+		parameters.add(storeName);
 		if (adapterName != null) {
-			parameters.add(
-					adapterName);
+			parameters.add(adapterName);
 		}
 	}
 
@@ -137,9 +135,11 @@ public class RecalculateStatsCommand extends
 		// Ensure we have all the required arguments
 		if (parameters.size() < 1) {
 			throw new ParameterException(
-					"Requires arguments: <store name> [<adapterId>]");
+					"Requires arguments: <store name>");
 		}
-
+		if ((adapterId != null) && !adapterId.trim().isEmpty()) {
+			parameters.add(adapterId);
+		}
 		super.run(
 				params,
 				parameters);

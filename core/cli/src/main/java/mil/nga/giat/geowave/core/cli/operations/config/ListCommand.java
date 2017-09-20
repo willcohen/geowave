@@ -43,8 +43,7 @@ public class ListCommand extends
 	@Override
 	public void execute(
 			final OperationParams params ) {
-		final Pair<String, Properties> list = getList(
-				params);
+		final Pair<String, Properties> list = getList(params);
 		final String name = list.getKey();
 		final Properties p = list.getValue();
 
@@ -52,22 +51,14 @@ public class ListCommand extends
 				"PROPERTIES (" + name + ")");
 
 		final List<String> keys = new ArrayList<String>();
-		keys.addAll(
-				p.stringPropertyNames());
-		Collections.sort(
-				keys);
+		keys.addAll(p.stringPropertyNames());
+		Collections.sort(keys);
 
 		for (final String key : keys) {
-			final String value = (String) p.get(
-					key);
+			final String value = (String) p.get(key);
 			JCommander.getConsole().println(
 					key + ": " + value);
 		}
-	}
-
-	@Override
-	public HttpMethod getMethod() {
-		return HttpMethod.GET;
 	}
 
 	@Override

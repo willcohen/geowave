@@ -40,8 +40,7 @@ public class Landsat8DownloadCommand extends
 		final DownloadRunner runner = new DownloadRunner(
 				analyzeOptions,
 				downloadOptions);
-		runner.runInternal(
-				params);
+		runner.runInternal(params);
 	}
 
 }

@@ -68,19 +68,16 @@ public class GeoServerRemoveWorkspaceCommand extends
 		}
 
 		JCommander.getConsole().println(
-				computeResults(
-						params));
+				computeResults(params));
 	}
 
 	@Override
 	public String computeResults(
 			final OperationParams params )
 			throws Exception {
-		wsName = parameters.get(
-				0);
+		wsName = parameters.get(0);
 
-		final Response deleteWorkspaceResponse = geoserverClient.deleteWorkspace(
-				wsName);
+		final Response deleteWorkspaceResponse = geoserverClient.deleteWorkspace(wsName);
 		if (deleteWorkspaceResponse.getStatus() == Status.OK.getStatusCode()) {
 			return "Delete workspace '" + wsName + "' from GeoServer: OK";
 		}

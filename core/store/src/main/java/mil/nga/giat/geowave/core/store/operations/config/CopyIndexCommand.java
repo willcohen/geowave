@@ -60,12 +60,10 @@ public class CopyIndexCommand extends
 		// Load the old index, so that we can override the values
 		String oldIndex = null;
 		if (parameters.size() >= 1) {
-			oldIndex = parameters.get(
-					0);
+			oldIndex = parameters.get(0);
 			if (!newPluginOptions.load(
 					existingProps,
-					IndexPluginOptions.getIndexNamespace(
-							oldIndex))) {
+					IndexPluginOptions.getIndexNamespace(oldIndex))) {
 				throw new ParameterException(
 						"Could not find index: " + oldIndex);
 			}
@@ -78,8 +76,7 @@ public class CopyIndexCommand extends
 	@Override
 	public void execute(
 			final OperationParams params ) {
-		copyIndex(
-				params);
+		copyIndex(params);
 
 	}
 
@@ -88,8 +85,7 @@ public class CopyIndexCommand extends
 			final OperationParams params ) {
 
 		try {
-			copyIndex(
-					params);
+			copyIndex(params);
 		}
 		catch (WritePropertiesException | ParameterException e) {
 			// TODO GEOWAVE-rest-project server error status message
@@ -115,10 +111,8 @@ public class CopyIndexCommand extends
 		}
 
 		// This is the new index name.
-		final String newIndex = parameters.get(
-				1);
-		final String newIndexNamespace = IndexPluginOptions.getIndexNamespace(
-				newIndex);
+		final String newIndex = parameters.get(1);
+		final String newIndexNamespace = IndexPluginOptions.getIndexNamespace(newIndex);
 
 		// Make sure we're not already in the index.
 		final IndexPluginOptions existPlugin = new IndexPluginOptions();
@@ -135,8 +129,7 @@ public class CopyIndexCommand extends
 				newIndexNamespace);
 
 		// Make default?
-		if (Boolean.TRUE.equals(
-				makeDefault)) {
+		if (Boolean.TRUE.equals(makeDefault)) {
 			existingProps.setProperty(
 					IndexPluginOptions.DEFAULT_PROPERTY_NAMESPACE,
 					newIndex);
@@ -159,10 +152,8 @@ public class CopyIndexCommand extends
 			final String existingIndex,
 			final String newIndex ) {
 		parameters = new ArrayList<String>();
-		parameters.add(
-				existingIndex);
-		parameters.add(
-				newIndex);
+		parameters.add(existingIndex);
+		parameters.add(newIndex);
 	}
 
 	private static class WritePropertiesException extends

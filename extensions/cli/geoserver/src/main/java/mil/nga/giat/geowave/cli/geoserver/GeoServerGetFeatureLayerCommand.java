@@ -69,25 +69,20 @@ public class GeoServerGetFeatureLayerCommand extends
 		}
 
 		JCommander.getConsole().println(
-				computeResults(
-						params));
+				computeResults(params));
 	}
 
 	@Override
 	public String computeResults(
 			final OperationParams params )
 			throws Exception {
-		layerName = parameters.get(
-				0);
+		layerName = parameters.get(0);
 
-		final Response getLayerResponse = geoserverClient.getFeatureLayer(
-				layerName);
+		final Response getLayerResponse = geoserverClient.getFeatureLayer(layerName);
 
 		if (getLayerResponse.getStatus() == Status.OK.getStatusCode()) {
-			final JSONObject jsonResponse = JSONObject.fromObject(
-					getLayerResponse.getEntity());
-			return "\nGeoServer layer info for '" + layerName + "': " + jsonResponse.toString(
-					2);
+			final JSONObject jsonResponse = JSONObject.fromObject(getLayerResponse.getEntity());
+			return "\nGeoServer layer info for '" + layerName + "': " + jsonResponse.toString(2);
 		}
 		return "Error getting GeoServer layer info for '" + layerName + "'; code = " + getLayerResponse.getStatus();
 	}

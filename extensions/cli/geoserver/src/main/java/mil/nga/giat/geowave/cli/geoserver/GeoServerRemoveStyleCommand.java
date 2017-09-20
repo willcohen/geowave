@@ -68,19 +68,16 @@ public class GeoServerRemoveStyleCommand extends
 		}
 
 		JCommander.getConsole().println(
-				computeResults(
-						params));
+				computeResults(params));
 	}
 
 	@Override
 	public String computeResults(
 			final OperationParams params )
 			throws Exception {
-		styleName = parameters.get(
-				0);
+		styleName = parameters.get(0);
 
-		final Response deleteStyleResponse = geoserverClient.deleteStyle(
-				styleName);
+		final Response deleteStyleResponse = geoserverClient.deleteStyle(styleName);
 
 		if (deleteStyleResponse.getStatus() == Status.OK.getStatusCode()) {
 			return "Delete style '" + styleName + "' on GeoServer: OK";

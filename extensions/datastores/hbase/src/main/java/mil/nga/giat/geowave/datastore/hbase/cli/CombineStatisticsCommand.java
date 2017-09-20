@@ -54,18 +54,14 @@ public class CombineStatisticsCommand extends
 					"Requires arguments: <storename> <adapter id>");
 		}
 
-		final String inputStoreName = parameters.get(
-				0);
-		final String adapterId = parameters.get(
-				1);
+		final String inputStoreName = parameters.get(0);
+		final String adapterId = parameters.get(1);
 
 		// Attempt to load input store.
 		if (inputStoreOptions == null) {
 			final StoreLoader inputStoreLoader = new StoreLoader(
 					inputStoreName);
-			if (!inputStoreLoader.loadFromConfig(
-					getGeoWaveConfigFile(
-							params))) {
+			if (!inputStoreLoader.loadFromConfig(getGeoWaveConfigFile(params))) {
 				throw new ParameterException(
 						"Cannot find store name: " + inputStoreLoader.getStoreName());
 			}
@@ -74,19 +70,16 @@ public class CombineStatisticsCommand extends
 
 		// Get all statistics, remove all statistics, then re-add
 		final DataStatisticsStore store = inputStoreOptions.createDataStatisticsStore();
-		final CloseableIterator<DataStatistics<?>> stats = store.getDataStatistics(
-				new ByteArrayId(
-						adapterId));
+		final CloseableIterator<DataStatistics<?>> stats = store.getDataStatistics(new ByteArrayId(
+				adapterId));
 
 		// Clear all existing stats
-		store.removeAllStatistics(
-				new ByteArrayId(
-						adapterId));
+		store.removeAllStatistics(new ByteArrayId(
+				adapterId));
 
 		// Re-insert
 		while (stats.hasNext()) {
-			store.incorporateStatistics(
-					stats.next());
+			store.incorporateStatistics(stats.next());
 		}
 	}
 

@@ -46,7 +46,7 @@ public class GeoServerAddLayerCommand extends
 	@Parameter(names = {
 		"-ws",
 		"--workspace"
-	}, required = false, description = "<workspace name>")
+	}, required = false, description = "workspace name")
 	private String workspace = null;
 
 	@Parameter(names = {
@@ -64,7 +64,7 @@ public class GeoServerAddLayerCommand extends
 	@Parameter(names = {
 		"-sld",
 		"--setStyle"
-	}, description = "<default style sld>")
+	}, description = "default style sld")
 	private final String style = null;
 
 	@Parameter(description = "<GeoWave store name>")
@@ -74,14 +74,12 @@ public class GeoServerAddLayerCommand extends
 	@Override
 	public boolean prepare(
 			final OperationParams params ) {
-		super.prepare(
-				params);
+		super.prepare(params);
 		if (geoserverClient == null) {
 			// Create the rest client
 			geoserverClient = new GeoServerRestClient(
 					new GeoServerConfig(
-							getGeoWaveConfigFile(
-									params)));
+							getGeoWaveConfigFile(params)));
 		}
 
 		// Successfully prepared
@@ -93,8 +91,7 @@ public class GeoServerAddLayerCommand extends
 			final OperationParams params )
 			throws Exception {
 		JCommander.getConsole().println(
-				computeResults(
-						params));
+				computeResults(params));
 	}
 
 	public static class AddOptionConverter implements
@@ -103,8 +100,7 @@ public class GeoServerAddLayerCommand extends
 		@Override
 		public AddOption convert(
 				final String value ) {
-			final AddOption convertedValue = AddOption.valueOf(
-					value.toUpperCase());
+			final AddOption convertedValue = AddOption.valueOf(value.toUpperCase());
 
 			if ((convertedValue != AddOption.ALL) && (convertedValue != AddOption.RASTER)
 					&& (convertedValue != AddOption.VECTOR)) {
@@ -113,7 +109,7 @@ public class GeoServerAddLayerCommand extends
 								+ StringUtils.join(
 										AddOption.values(),
 										", ").toLowerCase(
-												Locale.ENGLISH));
+										Locale.ENGLISH));
 			}
 			return convertedValue;
 		}
@@ -127,8 +123,7 @@ public class GeoServerAddLayerCommand extends
 					"Requires argument: <store name>");
 		}
 
-		gwStore = parameters.get(
-				0);
+		gwStore = parameters.get(0);
 
 		if ((workspace == null) || workspace.isEmpty()) {
 			workspace = geoserverClient.getConfig().getWorkspace();
@@ -146,10 +141,8 @@ public class GeoServerAddLayerCommand extends
 				style);
 
 		if (addLayerResponse.getStatus() == Status.OK.getStatusCode()) {
-			final JSONObject jsonResponse = JSONObject.fromObject(
-					addLayerResponse.getEntity());
-			return "Add GeoServer layer for '" + gwStore + ": OK : " + jsonResponse.toString(
-					2);
+			final JSONObject jsonResponse = JSONObject.fromObject(addLayerResponse.getEntity());
+			return "Add GeoServer layer for '" + gwStore + ": OK : " + jsonResponse.toString(2);
 		}
 		return "Error adding GeoServer layer for store '" + gwStore + "; code = " + addLayerResponse.getStatus();
 	}

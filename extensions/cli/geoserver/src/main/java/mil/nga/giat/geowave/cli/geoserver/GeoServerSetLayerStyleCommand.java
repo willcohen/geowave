@@ -39,7 +39,7 @@ public class GeoServerSetLayerStyleCommand extends
 	@Parameter(names = {
 		"-sn",
 		"--styleName"
-	}, required = true, description = "<style name>")
+	}, required = true, description = "style name")
 	private final String styleName = null;
 
 	@Parameter(description = "<layer name>")
@@ -81,16 +81,14 @@ public class GeoServerSetLayerStyleCommand extends
 	public String computeResults(
 			final OperationParams params )
 			throws Exception {
-		layerName = parameters.get(
-				0);
+		layerName = parameters.get(0);
 
 		final Response setLayerStyleResponse = geoserverClient.setLayerStyle(
 				layerName,
 				styleName);
 
 		if (setLayerStyleResponse.getStatus() == Status.OK.getStatusCode()) {
-			final String style = IOUtils.toString(
-					(InputStream) setLayerStyleResponse.getEntity());
+			final String style = IOUtils.toString((InputStream) setLayerStyleResponse.getEntity());
 			return "Set style for GeoServer layer '" + layerName + ": OK" + style;
 
 		}

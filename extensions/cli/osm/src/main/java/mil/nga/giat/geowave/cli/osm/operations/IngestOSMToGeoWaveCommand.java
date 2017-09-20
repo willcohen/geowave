@@ -60,8 +60,7 @@ public class IngestOSMToGeoWaveCommand extends
 					"Requires arguments: <hdfs host:port> <path to base directory to read from> <store name>");
 		}
 
-		for (final String string : computeResults(
-				params)) {
+		for (final String string : computeResults(params)) {
 			JCommander.getConsole().println(
 					string);
 		}
@@ -83,18 +82,15 @@ public class IngestOSMToGeoWaveCommand extends
 		}
 
 		final List<String> output = new ArrayList<>();
-		output.add(
-				"finished ingest");
-		output.add(
-				"**************************************************");
+		output.add("finished ingest");
+		output.add("**************************************************");
 		return output;
 	}
 
 	private List<String> convertData()
 			throws Exception {
 
-		FeatureDefinitionSet.initialize(
-				new OSMIngestCommandArgs().getMappingContents());
+		FeatureDefinitionSet.initialize(new OSMIngestCommandArgs().getMappingContents());
 
 		final OSMConversionRunner runner = new OSMConversionRunner(
 				ingestOptions,
@@ -109,14 +105,10 @@ public class IngestOSMToGeoWaveCommand extends
 		}
 
 		final List<String> output = new ArrayList<>();
-		output.add(
-				"finished conversion");
-		output.add(
-				"**************************************************");
-		output.add(
-				"**************************************************");
-		output.add(
-				"**************************************************");
+		output.add("finished conversion");
+		output.add("**************************************************");
+		output.add("**************************************************");
+		output.add("**************************************************");
 		return output;
 	}
 
@@ -129,12 +121,9 @@ public class IngestOSMToGeoWaveCommand extends
 			final String hdfsPath,
 			final String storeName ) {
 		parameters = new ArrayList<String>();
-		parameters.add(
-				hdfsHostPort);
-		parameters.add(
-				hdfsPath);
-		parameters.add(
-				storeName);
+		parameters.add(hdfsHostPort);
+		parameters.add(hdfsPath);
+		parameters.add(storeName);
 	}
 
 	public OSMIngestCommandArgs getIngestOptions() {
@@ -158,21 +147,16 @@ public class IngestOSMToGeoWaveCommand extends
 	public List<String> computeResults(
 			final OperationParams params )
 			throws Exception {
-		String hdfsHostPort = parameters.get(
-				0);
-		final String basePath = parameters.get(
-				1);
-		final String inputStoreName = parameters.get(
-				2);
+		String hdfsHostPort = parameters.get(0);
+		final String basePath = parameters.get(1);
+		final String inputStoreName = parameters.get(2);
 
 		// Ensures that the url starts with hdfs://
-		if (!hdfsHostPort.contains(
-				"://")) {
+		if (!hdfsHostPort.contains("://")) {
 			hdfsHostPort = "hdfs://" + hdfsHostPort;
 		}
 
-		if (!basePath.startsWith(
-				"/")) {
+		if (!basePath.startsWith("/")) {
 			throw new ParameterException(
 					"HDFS Base path must start with forward slash /");
 		}
@@ -185,8 +169,7 @@ public class IngestOSMToGeoWaveCommand extends
 		if (inputStoreOptions == null) {
 			final StoreLoader inputStoreLoader = new StoreLoader(
 					inputStoreName);
-			if (!inputStoreLoader.loadFromConfig(
-					configFile)) {
+			if (!inputStoreLoader.loadFromConfig(configFile)) {
 				throw new ParameterException(
 						"Cannot find store name: " + inputStoreLoader.getStoreName());
 			}
@@ -194,10 +177,8 @@ public class IngestOSMToGeoWaveCommand extends
 		}
 
 		// Copy over options from main parameter to ingest options
-		ingestOptions.setHdfsBasePath(
-				basePath);
-		ingestOptions.setNameNode(
-				hdfsHostPort);
+		ingestOptions.setHdfsBasePath(basePath);
+		ingestOptions.setNameNode(hdfsHostPort);
 
 		if (inputStoreOptions.getGeowaveNamespace() == null) {
 			inputStoreOptions.getFactoryOptions().setGeowaveNamespace(
@@ -210,18 +191,15 @@ public class IngestOSMToGeoWaveCommand extends
 		}
 
 		// This is needed by a method in OSMIngsetCommandArgs.
-		ingestOptions.setOsmNamespace(
-				inputStoreOptions.getGeowaveNamespace());
+		ingestOptions.setOsmNamespace(inputStoreOptions.getGeowaveNamespace());
 
 		final List<String> outputs = new ArrayList<>();
 
 		// Ingest the data.
-		outputs.addAll(
-				ingestData());
+		outputs.addAll(ingestData());
 
 		// Convert the data
-		outputs.addAll(
-				convertData());
+		outputs.addAll(convertData());
 
 		return outputs;
 	}

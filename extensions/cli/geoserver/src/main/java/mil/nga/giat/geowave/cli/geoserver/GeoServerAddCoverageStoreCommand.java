@@ -35,13 +35,13 @@ public class GeoServerAddCoverageStoreCommand extends
 	@Parameter(names = {
 		"-ws",
 		"--workspace"
-	}, required = false, description = "<workspace name>")
+	}, required = false, description = "workspace name")
 	private String workspace = null;
 
 	@Parameter(names = {
 		"-cs",
 		"--coverageStore"
-	}, required = false, description = "<coverage store name>")
+	}, required = false, description = "coverage store name")
 	private final String coverageStore = null;
 
 	@Parameter(names = {
@@ -69,14 +69,12 @@ public class GeoServerAddCoverageStoreCommand extends
 	@Override
 	public boolean prepare(
 			final OperationParams params ) {
-		super.prepare(
-				params);
+		super.prepare(params);
 		if (geoserverClient == null) {
 			// Create the rest client
 			geoserverClient = new GeoServerRestClient(
 					new GeoServerConfig(
-							getGeoWaveConfigFile(
-									params)));
+							getGeoWaveConfigFile(params)));
 		}
 
 		// Successfully prepared
@@ -88,8 +86,7 @@ public class GeoServerAddCoverageStoreCommand extends
 			final OperationParams params )
 			throws Exception {
 		JCommander.getConsole().println(
-				computeResults(
-						params));
+				computeResults(params));
 	}
 
 	@Override
@@ -100,8 +97,7 @@ public class GeoServerAddCoverageStoreCommand extends
 					"Requires argument: <GeoWave store name>");
 		}
 
-		gwStore = parameters.get(
-				0);
+		gwStore = parameters.get(0);
 
 		if ((workspace == null) || workspace.isEmpty()) {
 			workspace = geoserverClient.getConfig().getWorkspace();

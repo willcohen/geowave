@@ -43,15 +43,13 @@ public class RestRoute implements
 	@Override
 	public int compareTo(
 			final RestRoute route ) {
-		return path.compareTo(
-				route.path);
+		return path.compareTo(route.path);
 	}
 
 	@Override
 	public boolean equals(
 			final Object route ) {
-		return (route instanceof RestRoute) && path.equals(
-				((RestRoute) route).path);
+		return (route instanceof RestRoute) && path.equals(((RestRoute) route).path);
 	}
 
 	@Override

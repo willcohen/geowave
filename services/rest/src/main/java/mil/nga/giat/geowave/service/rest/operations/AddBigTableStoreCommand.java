@@ -38,8 +38,7 @@ public class AddBigTableStoreCommand extends
 	 * A REST Operation for the AddStoreCommand where --type=bigtable
 	 */
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			AddBigTableStoreCommand.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(AddBigTableStoreCommand.class);
 
 	public static final String PROPERTIES_CONTEXT = "properties";
 
@@ -62,10 +61,8 @@ public class AddBigTableStoreCommand extends
 	public boolean prepare(
 			final OperationParams params ) {
 
-		pluginOptions.selectPlugin(
-				"bigtable");
-		pluginOptions.setFactoryOptions(
-				opts);
+		pluginOptions.selectPlugin("bigtable");
+		pluginOptions.setFactoryOptions(opts);
 
 		return true;
 	}
@@ -73,8 +70,7 @@ public class AddBigTableStoreCommand extends
 	@Override
 	public void execute(
 			final OperationParams params ) {
-		computeResults(
-				params);
+		computeResults(params);
 	}
 
 	@Override
@@ -108,8 +104,7 @@ public class AddBigTableStoreCommand extends
 				getNamespace());
 
 		// Make default?
-		if (Boolean.TRUE.equals(
-				makeDefault)) {
+		if (Boolean.TRUE.equals(makeDefault)) {
 			existingProps.setProperty(
 					DataStorePluginOptions.DEFAULT_PROPERTY_NAMESPACE,
 					getPluginName());
@@ -122,10 +117,12 @@ public class AddBigTableStoreCommand extends
 
 		return null;
 	}
+
 	@Override
 	public String getId() {
 		return ConfigSection.class.getName() + ".addstore/bigtable";
 	}
+
 	@Override
 	public String getPath() {
 		return "config/addstore/bigtable";
@@ -136,13 +133,11 @@ public class AddBigTableStoreCommand extends
 	}
 
 	public String getPluginName() {
-		return parameters.get(
-				0);
+		return parameters.get(0);
 	}
 
 	public String getNamespace() {
-		return DataStorePluginOptions.getStoreNamespace(
-				getPluginName());
+		return DataStorePluginOptions.getStoreNamespace(getPluginName());
 	}
 
 	public List<String> getParameters() {
@@ -152,8 +147,7 @@ public class AddBigTableStoreCommand extends
 	public void setParameters(
 			final String storeName ) {
 		parameters = new ArrayList<String>();
-		parameters.add(
-				storeName);
+		parameters.add(storeName);
 	}
 
 	public Boolean getMakeDefault() {

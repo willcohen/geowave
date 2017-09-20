@@ -40,8 +40,7 @@ public class AddSpatialTemporalIndexCommand extends
 	 * A REST Operation for the AddIndexCommand where --type=spatial_temporal
 	 */
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			AddIndexCommand.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(AddIndexCommand.class);
 
 	@Parameter(description = "<name>", required = true)
 	private List<String> parameters = new ArrayList<String>();
@@ -64,12 +63,9 @@ public class AddSpatialTemporalIndexCommand extends
 	public boolean prepare(
 			final OperationParams params ) {
 
-		pluginOptions.selectPlugin(
-				"spatial_temporal");
-		pluginOptions.setBasicIndexOptions(
-				basicIndexOptions);
-		pluginOptions.setDimensionalityTypeOptions(
-				opts);
+		pluginOptions.selectPlugin("spatial_temporal");
+		pluginOptions.setBasicIndexOptions(basicIndexOptions);
+		pluginOptions.setDimensionalityTypeOptions(opts);
 		// Successfully prepared.
 		return true;
 	}
@@ -77,13 +73,14 @@ public class AddSpatialTemporalIndexCommand extends
 	@Override
 	public void execute(
 			final OperationParams params ) {
-		computeResults(
-				params);
+		computeResults(params);
 	}
+
 	@Override
 	public String getId() {
 		return ConfigSection.class.getName() + ".addindex/spatial_temporal";
 	}
+
 	@Override
 	public String getPath() {
 		return "config/addindex/spatial_temporal";
@@ -94,13 +91,11 @@ public class AddSpatialTemporalIndexCommand extends
 	}
 
 	public String getPluginName() {
-		return parameters.get(
-				0);
+		return parameters.get(0);
 	}
 
 	public String getNamespace() {
-		return IndexPluginOptions.getIndexNamespace(
-				getPluginName());
+		return IndexPluginOptions.getIndexNamespace(getPluginName());
 	}
 
 	public List<String> getParameters() {
@@ -110,8 +105,7 @@ public class AddSpatialTemporalIndexCommand extends
 	public void setParameters(
 			final String indexName ) {
 		parameters = new ArrayList<String>();
-		parameters.add(
-				indexName);
+		parameters.add(indexName);
 	}
 
 	public Boolean getMakeDefault() {
@@ -138,8 +132,7 @@ public class AddSpatialTemporalIndexCommand extends
 
 		// Ensure that a name is chosen.
 		if (getParameters().size() < 1) {
-			System.out.println(
-					getParameters());
+			System.out.println(getParameters());
 			throw new ParameterException(
 					"Must specify index name");
 		}
@@ -169,8 +162,7 @@ public class AddSpatialTemporalIndexCommand extends
 				getNamespace());
 
 		// Make default?
-		if (Boolean.TRUE.equals(
-				makeDefault)) {
+		if (Boolean.TRUE.equals(makeDefault)) {
 
 			existingProps.setProperty(
 					IndexPluginOptions.DEFAULT_PROPERTY_NAMESPACE,

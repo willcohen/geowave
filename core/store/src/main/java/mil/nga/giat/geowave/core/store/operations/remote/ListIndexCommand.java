@@ -38,8 +38,7 @@ public class ListIndexCommand extends
 		ServiceEnabledCommand<String>
 {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(
-			RecalculateStatsCommand.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(RecalculateStatsCommand.class);
 
 	@Parameter(description = "<store name>")
 	private final List<String> parameters = new ArrayList<String>();
@@ -48,8 +47,7 @@ public class ListIndexCommand extends
 	public void execute(
 			final OperationParams params ) {
 		JCommander.getConsole().println(
-				computeResults(
-						params));
+				computeResults(params));
 	}
 
 	@Override
@@ -60,8 +58,7 @@ public class ListIndexCommand extends
 					"Must specify store name");
 		}
 
-		final String inputStoreName = parameters.get(
-				0);
+		final String inputStoreName = parameters.get(0);
 
 		// Get the config options from the properties file
 
@@ -74,8 +71,7 @@ public class ListIndexCommand extends
 
 		final StoreLoader inputStoreLoader = new StoreLoader(
 				inputStoreName);
-		if (!inputStoreLoader.loadFromConfig(
-				configFile)) {
+		if (!inputStoreLoader.loadFromConfig(configFile)) {
 			result = "Cannot find store name: " + inputStoreLoader.getStoreName();
 		}
 		else {
@@ -90,7 +86,7 @@ public class ListIndexCommand extends
 				final Index<?, ?> index = it.next();
 				buffer.append(
 						index.getId().getString()).append(
-								' ');
+						' ');
 			}
 			try {
 				it.close();
@@ -104,5 +100,4 @@ public class ListIndexCommand extends
 		}
 		return result;
 	}
-
 }

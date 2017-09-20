@@ -40,8 +40,7 @@ public class AddHBaseStoreCommand extends
 	 * A REST Operation for the AddStoreCommand where --type=hbase
 	 */
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			AddHBaseStoreCommand.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(AddHBaseStoreCommand.class);
 
 	public static final String PROPERTIES_CONTEXT = "properties";
 
@@ -64,10 +63,8 @@ public class AddHBaseStoreCommand extends
 	public boolean prepare(
 			final OperationParams params ) {
 
-		pluginOptions.selectPlugin(
-				"hbase");
-		pluginOptions.setFactoryOptions(
-				requiredOptions);
+		pluginOptions.selectPlugin("hbase");
+		pluginOptions.setFactoryOptions(requiredOptions);
 
 		return true;
 	}
@@ -75,8 +72,7 @@ public class AddHBaseStoreCommand extends
 	@Override
 	public void execute(
 			final OperationParams params ) {
-		computeResults(
-				params);
+		computeResults(params);
 	}
 
 	@Override
@@ -109,8 +105,7 @@ public class AddHBaseStoreCommand extends
 				getNamespace());
 
 		// Make default?
-		if (Boolean.TRUE.equals(
-				makeDefault)) {
+		if (Boolean.TRUE.equals(makeDefault)) {
 			existingProps.setProperty(
 					DataStorePluginOptions.DEFAULT_PROPERTY_NAMESPACE,
 					getPluginName());
@@ -123,10 +118,12 @@ public class AddHBaseStoreCommand extends
 
 		return null;
 	}
+
 	@Override
 	public String getId() {
 		return ConfigSection.class.getName() + ".addstore/hbase";
 	}
+
 	@Override
 	public String getPath() {
 		return "config/addstore/hbase";
@@ -137,13 +134,11 @@ public class AddHBaseStoreCommand extends
 	}
 
 	public String getPluginName() {
-		return parameters.get(
-				0);
+		return parameters.get(0);
 	}
 
 	public String getNamespace() {
-		return DataStorePluginOptions.getStoreNamespace(
-				getPluginName());
+		return DataStorePluginOptions.getStoreNamespace(getPluginName());
 	}
 
 	public List<String> getParameters() {
@@ -153,8 +148,7 @@ public class AddHBaseStoreCommand extends
 	public void setParameters(
 			final String storeName ) {
 		parameters = new ArrayList<String>();
-		parameters.add(
-				storeName);
+		parameters.add(storeName);
 	}
 
 	public Boolean getMakeDefault() {

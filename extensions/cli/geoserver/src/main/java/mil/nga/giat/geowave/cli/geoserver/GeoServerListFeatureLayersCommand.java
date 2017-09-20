@@ -75,8 +75,7 @@ public class GeoServerListFeatureLayersCommand extends
 			final OperationParams params )
 			throws Exception {
 		JCommander.getConsole().println(
-				computeResults(
-						params));
+				computeResults(params));
 	}
 
 	@Override
@@ -89,10 +88,8 @@ public class GeoServerListFeatureLayersCommand extends
 				geowaveOnly);
 
 		if (listLayersResponse.getStatus() == Status.OK.getStatusCode()) {
-			final JSONObject listObj = JSONObject.fromObject(
-					listLayersResponse.getEntity());
-			return "\nGeoServer layer list: " + listObj.toString(
-					2);
+			final JSONObject listObj = JSONObject.fromObject(listLayersResponse.getEntity());
+			return "\nGeoServer layer list: " + listObj.toString(2);
 		}
 		return "Error getting GeoServer layer list; code = " + listLayersResponse.getStatus();
 	}

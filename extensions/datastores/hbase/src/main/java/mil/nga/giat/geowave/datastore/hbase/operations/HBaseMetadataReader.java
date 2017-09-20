@@ -80,47 +80,6 @@ public class HBaseMetadataReader implements
 					query.getAuthorizations());
 			Iterator<Result> it = rS.iterator();
 
-			// Client-side stats merge required?
-			DataStatistics mergedStats = null;
-			if (metadataType == MetadataType.STATS && query.getPrimaryId() != null) {
-				int statRecs = 0;
-				while (it.hasNext()) {
-					Result result = it.next();
-
-					for (Cell cell : result.listCells()) {
-						statRecs++;
-
-						byte[] byteValue = CellUtil.cloneValue(
-								cell);
-						DataStatistics stats = (DataStatistics) PersistenceUtils.fromBinary(
-								byteValue,
-								DataStatistics.class);
-
-						if (mergedStats != null) {
-							mergedStats.merge(
-									stats);
-						}
-						else {
-							mergedStats = stats;
-						}
-					}
-				}
-
-				// If more than one result, write the merged result back
-				if (statRecs > 1) {
-					operations.updateStats(
-							query,
-							mergedStats);
-				}
-
-				// Requery 
-				rS = operations.getScannedResults(
-						scanner,
-						AbstractGeoWavePersistence.METADATA_TABLE,
-						query.getAuthorizations());
-				it = rS.iterator();
-			}
-
 			return new CloseableIteratorWrapper<>(
 					new ScannerClosableWrapper(
 							rS),
@@ -134,7 +93,8 @@ public class HBaseMetadataReader implements
 											result.getRow(),
 											columnQualifier,
 											null,
-											result.value());
+											getMergedStats(
+													result));
 								}
 							}));
 
@@ -146,5 +106,32 @@ public class HBaseMetadataReader implements
 		}
 		return new CloseableIterator.Wrapper<>(
 				Iterators.emptyIterator());
+	}
+
+	private byte[] getMergedStats(
+			Result result ) {
+		if (metadataType != MetadataType.STATS || result.size() == 1) {
+			return result.value();
+		}
+		
+		DataStatistics mergedStats = null;
+		for (Cell cell : result.listCells()) {
+			byte[] byteValue = CellUtil.cloneValue(
+					cell);
+			DataStatistics stats = (DataStatistics) PersistenceUtils.fromBinary(
+					byteValue,
+					DataStatistics.class);
+
+			if (mergedStats != null) {
+				mergedStats.merge(
+						stats);
+			}
+			else {
+				mergedStats = stats;
+			}
+		}
+
+		return PersistenceUtils.toBinary(
+				mergedStats);
 	}
 }

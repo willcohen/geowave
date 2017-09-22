@@ -32,11 +32,13 @@ import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.ScannerBase;
 import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
+import org.apache.accumulo.core.client.admin.NewTableConfiguration;
 import org.apache.accumulo.core.conf.Property;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.iterators.IteratorUtil.IteratorScope;
+import org.apache.accumulo.core.iterators.user.VersioningIterator;
 import org.apache.accumulo.core.iterators.user.WholeRowIterator;
 import org.apache.accumulo.core.security.Authorizations;
 import org.apache.commons.lang.ArrayUtils;
@@ -93,7 +95,8 @@ import mil.nga.giat.geowave.mapreduce.splits.RecordReaderParams;
 public class AccumuloOperations implements
 		MapReduceDataStoreOperations
 {
-	private final static Logger LOGGER = Logger.getLogger(AccumuloOperations.class);
+	private final static Logger LOGGER = Logger.getLogger(
+			AccumuloOperations.class);
 	private static final int DEFAULT_NUM_THREADS = 16;
 	private static final long DEFAULT_TIMEOUT_MILLIS = 1000L; // 1 second
 	private static final long DEFAULT_BYTE_BUFFER_SIZE = 1048576L; // 1 MB
@@ -233,7 +236,8 @@ public class AccumuloOperations implements
 		this.connector = connector;
 		this.options = options;
 		locGrpCache = new HashMap<String, Long>();
-		cacheTimeoutMillis = TimeUnit.DAYS.toMillis(1);
+		cacheTimeoutMillis = TimeUnit.DAYS.toMillis(
+				1);
 	}
 
 	public int getNumThreads() {
@@ -266,20 +270,34 @@ public class AccumuloOperations implements
 			final String tableName,
 			final boolean enableVersioning,
 			final boolean enableBlockCache ) {
-		final String qName = getQualifiedTableName(tableName);
+		final String qName = getQualifiedTableName(
+				tableName);
 
 		if (!connector.tableOperations().exists(
 				qName)) {
 			try {
-				connector.tableOperations().create(
-						qName,
-						enableVersioning);
+				NewTableConfiguration config = new NewTableConfiguration();
+				// NOTE: 'enableVersioning' actually means enabling
+				// the version iterator, which sets maxVersions = 1
+				if (!enableVersioning) {
+					config.withoutDefaultIterators();
+				}
+
+				Map<String, String> propMap = new HashMap(
+						config.getProperties());
+
 				if (enableBlockCache) {
-					connector.tableOperations().setProperty(
-							qName,
+					propMap.put(
 							Property.TABLE_BLOCKCACHE_ENABLED.getKey(),
 							"true");
+
+					config.setProperties(
+							propMap);
 				}
+
+				connector.tableOperations().create(
+						qName,
+						config);
 			}
 			catch (AccumuloException | AccumuloSecurityException | TableExistsException e) {
 				LOGGER.warn(
@@ -296,12 +314,14 @@ public class AccumuloOperations implements
 		try {
 			rowIterator = new RowIterator(
 					connector.createScanner(
-							getQualifiedTableName(tableName),
+							getQualifiedTableName(
+									tableName),
 							(authorization == null) ? new Authorizations(
-									additionalAuthorizations) : new Authorizations(
-									(String[]) ArrayUtils.add(
-											additionalAuthorizations,
-											authorization))));
+									additionalAuthorizations)
+									: new Authorizations(
+											(String[]) ArrayUtils.add(
+													additionalAuthorizations,
+													authorization))));
 			while (rowIterator.hasNext()) {
 				rowIterator.next();
 			}
@@ -317,7 +337,8 @@ public class AccumuloOperations implements
 
 	public boolean deleteTable(
 			final String tableName ) {
-		final String qName = getQualifiedTableName(tableName);
+		final String qName = getQualifiedTableName(
+				tableName);
 		try {
 			connector.tableOperations().delete(
 					qName);
@@ -375,7 +396,8 @@ public class AccumuloOperations implements
 			final String... additionalAuthorizations ) {
 		return this.delete(
 				tableName,
-				Arrays.asList(rowId),
+				Arrays.asList(
+						rowId),
 				columnFamily,
 				columnQualifier,
 				additionalAuthorizations);
@@ -390,9 +412,12 @@ public class AccumuloOperations implements
 			deleter = createBatchDeleter(
 					tableName,
 					additionalAuthorizations);
-			deleter.setRanges(Arrays.asList(new Range()));
-			deleter.fetchColumnFamily(new Text(
-					columnFamily));
+			deleter.setRanges(
+					Arrays.asList(
+							new Range()));
+			deleter.fetchColumnFamily(
+					new Text(
+							columnFamily));
 			deleter.delete();
 			return true;
 		}
@@ -432,25 +457,31 @@ public class AccumuloOperations implements
 									columnQualifier));
 				}
 				else {
-					deleter.fetchColumnFamily(new Text(
-							columnFamily));
+					deleter.fetchColumnFamily(
+							new Text(
+									columnFamily));
 				}
 			}
 			final Set<ByteArrayId> removeSet = new HashSet<ByteArrayId>();
 			final List<Range> rowRanges = new ArrayList<Range>();
 			for (final ByteArrayId rowId : rowIds) {
-				rowRanges.add(Range.exact(new Text(
-						rowId.getBytes())));
-				removeSet.add(new ByteArrayId(
-						rowId.getBytes()));
+				rowRanges.add(
+						Range.exact(
+								new Text(
+										rowId.getBytes())));
+				removeSet.add(
+						new ByteArrayId(
+								rowId.getBytes()));
 			}
-			deleter.setRanges(rowRanges);
+			deleter.setRanges(
+					rowRanges);
 
 			final Iterator<Map.Entry<Key, Value>> iterator = deleter.iterator();
 			while (iterator.hasNext()) {
 				final Entry<Key, Value> entry = iterator.next();
-				removeSet.remove(new ByteArrayId(
-						entry.getKey().getRowData().getBackingArray()));
+				removeSet.remove(
+						new ByteArrayId(
+								entry.getKey().getRowData().getBackingArray()));
 			}
 
 			if (removeSet.isEmpty()) {
@@ -477,24 +508,31 @@ public class AccumuloOperations implements
 			final byte[] localityGroup )
 			throws AccumuloException,
 			TableNotFoundException {
-		final String qName = getQualifiedTableName(tableName);
-		final String localityGroupStr = qName + StringUtils.stringFromBinary(localityGroup);
+		final String qName = getQualifiedTableName(
+				tableName);
+		final String localityGroupStr = qName + StringUtils.stringFromBinary(
+				localityGroup);
 
 		// check the cache for our locality group
-		if (locGrpCache.containsKey(localityGroupStr)) {
-			if ((locGrpCache.get(localityGroupStr) - new Date().getTime()) < cacheTimeoutMillis) {
+		if (locGrpCache.containsKey(
+				localityGroupStr)) {
+			if ((locGrpCache.get(
+					localityGroupStr) - new Date().getTime()) < cacheTimeoutMillis) {
 				return true;
 			}
 			else {
-				locGrpCache.remove(localityGroupStr);
+				locGrpCache.remove(
+						localityGroupStr);
 			}
 		}
 
 		// check accumulo to see if locality group exists
 		final boolean groupExists = connector.tableOperations().exists(
-				qName) && connector.tableOperations().getLocalityGroups(
-				qName).keySet().contains(
-				StringUtils.stringFromBinary(localityGroup));
+				qName)
+				&& connector.tableOperations().getLocalityGroups(
+						qName).keySet().contains(
+								StringUtils.stringFromBinary(
+										localityGroup));
 
 		// update the cache
 		if (groupExists) {
@@ -512,16 +550,21 @@ public class AccumuloOperations implements
 			throws AccumuloException,
 			TableNotFoundException,
 			AccumuloSecurityException {
-		final String qName = getQualifiedTableName(tableName);
-		final String localityGroupStr = qName + StringUtils.stringFromBinary(localityGroup);
+		final String qName = getQualifiedTableName(
+				tableName);
+		final String localityGroupStr = qName + StringUtils.stringFromBinary(
+				localityGroup);
 
 		// check the cache for our locality group
-		if (locGrpCache.containsKey(localityGroupStr)) {
-			if ((locGrpCache.get(localityGroupStr) - new Date().getTime()) < cacheTimeoutMillis) {
+		if (locGrpCache.containsKey(
+				localityGroupStr)) {
+			if ((locGrpCache.get(
+					localityGroupStr) - new Date().getTime()) < cacheTimeoutMillis) {
 				return;
 			}
 			else {
-				locGrpCache.remove(localityGroupStr);
+				locGrpCache.remove(
+						localityGroupStr);
 			}
 		}
 
@@ -533,11 +576,13 @@ public class AccumuloOperations implements
 
 			final Set<Text> groupSet = new HashSet<Text>();
 
-			groupSet.add(new Text(
-					localityGroup));
+			groupSet.add(
+					new Text(
+							localityGroup));
 
 			localityGroups.put(
-					StringUtils.stringFromBinary(localityGroup),
+					StringUtils.stringFromBinary(
+							localityGroup),
 					groupSet);
 
 			connector.tableOperations().setLocalityGroups(
@@ -555,9 +600,11 @@ public class AccumuloOperations implements
 			final String... additionalAuthorizations )
 			throws TableNotFoundException {
 		return connector.createScanner(
-				getQualifiedTableName(tableName),
+				getQualifiedTableName(
+						tableName),
 				new Authorizations(
-						getAuthorizations(additionalAuthorizations)));
+						getAuthorizations(
+								additionalAuthorizations)));
 	}
 
 	public BatchScanner createBatchScanner(
@@ -565,9 +612,11 @@ public class AccumuloOperations implements
 			final String... additionalAuthorizations )
 			throws TableNotFoundException {
 		return connector.createBatchScanner(
-				getQualifiedTableName(tableName),
+				getQualifiedTableName(
+						tableName),
 				new Authorizations(
-						getAuthorizations(additionalAuthorizations)),
+						getAuthorizations(
+								additionalAuthorizations)),
 				numThreads);
 	}
 
@@ -583,9 +632,12 @@ public class AccumuloOperations implements
 			user = clientUser;
 		}
 		final Set<String> uninsuredAuths = new HashSet<String>();
-		Set<String> insuredAuths = insuredAuthorizationCache.get(user);
+		Set<String> insuredAuths = insuredAuthorizationCache.get(
+				user);
 		if (insuredAuths == null) {
-			uninsuredAuths.addAll(Arrays.asList(authorizations));
+			uninsuredAuths.addAll(
+					Arrays.asList(
+							authorizations));
 			insuredAuths = new HashSet<String>();
 			insuredAuthorizationCache.put(
 					user,
@@ -593,8 +645,10 @@ public class AccumuloOperations implements
 		}
 		else {
 			for (final String auth : authorizations) {
-				if (!insuredAuths.contains(auth)) {
-					uninsuredAuths.add(auth);
+				if (!insuredAuths.contains(
+						auth)) {
+					uninsuredAuths.add(
+							auth);
 				}
 			}
 		}
@@ -604,12 +658,16 @@ public class AccumuloOperations implements
 						user);
 				final List<byte[]> newSet = new ArrayList<byte[]>();
 				for (final String auth : uninsuredAuths) {
-					if (!auths.contains(auth)) {
-						newSet.add(auth.getBytes(StringUtils.UTF8_CHAR_SET));
+					if (!auths.contains(
+							auth)) {
+						newSet.add(
+								auth.getBytes(
+										StringUtils.UTF8_CHAR_SET));
 					}
 				}
 				if (newSet.size() > 0) {
-					newSet.addAll(auths.getAuthorizations());
+					newSet.addAll(
+							auths.getAuthorizations());
 					connector.securityOperations().changeUserAuthorizations(
 							user,
 							new Authorizations(
@@ -617,15 +675,20 @@ public class AccumuloOperations implements
 					auths = connector.securityOperations().getUserAuthorizations(
 							user);
 
-					LOGGER.trace(clientUser + " has authorizations " + ArrayUtils.toString(auths.getAuthorizations()));
+					LOGGER.trace(
+							clientUser + " has authorizations " + ArrayUtils.toString(
+									auths.getAuthorizations()));
 				}
 				for (final String auth : uninsuredAuths) {
-					insuredAuths.add(auth);
+					insuredAuths.add(
+							auth);
 				}
 			}
 			catch (AccumuloException | AccumuloSecurityException e) {
 				LOGGER.error(
-						"Unable to add authorizations '" + Arrays.toString(uninsuredAuths.toArray(new String[] {}))
+						"Unable to add authorizations '" + Arrays.toString(
+								uninsuredAuths.toArray(
+										new String[] {}))
 								+ "'",
 						e);
 				return false;
@@ -639,15 +702,20 @@ public class AccumuloOperations implements
 			final String... additionalAuthorizations )
 			throws TableNotFoundException {
 		return connector.createBatchDeleter(
-				getQualifiedTableName(tableName),
+				getQualifiedTableName(
+						tableName),
 				new Authorizations(
-						getAuthorizations(additionalAuthorizations)),
+						getAuthorizations(
+								additionalAuthorizations)),
 				numThreads,
-				new BatchWriterConfig().setMaxWriteThreads(
-						numThreads).setMaxMemory(
-						byteBufferSize).setTimeout(
-						timeoutMillis,
-						TimeUnit.MILLISECONDS));
+				new BatchWriterConfig()
+						.setMaxWriteThreads(
+								numThreads)
+						.setMaxMemory(
+								byteBufferSize)
+						.setTimeout(
+								timeoutMillis,
+								TimeUnit.MILLISECONDS));
 	}
 
 	public long getCacheTimeoutMillis() {
@@ -662,8 +730,10 @@ public class AccumuloOperations implements
 	public void insurePartition(
 			final ByteArrayId partition,
 			final String tableName ) {
-		final String qName = getQualifiedTableName(tableName);
-		Set<ByteArrayId> existingPartitions = insuredPartitionCache.get(qName);
+		final String qName = getQualifiedTableName(
+				tableName);
+		Set<ByteArrayId> existingPartitions = insuredPartitionCache.get(
+				qName);
 		try {
 			synchronized (insuredPartitionCache) {
 				if (existingPartitions == null) {
@@ -672,21 +742,25 @@ public class AccumuloOperations implements
 							qName);
 					existingPartitions = new HashSet<>();
 					for (final Text s : splits) {
-						existingPartitions.add(new ByteArrayId(
-								s.getBytes()));
+						existingPartitions.add(
+								new ByteArrayId(
+										s.getBytes()));
 					}
 					insuredPartitionCache.put(
 							qName,
 							existingPartitions);
 				}
-				if (!existingPartitions.contains(partition)) {
+				if (!existingPartitions.contains(
+						partition)) {
 					final SortedSet<Text> partitionKeys = new TreeSet<Text>();
-					partitionKeys.add(new Text(
-							partition.getBytes()));
+					partitionKeys.add(
+							new Text(
+									partition.getBytes()));
 					connector.tableOperations().addSplits(
 							qName,
 							partitionKeys);
-					existingPartitions.add(partition);
+					existingPartitions.add(
+							partition);
 				}
 			}
 		}
@@ -704,7 +778,8 @@ public class AccumuloOperations implements
 			final boolean enableBlockCache,
 			final IteratorConfig... iterators )
 			throws TableNotFoundException {
-		final String qName = getQualifiedTableName(tableName);
+		final String qName = getQualifiedTableName(
+				tableName);
 		if (createTable && !connector.tableOperations().exists(
 				qName)) {
 			createTable(
@@ -719,10 +794,12 @@ public class AccumuloOperations implements
 				for (final IteratorConfig iteratorConfig : iterators) {
 					boolean mustDelete = false;
 					boolean exists = false;
-					final EnumSet<IteratorScope> existingScopes = iteratorScopes.get(iteratorConfig.getIteratorName());
+					final EnumSet<IteratorScope> existingScopes = iteratorScopes.get(
+							iteratorConfig.getIteratorName());
 					EnumSet<IteratorScope> configuredScopes;
 					if (iteratorConfig.getScopes() == null) {
-						configuredScopes = EnumSet.allOf(IteratorScope.class);
+						configuredScopes = EnumSet.allOf(
+								IteratorScope.class);
 					}
 					else {
 						configuredScopes = iteratorConfig.getScopes();
@@ -732,12 +809,14 @@ public class AccumuloOperations implements
 						if (existingScopes.size() == configuredScopes.size()) {
 							exists = true;
 							for (final IteratorScope s : existingScopes) {
-								if (!configuredScopes.contains(s)) {
+								if (!configuredScopes.contains(
+										s)) {
 									// this iterator exists with the wrong
 									// scope, we will assume we want to remove
 									// it and add the new configuration
-									LOGGER.warn("found iterator '" + iteratorConfig.getIteratorName()
-											+ "' missing scope '" + s.name() + "', removing it and re-attaching");
+									LOGGER.warn(
+											"found iterator '" + iteratorConfig.getIteratorName() + "' missing scope '"
+													+ s.name() + "', removing it and re-attaching");
 
 									mustDelete = true;
 									break;
@@ -757,7 +836,8 @@ public class AccumuloOperations implements
 										scope);
 								if (setting != null) {
 									final Map<String, String> existingOptions = setting.getOptions();
-									configuredOptions = iteratorConfig.getOptions(existingOptions);
+									configuredOptions = iteratorConfig.getOptions(
+											existingOptions);
 									if (existingOptions == null) {
 										mustDelete = (configuredOptions == null);
 									}
@@ -775,7 +855,8 @@ public class AccumuloOperations implements
 											mustDelete = true;
 										}
 										else {
-											mustDelete = (!existingEntries.containsAll(configuredEntries));
+											mustDelete = (!existingEntries.containsAll(
+													configuredEntries));
 										}
 									}
 									// we found the setting existing in one
@@ -795,7 +876,8 @@ public class AccumuloOperations implements
 					}
 					if (!exists) {
 						if (configuredOptions == null) {
-							configuredOptions = iteratorConfig.getOptions(new HashMap<String, String>());
+							configuredOptions = iteratorConfig.getOptions(
+									new HashMap<String, String>());
 						}
 						connector.tableOperations().attachIterator(
 								qName,
@@ -834,7 +916,8 @@ public class AccumuloOperations implements
 			final AccumuloRequiredOptions options )
 			throws AccumuloException,
 			AccumuloSecurityException {
-		return createOperations(options).connector;
+		return createOperations(
+				options).connector;
 	}
 
 	public static String getUsername(
@@ -871,7 +954,8 @@ public class AccumuloOperations implements
 	public boolean indexExists(
 			final ByteArrayId indexId )
 			throws IOException {
-		final String qName = getQualifiedTableName(indexId.getString());
+		final String qName = getQualifiedTableName(
+				indexId.getString());
 		return connector.tableOperations().exists(
 				qName);
 	}
@@ -887,9 +971,12 @@ public class AccumuloOperations implements
 					indexId.getString(),
 					additionalAuthorizations);
 
-			deleter.setRanges(Arrays.asList(new Range()));
-			deleter.fetchColumnFamily(new Text(
-					adapterId.getString()));
+			deleter.setRanges(
+					Arrays.asList(
+							new Range()));
+			deleter.fetchColumnFamily(
+					new Text(
+							adapterId.getString()));
 			deleter.delete();
 			return true;
 		}
@@ -910,50 +997,62 @@ public class AccumuloOperations implements
 	protected ScannerBase getScanner(
 			final ReaderParams params ) {
 		final List<ByteArrayRange> ranges = params.getQueryRanges().getCompositeQueryRanges();
-		final String tableName = StringUtils.stringFromBinary(params.getIndex().getId().getBytes());
+		final String tableName = StringUtils.stringFromBinary(
+				params.getIndex().getId().getBytes());
 		ScannerBase scanner;
 		try {
 			if (!params.isAggregation() && (ranges != null) && (ranges.size() == 1)) {
 				scanner = createScanner(
 						tableName,
 						params.getAdditionalAuthorizations());
-				final ByteArrayRange r = ranges.get(0);
+				final ByteArrayRange r = ranges.get(
+						0);
 				if (r.isSingleValue()) {
-					((Scanner) scanner).setRange(Range.exact(new Text(
-							r.getStart().getBytes())));
+					((Scanner) scanner).setRange(
+							Range.exact(
+									new Text(
+											r.getStart().getBytes())));
 				}
 				else {
-					((Scanner) scanner).setRange(AccumuloUtils.byteArrayRangeToAccumuloRange(r));
+					((Scanner) scanner).setRange(
+							AccumuloUtils.byteArrayRangeToAccumuloRange(
+									r));
 				}
 				if ((params.getLimit() != null) && (params.getLimit() > 0)
 						&& (params.getLimit() < ((Scanner) scanner).getBatchSize())) {
 					// do allow the limit to be set to some enormous size.
-					((Scanner) scanner).setBatchSize(Math.min(
-							1024,
-							params.getLimit()));
+					((Scanner) scanner).setBatchSize(
+							Math.min(
+									1024,
+									params.getLimit()));
 				}
 			}
 			else {
 				scanner = createBatchScanner(
 						tableName,
 						params.getAdditionalAuthorizations());
-				((BatchScanner) scanner).setRanges(AccumuloUtils.byteArrayRangesToAccumuloRanges(ranges));
+				((BatchScanner) scanner).setRanges(
+						AccumuloUtils.byteArrayRangesToAccumuloRanges(
+								ranges));
 			}
 			if (params.getMaxResolutionSubsamplingPerDimension() != null) {
 				if (params.getMaxResolutionSubsamplingPerDimension().length != params
 						.getIndex()
 						.getIndexStrategy()
 						.getOrderedDimensionDefinitions().length) {
-					LOGGER.warn("Unable to subsample for table '" + tableName + "'. Subsample dimensions = "
-							+ params.getMaxResolutionSubsamplingPerDimension().length + " when indexed dimensions = "
-							+ params.getIndex().getIndexStrategy().getOrderedDimensionDefinitions().length);
+					LOGGER.warn(
+							"Unable to subsample for table '" + tableName + "'. Subsample dimensions = "
+									+ params.getMaxResolutionSubsamplingPerDimension().length
+									+ " when indexed dimensions = "
+									+ params.getIndex().getIndexStrategy().getOrderedDimensionDefinitions().length);
 				}
 				else {
 
-					final int cardinalityToSubsample = (int) Math.round(IndexUtils.getDimensionalBitsUsed(
-							params.getIndex().getIndexStrategy(),
-							params.getMaxResolutionSubsamplingPerDimension())
-							+ (8 * params.getIndex().getIndexStrategy().getPartitionKeyLength()));
+					final int cardinalityToSubsample = (int) Math.round(
+							IndexUtils.getDimensionalBitsUsed(
+									params.getIndex().getIndexStrategy(),
+									params.getMaxResolutionSubsamplingPerDimension())
+									+ (8 * params.getIndex().getIndexStrategy().getPartitionKeyLength()));
 
 					final IteratorSetting iteratorSettings = new IteratorSetting(
 							FixedCardinalitySkippingIterator.CARDINALITY_SKIPPING_ITERATOR_PRIORITY,
@@ -961,8 +1060,10 @@ public class AccumuloOperations implements
 							FixedCardinalitySkippingIterator.class);
 					iteratorSettings.addOption(
 							FixedCardinalitySkippingIterator.CARDINALITY_SKIP_INTERVAL,
-							Integer.toString(cardinalityToSubsample));
-					scanner.addScanIterator(iteratorSettings);
+							Integer.toString(
+									cardinalityToSubsample));
+					scanner.addScanIterator(
+							iteratorSettings);
 				}
 			}
 		}
@@ -974,8 +1075,9 @@ public class AccumuloOperations implements
 		}
 		if ((params.getAdapterIds() != null) && !params.getAdapterIds().isEmpty()) {
 			for (final ByteArrayId adapterId : params.getAdapterIds()) {
-				scanner.fetchColumnFamily(new Text(
-						adapterId.getBytes()));
+				scanner.fetchColumnFamily(
+						new Text(
+								adapterId.getBytes()));
 			}
 		}
 		return scanner;
@@ -1006,7 +1108,9 @@ public class AccumuloOperations implements
 					&& (params.getAggregation().getLeft() != null)) {
 				iteratorSettings.addOption(
 						AggregationIterator.ADAPTER_OPTION_NAME,
-						ByteArrayUtils.byteArrayToString(PersistenceUtils.toBinary(params.getAggregation().getLeft())));
+						ByteArrayUtils.byteArrayToString(
+								PersistenceUtils.toBinary(
+										params.getAggregation().getLeft())));
 			}
 			final Aggregation aggr = params.getAggregation().getRight();
 			iteratorSettings.addOption(
@@ -1015,25 +1119,34 @@ public class AccumuloOperations implements
 			if (aggr.getParameters() != null) { // sets the parameters
 				iteratorSettings.addOption(
 						AggregationIterator.PARAMETER_OPTION_NAME,
-						ByteArrayUtils.byteArrayToString((PersistenceUtils.toBinary(aggr.getParameters()))));
+						ByteArrayUtils.byteArrayToString(
+								(PersistenceUtils.toBinary(
+										aggr.getParameters()))));
 			}
 			if ((params.getConstraints() != null) && !params.getConstraints().isEmpty()) {
 				iteratorSettings.addOption(
 						AggregationIterator.CONSTRAINTS_OPTION_NAME,
-						ByteArrayUtils.byteArrayToString((PersistenceUtils.toBinary(params.getConstraints()))));
+						ByteArrayUtils.byteArrayToString(
+								(PersistenceUtils.toBinary(
+										params.getConstraints()))));
 			}
 			iteratorSettings.addOption(
 					AggregationIterator.INDEX_STRATEGY_OPTION_NAME,
-					ByteArrayUtils.byteArrayToString(PersistenceUtils.toBinary(params.getIndex().getIndexStrategy())));
+					ByteArrayUtils.byteArrayToString(
+							PersistenceUtils.toBinary(
+									params.getIndex().getIndexStrategy())));
 			// the index model and partition key length must be provided for the
 			// aggregation iterator to deserialize each entry
 
 			iteratorSettings.addOption(
 					QueryFilterIterator.PARTITION_KEY_LENGTH,
-					Integer.toString(params.getIndex().getIndexStrategy().getPartitionKeyLength()));
+					Integer.toString(
+							params.getIndex().getIndexStrategy().getPartitionKeyLength()));
 			iteratorSettings.addOption(
 					QueryFilterIterator.MODEL,
-					ByteArrayUtils.byteArrayToString(PersistenceUtils.toBinary(params.getIndex().getIndexModel())));
+					ByteArrayUtils.byteArrayToString(
+							PersistenceUtils.toBinary(
+									params.getIndex().getIndexModel())));
 			// don't bother setting max decomposition because it is just the
 			// default anyways
 		}
@@ -1058,16 +1171,21 @@ public class AccumuloOperations implements
 			}
 			iteratorSettings.addOption(
 					QueryFilterIterator.FILTER,
-					ByteArrayUtils.byteArrayToString(PersistenceUtils.toBinary(params.getFilter())));
+					ByteArrayUtils.byteArrayToString(
+							PersistenceUtils.toBinary(
+									params.getFilter())));
 			if (!iteratorSettings.getOptions().containsKey(
 					QueryFilterIterator.MODEL)) {
 				// it may already be added as an option if its an aggregation
 				iteratorSettings.addOption(
 						QueryFilterIterator.MODEL,
-						ByteArrayUtils.byteArrayToString(PersistenceUtils.toBinary(params.getIndex().getIndexModel())));
+						ByteArrayUtils.byteArrayToString(
+								PersistenceUtils.toBinary(
+										params.getIndex().getIndexModel())));
 				iteratorSettings.addOption(
 						QueryFilterIterator.PARTITION_KEY_LENGTH,
-						Integer.toString(params.getIndex().getIndexStrategy().getPartitionKeyLength()));
+						Integer.toString(
+								params.getIndex().getIndexStrategy().getPartitionKeyLength()));
 			}
 		}
 		else if ((iteratorSettings == null) && params.isMixedVisibility()) {
@@ -1086,7 +1204,8 @@ public class AccumuloOperations implements
 					scanner);
 		}
 		if (iteratorSettings != null) {
-			scanner.addScanIterator(iteratorSettings);
+			scanner.addScanIterator(
+					iteratorSettings);
 		}
 	}
 
@@ -1102,13 +1221,18 @@ public class AccumuloOperations implements
 
 			iteratorSetting.addOption(
 					NumericIndexStrategyFilterIterator.INDEX_STRATEGY_KEY,
-					ByteArrayUtils.byteArrayToString(PersistenceUtils.toBinary(params.getIndex().getIndexStrategy())));
+					ByteArrayUtils.byteArrayToString(
+							PersistenceUtils.toBinary(
+									params.getIndex().getIndexStrategy())));
 
 			iteratorSetting.addOption(
 					NumericIndexStrategyFilterIterator.COORDINATE_RANGE_KEY,
-					ByteArrayUtils.byteArrayToString(new ArrayOfArrays(
-							coords.toArray(new MultiDimensionalCoordinateRangesArray[] {})).toBinary()));
-			scanner.addScanIterator(iteratorSetting);
+					ByteArrayUtils.byteArrayToString(
+							new ArrayOfArrays(
+									coords.toArray(
+											new MultiDimensionalCoordinateRangesArray[] {})).toBinary()));
+			scanner.addScanIterator(
+					iteratorSetting);
 		}
 	}
 
@@ -1129,8 +1253,10 @@ public class AccumuloOperations implements
 
 				iteratorSetting.addOption(
 						AttributeSubsettingIterator.WHOLE_ROW_ENCODED_KEY,
-						Boolean.toString(params.isMixedVisibility()));
-				scanner.addScanIterator(iteratorSetting);
+						Boolean.toString(
+								params.isMixedVisibility()));
+				scanner.addScanIterator(
+						iteratorSetting);
 			}
 		}
 	}
@@ -1147,14 +1273,16 @@ public class AccumuloOperations implements
 					QueryFilterIterator.QUERY_ITERATOR_PRIORITY,
 					QueryFilterIterator.QUERY_ITERATOR_NAME,
 					WholeRowIterator.class);
-			scanner.addScanIterator(iteratorSettings);
+			scanner.addScanIterator(
+					iteratorSettings);
 		}
 	}
 
 	@Override
 	public Reader createReader(
 			final ReaderParams params ) {
-		final ScannerBase scanner = getScanner(params);
+		final ScannerBase scanner = getScanner(
+				params);
 		addConstraintsScanIteratorSettings(
 				params,
 				scanner,
@@ -1168,41 +1296,49 @@ public class AccumuloOperations implements
 	protected Scanner getScanner(
 			final RecordReaderParams params ) {
 		final GeoWaveRowRange range = params.getRowRange();
-		final String tableName = StringUtils.stringFromBinary(params.getIndex().getId().getBytes());
+		final String tableName = StringUtils.stringFromBinary(
+				params.getIndex().getId().getBytes());
 		Scanner scanner;
 		try {
 			scanner = createScanner(
 					tableName,
 					params.getAdditionalAuthorizations());
 			if (range == null) {
-				scanner.setRange(new Range());
+				scanner.setRange(
+						new Range());
 			}
 			else {
-				scanner.setRange(AccumuloSplitsProvider.toAccumuloRange(
-						range,
-						params.getIndex().getIndexStrategy().getPartitionKeyLength()));
+				scanner.setRange(
+						AccumuloSplitsProvider.toAccumuloRange(
+								range,
+								params.getIndex().getIndexStrategy().getPartitionKeyLength()));
 			}
-			if ((params.getLimit() != null) && (params.getLimit() > 0) && (params.getLimit() < scanner.getBatchSize())) {
+			if ((params.getLimit() != null) && (params.getLimit() > 0)
+					&& (params.getLimit() < scanner.getBatchSize())) {
 				// do allow the limit to be set to some enormous size.
-				scanner.setBatchSize(Math.min(
-						1024,
-						params.getLimit()));
+				scanner.setBatchSize(
+						Math.min(
+								1024,
+								params.getLimit()));
 			}
 			if (params.getMaxResolutionSubsamplingPerDimension() != null) {
 				if (params.getMaxResolutionSubsamplingPerDimension().length != params
 						.getIndex()
 						.getIndexStrategy()
 						.getOrderedDimensionDefinitions().length) {
-					LOGGER.warn("Unable to subsample for table '" + tableName + "'. Subsample dimensions = "
-							+ params.getMaxResolutionSubsamplingPerDimension().length + " when indexed dimensions = "
-							+ params.getIndex().getIndexStrategy().getOrderedDimensionDefinitions().length);
+					LOGGER.warn(
+							"Unable to subsample for table '" + tableName + "'. Subsample dimensions = "
+									+ params.getMaxResolutionSubsamplingPerDimension().length
+									+ " when indexed dimensions = "
+									+ params.getIndex().getIndexStrategy().getOrderedDimensionDefinitions().length);
 				}
 				else {
 
-					final int cardinalityToSubsample = (int) Math.round(IndexUtils.getDimensionalBitsUsed(
-							params.getIndex().getIndexStrategy(),
-							params.getMaxResolutionSubsamplingPerDimension())
-							+ (8 * params.getIndex().getIndexStrategy().getPartitionKeyLength()));
+					final int cardinalityToSubsample = (int) Math.round(
+							IndexUtils.getDimensionalBitsUsed(
+									params.getIndex().getIndexStrategy(),
+									params.getMaxResolutionSubsamplingPerDimension())
+									+ (8 * params.getIndex().getIndexStrategy().getPartitionKeyLength()));
 
 					final IteratorSetting iteratorSettings = new IteratorSetting(
 							FixedCardinalitySkippingIterator.CARDINALITY_SKIPPING_ITERATOR_PRIORITY,
@@ -1210,8 +1346,10 @@ public class AccumuloOperations implements
 							FixedCardinalitySkippingIterator.class);
 					iteratorSettings.addOption(
 							FixedCardinalitySkippingIterator.CARDINALITY_SKIP_INTERVAL,
-							Integer.toString(cardinalityToSubsample));
-					scanner.addScanIterator(iteratorSettings);
+							Integer.toString(
+									cardinalityToSubsample));
+					scanner.addScanIterator(
+							iteratorSettings);
 				}
 			}
 		}
@@ -1223,8 +1361,9 @@ public class AccumuloOperations implements
 		}
 		if ((params.getAdapterIds() != null) && !params.getAdapterIds().isEmpty()) {
 			for (final ByteArrayId adapterId : params.getAdapterIds()) {
-				scanner.fetchColumnFamily(new Text(
-						adapterId.getBytes()));
+				scanner.fetchColumnFamily(
+						new Text(
+								adapterId.getBytes()));
 			}
 		}
 		return scanner;
@@ -1233,7 +1372,8 @@ public class AccumuloOperations implements
 	@Override
 	public Reader createReader(
 			final RecordReaderParams readerParams ) {
-		final ScannerBase scanner = getScanner(readerParams);
+		final ScannerBase scanner = getScanner(
+				readerParams);
 		addConstraintsScanIteratorSettings(
 				readerParams,
 				scanner,
@@ -1273,7 +1413,8 @@ public class AccumuloOperations implements
 
 		try {
 			return new mil.nga.giat.geowave.datastore.accumulo.operations.AccumuloWriter(
-					createBatchWriter(tableName),
+					createBatchWriter(
+							tableName),
 					this,
 					tableName);
 		}
@@ -1288,13 +1429,16 @@ public class AccumuloOperations implements
 	public BatchWriter createBatchWriter(
 			final String tableName )
 			throws TableNotFoundException {
-		final String qName = getQualifiedTableName(tableName);
+		final String qName = getQualifiedTableName(
+				tableName);
 		final BatchWriterConfig config = new BatchWriterConfig();
-		config.setMaxMemory(byteBufferSize);
+		config.setMaxMemory(
+				byteBufferSize);
 		config.setMaxLatency(
 				timeoutMillis,
 				TimeUnit.MILLISECONDS);
-		config.setMaxWriteThreads(numThreads);
+		config.setMaxWriteThreads(
+				numThreads);
 		return connector.createBatchWriter(
 				qName,
 				config);
@@ -1306,6 +1450,7 @@ public class AccumuloOperations implements
 	@Override
 	public MetadataWriter createMetadataWriter(
 			final MetadataType metadataType ) {
+
 		if (options.isCreateTable()) {
 			// this checks for existence prior to create
 			createTable(
@@ -1313,7 +1458,8 @@ public class AccumuloOperations implements
 					true,
 					options.isEnableBlockCache());
 		}
-		if (MetadataType.STATS.equals(metadataType) && options.isServerSideLibraryEnabled()) {
+		if (MetadataType.STATS.equals(
+				metadataType) && options.isServerSideLibraryEnabled()) {
 			synchronized (this) {
 				if (!iteratorsAttached) {
 					iteratorsAttached = true;
@@ -1338,7 +1484,8 @@ public class AccumuloOperations implements
 		}
 		try {
 			return new AccumuloMetadataWriter(
-					createBatchWriter(AbstractGeoWavePersistence.METADATA_TABLE),
+					createBatchWriter(
+							AbstractGeoWavePersistence.METADATA_TABLE),
 					metadataType);
 		}
 		catch (final TableNotFoundException e) {
@@ -1371,16 +1518,19 @@ public class AccumuloOperations implements
 			final PrimaryIndex index,
 			final AdapterStore adapterStore,
 			final AdapterIndexMappingStore adapterIndexMappingStore ) {
-		final String tableName = getQualifiedTableName(index.getId().getString());
+		final String tableName = getQualifiedTableName(
+				index.getId().getString());
 		try {
-			LOGGER.info("Compacting table '" + tableName + "'");
+			LOGGER.info(
+					"Compacting table '" + tableName + "'");
 			connector.tableOperations().compact(
 					tableName,
 					null,
 					null,
 					true,
 					true);
-			LOGGER.info("Successfully compacted table '" + tableName + "'");
+			LOGGER.info(
+					"Successfully compacted table '" + tableName + "'");
 		}
 		catch (AccumuloSecurityException | TableNotFoundException | AccumuloException e) {
 			LOGGER.error(
@@ -1389,5 +1539,18 @@ public class AccumuloOperations implements
 			return false;
 		}
 		return true;
+	}
+
+	public void setMaxVersions(
+			final String tableName,
+			int maxVersions )
+			throws AccumuloException,
+			TableNotFoundException,
+			AccumuloSecurityException {
+		connector.tableOperations().setProperty(
+				getQualifiedTableName(tableName),
+				Property.TABLE_ITERATOR_PREFIX + IteratorScope.scan.name() + ".vers.opt.maxVersions",
+				Integer.toString(
+						maxVersions));
 	}
 }

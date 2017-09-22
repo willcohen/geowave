@@ -5,8 +5,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
-import org.apache.accumulo.core.client.AccumuloException;
-import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchScanner;
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.TableNotFoundException;
@@ -97,80 +95,40 @@ public class AccumuloMetadataReader implements
 			scanner.setRanges(
 					ranges);
 
-			// KAM: TEST ONLY; accumulo client-side stats merging experiment
-			if (metadataType == MetadataType.STATS && !options.isServerSideLibraryEnabled() && query.hasPrimaryId()) {
+			// For stats w/ no server-side support, need to merge here
+			if (metadataType == MetadataType.STATS && /* !options.isServerSideLibraryEnabled() && */ query.hasPrimaryId()) {
+				DataStatistics mergedStats = null;
+				Entry<Key, Value> row = null;
+				Iterator<Entry<Key, Value>> it = scanner.iterator();
 
-				synchronized (this) {
-					// change table props to enable multiple versions
-					try {
-						operations.setMaxVersions(
-								AbstractGeoWavePersistence.METADATA_TABLE,
-								Integer.MAX_VALUE);
+				while (it.hasNext()) {
+					row = it.next();
 
-						int entries = 0;
-						DataStatistics mergedStats = null;
-						Entry<Key, Value> entry = null;
-						Iterator<Entry<Key, Value>> it = scanner.iterator();
+					DataStatistics stats = PersistenceUtils.fromBinary(
+							row.getValue().get(),
+							DataStatistics.class);
 
-						while (it.hasNext()) {
-							entry = it.next();
-							LOGGER.warn(
-									Long.toString(
-											entry.getKey().getTimestamp()));
-
-							DataStatistics stats = PersistenceUtils.fromBinary(
-									entry.getValue().get(),
-									DataStatistics.class);
-							entries++;
-
-							if (mergedStats == null) {
-								mergedStats = stats;
-							}
-							else {
-								mergedStats.merge(
-										stats);
-							}
-						}
-
-						LOGGER.warn(
-								"Metadata query returned " + entries + " results");
-
-						GeoWaveMetadata mergedMetadata = new GeoWaveMetadata(
-								entry.getKey().getRow().getBytes(),
-								entry.getKey().getColumnQualifier().getBytes(),
-								entry.getKey().getColumnVisibility().getBytes(),
-								PersistenceUtils.toBinary(
-										mergedStats));
-
-						// Restore table props to normal
-						operations.setMaxVersions(
-								AbstractGeoWavePersistence.METADATA_TABLE,
-								1);
-
-						return new CloseableIteratorWrapper<>(
-								new ScannerClosableWrapper(
-										scanner),
-								new Iterator<GeoWaveMetadata>() {
-									@Override
-									public boolean hasNext() {
-										return true;
-									}
-
-									@Override
-									public GeoWaveMetadata next() {
-										return mergedMetadata;
-									}
-								});
-
+					if (mergedStats == null) {
+						mergedStats = stats;
 					}
-					catch (AccumuloException | AccumuloSecurityException e) {
-						LOGGER.error(
-								"Error updating maxVersions for stats query",
-								e);
+					else {
+						mergedStats.merge(
+								stats);
 					}
 				}
+
+				GeoWaveMetadata mergedMetadata = new GeoWaveMetadata(
+						row.getKey().getRow().getBytes(),
+						row.getKey().getColumnQualifier().getBytes(),
+						row.getKey().getColumnVisibility().getBytes(),
+						PersistenceUtils.toBinary(
+								mergedStats));
 				
-				return new CloseableIterator.Empty();
+				return new CloseableIteratorWrapper<>(
+						new ScannerClosableWrapper(
+								scanner),
+						Iterators.singletonIterator(
+								mergedMetadata));
 			}
 
 			return new CloseableIteratorWrapper<>(
@@ -203,7 +161,7 @@ public class AccumuloMetadataReader implements
 
 	private IteratorSetting[] getScanSettings() {
 		if (MetadataType.STATS.equals(
-				metadataType) && options.isServerSideLibraryEnabled()) {
+				metadataType) && false /* options.isServerSideLibraryEnabled() */) {
 			return getStatsScanSettings();
 		}
 		return null;

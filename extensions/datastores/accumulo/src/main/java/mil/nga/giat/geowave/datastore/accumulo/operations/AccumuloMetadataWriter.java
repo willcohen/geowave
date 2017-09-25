@@ -31,7 +31,8 @@ public class AccumuloMetadataWriter implements
 	private static final int STATS_COMBINER_PRIORITY = 10;
 	private static final String STATISTICS_COMBINER_NAME = "STATS_COMBINER";
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(AccumuloMetadataWriter.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(
+			AccumuloMetadataWriter.class);
 	private final BatchWriter writer;
 	private final Text metadataTypeName;
 
@@ -39,7 +40,8 @@ public class AccumuloMetadataWriter implements
 			final BatchWriter writer,
 			final MetadataType metadataType ) {
 		this.writer = writer;
-		metadataTypeName = getSafeText(metadataType.name());
+		metadataTypeName = getSafeText(
+				metadataType.name());
 	}
 
 	@Override
@@ -82,14 +84,14 @@ public class AccumuloMetadataWriter implements
 							metadata.getValue()));
 		}
 		try {
-			writer.addMutation(mutation);
+			writer.addMutation(
+					mutation);
 		}
 		catch (final MutationsRejectedException e) {
 			LOGGER.error(
 					"Unable to write metadata",
 					e);
 		}
-
 	}
 
 	private static Text getSafeText(
@@ -125,7 +127,8 @@ public class AccumuloMetadataWriter implements
 						adapterColumn.getFirst(),
 						adapterColumn.getSecond()));
 		final IteratorConfig statsCombiner = new IteratorConfig(
-				EnumSet.allOf(IteratorScope.class),
+				EnumSet.allOf(
+						IteratorScope.class),
 				STATS_COMBINER_PRIORITY,
 				STATISTICS_COMBINER_NAME,
 				MergingCombiner.class.getName(),

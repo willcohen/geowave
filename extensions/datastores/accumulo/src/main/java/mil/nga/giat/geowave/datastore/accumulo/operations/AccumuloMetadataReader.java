@@ -2,15 +2,20 @@ package mil.nga.giat.geowave.datastore.accumulo.operations;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
 
+import org.apache.accumulo.core.client.AccumuloException;
+import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchScanner;
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,9 +57,8 @@ public class AccumuloMetadataReader implements
 	@Override
 	public CloseableIterator<GeoWaveMetadata> query(
 			final MetadataQuery query ) {
-		BatchScanner scanner;
 		try {
-			scanner = operations.createBatchScanner(
+			BatchScanner scanner = operations.createBatchScanner(
 					AbstractGeoWavePersistence.METADATA_TABLE,
 					query.getAuthorizations());
 
@@ -82,7 +86,7 @@ public class AccumuloMetadataReader implements
 				}
 			}
 			final Collection<Range> ranges = new ArrayList<Range>();
-			if (query.getPrimaryId() != null) {
+			if (query.hasPrimaryId()) {
 				ranges.add(
 						new Range(
 								new Text(
@@ -96,39 +100,49 @@ public class AccumuloMetadataReader implements
 					ranges);
 
 			// For stats w/ no server-side support, need to merge here
-			if (metadataType == MetadataType.STATS && /* !options.isServerSideLibraryEnabled() && */ query.hasPrimaryId()) {
-				DataStatistics mergedStats = null;
-				Entry<Key, Value> row = null;
+			if (metadataType == MetadataType.STATS
+//					&& !options.isServerSideLibraryEnabled()
+					&& !AccumuloOperations.SERVER_SIDE_STATS_MERGE) {
+
+				HashMap<Text, Key> keyMap = new HashMap();
+				HashMap<Text, DataStatistics> mergedDataMap = new HashMap();
 				Iterator<Entry<Key, Value>> it = scanner.iterator();
 
 				while (it.hasNext()) {
-					row = it.next();
+					Entry<Key, Value> row = it.next();
 
 					DataStatistics stats = PersistenceUtils.fromBinary(
 							row.getValue().get(),
 							DataStatistics.class);
-
-					if (mergedStats == null) {
-						mergedStats = stats;
-					}
-					else {
+					
+					if (keyMap.containsKey(row.getKey().getRow())) {
+						DataStatistics mergedStats = mergedDataMap.get(row.getKey().getRow());
 						mergedStats.merge(
 								stats);
 					}
+					else {
+						keyMap.put(row.getKey().getRow(), row.getKey());
+						mergedDataMap.put(row.getKey().getRow(), stats);
+					}
 				}
-
-				GeoWaveMetadata mergedMetadata = new GeoWaveMetadata(
-						row.getKey().getRow().getBytes(),
-						row.getKey().getColumnQualifier().getBytes(),
-						row.getKey().getColumnVisibility().getBytes(),
-						PersistenceUtils.toBinary(
-								mergedStats));
+				
+				List<GeoWaveMetadata> metadataList = new ArrayList();
+				for (Text rowId : keyMap.keySet()) {
+					Key key = keyMap.get(rowId);
+					DataStatistics mergedStats = mergedDataMap.get(rowId);
+					
+					metadataList.add(new GeoWaveMetadata(
+							key.getRow().getBytes(),
+							key.getColumnQualifier().getBytes(),
+							key.getColumnVisibility().getBytes(),
+							PersistenceUtils.toBinary(
+									mergedStats)));	
+				}
 				
 				return new CloseableIteratorWrapper<>(
 						new ScannerClosableWrapper(
 								scanner),
-						Iterators.singletonIterator(
-								mergedMetadata));
+						metadataList.iterator());
 			}
 
 			return new CloseableIteratorWrapper<>(
@@ -161,7 +175,9 @@ public class AccumuloMetadataReader implements
 
 	private IteratorSetting[] getScanSettings() {
 		if (MetadataType.STATS.equals(
-				metadataType) && false /* options.isServerSideLibraryEnabled() */) {
+				metadataType)
+//				&& options.isServerSideLibraryEnabled()
+				&& AccumuloOperations.SERVER_SIDE_STATS_MERGE) {
 			return getStatsScanSettings();
 		}
 		return null;

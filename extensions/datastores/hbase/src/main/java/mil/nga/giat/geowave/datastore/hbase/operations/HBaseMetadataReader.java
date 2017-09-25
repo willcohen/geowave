@@ -66,12 +66,16 @@ public class HBaseMetadataReader implements
 			}
 
 			if (query.getPrimaryId() != null) {
-				scanner.setMaxVersions(); // Get all versions
-
 				scanner.setStartRow(
 						query.getPrimaryId());
 				scanner.setStopRow(
 						query.getPrimaryId());
+			}
+			
+			// TODO: This needs to check for 'options.serverSideLibraryEnabled' 
+			// when server-side merging is implemented
+			if (metadataType == MetadataType.STATS) {
+				scanner.setMaxVersions(); // Get all versions
 			}
 
 			ResultScanner rS = operations.getScannedResults(

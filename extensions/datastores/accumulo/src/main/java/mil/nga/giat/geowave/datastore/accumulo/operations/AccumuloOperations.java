@@ -114,6 +114,10 @@ public class AccumuloOperations implements
 	private final Map<String, Set<String>> insuredAuthorizationCache = new HashMap<>();
 	private final Map<String, Set<ByteArrayId>> insuredPartitionCache = new HashMap<>();
 	private final AccumuloOptions options;
+	
+	// KAM: Temporarily splitting out stats merging from other server side operations
+	// This is replacing options.isServerSideLibraryEnabled in a few places.
+	public static final boolean SERVER_SIDE_STATS_MERGE = false;
 
 	/**
 	 * This is will create an Accumulo connector based on passed in connection
@@ -294,10 +298,9 @@ public class AccumuloOperations implements
 						qName,
 						config);
 				
-				// NOTE: 'enableVersioning' actually means enabling
-				// the version iterator, which is true by default
+				// Versioning is on by default; only need to detach
 				if (!enableVersioning) {
-					detachVersioningIterator(tableName);
+					enableVersioningIterator(tableName, false);
 				}
 			}
 			catch (AccumuloException | AccumuloSecurityException | TableExistsException e) {
@@ -306,9 +309,8 @@ public class AccumuloOperations implements
 						e);
 			}
 			catch (TableNotFoundException e) {
-				LOGGER.error(
-						"Unable to detach VersioningIterator for table '" + qName + "'",
-						e);
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 	}
@@ -1461,11 +1463,15 @@ public class AccumuloOperations implements
 			// this checks for existence prior to create
 			createTable(
 					AbstractGeoWavePersistence.METADATA_TABLE,
-					false, //options.isServerSideLibraryEnabled(),
+//					options.isServerSideLibraryEnabled(),
+					AccumuloOperations.SERVER_SIDE_STATS_MERGE,
 					options.isEnableBlockCache());
 		}
 		if (MetadataType.STATS.equals(
-				metadataType) && false /* options.isServerSideLibraryEnabled() */) {
+				metadataType)
+//				&& options.isServerSideLibraryEnabled()
+				&& AccumuloOperations.SERVER_SIDE_STATS_MERGE
+				) {
 			synchronized (this) {
 				if (!iteratorsAttached) {
 					iteratorsAttached = true;
@@ -1547,35 +1553,34 @@ public class AccumuloOperations implements
 		return true;
 	}
 
-	public void detachVersioningIterator(
-			final String tableName )
+	public void enableVersioningIterator(
+			final String tableName,
+			final boolean enable )
 			throws AccumuloSecurityException,
 			AccumuloException,
 			TableNotFoundException {
-		String qName = getQualifiedTableName(
-				tableName);
-		
-		// KAM: Test Only - See if we have any versioning iterators attached
-		boolean hasVersioningIterator = false;
-		
-		for (IteratorScope iterScope : IteratorScope.values()) {
-			IteratorSetting setting = connector.tableOperations().getIteratorSetting(qName, "vers", iterScope);
-			if (setting != null) {
-				hasVersioningIterator = true;
-				break;
+		synchronized (this) {
+			String qName = getQualifiedTableName(
+					tableName);
+
+			if (enable) {
+				connector.tableOperations().attachIterator(
+						qName,
+						new IteratorSetting(
+								20,
+								"vers",
+								VersioningIterator.class.getName()),
+						EnumSet.allOf(
+								IteratorScope.class));
+			}
+			else {
+				connector.tableOperations().removeIterator(
+						qName,
+						"vers",
+						EnumSet.allOf(
+								IteratorScope.class));
 			}
 		}
-		
-		if (!hasVersioningIterator) {
-			LOGGER.warn(qName + " has no versioning iterator to detach");
-		}		
-
-		// This will fail quietly if there's no iterator to detach.
-		connector.tableOperations().removeIterator(
-				qName,
-				"vers",
-				EnumSet.allOf(
-						IteratorScope.class));
 	}
 
 	public void setMaxVersions(

@@ -19,6 +19,8 @@ import java.util.Map.Entry;
 import java.util.NavigableMap;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
@@ -31,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.index.NumericIndexStrategy;
+import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.QueryRanges;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
@@ -38,6 +41,7 @@ import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.IndexedAdapterPersistenceEncoding;
 import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
+import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
 import mil.nga.giat.geowave.core.store.data.PersistentDataset;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
@@ -53,17 +57,19 @@ import mil.nga.giat.geowave.datastore.hbase.operations.HBaseWriterOrig;
 @SuppressWarnings("rawtypes")
 public class HBaseUtils
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(HBaseUtils.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(
+			HBaseUtils.class);
 
 	public static String getQualifiedTableName(
 			final String tableNamespace,
 			final String unqualifiedTableName ) {
-		if (unqualifiedTableName.contains(tableNamespace)) {
+		if (unqualifiedTableName.contains(
+				tableNamespace)) {
 			return unqualifiedTableName;
 		}
 
-		return ((tableNamespace == null) || tableNamespace.isEmpty()) ? unqualifiedTableName : tableNamespace + "_"
-				+ unqualifiedTableName;
+		return ((tableNamespace == null) || tableNamespace.isEmpty()) ? unqualifiedTableName
+				: tableNamespace + "_" + unqualifiedTableName;
 	}
 
 	public static QueryRanges constraintsToByteArrayRanges(
@@ -110,7 +116,8 @@ public class HBaseUtils
 			final byte[] fieldSubsetBitmask,
 			final boolean decodeRow ) {
 		if ((dataAdapter == null) && (adapterStore == null)) {
-			LOGGER.error("Could not decode row from iterator. Either adapter or adapter store must be non-null.");
+			LOGGER.error(
+					"Could not decode row from iterator. Either adapter or adapter store must be non-null.");
 			return null;
 		}
 		DataAdapter adapter = dataAdapter;
@@ -145,14 +152,17 @@ public class HBaseUtils
 			}
 
 			if (adapter == null) {
-				adapter = adapterStore.getAdapter(adapterId);
+				adapter = adapterStore.getAdapter(
+						adapterId);
 				if (adapter == null) {
-					LOGGER.error("DataAdapter does not exist");
+					LOGGER.error(
+							"DataAdapter does not exist");
 					return null;
 				}
 			}
 			if (!adapterMatchVerified) {
-				if (!adapterId.equals(adapter.getAdapterId())) {
+				if (!adapterId.equals(
+						adapter.getAdapterId())) {
 					return null;
 				}
 				adapterMatchVerified = true;
@@ -205,7 +215,8 @@ public class HBaseUtils
 				encodedRow)) {
 			// cannot get here unless adapter is found (not null)
 			if (adapter == null) {
-				LOGGER.error("Error, adapter was null when it should not be");
+				LOGGER.error(
+						"Error, adapter was null when it should not be");
 			}
 			else {
 				final Pair<Object, DataStoreEntryInfo> pair = Pair.of(
@@ -214,10 +225,12 @@ public class HBaseUtils
 								index) : encodedRow,
 						new DataStoreEntryInfo(
 								hbaseRow.getDataId(),
-								Arrays.asList(new ByteArrayId(
-										hbaseRow.getIndex())),
-								Arrays.asList(new ByteArrayId(
-										row.getRow())),
+								Arrays.asList(
+										new ByteArrayId(
+												hbaseRow.getIndex())),
+								Arrays.asList(
+										new ByteArrayId(
+												row.getRow())),
 								fieldInfoList));
 				if ((scanCallback != null) && decodeRow) {
 					scanCallback.entryScanned(
@@ -254,15 +267,18 @@ public class HBaseUtils
 					row.addColumn(
 							adapterId,
 							rowId.getBytes(),
-							"".getBytes(StringUtils.UTF8_CHAR_SET));
-					mutation.add(row);
+							"".getBytes(
+									StringUtils.UTF8_CHAR_SET));
+					mutation.add(
+							row);
 				}
 				catch (final IOException e) {
 					LOGGER.warn(
 							"Could not add row to mutation.",
 							e);
 				}
-				mutations.add(mutation);
+				mutations.add(
+						mutation);
 			}
 			try {
 				writer.write(
@@ -291,7 +307,8 @@ public class HBaseUtils
 		d.addColumns(
 				columnFamily,
 				columnQualifier);
-		m.add(d);
+		m.add(
+				d);
 		return m;
 	}
 
@@ -345,6 +362,30 @@ public class HBaseUtils
 				new ByteArrayId(
 						range2.getStopRow()));
 
-		return thisRange.intersects(otherRange);
+		return thisRange.intersects(
+				otherRange);
 	}
+
+	public static DataStatistics getMergedStats(
+			List<Cell> rowCells ) {
+		DataStatistics mergedStats = null;
+		for (Cell cell : rowCells) {
+			byte[] byteValue = CellUtil.cloneValue(
+					cell);
+			DataStatistics stats = (DataStatistics) PersistenceUtils.fromBinary(
+					byteValue,
+					DataStatistics.class);
+
+			if (mergedStats != null) {
+				mergedStats.merge(
+						stats);
+			}
+			else {
+				mergedStats = stats;
+			}
+		}
+
+		return mergedStats;
+	}
+
 }

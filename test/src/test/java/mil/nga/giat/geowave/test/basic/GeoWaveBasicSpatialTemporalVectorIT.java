@@ -75,13 +75,6 @@ public class GeoWaveBasicSpatialTemporalVectorIT extends
 		GeoWaveStoreType.CASSANDRA,
 		GeoWaveStoreType.DYNAMODB,
 		GeoWaveStoreType.HBASE
-	}, options = {
-		/**
-		 * Here we are testing non-default HBase options, we may want to
-		 * consider testing some non-default Accumulo options as well
-		 */
-		"disableCustomFilters=true",
-		"disableCoprocessors=true"
 	})
 	protected DataStorePluginOptions dataStore;
 	private static long startMillis;

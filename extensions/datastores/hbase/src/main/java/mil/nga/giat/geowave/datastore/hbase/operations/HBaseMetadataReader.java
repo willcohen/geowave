@@ -2,8 +2,6 @@ package mil.nga.giat.geowave.datastore.hbase.operations;
 
 import java.util.Iterator;
 
-import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
@@ -17,12 +15,12 @@ import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.DataStoreOptions;
-import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveMetadata;
 import mil.nga.giat.geowave.core.store.metadata.AbstractGeoWavePersistence;
 import mil.nga.giat.geowave.core.store.operations.MetadataQuery;
 import mil.nga.giat.geowave.core.store.operations.MetadataReader;
 import mil.nga.giat.geowave.core.store.operations.MetadataType;
+import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils.ScannerClosableWrapper;
 
 public class HBaseMetadataReader implements
@@ -71,8 +69,8 @@ public class HBaseMetadataReader implements
 				scanner.setStopRow(
 						query.getPrimaryId());
 			}
-			
-			// TODO: This needs to check for 'options.serverSideLibraryEnabled' 
+
+			// TODO: This needs to check for 'options.serverSideLibraryEnabled'
 			// when server-side merging is implemented
 			if (metadataType == MetadataType.STATS) {
 				scanner.setMaxVersions(); // Get all versions
@@ -117,25 +115,9 @@ public class HBaseMetadataReader implements
 		if (metadataType != MetadataType.STATS || result.size() == 1) {
 			return result.value();
 		}
-		
-		DataStatistics mergedStats = null;
-		for (Cell cell : result.listCells()) {
-			byte[] byteValue = CellUtil.cloneValue(
-					cell);
-			DataStatistics stats = (DataStatistics) PersistenceUtils.fromBinary(
-					byteValue,
-					DataStatistics.class);
-
-			if (mergedStats != null) {
-				mergedStats.merge(
-						stats);
-			}
-			else {
-				mergedStats = stats;
-			}
-		}
 
 		return PersistenceUtils.toBinary(
-				mergedStats);
+				HBaseUtils.getMergedStats(
+						result.listCells()));
 	}
 }

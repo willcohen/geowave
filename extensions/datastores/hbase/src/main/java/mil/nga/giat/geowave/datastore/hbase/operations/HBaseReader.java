@@ -11,7 +11,8 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.MultiRowRangeFilter;
 import org.apache.hadoop.hbase.filter.MultiRowRangeFilter.RowRange;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
@@ -38,7 +39,7 @@ import mil.nga.giat.geowave.mapreduce.splits.RecordReaderParams;
 public class HBaseReader implements
 		Reader
 {
-	private final static Logger LOGGER = Logger.getLogger(
+	private final static Logger LOGGER = LoggerFactory.getLogger(
 			HBaseReader.class);
 
 	private final ReaderParams readerParams;

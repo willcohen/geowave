@@ -8,7 +8,7 @@
  * Version 2.0 which accompanies this distribution and is available at
  * http://www.apache.org/licenses/LICENSE-2.0.txt
  ******************************************************************************/
-package mil.nga.giat.geowave.datastore.hbase.query;
+package mil.nga.giat.geowave.datastore.hbase.filters;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -103,11 +103,21 @@ public class HBaseNumericIndexStrategyFilter extends
 
 	private boolean inBounds(
 			final Cell cell ) {
-		final MultiDimensionalCoordinates coordinates = indexStrategy.getCoordinatesPerDimension(new ByteArrayId(
-				new GeoWaveKeyImpl(
-						cell.getRowArray(),
-						cell.getRowOffset(),
-						cell.getRowLength()).getIndex()));
+		GeoWaveKeyImpl cellKey = new GeoWaveKeyImpl(
+				cell.getRowArray(),
+				indexStrategy.getPartitionKeyLength(),
+				cell.getRowOffset(),
+				cell.getRowLength());
+
+		ByteArrayId sortKey = new ByteArrayId(
+				cellKey.getSortKey());
+		ByteArrayId partitionKey = new ByteArrayId(
+				cellKey.getPartitionKey());
+
+		final MultiDimensionalCoordinates coordinates = indexStrategy.getCoordinatesPerDimension(
+				sortKey,
+				partitionKey);
+
 		return rangeCache.inBounds(coordinates);
 	}
 }

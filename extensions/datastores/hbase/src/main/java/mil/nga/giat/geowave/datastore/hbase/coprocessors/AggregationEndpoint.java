@@ -8,7 +8,7 @@
  * Version 2.0 which accompanies this distribution and is available at
  * http://www.apache.org/licenses/LICENSE-2.0.txt
  ******************************************************************************/
-package mil.nga.giat.geowave.datastore.hbase.query;
+package mil.nga.giat.geowave.datastore.hbase.coprocessors;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -44,7 +44,9 @@ import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.query.aggregate.Aggregation;
-import mil.nga.giat.geowave.datastore.hbase.query.protobuf.AggregationProtos;
+import mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.AggregationProtos;
+import mil.nga.giat.geowave.datastore.hbase.filters.HBaseDistributableFilter;
+import mil.nga.giat.geowave.datastore.hbase.filters.HBaseNumericIndexStrategyFilter;
 
 public class AggregationEndpoint extends
 		AggregationProtos.AggregationService implements
@@ -163,7 +165,7 @@ public class AggregationEndpoint extends
 					if (request.hasWholeRowFilter()) {
 						hdFilter.setWholeRowFilter(request.getWholeRowFilter());
 					}
-					
+
 					if (request.hasPartitionKeyLength()) {
 						hdFilter.setPartitionKeyLength(request.getPartitionKeyLength());
 					}

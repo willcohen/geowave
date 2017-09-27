@@ -38,8 +38,7 @@ import mil.nga.giat.geowave.datastore.accumulo.util.ScannerClosableWrapper;
 public class AccumuloMetadataReader implements
 		MetadataReader
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			AccumuloMetadataReader.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(AccumuloMetadataReader.class);
 	private static final int STATS_MULTI_VISIBILITY_COMBINER_PRIORITY = 15;
 	private final AccumuloOperations operations;
 	private final DataStoreOptions options;
@@ -65,8 +64,7 @@ public class AccumuloMetadataReader implements
 			final IteratorSetting[] settings = getScanSettings();
 			if ((settings != null) && (settings.length > 0)) {
 				for (final IteratorSetting setting : settings) {
-					scanner.addScanIterator(
-							setting);
+					scanner.addScanIterator(setting);
 				}
 			}
 			final String columnFamily = metadataType.name();
@@ -80,28 +78,24 @@ public class AccumuloMetadataReader implements
 									columnQualifier));
 				}
 				else {
-					scanner.fetchColumnFamily(
-							new Text(
-									columnFamily));
+					scanner.fetchColumnFamily(new Text(
+							columnFamily));
 				}
 			}
 			final Collection<Range> ranges = new ArrayList<Range>();
 			if (query.hasPrimaryId()) {
-				ranges.add(
-						new Range(
-								new Text(
-										query.getPrimaryId())));
+				ranges.add(new Range(
+						new Text(
+								query.getPrimaryId())));
 			}
 			else {
-				ranges.add(
-						new Range());
+				ranges.add(new Range());
 			}
-			scanner.setRanges(
-					ranges);
+			scanner.setRanges(ranges);
 
 			// For stats w/ no server-side support, need to merge here
 			if (metadataType == MetadataType.STATS
-//					&& !options.isServerSideLibraryEnabled()
+			// && !options.isServerSideLibraryEnabled()
 					&& !AccumuloOperations.SERVER_SIDE_STATS_MERGE) {
 
 				HashMap<Text, Key> keyMap = new HashMap();
@@ -114,31 +108,34 @@ public class AccumuloMetadataReader implements
 					DataStatistics stats = PersistenceUtils.fromBinary(
 							row.getValue().get(),
 							DataStatistics.class);
-					
+
 					if (keyMap.containsKey(row.getKey().getRow())) {
 						DataStatistics mergedStats = mergedDataMap.get(row.getKey().getRow());
-						mergedStats.merge(
-								stats);
+						mergedStats.merge(stats);
 					}
 					else {
-						keyMap.put(row.getKey().getRow(), row.getKey());
-						mergedDataMap.put(row.getKey().getRow(), stats);
+						keyMap.put(
+								row.getKey().getRow(),
+								row.getKey());
+						mergedDataMap.put(
+								row.getKey().getRow(),
+								stats);
 					}
 				}
-				
+
 				List<GeoWaveMetadata> metadataList = new ArrayList();
-				for (Text rowId : keyMap.keySet()) {
+				for (Entry<Text, Key> entry : keyMap.entrySet()) {
+					Text rowId = entry.getKey();
 					Key key = keyMap.get(rowId);
 					DataStatistics mergedStats = mergedDataMap.get(rowId);
-					
+
 					metadataList.add(new GeoWaveMetadata(
 							key.getRow().getBytes(),
 							key.getColumnQualifier().getBytes(),
 							key.getColumnVisibility().getBytes(),
-							PersistenceUtils.toBinary(
-									mergedStats)));	
+							PersistenceUtils.toBinary(mergedStats)));
 				}
-				
+
 				return new CloseableIteratorWrapper<>(
 						new ScannerClosableWrapper(
 								scanner),
@@ -174,9 +171,8 @@ public class AccumuloMetadataReader implements
 	}
 
 	private IteratorSetting[] getScanSettings() {
-		if (MetadataType.STATS.equals(
-				metadataType)
-//				&& options.isServerSideLibraryEnabled()
+		if (MetadataType.STATS.equals(metadataType)
+		// && options.isServerSideLibraryEnabled()
 				&& AccumuloOperations.SERVER_SIDE_STATS_MERGE) {
 			return getStatsScanSettings();
 		}

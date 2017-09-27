@@ -75,6 +75,8 @@ public class GeoWaveBasicSpatialTemporalVectorIT extends
 		GeoWaveStoreType.CASSANDRA,
 		GeoWaveStoreType.DYNAMODB,
 		GeoWaveStoreType.HBASE
+	}, options = {
+		"enableServerSideLibrary=false"
 	})
 	protected DataStorePluginOptions dataStore;
 	private static long startMillis;

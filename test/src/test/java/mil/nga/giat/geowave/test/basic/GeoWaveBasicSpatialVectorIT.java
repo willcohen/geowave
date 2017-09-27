@@ -32,8 +32,7 @@ import mil.nga.giat.geowave.test.annotation.GeoWaveTestStore.GeoWaveStoreType;
 public class GeoWaveBasicSpatialVectorIT extends
 		AbstractGeoWaveBasicVectorIT
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			GeoWaveBasicSpatialVectorIT.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(GeoWaveBasicSpatialVectorIT.class);
 	private static final String HAIL_EXPECTED_BOX_FILTER_RESULTS_FILE = HAIL_TEST_CASE_PACKAGE + "hail-box-filter.shp";
 	private static final String HAIL_EXPECTED_POLYGON_FILTER_RESULTS_FILE = HAIL_TEST_CASE_PACKAGE
 			+ "hail-polygon-filter.shp";
@@ -61,53 +60,42 @@ public class GeoWaveBasicSpatialVectorIT extends
 	private static long startMillis;
 	private static final boolean POINTS_ONLY = false;
 	private static final int NUM_THREADS = 4;
-	
+
 	@BeforeClass
 	public static void reportTestStart() {
 		startMillis = System.currentTimeMillis();
-		LOGGER.warn(
-				"-----------------------------------------");
-		LOGGER.warn(
-				"*                                       *");
-		LOGGER.warn(
-				"*  RUNNING GeoWaveBasicSpatialVectorIT  *");
-		LOGGER.warn(
-				"*                                       *");
-		LOGGER.warn(
-				"-----------------------------------------");
+		LOGGER.warn("-----------------------------------------");
+		LOGGER.warn("*                                       *");
+		LOGGER.warn("*  RUNNING GeoWaveBasicSpatialVectorIT  *");
+		LOGGER.warn("*                                       *");
+		LOGGER.warn("-----------------------------------------");
 	}
 
 	@AfterClass
 	public static void reportTestFinish() {
-		LOGGER.warn(
-				"-----------------------------------------");
-		LOGGER.warn(
-				"*                                       *");
-		LOGGER.warn(
-				"* FINISHED GeoWaveBasicSpatialVectorIT  *");
-		LOGGER.warn(
-				"*         " + ((System.currentTimeMillis() - startMillis) / 1000) + "s elapsed.                 *");
-		LOGGER.warn(
-				"*                                       *");
-		LOGGER.warn(
-				"-----------------------------------------");
+		LOGGER.warn("-----------------------------------------");
+		LOGGER.warn("*                                       *");
+		LOGGER.warn("* FINISHED GeoWaveBasicSpatialVectorIT  *");
+		LOGGER
+				.warn("*         " + ((System.currentTimeMillis() - startMillis) / 1000)
+						+ "s elapsed.                 *");
+		LOGGER.warn("*                                       *");
+		LOGGER.warn("-----------------------------------------");
 	}
 
 	@Test
 	public void testMultiThreadedIngestAndQuerySpatialPointsAndLines() {
-		testIngestAndQuerySpatialPointsAndLines(
-				NUM_THREADS);
+		testIngestAndQuerySpatialPointsAndLines(NUM_THREADS);
 	}
 
 	public void testIngestAndQuerySpatialPointsAndLines(
 			final int nthreads ) {
 		long mark = System.currentTimeMillis();
 
-//		org.apache.log4j.Logger.getRootLogger().setLevel(
-//				org.apache.log4j.Level.INFO);
+		// org.apache.log4j.Logger.getRootLogger().setLevel(
+		// org.apache.log4j.Level.INFO);
 
-		LOGGER.info(
-				"Testing DataStore Type: " + dataStore.getType());
+		LOGGER.info("Testing DataStore Type: " + dataStore.getType());
 
 		// ingest both lines and points
 		TestUtils.testLocalIngest(
@@ -115,14 +103,12 @@ public class GeoWaveBasicSpatialVectorIT extends
 				DimensionalityType.SPATIAL,
 				HAIL_SHAPEFILE_FILE,
 				nthreads);
-		
 
 		long dur = (System.currentTimeMillis() - mark);
-		LOGGER.info(
-				"Ingest (points) duration = " + dur + " ms with " + nthreads + " thread(s).");
+		LOGGER.info("Ingest (points) duration = " + dur + " ms with " + nthreads + " thread(s).");
 
-//		org.apache.log4j.Logger.getRootLogger().setLevel(
-//				org.apache.log4j.Level.WARN);
+		// org.apache.log4j.Logger.getRootLogger().setLevel(
+		// org.apache.log4j.Level.WARN);
 
 		if (!POINTS_ONLY) {
 			mark = System.currentTimeMillis();
@@ -134,8 +120,7 @@ public class GeoWaveBasicSpatialVectorIT extends
 					nthreads);
 
 			dur = (System.currentTimeMillis() - mark);
-			LOGGER.info(
-					"Ingest (lines) duration = " + dur + " ms with " + nthreads + " thread(s).");
+			LOGGER.info("Ingest (lines) duration = " + dur + " ms with " + nthreads + " thread(s).");
 		}
 
 		try {
@@ -165,16 +150,13 @@ public class GeoWaveBasicSpatialVectorIT extends
 					"bounding box constraint only");
 
 			dur = (System.currentTimeMillis() - mark);
-			LOGGER.info(
-					"BBOX query duration = " + dur + " ms.");
+			LOGGER.info("BBOX query duration = " + dur + " ms.");
 		}
 		catch (final Exception e) {
 			e.printStackTrace();
-			TestUtils.deleteAll(
-					dataStore);
-			Assert.fail(
-					"Error occurred while testing a bounding box query of spatial index: '" + e.getLocalizedMessage()
-							+ "'");
+			TestUtils.deleteAll(dataStore);
+			Assert.fail("Error occurred while testing a bounding box query of spatial index: '"
+					+ e.getLocalizedMessage() + "'");
 		}
 		try {
 			mark = System.currentTimeMillis();
@@ -203,15 +185,13 @@ public class GeoWaveBasicSpatialVectorIT extends
 					"polygon constraint only");
 
 			dur = (System.currentTimeMillis() - mark);
-			LOGGER.info(
-					"POLY query duration = " + dur + " ms.");
+			LOGGER.info("POLY query duration = " + dur + " ms.");
 		}
 		catch (final Exception e) {
 			e.printStackTrace();
-			TestUtils.deleteAll(
-					dataStore);
-			Assert.fail(
-					"Error occurred while testing a polygon query of spatial index: '" + e.getLocalizedMessage() + "'");
+			TestUtils.deleteAll(dataStore);
+			Assert.fail("Error occurred while testing a polygon query of spatial index: '" + e.getLocalizedMessage()
+					+ "'");
 		}
 
 		if ((nthreads > 0)) {
@@ -231,7 +211,7 @@ public class GeoWaveBasicSpatialVectorIT extends
 								TORNADO_TRACKS_SHAPEFILE_FILE)
 					};
 				}
-				
+
 				testStats(
 						statsInputs,
 						TestUtils.DEFAULT_SPATIAL_INDEX,
@@ -239,11 +219,9 @@ public class GeoWaveBasicSpatialVectorIT extends
 			}
 			catch (final Exception e) {
 				e.printStackTrace();
-				TestUtils.deleteAll(
-						dataStore);
-				Assert.fail(
-						"Error occurred while testing a bounding box stats on spatial index: '"
-								+ e.getLocalizedMessage() + "'");
+				TestUtils.deleteAll(dataStore);
+				Assert.fail("Error occurred while testing a bounding box stats on spatial index: '"
+						+ e.getLocalizedMessage() + "'");
 			}
 		}
 
@@ -254,11 +232,9 @@ public class GeoWaveBasicSpatialVectorIT extends
 		}
 		catch (final Exception e) {
 			e.printStackTrace();
-			TestUtils.deleteAll(
-					dataStore);
-			Assert.fail(
-					"Error occurred while testing deletion of an entry using spatial index: '" + e.getLocalizedMessage()
-							+ "'");
+			TestUtils.deleteAll(dataStore);
+			Assert.fail("Error occurred while testing deletion of an entry using spatial index: '"
+					+ e.getLocalizedMessage() + "'");
 		}
 
 		try {
@@ -269,15 +245,12 @@ public class GeoWaveBasicSpatialVectorIT extends
 		}
 		catch (final Exception e) {
 			e.printStackTrace();
-			TestUtils.deleteAll(
-					dataStore);
-			Assert.fail(
-					"Error occurred while testing deletion of an entry using spatial index: '" + e.getLocalizedMessage()
-							+ "'");
+			TestUtils.deleteAll(dataStore);
+			Assert.fail("Error occurred while testing deletion of an entry using spatial index: '"
+					+ e.getLocalizedMessage() + "'");
 		}
 
-		TestUtils.deleteAll(
-				dataStore);
+		TestUtils.deleteAll(dataStore);
 	}
 
 	@Override

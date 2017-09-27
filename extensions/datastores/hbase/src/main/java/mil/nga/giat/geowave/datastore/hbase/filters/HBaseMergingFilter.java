@@ -15,8 +15,7 @@ import mil.nga.giat.geowave.core.index.PersistenceUtils;
 public class HBaseMergingFilter extends
 		FilterBase
 {
-	public HBaseMergingFilter() {
-	}
+	public HBaseMergingFilter() {}
 
 	public static HBaseMergingFilter parseFrom(
 			final byte[] pbBytes )
@@ -25,7 +24,7 @@ public class HBaseMergingFilter extends
 
 		return mergingFilter;
 	}
-	
+
 	/**
 	 * Enable filterRowCells
 	 */
@@ -41,24 +40,22 @@ public class HBaseMergingFilter extends
 	public void filterRowCells(
 			List<Cell> rowCells )
 			throws IOException {
-		if (!rowCells.isEmpty()) {			
+		if (!rowCells.isEmpty()) {
 			if (rowCells.size() > 1) {
 				Cell firstCell = rowCells.get(0);
 				byte[] singleRow = CellUtil.cloneRow(firstCell);
 				byte[] singleFam = CellUtil.cloneFamily(firstCell);
 				byte[] singleQual = CellUtil.cloneQualifier(firstCell);
-				
+
 				Mergeable mergedValue = null;
 				for (Cell cell : rowCells) {
-					byte[] byteValue = CellUtil.cloneValue(
-							cell);
+					byte[] byteValue = CellUtil.cloneValue(cell);
 					Mergeable value = (Mergeable) PersistenceUtils.fromBinary(
 							byteValue,
 							Mergeable.class);
 
 					if (mergedValue != null) {
-						mergedValue.merge(
-								value);
+						mergedValue.merge(value);
 					}
 					else {
 						mergedValue = value;
@@ -72,7 +69,7 @@ public class HBaseMergingFilter extends
 						System.currentTimeMillis(),
 						KeyValue.Type.Put.getCode(),
 						PersistenceUtils.toBinary(mergedValue));
-				
+
 				rowCells.clear();
 				rowCells.add(singleCell);
 			}

@@ -20,7 +20,6 @@ import mil.nga.giat.geowave.core.index.IndexUtils;
 import mil.nga.giat.geowave.core.index.Mergeable;
 import mil.nga.giat.geowave.core.index.MultiDimensionalCoordinateRangesArray;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
-import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRowImpl;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveValue;
@@ -30,17 +29,16 @@ import mil.nga.giat.geowave.core.store.operations.BaseReaderParams;
 import mil.nga.giat.geowave.core.store.operations.Reader;
 import mil.nga.giat.geowave.core.store.operations.ReaderParams;
 import mil.nga.giat.geowave.datastore.hbase.HBaseRow;
-import mil.nga.giat.geowave.datastore.hbase.query.FixedCardinalitySkippingFilter;
-import mil.nga.giat.geowave.datastore.hbase.query.HBaseDistributableFilter;
-import mil.nga.giat.geowave.datastore.hbase.query.HBaseNumericIndexStrategyFilter;
+import mil.nga.giat.geowave.datastore.hbase.filters.FixedCardinalitySkippingFilter;
+import mil.nga.giat.geowave.datastore.hbase.filters.HBaseDistributableFilter;
+import mil.nga.giat.geowave.datastore.hbase.filters.HBaseNumericIndexStrategyFilter;
 import mil.nga.giat.geowave.mapreduce.splits.GeoWaveRowRange;
 import mil.nga.giat.geowave.mapreduce.splits.RecordReaderParams;
 
 public class HBaseReader implements
 		Reader
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			HBaseReader.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(HBaseReader.class);
 
 	private final ReaderParams readerParams;
 	private final RecordReaderParams recordReaderParams;
@@ -68,8 +66,7 @@ public class HBaseReader implements
 		if (readerParams.isServersideAggregation()) {
 			this.scanner = null;
 			this.scanIt = null;
-			aggTotal = operations.aggregateServerSide(
-					readerParams);
+			aggTotal = operations.aggregateServerSide(readerParams);
 			aggReady = true;
 		}
 		else {
@@ -133,23 +130,17 @@ public class HBaseReader implements
 					new GeoWaveValueImpl(
 							null,
 							null,
-							PersistenceUtils.toBinary(
-									aggTotal))
+							PersistenceUtils.toBinary(aggTotal))
 				});
 	}
 
 	protected void initRecordScanner() {
 		final FilterList filterList = new FilterList();
 		final GeoWaveRowRange range = recordReaderParams.getRowRange();
-		final String tableName = StringUtils.stringFromBinary(
-				recordReaderParams.getIndex().getId().getBytes());
 
-		final Scan rscanner = createStandardScanner(
-				recordReaderParams);
-		rscanner.setStartRow(
-				range.getStartSortKey());
-		rscanner.setStopRow(
-				range.getEndSortKey());
+		final Scan rscanner = createStandardScanner(recordReaderParams);
+		rscanner.setStartRow(range.getStartSortKey());
+		rscanner.setStopRow(range.getEndSortKey());
 
 		if (operations.isServerSideLibraryEnabled()) {
 			addSkipFilter(
@@ -172,8 +163,7 @@ public class HBaseReader implements
 		}
 
 		if (!filterList.getFilters().isEmpty()) {
-			rscanner.setFilter(
-					filterList);
+			rscanner.setFilter(filterList);
 		}
 
 		try {
@@ -196,8 +186,7 @@ public class HBaseReader implements
 	protected void initScanner() {
 		final FilterList filterList = new FilterList();
 
-		final Scan multiScanner = getMultiScanner(
-				filterList);
+		final Scan multiScanner = getMultiScanner(filterList);
 
 		if (operations.isServerSideLibraryEnabled()) {
 			addSkipFilter(
@@ -220,8 +209,7 @@ public class HBaseReader implements
 		}
 
 		if (!filterList.getFilters().isEmpty()) {
-			multiScanner.setFilter(
-					filterList);
+			multiScanner.setFilter(filterList);
 		}
 
 		try {
@@ -251,11 +239,10 @@ public class HBaseReader implements
 					.getIndex()
 					.getIndexStrategy()
 					.getOrderedDimensionDefinitions().length) {
-				LOGGER.warn(
-						"Unable to subsample for table '" + params.getIndex().getId().getString()
-								+ "'. Subsample dimensions = " + params.getMaxResolutionSubsamplingPerDimension().length
-								+ " when indexed dimensions = "
-								+ params.getIndex().getIndexStrategy().getOrderedDimensionDefinitions().length);
+				LOGGER.warn("Unable to subsample for table '" + params.getIndex().getId().getString()
+						+ "'. Subsample dimensions = " + params.getMaxResolutionSubsamplingPerDimension().length
+						+ " when indexed dimensions = "
+						+ params.getIndex().getIndexStrategy().getOrderedDimensionDefinitions().length);
 			}
 			else {
 				final int cardinalityToSubsample = IndexUtils.getBitPositionFromSubsamplingArray(
@@ -264,8 +251,7 @@ public class HBaseReader implements
 
 				final FixedCardinalitySkippingFilter skippingFilter = new FixedCardinalitySkippingFilter(
 						cardinalityToSubsample);
-				filterList.addFilter(
-						skippingFilter);
+				filterList.addFilter(skippingFilter);
 			}
 		}
 	}
@@ -275,23 +261,19 @@ public class HBaseReader implements
 			FilterList filterList ) {
 		final HBaseDistributableFilter hbdFilter = new HBaseDistributableFilter();
 		if (wholeRowEncoding) {
-			hbdFilter.setWholeRowFilter(
-					true);
+			hbdFilter.setWholeRowFilter(true);
 		}
 
-		hbdFilter.setPartitionKeyLength(
-				partitionKeyLength);
+		hbdFilter.setPartitionKeyLength(partitionKeyLength);
 
 		final List<DistributableQueryFilter> distFilters = new ArrayList();
-		distFilters.add(
-				params.getFilter());
+		distFilters.add(params.getFilter());
 		hbdFilter.init(
 				distFilters,
 				params.getIndex().getIndexModel(),
 				params.getAdditionalAuthorizations());
 
-		filterList.addFilter(
-				hbdFilter);
+		filterList.addFilter(hbdFilter);
 	}
 
 	private void addIndexFilter(
@@ -301,34 +283,27 @@ public class HBaseReader implements
 		if ((coords != null) && !coords.isEmpty()) {
 			final HBaseNumericIndexStrategyFilter numericIndexFilter = new HBaseNumericIndexStrategyFilter(
 					params.getIndex().getIndexStrategy(),
-					coords.toArray(
-							new MultiDimensionalCoordinateRangesArray[] {}));
-			filterList.addFilter(
-					numericIndexFilter);
+					coords.toArray(new MultiDimensionalCoordinateRangesArray[] {}));
+			filterList.addFilter(numericIndexFilter);
 		}
 	}
 
 	protected Scan getMultiScanner(
 			final FilterList filterList ) {
 		// Single scan w/ multiple ranges
-		final Scan multiScanner = createStandardScanner(
-				readerParams);
+		final Scan multiScanner = createStandardScanner(readerParams);
 
 		final List<ByteArrayRange> ranges = readerParams.getQueryRanges().getCompositeQueryRanges();
 
-		final MultiRowRangeFilter filter = operations.getMultiRowRangeFilter(
-				ranges);
+		final MultiRowRangeFilter filter = operations.getMultiRowRangeFilter(ranges);
 		if (filter != null) {
-			filterList.addFilter(
-					filter);
+			filterList.addFilter(filter);
 
 			final List<RowRange> rowRanges = filter.getRowRanges();
-			multiScanner.setStartRow(
-					rowRanges.get(
-							0).getStartRow());
+			multiScanner.setStartRow(rowRanges.get(
+					0).getStartRow());
 
-			final RowRange stopRowRange = rowRanges.get(
-					rowRanges.size() - 1);
+			final RowRange stopRowRange = rowRanges.get(rowRanges.size() - 1);
 			byte[] stopRowExclusive;
 			if (stopRowRange.isStopRowInclusive()) {
 				// because the end is always exclusive, to make an inclusive
@@ -345,8 +320,7 @@ public class HBaseReader implements
 			else {
 				stopRowExclusive = stopRowRange.getStopRow();
 			}
-			multiScanner.setStopRow(
-					stopRowExclusive);
+			multiScanner.setStopRow(stopRowExclusive);
 		}
 
 		return multiScanner;
@@ -357,26 +331,21 @@ public class HBaseReader implements
 		final Scan scanner = new Scan();
 
 		// Performance tuning per store options
-		scanner.setCaching(
-				operations.getScanCacheSize());
-		scanner.setCacheBlocks(
-				operations.isEnableBlockCache());
+		scanner.setCaching(operations.getScanCacheSize());
+		scanner.setCacheBlocks(operations.isEnableBlockCache());
 
 		// Only return the most recent version
-		scanner.setMaxVersions(
-				1);
+		scanner.setMaxVersions(1);
 
 		if ((readerParams.getAdapterIds() != null) && !readerParams.getAdapterIds().isEmpty()) {
 			for (final ByteArrayId adapterId : readerParams.getAdapterIds()) {
-				scanner.addFamily(
-						adapterId.getBytes());
+				scanner.addFamily(adapterId.getBytes());
 			}
 		}
 
 		if ((readerParams.getLimit() != null) && (readerParams.getLimit() > 0)
 				&& (readerParams.getLimit() < scanner.getBatch())) {
-			scanner.setBatch(
-					readerParams.getLimit());
+			scanner.setBatch(readerParams.getLimit());
 		}
 
 		return scanner;

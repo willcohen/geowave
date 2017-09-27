@@ -8,7 +8,7 @@
  * Version 2.0 which accompanies this distribution and is available at
  * http://www.apache.org/licenses/LICENSE-2.0.txt
  ******************************************************************************/
-package mil.nga.giat.geowave.datastore.hbase.query;
+package mil.nga.giat.geowave.datastore.hbase.filters;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -23,7 +23,7 @@ import org.apache.hadoop.hbase.util.ByteStringer;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
-import mil.nga.giat.geowave.datastore.hbase.query.protobuf.FilterProtos;
+import mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.FilterProtos;
 
 /**
  * This is a Filter which will run on Tablet Server during Scan. HBase uses

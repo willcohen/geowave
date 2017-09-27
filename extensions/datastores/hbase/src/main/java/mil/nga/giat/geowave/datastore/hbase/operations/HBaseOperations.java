@@ -78,24 +78,23 @@ import mil.nga.giat.geowave.core.store.operations.ReaderParams;
 import mil.nga.giat.geowave.core.store.operations.Writer;
 import mil.nga.giat.geowave.core.store.query.aggregate.Aggregation;
 import mil.nga.giat.geowave.core.store.query.aggregate.CommonIndexAggregation;
+import mil.nga.giat.geowave.core.store.util.MergingEntryIterator;
 import mil.nga.giat.geowave.datastore.hbase.HBaseRow;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseOptions;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseRequiredOptions;
-import mil.nga.giat.geowave.datastore.hbase.query.AggregationEndpoint;
-import mil.nga.giat.geowave.datastore.hbase.query.HBaseNumericIndexStrategyFilter;
-import mil.nga.giat.geowave.datastore.hbase.query.protobuf.AggregationProtos;
+import mil.nga.giat.geowave.datastore.hbase.coprocessors.AggregationEndpoint;
+import mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.AggregationProtos;
+import mil.nga.giat.geowave.datastore.hbase.filters.HBaseNumericIndexStrategyFilter;
 import mil.nga.giat.geowave.datastore.hbase.util.ConnectionPool;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils.ScannerClosableWrapper;
-import mil.nga.giat.geowave.datastore.hbase.util.RewritingMergingEntryIterator;
 import mil.nga.giat.geowave.mapreduce.MapReduceDataStoreOperations;
 import mil.nga.giat.geowave.mapreduce.splits.RecordReaderParams;
 
 public class HBaseOperations implements
 		MapReduceDataStoreOperations
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			HBaseOperations.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(HBaseOperations.class);
 
 	protected static final String DEFAULT_TABLE_NAMESPACE = "";
 	public static final Object ADMIN_MUTEX = new Object();
@@ -196,9 +195,7 @@ public class HBaseOperations implements
 
 	public TableName getTableName(
 			final String tableName ) {
-		return TableName.valueOf(
-				getQualifiedTableName(
-						tableName));
+		return TableName.valueOf(getQualifiedTableName(tableName));
 	}
 
 	public HBaseWriter createWriter(
@@ -219,8 +216,7 @@ public class HBaseOperations implements
 			final boolean createTable,
 			final Set<ByteArrayId> splits )
 			throws IOException {
-		final TableName tableName = getTableName(
-				sTableName);
+		final TableName tableName = getTableName(sTableName);
 
 		if (createTable) {
 			createTable(
@@ -229,8 +225,7 @@ public class HBaseOperations implements
 		}
 
 		return new HBaseWriter(
-				getBufferedMutator(
-						tableName),
+				getBufferedMutator(tableName),
 				this,
 				sTableName);
 	}
@@ -259,14 +254,11 @@ public class HBaseOperations implements
 					final HColumnDescriptor column = new HColumnDescriptor(
 							columnFamily);
 
-					column.setMaxVersions(
-							maxVersions);
+					column.setMaxVersions(maxVersions);
 
-					desc.addFamily(
-							column);
+					desc.addFamily(column);
 
-					cfCache.add(
-							columnFamily);
+					cfCache.add(columnFamily);
 				}
 
 				try {
@@ -296,10 +288,8 @@ public class HBaseOperations implements
 		ArrayList<String> newCFs = new ArrayList<>();
 
 		for (final String columnFamily : columnFamilies) {
-			if (!cfCache.contains(
-					columnFamily)) {
-				newCFs.add(
-						columnFamily);
+			if (!cfCache.contains(columnFamily)) {
+				newCFs.add(columnFamily);
 			}
 		}
 
@@ -308,8 +298,7 @@ public class HBaseOperations implements
 			return;
 		}
 
-		final TableName table = getTableName(
-				tableName);
+		final TableName table = getTableName(tableName);
 		final List<String> existingColumnFamilies = new ArrayList<>();
 		final List<String> newColumnFamilies = new ArrayList<>();
 		synchronized (ADMIN_MUTEX) {
@@ -319,25 +308,20 @@ public class HBaseOperations implements
 						table);
 				final HColumnDescriptor[] existingColumnDescriptors = existingTableDescriptor.getColumnFamilies();
 				for (final HColumnDescriptor hColumnDescriptor : existingColumnDescriptors) {
-					existingColumnFamilies.add(
-							hColumnDescriptor.getNameAsString());
+					existingColumnFamilies.add(hColumnDescriptor.getNameAsString());
 				}
 				for (final String columnFamily : newCFs) {
-					if (!existingColumnFamilies.contains(
-							columnFamily)) {
-						newColumnFamilies.add(
-								columnFamily);
+					if (!existingColumnFamilies.contains(columnFamily)) {
+						newColumnFamilies.add(columnFamily);
 					}
 				}
 
 				if (!newColumnFamilies.isEmpty()) {
 					for (final String newColumnFamily : newColumnFamilies) {
-						existingTableDescriptor.addFamily(
-								new HColumnDescriptor(
-										newColumnFamily));
+						existingTableDescriptor.addFamily(new HColumnDescriptor(
+								newColumnFamily));
 
-						cfCache.add(
-								newColumnFamily);
+						cfCache.add(newColumnFamily);
 					}
 
 					conn.getAdmin().modifyTable(
@@ -419,17 +403,13 @@ public class HBaseOperations implements
 			final String... authorizations )
 			throws IOException {
 		if ((authorizations != null) && (authorizations.length > 0)) {
-			scanner.setAuthorizations(
-					new Authorizations(
-							authorizations));
+			scanner.setAuthorizations(new Authorizations(
+					authorizations));
 		}
 
-		final Table table = conn.getTable(
-				getTableName(
-						tableName));
+		final Table table = conn.getTable(getTableName(tableName));
 
-		final ResultScanner results = table.getScanner(
-				scanner);
+		final ResultScanner results = table.getScanner(scanner);
 
 		table.close();
 
@@ -439,17 +419,13 @@ public class HBaseOperations implements
 	public RegionLocator getRegionLocator(
 			final String tableName )
 			throws IOException {
-		return conn.getRegionLocator(
-				getTableName(
-						tableName));
+		return conn.getRegionLocator(getTableName(tableName));
 	}
 
 	public Table getTable(
 			final String tableName )
 			throws IOException {
-		return conn.getTable(
-				getTableName(
-						tableName));
+		return conn.getTable(getTableName(tableName));
 	}
 
 	public boolean verifyCoprocessor(
@@ -458,11 +434,9 @@ public class HBaseOperations implements
 			final String coprocessorJar ) {
 		try {
 			// Check the cache first
-			final List<String> checkList = coprocessorCache.get(
-					tableNameStr);
+			final List<String> checkList = coprocessorCache.get(tableNameStr);
 			if (checkList != null) {
-				if (checkList.contains(
-						coprocessorName)) {
+				if (checkList.contains(coprocessorName)) {
 					return true;
 				}
 			}
@@ -473,37 +447,28 @@ public class HBaseOperations implements
 			}
 
 			final Admin admin = conn.getAdmin();
-			final TableName tableName = getTableName(
-					tableNameStr);
-			final HTableDescriptor td = admin.getTableDescriptor(
-					tableName);
+			final TableName tableName = getTableName(tableNameStr);
+			final HTableDescriptor td = admin.getTableDescriptor(tableName);
 
-			if (!td.hasCoprocessor(
-					coprocessorName)) {
-				LOGGER.debug(
-						tableNameStr + " does not have coprocessor. Adding " + coprocessorName);
+			if (!td.hasCoprocessor(coprocessorName)) {
+				LOGGER.debug(tableNameStr + " does not have coprocessor. Adding " + coprocessorName);
 
 				// if (!schemaUpdateEnabled &&
 				// !admin.isTableDisabled(tableName)) {
-				LOGGER.debug(
-						"- disable table...");
-				admin.disableTable(
-						tableName);
+				LOGGER.debug("- disable table...");
+				admin.disableTable(tableName);
 				// }
 
-				LOGGER.debug(
-						"- add coprocessor...");
+				LOGGER.debug("- add coprocessor...");
 
 				// Retrieve coprocessor jar path from config
 				if (coprocessorJar == null) {
-					td.addCoprocessor(
-							coprocessorName);
+					td.addCoprocessor(coprocessorName);
 				}
 				else {
 					final Path hdfsJarPath = new Path(
 							coprocessorJar);
-					LOGGER.debug(
-							"Coprocessor jar path: " + hdfsJarPath.toString());
+					LOGGER.debug("Coprocessor jar path: " + hdfsJarPath.toString());
 					td.addCoprocessor(
 							coprocessorName,
 							hdfsJarPath,
@@ -511,17 +476,14 @@ public class HBaseOperations implements
 							null);
 				}
 
-				LOGGER.debug(
-						"- modify table...");
+				LOGGER.debug("- modify table...");
 				admin.modifyTable(
 						tableName,
 						td);
 
 				// if (!schemaUpdateEnabled) {
-				LOGGER.debug(
-						"- enable table...");
-				admin.enableTable(
-						tableName);
+				LOGGER.debug("- enable table...");
+				admin.enableTable(tableName);
 			}
 			// }
 
@@ -531,12 +493,10 @@ public class HBaseOperations implements
 			do {
 				regionsLeft = admin.getAlterStatus(
 						tableName).getFirst();
-				LOGGER.debug(
-						regionsLeft + " regions remaining in table modify");
+				LOGGER.debug(regionsLeft + " regions remaining in table modify");
 
 				try {
-					Thread.sleep(
-							SLEEP_INTERVAL);
+					Thread.sleep(SLEEP_INTERVAL);
 				}
 				catch (final InterruptedException e) {
 					LOGGER.warn(
@@ -547,16 +507,15 @@ public class HBaseOperations implements
 			while (regionsLeft > 0);
 			// }
 
-			LOGGER.debug(
-					"Successfully added coprocessor");
+			LOGGER.debug("Successfully added coprocessor");
 
 			coprocessorCache.get(
 					tableNameStr).add(
-							coprocessorName);
+					coprocessorName);
 
 			coprocessorCache.get(
 					tableNameStr).add(
-							coprocessorName);
+					coprocessorName);
 		}
 		catch (final IOException e) {
 			LOGGER.error(
@@ -575,8 +534,7 @@ public class HBaseOperations implements
 			throws IOException {
 		synchronized (ADMIN_MUTEX) {
 			return conn.getAdmin().isTableAvailable(
-					getTableName(
-							indexId.getString()));
+					getTableName(indexId.getString()));
 		}
 	}
 
@@ -594,12 +552,11 @@ public class HBaseOperations implements
 				if (a instanceof RowMergingDataAdapter) {
 					if (adapterIndexMappingStore.getIndicesForAdapter(
 							a.getAdapterId()).contains(
-									index.getId())) {
+							index.getId())) {
 						map.put(
 								a.getAdapterId(),
 								(RowMergingDataAdapter) a);
-						columnFamilies.add(
-								a.getAdapterId().getString());
+						columnFamilies.add(a.getAdapterId().getString());
 					}
 				}
 			}
@@ -611,21 +568,18 @@ public class HBaseOperations implements
 			return false;
 		}
 		if (columnFamilies.isEmpty()) {
-			LOGGER.warn(
-					"There is no mergeable data found in datastore");
+			LOGGER.warn("There is no mergeable data found in datastore");
 			return false;
 		}
 		final String table = index.getId().getString();
 		try (HBaseWriter writer = createWriter(
 				index.getId().getString(),
-				columnFamilies.toArray(
-						new String[] {}),
+				columnFamilies.toArray(new String[] {}),
 				false)) {
 			final Scan scanner = new Scan();
 			for (final String cf : columnFamilies) {
-				scanner.addFamily(
-						new ByteArrayId(
-								cf).getBytes());
+				scanner.addFamily(new ByteArrayId(
+						cf).getBytes());
 			}
 			final ResultScanner rs = getScannedResults(
 					scanner,
@@ -648,12 +602,13 @@ public class HBaseOperations implements
 
 							}));
 
-			final RewritingMergingEntryIterator iterator = new RewritingMergingEntryIterator<>(
+			final MergingEntryIterator iterator = new MergingEntryIterator<>(
 					adapterStore,
 					index,
 					it,
-					map,
-					writer);
+					null,
+					null,
+					map);
 			while (iterator.hasNext()) {
 				iterator.next();
 			}
@@ -670,23 +625,19 @@ public class HBaseOperations implements
 	public void insurePartition(
 			final ByteArrayId partition,
 			final String tableNameStr ) {
-		TableName tableName = getTableName(
-				tableNameStr);
-		Set<ByteArrayId> existingPartitions = partitionCache.get(
-				tableNameStr);
+		TableName tableName = getTableName(tableNameStr);
+		Set<ByteArrayId> existingPartitions = partitionCache.get(tableNameStr);
 
 		try {
 			synchronized (partitionCache) {
 				if (existingPartitions == null) {
-					RegionLocator regionLocator = conn.getRegionLocator(
-							tableName);
+					RegionLocator regionLocator = conn.getRegionLocator(tableName);
 					existingPartitions = new HashSet<>();
 
 					for (byte[] startKey : regionLocator.getStartKeys()) {
 						if (startKey.length > 0) {
-							existingPartitions.add(
-									new ByteArrayId(
-											startKey));
+							existingPartitions.add(new ByteArrayId(
+									startKey));
 						}
 					}
 
@@ -695,16 +646,14 @@ public class HBaseOperations implements
 							existingPartitions);
 				}
 
-				if (!existingPartitions.contains(
-						partition)) {
+				if (!existingPartitions.contains(partition)) {
 					Admin admin = conn.getAdmin();
 
 					admin.split(
 							tableName,
 							partition.getBytes());
 
-					existingPartitions.add(
-							partition);
+					existingPartitions.add(partition);
 
 					// Split is async - do we need to wait?
 					if (ASYNC_WAIT) {
@@ -713,12 +662,10 @@ public class HBaseOperations implements
 						do {
 							regionsLeft = admin.getAlterStatus(
 									tableName).getFirst();
-							LOGGER.debug(
-									regionsLeft + " regions remaining in table modify");
+							LOGGER.debug(regionsLeft + " regions remaining in table modify");
 
 							try {
-								Thread.sleep(
-										SLEEP_INTERVAL);
+								Thread.sleep(SLEEP_INTERVAL);
 							}
 							catch (final InterruptedException e) {
 								LOGGER.warn(
@@ -734,8 +681,7 @@ public class HBaseOperations implements
 			}
 		}
 		catch (IOException e) {
-			LOGGER.error(
-					"Error accessing region info: " + e.getMessage());
+			LOGGER.error("Error accessing region info: " + e.getMessage());
 		}
 	}
 
@@ -750,8 +696,7 @@ public class HBaseOperations implements
 	public Writer createWriter(
 			final ByteArrayId indexId,
 			final ByteArrayId adapterId ) {
-		final TableName tableName = getTableName(
-				indexId.getString());
+		final TableName tableName = getTableName(indexId.getString());
 		try {
 			if (options.isCreateTable()) {
 				String[] columnFamilies = new String[1];
@@ -763,8 +708,7 @@ public class HBaseOperations implements
 			}
 
 			return new HBaseWriter(
-					getBufferedMutator(
-							tableName),
+					getBufferedMutator(tableName),
 					this,
 					indexId.getString());
 		}
@@ -785,8 +729,7 @@ public class HBaseOperations implements
 	@Override
 	public MetadataWriter createMetadataWriter(
 			final MetadataType metadataType ) {
-		final TableName tableName = getTableName(
-				AbstractGeoWavePersistence.METADATA_TABLE);
+		final TableName tableName = getTableName(AbstractGeoWavePersistence.METADATA_TABLE);
 		try {
 			if (options.isCreateTable()) {
 				createTable(
@@ -797,8 +740,7 @@ public class HBaseOperations implements
 
 			return new HBaseMetadataWriter(
 					this,
-					getBufferedMutator(
-							tableName),
+					getBufferedMutator(tableName),
 					metadataType);
 		}
 		catch (IOException e) {
@@ -848,12 +790,10 @@ public class HBaseOperations implements
 			final ByteArrayId indexId,
 			final String... authorizations )
 			throws Exception {
-		final TableName tableName = getTableName(
-				indexId.getString());
+		final TableName tableName = getTableName(indexId.getString());
 
 		return new HBaseDeleter(
-				getBufferedMutator(
-						tableName),
+				getBufferedMutator(tableName),
 				false);
 	}
 
@@ -863,8 +803,7 @@ public class HBaseOperations implements
 		final BufferedMutatorParams params = new BufferedMutatorParams(
 				tableName);
 
-		return conn.getBufferedMutator(
-				params);
+		return conn.getBufferedMutator(params);
 	}
 
 	public MultiRowRangeFilter getMultiRowRangeFilter(
@@ -872,12 +811,11 @@ public class HBaseOperations implements
 		// create the multi-row filter
 		final List<RowRange> rowRanges = new ArrayList<RowRange>();
 		if ((ranges == null) || ranges.isEmpty()) {
-			rowRanges.add(
-					new RowRange(
-							HConstants.EMPTY_BYTE_ARRAY,
-							true,
-							HConstants.EMPTY_BYTE_ARRAY,
-							false));
+			rowRanges.add(new RowRange(
+					HConstants.EMPTY_BYTE_ARRAY,
+					true,
+					HConstants.EMPTY_BYTE_ARRAY,
+					false));
 		}
 		else {
 			for (final ByteArrayRange range : ranges) {
@@ -897,8 +835,7 @@ public class HBaseOperations implements
 							stopRow,
 							false);
 
-					rowRanges.add(
-							rowRange);
+					rowRanges.add(rowRange);
 				}
 			}
 		}
@@ -918,8 +855,7 @@ public class HBaseOperations implements
 
 	public Mergeable aggregateServerSide(
 			final ReaderParams readerParams ) {
-		final String tableName = StringUtils.stringFromBinary(
-				readerParams.getIndex().getId().getBytes());
+		final String tableName = StringUtils.stringFromBinary(readerParams.getIndex().getId().getBytes());
 
 		try {
 			// Use the row count coprocessor
@@ -934,69 +870,53 @@ public class HBaseOperations implements
 
 			final AggregationProtos.AggregationType.Builder aggregationBuilder = AggregationProtos.AggregationType
 					.newBuilder();
-			aggregationBuilder.setName(
-					aggregation.getClass().getName());
+			aggregationBuilder.setName(aggregation.getClass().getName());
 
 			if (aggregation.getParameters() != null) {
-				final byte[] paramBytes = PersistenceUtils.toBinary(
-						aggregation.getParameters());
-				aggregationBuilder.setParams(
-						ByteString.copyFrom(
-								paramBytes));
+				final byte[] paramBytes = PersistenceUtils.toBinary(aggregation.getParameters());
+				aggregationBuilder.setParams(ByteString.copyFrom(paramBytes));
 			}
 
 			final AggregationProtos.AggregationRequest.Builder requestBuilder = AggregationProtos.AggregationRequest
 					.newBuilder();
-			requestBuilder.setAggregation(
-					aggregationBuilder.build());
+			requestBuilder.setAggregation(aggregationBuilder.build());
 			if (readerParams.getFilter() != null) {
 				final List<DistributableQueryFilter> distFilters = new ArrayList();
-				distFilters.add(
-						readerParams.getFilter());
+				distFilters.add(readerParams.getFilter());
 
-				final byte[] filterBytes = PersistenceUtils.toBinary(
-						distFilters);
-				final ByteString filterByteString = ByteString.copyFrom(
-						filterBytes);
-				requestBuilder.setFilter(
-						filterByteString);
+				final byte[] filterBytes = PersistenceUtils.toBinary(distFilters);
+				final ByteString filterByteString = ByteString.copyFrom(filterBytes);
+				requestBuilder.setFilter(filterByteString);
 			}
 			else {
 				final List<MultiDimensionalCoordinateRangesArray> coords = readerParams.getCoordinateRanges();
 				if (!coords.isEmpty()) {
 					final byte[] filterBytes = new HBaseNumericIndexStrategyFilter(
 							readerParams.getIndex().getIndexStrategy(),
-							coords.toArray(
-									new MultiDimensionalCoordinateRangesArray[] {})).toByteArray();
+							coords.toArray(new MultiDimensionalCoordinateRangesArray[] {})).toByteArray();
 					final ByteString filterByteString = ByteString.copyFrom(
 							new byte[] {
 								0
 							}).concat(
-									ByteString.copyFrom(
-											filterBytes));
+							ByteString.copyFrom(filterBytes));
 
-					requestBuilder.setNumericIndexStrategyFilter(
-							filterByteString);
+					requestBuilder.setNumericIndexStrategyFilter(filterByteString);
 				}
 			}
-			requestBuilder.setModel(
-					ByteString.copyFrom(
-							PersistenceUtils.toBinary(
-									readerParams.getIndex().getIndexModel())));
+			requestBuilder.setModel(ByteString.copyFrom(PersistenceUtils.toBinary(readerParams
+					.getIndex()
+					.getIndexModel())));
 
-			final MultiRowRangeFilter multiFilter = getMultiRowRangeFilter(
-					readerParams.getQueryRanges().getCompositeQueryRanges());
+			final MultiRowRangeFilter multiFilter = getMultiRowRangeFilter(readerParams
+					.getQueryRanges()
+					.getCompositeQueryRanges());
 			if (multiFilter != null) {
-				requestBuilder.setRangeFilter(
-						ByteString.copyFrom(
-								multiFilter.toByteArray()));
+				requestBuilder.setRangeFilter(ByteString.copyFrom(multiFilter.toByteArray()));
 			}
 			if (readerParams.getAggregation().getLeft() != null) {
 				final ByteArrayId adapterId = readerParams.getAggregation().getLeft().getAdapterId();
 				if (readerParams.getAggregation().getRight() instanceof CommonIndexAggregation) {
-					requestBuilder.setAdapterId(
-							ByteString.copyFrom(
-									adapterId.getBytes()));
+					requestBuilder.setAdapterId(ByteString.copyFrom(adapterId.getBytes()));
 				}
 				// else {
 				// final DataAdapter dataAdapter =
@@ -1007,31 +927,26 @@ public class HBaseOperations implements
 
 			if (readerParams.getAdditionalAuthorizations() != null
 					&& readerParams.getAdditionalAuthorizations().length > 0) {
-				requestBuilder.setVisLabels(
-						ByteString.copyFrom(
-								StringUtils.stringsToBinary(
-										readerParams.getAdditionalAuthorizations())));
+				requestBuilder.setVisLabels(ByteString.copyFrom(StringUtils.stringsToBinary(readerParams
+						.getAdditionalAuthorizations())));
 			}
 
 			// if (wholeRowIterator) {
 			// requestBuilder.setWholeRowFilter(true);
 			// }
 
-			requestBuilder.setPartitionKeyLength(
-					readerParams.getIndex().getIndexStrategy().getPartitionKeyLength());
+			requestBuilder.setPartitionKeyLength(readerParams.getIndex().getIndexStrategy().getPartitionKeyLength());
 
 			final AggregationProtos.AggregationRequest request = requestBuilder.build();
 
-			final Table table = getTable(
-					tableName);
+			final Table table = getTable(tableName);
 
 			byte[] startRow = null;
 			byte[] endRow = null;
 
 			final List<ByteArrayRange> ranges = readerParams.getQueryRanges().getCompositeQueryRanges();
 			if ((ranges != null) && !ranges.isEmpty()) {
-				final ByteArrayRange aggRange = ranges.get(
-						0);
+				final ByteArrayRange aggRange = ranges.get(0);
 				startRow = aggRange.getStart().getBytes();
 				endRow = aggRange.getEnd().getBytes();
 			}
@@ -1068,20 +983,17 @@ public class HBaseOperations implements
 							bvalue,
 							Mergeable.class);
 
-					LOGGER.debug(
-							"Value from region " + regionCount + " is " + mvalue);
+					LOGGER.debug("Value from region " + regionCount + " is " + mvalue);
 
 					if (total == null) {
 						total = mvalue;
 					}
 					else {
-						total.merge(
-								mvalue);
+						total.merge(mvalue);
 					}
 				}
 				else {
-					LOGGER.debug(
-							"Empty response for region " + regionCount);
+					LOGGER.debug("Empty response for region " + regionCount);
 				}
 			}
 
@@ -1104,16 +1016,13 @@ public class HBaseOperations implements
 	public List<ByteArrayId> getTableRegions(
 			String tableNameStr ) {
 		ArrayList<ByteArrayId> regionIdList = new ArrayList();
-		TableName tableName = getTableName(
-				tableNameStr);
+		TableName tableName = getTableName(tableNameStr);
 
 		try {
-			RegionLocator locator = conn.getRegionLocator(
-					tableName);
+			RegionLocator locator = conn.getRegionLocator(tableName);
 			for (HRegionLocation regionLocation : locator.getAllRegionLocations()) {
-				regionIdList.add(
-						new ByteArrayId(
-								regionLocation.getRegionInfo().getRegionName()));
+				regionIdList.add(new ByteArrayId(
+						regionLocation.getRegionInfo().getRegionName()));
 			}
 		}
 		catch (IOException e) {
@@ -1126,18 +1035,18 @@ public class HBaseOperations implements
 	}
 
 	/**
-	 * Whenever a stats query returns multiple versions, we combine them and rewrite the data
+	 * Whenever a stats query returns multiple versions, we combine them and
+	 * rewrite the data
+	 * 
 	 * @param query
 	 * @param mergedStats
 	 */
 	public void updateStats(
 			MetadataQuery query,
 			DataStatistics mergedStats ) {
-		try (final MetadataDeleter deleter = createMetadataDeleter(
-				MetadataType.STATS)) {
+		try (final MetadataDeleter deleter = createMetadataDeleter(MetadataType.STATS)) {
 			if (deleter != null) {
-				deleter.delete(
-						query);
+				deleter.delete(query);
 			}
 		}
 		catch (final Exception e) {
@@ -1146,17 +1055,14 @@ public class HBaseOperations implements
 					e);
 		}
 
-		try (final MetadataWriter writer = createMetadataWriter(
-				MetadataType.STATS)) {
+		try (final MetadataWriter writer = createMetadataWriter(MetadataType.STATS)) {
 			if (writer != null) {
 				final GeoWaveMetadata metadata = new GeoWaveMetadata(
 						query.getPrimaryId(),
 						query.getSecondaryId(),
 						null,
-						PersistenceUtils.toBinary(
-								mergedStats));
-				writer.write(
-						metadata);
+						PersistenceUtils.toBinary(mergedStats));
+				writer.write(metadata);
 			}
 		}
 		catch (final Exception e) {

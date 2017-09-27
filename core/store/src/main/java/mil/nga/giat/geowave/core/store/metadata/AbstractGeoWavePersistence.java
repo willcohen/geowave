@@ -181,7 +181,7 @@ public abstract class AbstractGeoWavePersistence<T extends Persistable>
 				id,
 				secondaryId,
 				object);
-		
+
 		try (final MetadataWriter writer = operations.createMetadataWriter(getType())) {
 			if (writer != null) {
 				final GeoWaveMetadata metadata = new GeoWaveMetadata(

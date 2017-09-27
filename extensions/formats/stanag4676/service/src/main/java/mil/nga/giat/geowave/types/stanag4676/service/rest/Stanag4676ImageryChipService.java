@@ -74,8 +74,7 @@ import mil.nga.giat.geowave.service.ServiceUtils;
 @Path("stanag4676")
 public class Stanag4676ImageryChipService
 {
-	private static Logger LOGGER = LoggerFactory.getLogger(
-			Stanag4676ImageryChipService.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(Stanag4676ImageryChipService.class);
 	@Context
 	ServletContext context;
 	private static DataStore dataStore;
@@ -105,9 +104,7 @@ public class Stanag4676ImageryChipService
 			@QueryParam("size")
 			@DefaultValue("-1")
 			final int targetPixelSize ) {
-		final Calendar cal = Calendar.getInstance(
-				TimeZone.getTimeZone(
-						"GMT"));
+		final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
 		cal.set(
 				year,
 				month - 1,
@@ -153,23 +150,16 @@ public class Stanag4676ImageryChipService
 
 		if ((imageChip != null) && (imageChip instanceof ImageChip)) {
 			if (targetPixelSize <= 0) {
-				LOGGER.info(
-						"Sending ImageChip for " + chipNameStr);
+				LOGGER.info("Sending ImageChip for " + chipNameStr);
 
 				final byte[] imageData = ((ImageChip) imageChip).getImageBinary();
-				return Response
-						.ok()
-						.entity(
-								imageData)
-						.type(
-								"image/jpeg")
-						.build();
+				return Response.ok().entity(
+						imageData).type(
+						"image/jpeg").build();
 			}
 			else {
-				LOGGER.info(
-						"Sending BufferedImage for " + chipNameStr);
-				final BufferedImage image = ((ImageChip) imageChip).getImage(
-						targetPixelSize);
+				LOGGER.info("Sending BufferedImage for " + chipNameStr);
+				final BufferedImage image = ((ImageChip) imageChip).getImage(targetPixelSize);
 				final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				try {
 					ImageIO.write(
@@ -177,13 +167,9 @@ public class Stanag4676ImageryChipService
 							"jpeg",
 							baos);
 
-					return Response
-							.ok()
-							.entity(
-									baos.toByteArray())
-							.type(
-									"image/jpeg")
-							.build();
+					return Response.ok().entity(
+							baos.toByteArray()).type(
+							"image/jpeg").build();
 				}
 				catch (final IOException e) {
 					LOGGER.error(
@@ -240,8 +226,7 @@ public class Stanag4676ImageryChipService
 				final Object imageChipObj = imageChipIt.next();
 				if ((imageChipObj != null) && (imageChipObj instanceof ImageChip)) {
 					final ImageChip imageChip = (ImageChip) imageChipObj;
-					final BufferedImage image = imageChip.getImage(
-							targetPixelSize);
+					final BufferedImage image = imageChip.getImage(targetPixelSize);
 					if ((width < 0) || (image.getWidth() > width)) {
 						width = image.getWidth();
 					}
@@ -262,8 +247,7 @@ public class Stanag4676ImageryChipService
 					.serverError()
 					.entity(
 							"Video generation failed \nException: " + e1.getLocalizedMessage() + "\n stack trace: "
-									+ Arrays.toString(
-											e1.getStackTrace()))
+									+ Arrays.toString(e1.getStackTrace()))
 					.build();
 		}
 
@@ -274,13 +258,11 @@ public class Stanag4676ImageryChipService
 					"Unable to retrieve image chips").build();
 		}
 		else {
-			LOGGER.info(
-					"Sending Video for " + videoNameStr);
+			LOGGER.info("Sending Video for " + videoNameStr);
 
 			try {
 				final File responseBody;
-				LOGGER.debug(
-						"Attempting to build the video the new way ...");
+				LOGGER.debug("Attempting to build the video the new way ...");
 				responseBody = buildVideo2(
 						mission,
 						track,
@@ -288,8 +270,7 @@ public class Stanag4676ImageryChipService
 						width,
 						height,
 						speed);
-				LOGGER.debug(
-						"Got a response body (path): " + responseBody.getAbsolutePath());
+				LOGGER.debug("Got a response body (path): " + responseBody.getAbsolutePath());
 				try (FileInputStream fis = new FileInputStream(
 						responseBody) {
 
@@ -301,25 +282,18 @@ public class Stanag4676ImageryChipService
 						// returned
 
 						if (!responseBody.delete()) {
-							LOGGER.warn(
-									"Cannot delete response body");
+							LOGGER.warn("Cannot delete response body");
 						}
 
 						if (!responseBody.getParentFile().delete()) {
-							LOGGER.warn(
-									"Cannot delete response body's parent file");
+							LOGGER.warn("Cannot delete response body's parent file");
 						}
 					}
 				}) {
-					LOGGER.info(
-							"Returning video object: " + fis);
-					return Response
-							.ok()
-							.entity(
-									fis)
-							.type(
-									"video/webm")
-							.build();
+					LOGGER.info("Returning video object: " + fis);
+					return Response.ok().entity(
+							fis).type(
+							"video/webm").build();
 				}
 				catch (final FileNotFoundException fnfe) {
 					LOGGER.error(
@@ -419,8 +393,7 @@ public class Stanag4676ImageryChipService
 		FileChannelWrapper sink = null;
 
 		try {
-			sink = NIOUtils.writableFileChannel(
-					videoFile.getAbsolutePath());
+			sink = NIOUtils.writableFileChannel(videoFile.getAbsolutePath());
 
 			/*
 			 * Version 0.1.9
@@ -455,11 +428,9 @@ public class Stanag4676ImageryChipService
 						rgb.getHeight(),
 						ColorSpace.YUV420);
 				transform.transform(
-						AWTUtil.fromBufferedImage(
-								rgb),
+						AWTUtil.fromBufferedImage(rgb),
 						yuv);
-				final ByteBuffer buf = ByteBuffer.allocate(
-						rgb.getWidth() * rgb.getHeight() * 3);
+				final ByteBuffer buf = ByteBuffer.allocate(rgb.getWidth() * rgb.getHeight() * 3);
 
 				final ByteBuffer ff = encoder.encodeFrame(
 						yuv,
@@ -476,17 +447,14 @@ public class Stanag4676ImageryChipService
 				}
 			}
 			if (i == 1) {
-				LOGGER.error(
-						"Image sequence not found");
+				LOGGER.error("Image sequence not found");
 				return null;
 			}
 			if (videoTrack != null) {
-				LOGGER.debug(
-						"Found " + y + " of " + i + " new frames." + "  videoTrack timescale is "
-								+ videoTrack.getTimescale());
+				LOGGER.debug("Found " + y + " of " + i + " new frames." + "  videoTrack timescale is "
+						+ videoTrack.getTimescale());
 			}
-			muxer.mux(
-					sink);
+			muxer.mux(sink);
 
 			// ------------------------------------------------------------------
 			// Version 0.2.0
@@ -538,8 +506,7 @@ public class Stanag4676ImageryChipService
 		finally {
 			if (sink != null) {
 				sink.close();
-				IOUtils.closeQuietly(
-						sink);
+				IOUtils.closeQuietly(sink);
 			}
 		}
 		return videoFile;
@@ -552,18 +519,14 @@ public class Stanag4676ImageryChipService
 		if (dataStore != null) {
 			return dataStore;
 		}
-		final String confPropFilename = context.getInitParameter(
-				"config.properties");
+		final String confPropFilename = context.getInitParameter("config.properties");
 		// HP Fortify "Log Forging" false positive
 		// What Fortify considers "user input" comes only
 		// from users with OS-level access anyway
-		LOGGER.info(
-				"Creating datastore singleton for 4676 service.   conf prop filename: " + confPropFilename);
+		LOGGER.info("Creating datastore singleton for 4676 service.   conf prop filename: " + confPropFilename);
 		Properties props = null;
-		try (InputStream is = context.getResourceAsStream(
-				confPropFilename)) {
-			props = ServiceUtils.loadProperties(
-					is);
+		try (InputStream is = context.getResourceAsStream(confPropFilename)) {
+			props = ServiceUtils.loadProperties(is);
 		}
 		catch (final IOException e) {
 			LOGGER.error(
@@ -589,19 +552,15 @@ public class Stanag4676ImageryChipService
 				// HP Fortify "Log Forging" false positive
 				// What Fortify considers "user input" comes only
 				// from users with OS-level access anyway
-				LOGGER.info(
-						"    Key/Value: " + key + "/" + value);
+				LOGGER.info("    Key/Value: " + key + "/" + value);
 			}
 
-			dataStore = GeoWaveStoreFinder.createDataStore(
-					strMap);
+			dataStore = GeoWaveStoreFinder.createDataStore(strMap);
 
-			dataStore = GeoWaveStoreFinder.createDataStore(
-					strMap);
+			dataStore = GeoWaveStoreFinder.createDataStore(strMap);
 		}
 		if (dataStore == null) {
-			LOGGER.error(
-					"Unable to create datastore for 4676 service");
+			LOGGER.error("Unable to create datastore for 4676 service");
 		}
 		return dataStore;
 	}

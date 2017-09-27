@@ -16,8 +16,7 @@ import mil.nga.giat.geowave.core.store.operations.MetadataWriter;
 public class HBaseMetadataWriter implements
 		MetadataWriter
 {
-	private static final Logger LOGGER = LoggerFactory.getLogger(
-			HBaseMetadataWriter.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(HBaseMetadataWriter.class);
 
 	private final HBaseOperations operations;
 	private final BufferedMutator writer;
@@ -33,8 +32,7 @@ public class HBaseMetadataWriter implements
 		this.operations = operations;
 		this.writer = writer;
 		this.metadataType = metadataType;
-		this.metadataTypeBytes = StringUtils.stringToBinary(
-				metadataType.name());
+		this.metadataTypeBytes = StringUtils.stringToBinary(metadataType.name());
 	}
 
 	@Override
@@ -64,15 +62,12 @@ public class HBaseMetadataWriter implements
 				metadata.getValue());
 
 		if (metadata.getVisibility() != null) {
-			put.setCellVisibility(
-					new CellVisibility(
-							StringUtils.stringFromBinary(
-									metadata.getVisibility())));
+			put.setCellVisibility(new CellVisibility(
+					StringUtils.stringFromBinary(metadata.getVisibility())));
 		}
 
 		try {
-			writer.mutate(
-					put);
+			writer.mutate(put);
 		}
 		catch (final IOException e) {
 			LOGGER.error(

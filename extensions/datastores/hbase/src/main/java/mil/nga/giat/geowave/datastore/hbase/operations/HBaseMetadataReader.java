@@ -20,6 +20,7 @@ import mil.nga.giat.geowave.core.store.metadata.AbstractGeoWavePersistence;
 import mil.nga.giat.geowave.core.store.operations.MetadataQuery;
 import mil.nga.giat.geowave.core.store.operations.MetadataReader;
 import mil.nga.giat.geowave.core.store.operations.MetadataType;
+import mil.nga.giat.geowave.datastore.hbase.filters.HBaseMergingFilter;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils.ScannerClosableWrapper;
 
@@ -70,10 +71,12 @@ public class HBaseMetadataReader implements
 						query.getPrimaryId());
 			}
 
-			// TODO: This needs to check for 'options.serverSideLibraryEnabled'
-			// when server-side merging is implemented
 			if (metadataType == MetadataType.STATS) {
 				scanner.setMaxVersions(); // Get all versions
+				
+				if (options.isServerSideLibraryEnabled()) {
+					scanner.setFilter(new HBaseMergingFilter());
+				}
 			}
 
 			ResultScanner rS = operations.getScannedResults(
@@ -115,7 +118,7 @@ public class HBaseMetadataReader implements
 		if (metadataType != MetadataType.STATS || result.size() == 1) {
 			return result.value();
 		}
-
+		
 		return PersistenceUtils.toBinary(
 				HBaseUtils.getMergedStats(
 						result.listCells()));

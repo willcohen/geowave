@@ -8,24 +8,14 @@ import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.exceptions.DeserializationException;
 import org.apache.hadoop.hbase.filter.FilterBase;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import mil.nga.giat.geowave.core.index.Mergeable;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
-import mil.nga.giat.geowave.core.index.StringUtils;
-import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 
 public class HBaseMergingFilter extends
 		FilterBase
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			HBaseMergingFilter.class);
-
-	private String mergeData;
-
 	public HBaseMergingFilter() {
-
 	}
 
 	public static HBaseMergingFilter parseFrom(
@@ -33,16 +23,7 @@ public class HBaseMergingFilter extends
 			throws DeserializationException {
 		HBaseMergingFilter mergingFilter = new HBaseMergingFilter();
 
-		String mergeData = StringUtils.stringFromBinary(pbBytes);
-		mergingFilter.setMergeData(mergeData);
-
 		return mergingFilter;
-	}
-	
-	@Override
-	public byte[] toByteArray()
-			throws IOException {
-		return StringUtils.stringToBinary(mergeData);
 	}
 	
 	/**
@@ -103,17 +84,8 @@ public class HBaseMergingFilter extends
 	 */
 	@Override
 	public ReturnCode filterKeyValue(
-			Cell v )
+			Cell cell )
 			throws IOException {
 		return ReturnCode.INCLUDE;
-	}
-
-	public String getMergeData() {
-		return mergeData;
-	}
-
-	public void setMergeData(
-			String mergeData ) {
-		this.mergeData = mergeData;
 	}
 }

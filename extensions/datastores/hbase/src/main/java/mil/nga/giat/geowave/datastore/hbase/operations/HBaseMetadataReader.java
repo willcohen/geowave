@@ -27,7 +27,8 @@ import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils.ScannerClosableWrapp
 public class HBaseMetadataReader implements
 		MetadataReader
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(HBaseMetadataReader.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(
+			HBaseMetadataReader.class);
 	private final HBaseOperations operations;
 	private final DataStoreOptions options;
 	private final MetadataType metadataType;
@@ -47,7 +48,8 @@ public class HBaseMetadataReader implements
 		final Scan scanner = new Scan();
 
 		try {
-			final byte[] columnFamily = StringUtils.stringToBinary(metadataType.name());
+			final byte[] columnFamily = StringUtils.stringToBinary(
+					metadataType.name());
 			final byte[] columnQualifier = query.getSecondaryId();
 
 			if (columnFamily != null) {
@@ -57,21 +59,29 @@ public class HBaseMetadataReader implements
 							columnQualifier);
 				}
 				else {
-					scanner.addFamily(columnFamily);
+					scanner.addFamily(
+							columnFamily);
 				}
 			}
 
-			if (query.getPrimaryId() != null) {
-				scanner.setStartRow(query.getPrimaryId());
-				scanner.setStopRow(query.getPrimaryId());
+			if (query.hasPrimaryId()) {
+				scanner.setStartRow(
+						query.getPrimaryId());
+				scanner.setStopRow(
+						query.getPrimaryId());
 			}
 
 			if (metadataType == MetadataType.STATS) {
 				scanner.setMaxVersions(); // Get all versions
 
 				if (options.isServerSideLibraryEnabled()) {
-					scanner.setFilter(new HBaseMergingFilter());
+					scanner.setFilter(
+							new HBaseMergingFilter());
 				}
+			}
+			else {
+				scanner.setMaxVersions(
+						1);
 			}
 
 			ResultScanner rS = operations.getScannedResults(
@@ -93,7 +103,8 @@ public class HBaseMetadataReader implements
 											result.getRow(),
 											columnQualifier,
 											null,
-											getMergedStats(result));
+											getMergedStats(
+													result));
 								}
 							}));
 
@@ -113,6 +124,8 @@ public class HBaseMetadataReader implements
 			return result.value();
 		}
 
-		return PersistenceUtils.toBinary(HBaseUtils.getMergedStats(result.listCells()));
+		return PersistenceUtils.toBinary(
+				HBaseUtils.getMergedStats(
+						result.listCells()));
 	}
 }

@@ -23,8 +23,6 @@ public class HBaseMetadataWriter implements
 	private final MetadataType metadataType;
 	private final byte[] metadataTypeBytes;
 
-	private static final boolean MERGE_STATS = false;
-
 	public HBaseMetadataWriter(
 			final HBaseOperations operations,
 			final BufferedMutator writer,

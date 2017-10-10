@@ -25,11 +25,7 @@ import mil.nga.giat.geowave.datastore.cassandra.operations.CassandraOperations;
 abstract public class AbstractCassandraPersistence<T extends Persistable> extends
 		AbstractGeoWavePersistence<T>
 {
-	protected static final String PRIMARY_ID_KEY = "I";
-	protected static final String SECONDARY_ID_KEY = "S";
-	// serves as unique ID for instances where primary+secondary are repeated
-	protected static final String TIMESTAMP_ID_KEY = "T";
-	protected static final String VALUE_KEY = "V";
+
 
 	private static final Object CREATE_TABLE_MUTEX = new Object();
 
@@ -76,46 +72,7 @@ abstract public class AbstractCassandraPersistence<T extends Persistable> extend
 				id,
 				secondaryId,
 				object);
-		synchronized (CREATE_TABLE_MUTEX) {
-			if (!operations.tableExists(getTablename())) {
-				// create table
-				final Create create = operations.getCreateTable(getTablename());
-				create.addPartitionKey(
-						PRIMARY_ID_KEY,
-						DataType.blob());
-				if (hasSecondaryId()) {
-					create.addClusteringColumn(
-							SECONDARY_ID_KEY,
-							DataType.blob());
-					create.addClusteringColumn(
-							TIMESTAMP_ID_KEY,
-							DataType.timeuuid());
-				}
-				create.addColumn(
-						VALUE_KEY,
-						DataType.blob());
-				operations.executeCreateTable(
-						create,
-						getTablename());
-			}
-		}
-		final Insert insert = operations.getInsert(getTablename());
-		insert.value(
-				PRIMARY_ID_KEY,
-				ByteBuffer.wrap(id.getBytes()));
-		if (secondaryId != null) {
-			insert.value(
-					SECONDARY_ID_KEY,
-					ByteBuffer.wrap(secondaryId.getBytes()));
-			insert.value(
-					TIMESTAMP_ID_KEY,
-					QueryBuilder.now());
-		}
-		insert.value(
-				VALUE_KEY,
-				ByteBuffer.wrap(PersistenceUtils.toBinary(object)));
-		operations.getSession().execute(
-				insert);
+	
 	}
 
 	protected CloseableIterator<T> getAllObjectsWithSecondaryId(

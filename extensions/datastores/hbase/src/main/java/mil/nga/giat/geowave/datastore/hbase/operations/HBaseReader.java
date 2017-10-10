@@ -38,8 +38,7 @@ import mil.nga.giat.geowave.mapreduce.splits.RecordReaderParams;
 public class HBaseReader implements
 		Reader
 {
-	private final static Logger LOGGER = Logger.getLogger(
-			HBaseReader.class);
+	private final static Logger LOGGER = Logger.getLogger(HBaseReader.class);
 
 	private final ReaderParams readerParams;
 	private final RecordReaderParams recordReaderParams;
@@ -67,8 +66,7 @@ public class HBaseReader implements
 		if (readerParams.isServersideAggregation()) {
 			this.scanner = null;
 			this.scanIt = null;
-			aggTotal = operations.aggregateServerSide(
-					readerParams);
+			aggTotal = operations.aggregateServerSide(readerParams);
 			aggReady = true;
 		}
 		else {
@@ -132,16 +130,13 @@ public class HBaseReader implements
 					new GeoWaveValueImpl(
 							null,
 							null,
-							PersistenceUtils.toBinary(
-									aggTotal))
+							PersistenceUtils.toBinary(aggTotal))
 				});
 	}
 
 	protected void initRecordScanner() {
 		final FilterList filterList = new FilterList();
 		final GeoWaveRowRange range = recordReaderParams.getRowRange();
-		final String tableName = StringUtils.stringFromBinary(
-				recordReaderParams.getIndex().getId().getBytes());
 
 		final Scan rscanner = createStandardScanner(
 				recordReaderParams);
@@ -150,7 +145,7 @@ public class HBaseReader implements
 		rscanner.setStopRow(
 				range.getEndSortKey());
 
-		if (operations.isServerSideLibraryEnabled()) {
+		if (operations.isCustomFiltersEnabled()) {
 			addSkipFilter(
 					recordReaderParams,
 					filterList);
@@ -198,7 +193,7 @@ public class HBaseReader implements
 		final Scan multiScanner = getMultiScanner(
 				filterList);
 
-		if (operations.isServerSideLibraryEnabled()) {
+		if (operations.isCustomFiltersEnabled()) {
 			addSkipFilter(
 					readerParams,
 					filterList);
@@ -219,8 +214,7 @@ public class HBaseReader implements
 		}
 
 		if (!filterList.getFilters().isEmpty()) {
-			multiScanner.setFilter(
-					filterList);
+			multiScanner.setFilter(filterList);
 		}
 
 		try {
@@ -315,19 +309,15 @@ public class HBaseReader implements
 
 		final List<ByteArrayRange> ranges = readerParams.getQueryRanges().getCompositeQueryRanges();
 
-		final MultiRowRangeFilter filter = operations.getMultiRowRangeFilter(
-				ranges);
+		final MultiRowRangeFilter filter = operations.getMultiRowRangeFilter(ranges);
 		if (filter != null) {
-			filterList.addFilter(
-					filter);
+			filterList.addFilter(filter);
 
 			final List<RowRange> rowRanges = filter.getRowRanges();
-			multiScanner.setStartRow(
-					rowRanges.get(
-							0).getStartRow());
+			multiScanner.setStartRow(rowRanges.get(
+					0).getStartRow());
 
-			final RowRange stopRowRange = rowRanges.get(
-					rowRanges.size() - 1);
+			final RowRange stopRowRange = rowRanges.get(rowRanges.size() - 1);
 			byte[] stopRowExclusive;
 			if (stopRowRange.isStopRowInclusive()) {
 				// because the end is always exclusive, to make an inclusive
@@ -344,8 +334,7 @@ public class HBaseReader implements
 			else {
 				stopRowExclusive = stopRowRange.getStopRow();
 			}
-			multiScanner.setStopRow(
-					stopRowExclusive);
+			multiScanner.setStopRow(stopRowExclusive);
 		}
 
 		return multiScanner;
@@ -356,26 +345,21 @@ public class HBaseReader implements
 		final Scan scanner = new Scan();
 
 		// Performance tuning per store options
-		scanner.setCaching(
-				operations.getScanCacheSize());
-		scanner.setCacheBlocks(
-				operations.isEnableBlockCache());
+		scanner.setCaching(operations.getScanCacheSize());
+		scanner.setCacheBlocks(operations.isEnableBlockCache());
 
 		// Only return the most recent version
-		scanner.setMaxVersions(
-				1);
+		scanner.setMaxVersions(1);
 
 		if ((readerParams.getAdapterIds() != null) && !readerParams.getAdapterIds().isEmpty()) {
 			for (final ByteArrayId adapterId : readerParams.getAdapterIds()) {
-				scanner.addFamily(
-						adapterId.getBytes());
+				scanner.addFamily(adapterId.getBytes());
 			}
 		}
 
 		if ((readerParams.getLimit() != null) && (readerParams.getLimit() > 0)
 				&& (readerParams.getLimit() < scanner.getBatch())) {
-			scanner.setBatch(
-					readerParams.getLimit());
+			scanner.setBatch(readerParams.getLimit());
 		}
 
 		return scanner;

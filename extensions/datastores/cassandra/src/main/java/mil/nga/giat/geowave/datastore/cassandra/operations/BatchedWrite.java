@@ -1,6 +1,7 @@
 package mil.nga.giat.geowave.datastore.cassandra.operations;
 
 import com.datastax.driver.core.BatchStatement;
+import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
@@ -8,7 +9,8 @@ import com.datastax.driver.core.Session;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 
-import mil.nga.giat.geowave.datastore.cassandra.CassandraRow;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
+import mil.nga.giat.geowave.datastore.cassandra.util.CassandraUtils;
 
 public class BatchedWrite extends
 		BatchHandler implements
@@ -35,23 +37,38 @@ public class BatchedWrite extends
 	}
 
 	public void insert(
-			final CassandraRow row ) {
+			final GeoWaveRow row ) {
+		final BoundStatement[] statements = CassandraUtils.bindInsertion(
+				preparedInsert,
+				row);
+		for (final BoundStatement statement : statements) {
+			insertStatement(
+					statement);
+		}
+	}
+
+	private void insertStatement(
+			final BoundStatement statement ) {
 		if (ASYNC) {
-			final BatchStatement currentBatch = addStatement(row.bindInsertion(preparedInsert));
+			final BatchStatement currentBatch = addStatement(
+					statement);
 			synchronized (currentBatch) {
 				if (currentBatch.size() >= batchSize) {
-					writeBatch(currentBatch);
+					writeBatch(
+							currentBatch);
 				}
 			}
 		}
 		else {
-			session.execute(row.bindInsertion(preparedInsert));
+			session.execute(
+					statement);
 		}
 	}
 
 	private void writeBatch(
 			final BatchStatement batch ) {
-		final ResultSetFuture future = session.executeAsync(batch);
+		final ResultSetFuture future = session.executeAsync(
+				batch);
 		Futures.addCallback(
 				future,
 				new IngestCallback(),
@@ -64,7 +81,8 @@ public class BatchedWrite extends
 			throws Exception {
 		for (final BatchStatement batch : batches.values()) {
 			synchronized (batch) {
-				writeBatch(batch);
+				writeBatch(
+						batch);
 			}
 		}
 		// TODO need to wait for all asynchronous batches to finish writing

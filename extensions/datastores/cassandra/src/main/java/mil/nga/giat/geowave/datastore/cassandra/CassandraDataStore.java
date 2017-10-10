@@ -23,8 +23,6 @@ import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DuplicateEntryCount;
 import mil.nga.giat.geowave.core.store.base.BaseDataStore;
-import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo;
-import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo.FieldInfo;
 import mil.nga.giat.geowave.core.store.callback.IngestCallback;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
 import mil.nga.giat.geowave.core.store.data.visibility.DifferingFieldVisibilityEntryCount;
@@ -342,48 +340,5 @@ public class CassandraDataStore extends
 			CassandraRow cassRow = (CassandraRow) geowaveRow;
 			((CassandraWriter) writer).write(cassRow);
 		}
-	}
-
-	@Override
-	public RecordReader<GeoWaveInputKey, ?> createRecordReader(
-			DistributableQuery query,
-			QueryOptions queryOptions,
-			AdapterStore adapterStore,
-			DataStatisticsStore statsStore,
-			IndexStore indexStore,
-			boolean isOutputWritable,
-			InputSplit inputSplit )
-			throws IOException,
-			InterruptedException {
-		return new GeoWaveCassandraRecordReader(
-				query,
-				queryOptions,
-				isOutputWritable,
-				adapterStore,
-				this,
-				operations);
-	}
-
-	@Override
-	public List<InputSplit> getSplits(
-			DistributableQuery query,
-			QueryOptions queryOptions,
-			AdapterStore adapterStore,
-			DataStatisticsStore statsStore,
-			IndexStore indexStore,
-			Integer minSplits,
-			Integer maxSplits )
-			throws IOException,
-			InterruptedException {
-		return splitsProvider.getSplits(
-				operations,
-				query,
-				queryOptions,
-				adapterStore,
-				statsStore,
-				indexStore,
-				indexMappingStore,
-				minSplits,
-				maxSplits);
 	}
 }

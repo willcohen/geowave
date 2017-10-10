@@ -12,9 +12,11 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.schemabuilder.Create;
 
 import mil.nga.giat.geowave.core.store.entities.GeoWaveKeyImpl;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveValue;
 
-public class CassandraRow extends
-		GeoWaveKeyImpl
+public class CassandraRow implements
+		GeoWaveRow
 {
 	private final static Logger LOGGER = Logger.getLogger(
 			CassandraRow.class);
@@ -54,14 +56,17 @@ public class CassandraRow extends
 		GW_ADAPTER_ID_KEY(
 				"adapter_id",
 				ColumnType.CLUSTER_COLUMN),
-		GW_IDX_KEY(
-				"idx",
+		GW_SORT_KEY(
+				"sort",
 				ColumnType.CLUSTER_COLUMN),
 		GW_DATA_ID_KEY(
 				"data_id",
 				ColumnType.CLUSTER_COLUMN),
 		GW_FIELD_MASK_KEY(
 				"field_mask",
+				ColumnType.OTHER_COLUMN),
+		GW_FIELD_VISIBILITY_KEY(
+				"vis",
 				ColumnType.OTHER_COLUMN),
 		GW_VALUE_KEY(
 				"value",
@@ -104,89 +109,44 @@ public class CassandraRow extends
 		}
 	}
 
-	private final byte[] partitionId;
-
-	public CassandraRow(
-			final byte[] partitionId,
-			final byte[] dataId,
-			final byte[] adapterId,
-			final byte[] idx,
-			final byte[] fieldMask,
-			final byte[] value,
-			final int numDuplicates ) {
-		super(
-				dataId,
-				adapterId,
-				idx,
-				fieldMask,
-				value,
-				numDuplicates);
-
-		this.partitionId = partitionId;
-	}
+	private byte[] partitionId;
 
 	public CassandraRow(
 			final Row row ) {
-		super(
-				row.getBytes(
-						CassandraField.GW_DATA_ID_KEY.getFieldName()).array(),
-				row.getBytes(
-						CassandraField.GW_ADAPTER_ID_KEY.getFieldName()).array(),
-				row.getBytes(
-						CassandraField.GW_IDX_KEY.getFieldName()).array(),
-				row.getBytes(
-						CassandraField.GW_FIELD_MASK_KEY.getFieldName()).array(),
-				row.getBytes(
-						CassandraField.GW_VALUE_KEY.getFieldName()).array(),
-				(int)(row.getBytes(
-						CassandraField.GW_NUM_DUPLICATES_KEY.getFieldName()).get(0)));
+		
 		
 		partitionId = row.getBytes(
 				CassandraField.GW_PARTITION_ID_KEY.getFieldName()).array();
 	}
 
-	public byte[] getPartitionId() {
-		return partitionId;
+
+	@Override
+	public byte[] getDataId() {
+		return null;
 	}
 
-	public BoundStatement bindInsertion(
-			final PreparedStatement insertionStatement ) {
-		final BoundStatement retVal = new BoundStatement(
-				insertionStatement);
-		retVal.set(
-				CassandraField.GW_PARTITION_ID_KEY.getBindMarkerName(),
-				ByteBuffer.wrap(
-						partitionId),
-				ByteBuffer.class);
-		retVal.set(
-				CassandraField.GW_IDX_KEY.getBindMarkerName(),
-				ByteBuffer.wrap(
-						index),
-				ByteBuffer.class);
-		retVal.set(
-				CassandraField.GW_DATA_ID_KEY.getBindMarkerName(),
-				ByteBuffer.wrap(
-						dataId),
-				ByteBuffer.class);
-		retVal.set(
-				CassandraField.GW_FIELD_MASK_KEY.getBindMarkerName(),
-				ByteBuffer.wrap(
-						fieldMask),
-				ByteBuffer.class);
-		retVal.set(
-				CassandraField.GW_ADAPTER_ID_KEY.getBindMarkerName(),
-				ByteBuffer.wrap(
-						adapterId),
-				ByteBuffer.class);
-		retVal.set(
-				CassandraField.GW_VALUE_KEY.getBindMarkerName(),
-				ByteBuffer.wrap(
-						value),
-				ByteBuffer.class);
-		retVal.set(
-				CassandraField.GW_NUM_DUPLICATES_KEY.getBindMarkerName(),
-				ByteBuffer.wrap(new byte[] { (byte)numberOfDuplicates }),
-				ByteBuffer.class);
-		return retVal;
+	@Override
+	public byte[] getAdapterId() {
+		return null;
+	}
+
+	@Override
+	public byte[] getSortKey() {
+		return null;
+	}
+
+	@Override
+	public byte[] getPartitionKey() {
+		return null;
+	}
+
+	@Override
+	public int getNumberOfDuplicates() {
+		return 0;
+	}
+
+	@Override
+	public GeoWaveValue[] getFieldValues() {
+		return new GeoWaveValue[0];
 	}
 }

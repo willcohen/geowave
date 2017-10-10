@@ -1,17 +1,14 @@
-package mil.nga.giat.geowave.datastore.cassandra;
-
-import java.io.IOException;
+package mil.nga.giat.geowave.datastore.cassandra.operations;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.operations.Writer;
-import mil.nga.giat.geowave.datastore.cassandra.operations.BatchedWrite;
-import mil.nga.giat.geowave.datastore.cassandra.operations.CassandraOperations;
 
-public class CassandraWriter implements
-		Writer<CassandraRow>
+public class CassandraWriter implements Writer
 {
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(CassandraWriter.class);
 	private final Object MUTEX = new Object();
 	private BatchedWrite batchedWrite = null;
@@ -27,21 +24,21 @@ public class CassandraWriter implements
 
 	@Override
 	public void close()
-			throws IOException {
+			throws Exception {
 		flush();
 	}
 
 	@Override
 	public void write(
-			final Iterable<CassandraRow> rows ) {
-		for (final CassandraRow row : rows) {
+			GeoWaveRow[] rows ) {
+		for (final GeoWaveRow row : rows) {
 			write(row);
-		}
+		}		
 	}
 
 	@Override
 	public void write(
-			final CassandraRow row ) {
+			GeoWaveRow row ) {
 		synchronized (MUTEX) {
 			if (batchedWrite == null) {
 				batchedWrite = operations.getBatchedWrite(tableName);
@@ -65,4 +62,5 @@ public class CassandraWriter implements
 			}
 		}
 	}
+
 }

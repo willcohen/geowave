@@ -49,6 +49,7 @@ public class HBaseStoreTestEnvironment extends
 
 	// TODO: Research the impact of vis setup on the other ITs
 	private static boolean enableVisibility = false;
+	private static boolean enableMergingObserver = true;
 
 	public static synchronized HBaseStoreTestEnvironment getInstance() {
 		if (singletonInstance == null) {
@@ -116,6 +117,12 @@ public class HBaseStoreTestEnvironment extends
 				conf.set(
 						"hbase.online.schema.update.enable",
 						"true");
+
+				if (enableMergingObserver) {
+					conf.set(
+							"hbase.coprocessor.region.classes",
+							"mil.nga.giat.geowave.datastore.hbase.coprocessors.MergingRegionObserver");
+				}
 
 				if (enableVisibility) {
 					conf.set(

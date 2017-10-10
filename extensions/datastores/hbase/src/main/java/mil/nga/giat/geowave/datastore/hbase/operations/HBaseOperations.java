@@ -778,9 +778,9 @@ public class HBaseOperations implements
 								tableName,
 								partition.getBytes());
 						
-//						waitForUpdate(
-//								admin,
-//								tableName);
+						waitForUpdate(
+								admin,
+								tableName);
 					}
 
 					LOGGER.warn(

@@ -29,6 +29,7 @@ public class HBaseWriter implements
 	private final BufferedMutator mutator;
 	private final HBaseOperations operations;
 	private final String tableName;
+	private static final boolean PARTITION_CHECK = false;
 
 	public HBaseWriter(
 			final BufferedMutator mutator,
@@ -75,13 +76,16 @@ public class HBaseWriter implements
 	@Override
 	public void write(
 			final GeoWaveRow row ) {
-		final byte[] partition = row.getPartitionKey();
-		if ((partition != null) && (partition.length > 0)) {
-			operations.insurePartition(
-					new ByteArrayId(partition),
-					tableName);
+		if (PARTITION_CHECK) {
+			final byte[] partition = row.getPartitionKey();
+			if ((partition != null) && (partition.length > 0)) {
+				operations.insurePartition(
+						new ByteArrayId(
+								partition),
+						tableName);
+			}
 		}
-
+		
 		String columnFamily = StringUtils.stringFromBinary(
 				row.getAdapterId());
 
@@ -94,7 +98,7 @@ public class HBaseWriter implements
 						row));
 	}
 
-	public void writeMutations(
+	private void writeMutations(
 			final RowMutations rowMutation ) {
 		try {
 			mutator.mutate(
@@ -107,7 +111,7 @@ public class HBaseWriter implements
 		}
 	}
 
-	public static RowMutations rowToMutation(
+	private static RowMutations rowToMutation(
 			final GeoWaveRow row ) {
 		final byte[] rowBytes = GeoWaveKey.getCompositeId(
 				row);

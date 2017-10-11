@@ -3,35 +3,37 @@ package mil.nga.giat.geowave.datastore.hbase.coprocessors;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.NavigableMap;
 
 import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.CellScanner;
+import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Durability;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Mutation;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.coprocessor.BaseRegionObserver;
 import org.apache.hadoop.hbase.coprocessor.ObserverContext;
 import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
-import org.apache.hadoop.hbase.filter.ByteArrayComparable;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
-import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
 import org.apache.hadoop.hbase.regionserver.InternalScanner;
 import org.apache.hadoop.hbase.regionserver.MiniBatchOperationInProgress;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.hadoop.hbase.regionserver.ScanType;
 import org.apache.hadoop.hbase.regionserver.Store;
 import org.apache.hadoop.hbase.regionserver.compactions.CompactionRequest;
-import org.apache.hadoop.hbase.regionserver.wal.WALEdit;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.index.Mergeable;
+import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.datastore.hbase.filters.HBaseMergingFilter;
 
@@ -41,6 +43,9 @@ public class MergingRegionObserver extends
 	private final static Logger LOGGER = Logger.getLogger(
 			MergingRegionObserver.class);
 
+	public final static String COLUMN_FAMILIES_CONFIG_KEY = "hbase.coprocessor.merging.columnfamilies";
+	public final static String COLUMN_FAMILIES_CONFIG_DEFAULT = "RasterDataAdapter";
+
 	// TEST ONLY!
 	static {
 		LOGGER.setLevel(
@@ -48,24 +53,123 @@ public class MergingRegionObserver extends
 	}
 
 	private HashMap<RegionScanner, HBaseMergingFilter> filterMap = new HashMap<RegionScanner, HBaseMergingFilter>();
+	private static HashSet<ByteArrayId> mergingColumnFamilies = null;
 
 	@Override
 	public void preBatchMutate(
 			final ObserverContext<RegionCoprocessorEnvironment> c,
 			final MiniBatchOperationInProgress<Mutation> miniBatchOp )
 			throws IOException {
-		TableName tableName = c.getEnvironment().getRegionInfo().getTable();
+		RegionCoprocessorEnvironment env = c.getEnvironment();
+		TableName tableName = env.getRegionInfo().getTable();
 
 		if (!tableName.isSystemTable()) {
+			// TEST ONLY!
+			if (!tableName.getNameAsString().equals(
+					"mil_nga_giat_geowave_test_SPATIAL_IDX")) {
+				return;
+			}
+
 			LOGGER.debug(
-					">>> preBatchMutate for table: " + tableName.getNameAsString() +
-					"; batch size = " +	miniBatchOp.size());
+					">>> preBatchMutate for table: " + tableName.getNameAsString() + "; batch size = "
+							+ miniBatchOp.size());
+
+			// Retrieve config for mergeables
+			if (mergingColumnFamilies == null) {
+				mergingColumnFamilies = new HashSet<>();
+
+				String mcfConfig = env.getConfiguration().get(
+						COLUMN_FAMILIES_CONFIG_KEY,
+						COLUMN_FAMILIES_CONFIG_DEFAULT);
+
+				String[] columnFamiliesList = mcfConfig.split(
+						",");
+				for (String columnFamily : columnFamiliesList) {
+					mergingColumnFamilies.add(
+							new ByteArrayId(
+									StringUtils.stringToBinary(
+											columnFamily)));
+					LOGGER.debug(
+							"Got CF: " + columnFamily + " from config");
+				}
+			}
+
 			for (int i = 0; i < miniBatchOp.size(); i++) {
-				Mutation mutation = miniBatchOp.getOperation(i);
+				Mutation mutation = miniBatchOp.getOperation(
+						i);
 				if (mutation instanceof Put) {
-					Put put = (Put)mutation;
-					// TODO: Retrieve existing row if possible;
-					// merge values and put.
+					Put put = (Put) mutation;
+
+					// Get column family(ies) from put and check against merge
+					// list
+					NavigableMap<byte[], List<Cell>> familyMap = put.getFamilyCellMap();
+					for (Entry<byte[], List<Cell>> entry : familyMap.entrySet()) {
+						Mergeable mergedValue = null;
+
+						for (Cell cell : entry.getValue()) {
+							ByteArrayId family = new ByteArrayId(
+									CellUtil.cloneFamily(
+											cell));
+							LOGGER.debug(
+									"Put has CF: " + family.getString());
+							if (mergingColumnFamilies.contains(
+									family)) {
+
+								Mergeable value = (Mergeable) PersistenceUtils.fromBinary(
+										CellUtil.cloneValue(
+												cell),
+										Mergeable.class);
+								if (value != null) {
+									if (mergedValue == null) {
+										mergedValue = value;
+									}
+									else {
+										mergedValue.merge(
+												value);
+									}
+								}
+								else {
+									LOGGER.debug(
+											"Cell value is not Mergeable!");
+								}
+							}
+						}
+
+						// Retrieve existing row if possible
+						if (mergedValue != null) {
+							LOGGER.debug(
+									">>> Getting existing row for merge...");
+							Table mergeTable = env.getTable(
+									tableName);
+
+							Get get = new Get(
+									put.getRow());
+							Result result = mergeTable.get(
+									get);
+
+							if (result != null && !result.isEmpty()) {
+								// merge values
+								LOGGER.debug(
+										">>> MERGING! " + result.toString());
+
+								for (Cell cell : result.listCells()) {
+									Mergeable value = (Mergeable) PersistenceUtils.fromBinary(
+											CellUtil.cloneValue(
+													cell),
+											Mergeable.class);
+
+									mergedValue.merge(
+											value);
+								}
+
+								// TODO: update the Put w/ merged value,
+								// or do a new put and cancel this one?
+								LOGGER.debug(
+										">>> MERGED");
+							}
+						}
+					}
+
 				}
 			}
 		}

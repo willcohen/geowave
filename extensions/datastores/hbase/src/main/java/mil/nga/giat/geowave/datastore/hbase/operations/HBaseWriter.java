@@ -90,7 +90,7 @@ public class HBaseWriter implements
 		writeMutations(rowToMutation(row));
 	}
 
-	public void writeMutations(
+	private void writeMutations(
 			final RowMutations rowMutation ) {
 		try {
 			mutator.mutate(rowMutation.getMutations());
@@ -102,7 +102,7 @@ public class HBaseWriter implements
 		}
 	}
 
-	public static RowMutations rowToMutation(
+	private static RowMutations rowToMutation(
 			final GeoWaveRow row ) {
 		final byte[] rowBytes = GeoWaveKey.getCompositeId(row);
 		final RowMutations mutation = new RowMutations(

@@ -37,6 +37,7 @@ import mil.nga.giat.geowave.core.store.GenericStoreFactory;
 import mil.nga.giat.geowave.core.store.StoreFactoryOptions;
 import mil.nga.giat.geowave.datastore.hbase.HBaseStoreFactoryFamily;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseRequiredOptions;
+import mil.nga.giat.geowave.datastore.hbase.coprocessors.MergingRegionObserver;
 import mil.nga.giat.geowave.datastore.hbase.util.ConnectionPool;
 import mil.nga.giat.geowave.test.annotation.GeoWaveTestStore.GeoWaveStoreType;
 
@@ -49,6 +50,7 @@ public class HBaseStoreTestEnvironment extends
 
 	// TODO: Research the impact of vis setup on the other ITs
 	private static boolean enableVisibility = false;
+	private static boolean enableMergingObserver = true;
 
 	public static synchronized HBaseStoreTestEnvironment getInstance() {
 		if (singletonInstance == null) {
@@ -116,6 +118,15 @@ public class HBaseStoreTestEnvironment extends
 				conf.set(
 						"hbase.online.schema.update.enable",
 						"true");
+
+				if (enableMergingObserver) {
+					conf.set(
+							"hbase.coprocessor.region.classes",
+							"mil.nga.giat.geowave.datastore.hbase.coprocessors.MergingRegionObserver");
+					conf.set(
+							MergingRegionObserver.COLUMN_FAMILIES_CONFIG_KEY,
+							"testNoDataMergeStrategy, testMultipleMergeStrategies_NoDataMergeStrategy");
+				}
 
 				if (enableVisibility) {
 					conf.set(

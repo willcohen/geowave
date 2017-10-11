@@ -51,8 +51,7 @@ import mil.nga.giat.geowave.test.annotation.GeoWaveTestStore.GeoWaveStoreType;
 public class GeoWaveBasicSpatialTemporalVectorIT extends
 		AbstractGeoWaveBasicVectorIT
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			GeoWaveBasicSpatialTemporalVectorIT.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(GeoWaveBasicSpatialTemporalVectorIT.class);
 
 	private static final String HAIL_EXPECTED_BOX_TEMPORAL_FILTER_RESULTS_FILE = HAIL_TEST_CASE_PACKAGE
 			+ "hail-box-temporal-filter.shp";
@@ -87,33 +86,22 @@ public class GeoWaveBasicSpatialTemporalVectorIT extends
 	@BeforeClass
 	public static void reportTestStart() {
 		startMillis = System.currentTimeMillis();
-		LOGGER.warn(
-				"-----------------------------------------------");
-		LOGGER.warn(
-				"*                                             *");
-		LOGGER.warn(
-				"* RUNNING GeoWaveBasicSpatialTemporalVectorIT *");
-		LOGGER.warn(
-				"*                                             *");
-		LOGGER.warn(
-				"-----------------------------------------------");
+		LOGGER.warn("-----------------------------------------------");
+		LOGGER.warn("*                                             *");
+		LOGGER.warn("* RUNNING GeoWaveBasicSpatialTemporalVectorIT *");
+		LOGGER.warn("*                                             *");
+		LOGGER.warn("-----------------------------------------------");
 	}
 
 	@AfterClass
 	public static void reportTestFinish() {
-		LOGGER.warn(
-				"------------------------------------------------");
-		LOGGER.warn(
-				"*                                              *");
-		LOGGER.warn(
-				"* FINISHED GeoWaveBasicSpatialTemporalVectorIT *");
-		LOGGER.warn(
-				"*                " + ((System.currentTimeMillis() - startMillis) / 1000)
-						+ "s elapsed.                  *");
-		LOGGER.warn(
-				"*                                              *");
-		LOGGER.warn(
-				"------------------------------------------------");
+		LOGGER.warn("------------------------------------------------");
+		LOGGER.warn("*                                              *");
+		LOGGER.warn("* FINISHED GeoWaveBasicSpatialTemporalVectorIT *");
+		LOGGER.warn("*                " + ((System.currentTimeMillis() - startMillis) / 1000)
+				+ "s elapsed.                  *");
+		LOGGER.warn("*                                              *");
+		LOGGER.warn("------------------------------------------------");
 	}
 
 	@Test
@@ -158,11 +146,9 @@ public class GeoWaveBasicSpatialTemporalVectorIT extends
 		}
 		catch (final Exception e) {
 			e.printStackTrace();
-			TestUtils.deleteAll(
-					dataStore);
-			Assert.fail(
-					"Error occurred while testing a bounding box and time range query of spatial temporal index: '"
-							+ e.getLocalizedMessage() + "'");
+			TestUtils.deleteAll(dataStore);
+			Assert.fail("Error occurred while testing a bounding box and time range query of spatial temporal index: '"
+					+ e.getLocalizedMessage() + "'");
 		}
 
 		try {
@@ -190,11 +176,9 @@ public class GeoWaveBasicSpatialTemporalVectorIT extends
 		}
 		catch (final Exception e) {
 			e.printStackTrace();
-			TestUtils.deleteAll(
-					dataStore);
-			Assert.fail(
-					"Error occurred while testing a polygon and time range query of spatial temporal index: '"
-							+ e.getLocalizedMessage() + "'");
+			TestUtils.deleteAll(dataStore);
+			Assert.fail("Error occurred while testing a polygon and time range query of spatial temporal index: '"
+					+ e.getLocalizedMessage() + "'");
 		}
 
 		try {
@@ -221,25 +205,20 @@ public class GeoWaveBasicSpatialTemporalVectorIT extends
 		}
 		catch (final Exception e) {
 			e.printStackTrace();
-			TestUtils.deleteAll(
-					dataStore);
-			Assert.fail(
-					"Error occurred while testing a bounding box stats on spatial temporal index: '"
-							+ e.getLocalizedMessage() + "'");
+			TestUtils.deleteAll(dataStore);
+			Assert.fail("Error occurred while testing a bounding box stats on spatial temporal index: '"
+					+ e.getLocalizedMessage() + "'");
 		}
 
 		try {
-			testSpatialTemporalLocalExportAndReingestWithCQL(
-					new File(
-							TEST_BOX_TEMPORAL_FILTER_FILE).toURI().toURL());
+			testSpatialTemporalLocalExportAndReingestWithCQL(new File(
+					TEST_BOX_TEMPORAL_FILTER_FILE).toURI().toURL());
 		}
 		catch (final Exception e) {
 			e.printStackTrace();
-			TestUtils.deleteAll(
-					dataStore);
-			Assert.fail(
-					"Error occurred while testing deletion of an entry using spatial index: '" + e.getLocalizedMessage()
-							+ "'");
+			TestUtils.deleteAll(dataStore);
+			Assert.fail("Error occurred while testing deletion of an entry using spatial index: '"
+					+ e.getLocalizedMessage() + "'");
 		}
 
 		try {
@@ -250,15 +229,12 @@ public class GeoWaveBasicSpatialTemporalVectorIT extends
 		}
 		catch (final Exception e) {
 			e.printStackTrace();
-			TestUtils.deleteAll(
-					dataStore);
-			Assert.fail(
-					"Error occurred while testing deletion of an entry using spatial temporal index: '"
-							+ e.getLocalizedMessage() + "'");
+			TestUtils.deleteAll(dataStore);
+			Assert.fail("Error occurred while testing deletion of an entry using spatial temporal index: '"
+					+ e.getLocalizedMessage() + "'");
 		}
 
-		TestUtils.deleteAll(
-				dataStore);
+		TestUtils.deleteAll(dataStore);
 	}
 
 	private void testSpatialTemporalLocalExportAndReingestWithCQL(
@@ -266,14 +242,11 @@ public class GeoWaveBasicSpatialTemporalVectorIT extends
 			throws CQLException,
 			IOException {
 
-		final SimpleFeature savedFilter = TestUtils.resourceToFeature(
-				filterURL);
+		final SimpleFeature savedFilter = TestUtils.resourceToFeature(filterURL);
 
 		final Geometry filterGeometry = (Geometry) savedFilter.getDefaultGeometry();
-		final Object startObj = savedFilter.getAttribute(
-				TestUtils.TEST_FILTER_START_TIME_ATTRIBUTE_NAME);
-		final Object endObj = savedFilter.getAttribute(
-				TestUtils.TEST_FILTER_END_TIME_ATTRIBUTE_NAME);
+		final Object startObj = savedFilter.getAttribute(TestUtils.TEST_FILTER_START_TIME_ATTRIBUTE_NAME);
+		final Object endObj = savedFilter.getAttribute(TestUtils.TEST_FILTER_END_TIME_ATTRIBUTE_NAME);
 		Date startDate = null, endDate = null;
 		if ((startObj != null) && (endObj != null)) {
 			// if we can resolve start and end times, make it a spatial temporal
@@ -300,10 +273,8 @@ public class GeoWaveBasicSpatialTemporalVectorIT extends
 		exportDir.delete();
 		exportDir.mkdirs();
 
-		exportCommand.setInputStoreOptions(
-				dataStore);
-		options.setBatchSize(
-				10000);
+		exportCommand.setInputStoreOptions(dataStore);
+		options.setBatchSize(10000);
 		final Envelope env = filterGeometry.getEnvelopeInternal();
 		final double east = env.getMaxX();
 		final double west = env.getMinX();
@@ -313,10 +284,8 @@ public class GeoWaveBasicSpatialTemporalVectorIT extends
 			while (adapterIt.hasNext()) {
 				final DataAdapter<?> adapter = adapterIt.next();
 				final List<String> adapterIds = new ArrayList<String>();
-				adapterIds.add(
-						adapter.getAdapterId().getString());
-				options.setAdapterIds(
-						adapterIds);
+				adapterIds.add(adapter.getAdapterId().getString());
+				options.setAdapterIds(adapterIds);
 				if (adapter instanceof GeotoolsFeatureDataAdapter) {
 					final GeotoolsFeatureDataAdapter gtAdapter = (GeotoolsFeatureDataAdapter) adapter;
 					final TimeDescriptors timeDesc = gtAdapter.getTimeDescriptors();
@@ -345,26 +314,19 @@ public class GeoWaveBasicSpatialTemporalVectorIT extends
 							east,
 							north,
 							startTimeAttribute,
-							CQL_DATE_FORMAT.format(
-									endDate),
+							CQL_DATE_FORMAT.format(endDate),
 							endTimeAttribute,
-							CQL_DATE_FORMAT.format(
-									startDate));
-					options.setOutputFile(
-							new File(
-									exportDir,
-									adapter.getAdapterId().getString() + TEST_BASE_EXPORT_FILE_NAME));
-					options.setCqlFilter(
-							cqlPredicate);
-					exportCommand.setParameters(
-							null);
-					exportCommand.execute(
-							new ManualOperationParams());
+							CQL_DATE_FORMAT.format(startDate));
+					options.setOutputFile(new File(
+							exportDir,
+							adapter.getAdapterId().getString() + TEST_BASE_EXPORT_FILE_NAME));
+					options.setCqlFilter(cqlPredicate);
+					exportCommand.setParameters(null);
+					exportCommand.execute(new ManualOperationParams());
 				}
 			}
 		}
-		TestUtils.deleteAll(
-				dataStore);
+		TestUtils.deleteAll(dataStore);
 		TestUtils.testLocalIngest(
 				dataStore,
 				DimensionalityType.SPATIAL_TEMPORAL,
@@ -396,10 +358,9 @@ public class GeoWaveBasicSpatialTemporalVectorIT extends
 		}
 		catch (final Exception e) {
 			e.printStackTrace();
-			TestUtils.deleteAll(
-					dataStore);
-			Assert.fail(
-					"Error occurred on reingested dataset while testing a bounding box and time range query of spatial temporal index: '"
+			TestUtils.deleteAll(dataStore);
+			Assert
+					.fail("Error occurred on reingested dataset while testing a bounding box and time range query of spatial temporal index: '"
 							+ e.getLocalizedMessage() + "'");
 		}
 	}

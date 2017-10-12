@@ -31,8 +31,7 @@ public class SharedDataEndpoint extends
 		Coprocessor,
 		CoprocessorService
 {
-	private static final Logger LOGGER = LoggerFactory.getLogger(
-			SharedDataEndpoint.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(SharedDataEndpoint.class);
 
 	private RegionCoprocessorEnvironment env;
 
@@ -85,7 +84,6 @@ public class SharedDataEndpoint extends
 		response = SharedDataProtos.SharedDataResponse.newBuilder().setValue(
 				value).build();
 
-		done.run(
-				response);
+		done.run(response);
 	}
 }

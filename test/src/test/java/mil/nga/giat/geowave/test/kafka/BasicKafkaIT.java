@@ -59,8 +59,7 @@ import mil.nga.giat.geowave.test.basic.AbstractGeoWaveIT;
 public class BasicKafkaIT extends
 		AbstractGeoWaveIT
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			BasicKafkaIT.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(BasicKafkaIT.class);
 	private static final Map<ByteArrayId, Integer> EXPECTED_COUNT_PER_ADAPTER_ID = new HashMap<ByteArrayId, Integer>();
 
 	static {
@@ -85,7 +84,6 @@ public class BasicKafkaIT extends
 	}, options = {
 		"enableServerSideLibrary=true"
 	})
-
 	protected DataStorePluginOptions dataStorePluginOptions;
 
 	protected DataStorePluginOptions getDataStorePluginOptions() {
@@ -104,40 +102,30 @@ public class BasicKafkaIT extends
 				TestUtils.TEST_CASE_BASE);
 
 		startMillis = System.currentTimeMillis();
-		LOGGER.warn(
-				"-----------------------------------------");
-		LOGGER.warn(
-				"*                                       *");
-		LOGGER.warn(
-				"*         RUNNING BasicKafkaIT          *");
-		LOGGER.warn(
-				"*                                       *");
-		LOGGER.warn(
-				"-----------------------------------------");
+		LOGGER.warn("-----------------------------------------");
+		LOGGER.warn("*                                       *");
+		LOGGER.warn("*         RUNNING BasicKafkaIT          *");
+		LOGGER.warn("*                                       *");
+		LOGGER.warn("-----------------------------------------");
 	}
 
 	@AfterClass
 	public static void reportTest() {
-		LOGGER.warn(
-				"-----------------------------------------");
-		LOGGER.warn(
-				"*                                       *");
-		LOGGER.warn(
-				"*      FINISHED BasicKafkaIT            *");
-		LOGGER.warn(
-				"*         " + ((System.currentTimeMillis() - startMillis) / 1000) + "s elapsed.                 *");
-		LOGGER.warn(
-				"*                                       *");
-		LOGGER.warn(
-				"-----------------------------------------");
+		LOGGER.warn("-----------------------------------------");
+		LOGGER.warn("*                                       *");
+		LOGGER.warn("*      FINISHED BasicKafkaIT            *");
+		LOGGER
+				.warn("*         " + ((System.currentTimeMillis() - startMillis) / 1000)
+						+ "s elapsed.                 *");
+		LOGGER.warn("*                                       *");
+		LOGGER.warn("-----------------------------------------");
 	}
 
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testBasicIngestGpx()
 			throws Exception {
-		KafkaTestUtils.testKafkaStage(
-				OSM_GPX_INPUT_DIR);
+		KafkaTestUtils.testKafkaStage(OSM_GPX_INPUT_DIR);
 		KafkaTestUtils.testKafkaIngest(
 				dataStorePluginOptions,
 				false,
@@ -166,8 +154,10 @@ public class BasicKafkaIT extends
 				final BoundingBoxDataStatistics<?> bboxStat = (BoundingBoxDataStatistics<SimpleFeature>) statsStore
 						.getDataStatistics(
 								adapter.getAdapterId(),
-								FeatureBoundingBoxStatistics.composeId(
-										adapter.getFeatureType().getGeometryDescriptor().getLocalName()));
+								FeatureBoundingBoxStatistics.composeId(adapter
+										.getFeatureType()
+										.getGeometryDescriptor()
+										.getLocalName()));
 				final CountDataStatistics<?> countStat = (CountDataStatistics<SimpleFeature>) statsStore
 						.getDataStatistics(
 								adapter.getAdapterId(),
@@ -179,8 +169,7 @@ public class BasicKafkaIT extends
 						bboxStat.getMaxX(),
 						bboxStat.getMinY(),
 						bboxStat.getMaxY());
-				final Geometry spatialFilter = factory.toGeometry(
-						env);
+				final Geometry spatialFilter = factory.toGeometry(env);
 				final Query query = new SpatialQuery(
 						spatialFilter);
 				final int resultCount = testQuery(
@@ -199,8 +188,7 @@ public class BasicKafkaIT extends
 				assertEquals(
 						"'" + adapter.getAdapterId().getString()
 								+ "' adapter entries ingested does not match expected count",
-						EXPECTED_COUNT_PER_ADAPTER_ID.get(
-								adapter.getAdapterId()),
+						EXPECTED_COUNT_PER_ADAPTER_ID.get(adapter.getAdapterId()),
 						new Integer(
 								resultCount));
 				adapterCount++;

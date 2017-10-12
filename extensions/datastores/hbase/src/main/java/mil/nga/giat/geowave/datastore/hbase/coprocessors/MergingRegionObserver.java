@@ -209,7 +209,7 @@ public class MergingRegionObserver extends
 			return new MergingInternalScanner(
 					scanner);
 		}
-		
+
 		return scanner;
 	}
 
@@ -241,7 +241,7 @@ public class MergingRegionObserver extends
 					scanner);
 
 		}
-		
+
 		return scanner;
 	}
 

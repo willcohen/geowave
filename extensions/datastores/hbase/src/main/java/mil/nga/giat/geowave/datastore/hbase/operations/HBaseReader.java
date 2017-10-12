@@ -67,7 +67,7 @@ public class HBaseReader implements
 			this.scanner = null;
 			this.scanIt = null;
 			aggTotal = operations.aggregateServerSide(readerParams);
-			aggReady = true;
+			aggReady = aggTotal != null;
 		}
 		else {
 			initScanner();

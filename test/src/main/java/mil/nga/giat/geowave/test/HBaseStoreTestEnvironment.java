@@ -15,6 +15,7 @@ import java.security.PrivilegedExceptionAction;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.coprocessor.CoprocessorHost;
 import org.apache.hadoop.hbase.protobuf.generated.VisibilityLabelsProtos.VisibilityLabelsResponse;
 import org.apache.hadoop.hbase.security.User;
 import org.apache.hadoop.hbase.security.visibility.ScanLabelGenerator;
@@ -50,7 +51,7 @@ public class HBaseStoreTestEnvironment extends
 
 	// TODO: Research the impact of vis setup on the other ITs
 	private static boolean enableVisibility = false;
-	private static boolean enableMergingObserver = true;
+	private static boolean enableCoprocessors = true;
 
 	public static synchronized HBaseStoreTestEnvironment getInstance() {
 		if (singletonInstance == null) {
@@ -126,13 +127,23 @@ public class HBaseStoreTestEnvironment extends
 						"hbase.online.schema.update.enable",
 						"true");
 
-				if (enableMergingObserver) {
-					conf.set(
-							"hbase.coprocessor.region.classes",
-							"mil.nga.giat.geowave.datastore.hbase.coprocessors.MergingRegionObserver");
-					conf.set(
+				if (enableCoprocessors) {
+					conf.setStrings(
+							CoprocessorHost.REGION_COPROCESSOR_CONF_KEY,
+							MergingRegionObserver.class.getName());
+					// conf.setStrings(
+					// CoprocessorHost.MASTER_COPROCESSOR_CONF_KEY,
+					// SharedDataEndpoint.class.getName());
+
+					String[] testCfs = {
+						"testNoDataMergeStrategy",
+						"testMultipleMergeStrategies_NoDataMergeStrategy",
+						"testMultipleMergeStrategies_SummingMergeStrategy",
+						"testMultipleMergeStrategies_SumAndAveragingMergeStrategy"
+					};
+					conf.setStrings(
 							MergingRegionObserver.COLUMN_FAMILIES_CONFIG_KEY,
-							"testNoDataMergeStrategy, testMultipleMergeStrategies_NoDataMergeStrategy");
+							testCfs);
 				}
 
 				if (enableVisibility) {

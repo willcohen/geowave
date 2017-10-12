@@ -12,7 +12,6 @@ package mil.nga.giat.geowave.datastore.hbase.operations;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -43,12 +42,14 @@ import org.apache.hadoop.hbase.client.coprocessor.Batch;
 import org.apache.hadoop.hbase.filter.MultiRowRangeFilter;
 import org.apache.hadoop.hbase.filter.MultiRowRangeFilter.RowRange;
 import org.apache.hadoop.hbase.ipc.BlockingRpcCallback;
+import org.apache.hadoop.hbase.ipc.CoprocessorRpcChannel;
 import org.apache.hadoop.hbase.security.visibility.Authorizations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterators;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.ServiceException;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
@@ -84,7 +85,10 @@ import mil.nga.giat.geowave.datastore.hbase.HBaseRow;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseOptions;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseRequiredOptions;
 import mil.nga.giat.geowave.datastore.hbase.coprocessors.AggregationEndpoint;
+import mil.nga.giat.geowave.datastore.hbase.coprocessors.MergingRegionObserver;
+import mil.nga.giat.geowave.datastore.hbase.coprocessors.SharedDataEndpoint;
 import mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.AggregationProtos;
+import mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos;
 import mil.nga.giat.geowave.datastore.hbase.filters.HBaseNumericIndexStrategyFilter;
 import mil.nga.giat.geowave.datastore.hbase.util.ConnectionPool;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils;
@@ -777,7 +781,7 @@ public class HBaseOperations implements
 						admin.split(
 								tableName,
 								partition.getBytes());
-						
+
 						waitForUpdate(
 								admin,
 								tableName);
@@ -972,6 +976,108 @@ public class HBaseOperations implements
 					e);
 		}
 		return null;
+	}
+
+	public void addMergingAdapterToConfig(
+			ByteArrayId adapterId ) {
+		try  {
+			String[] mergingAdapters = conn.getConfiguration().getStrings(
+					MergingRegionObserver.COLUMN_FAMILIES_CONFIG_KEY);
+
+			int length = 1;
+			if (mergingAdapters != null) {
+				length += mergingAdapters.length;
+			}
+
+			String[] newMergingAdapters = new String[length];
+
+			if (mergingAdapters != null) {
+				for (int i = 0; i < mergingAdapters.length; i++) {
+					newMergingAdapters[i] = mergingAdapters[i];
+				}
+			}
+
+			newMergingAdapters[length - 1] = adapterId.getString();
+
+			conn.getConfiguration().setStrings(
+					MergingRegionObserver.COLUMN_FAMILIES_CONFIG_KEY,
+					newMergingAdapters);
+			
+			Admin admin = conn.getAdmin();
+			admin.updateConfiguration();
+			admin.close();
+		}
+		catch (IOException e) {
+			LOGGER.error(
+					"Error updating RegionServer config!",
+					e);
+		}
+	}
+
+	public void addMergingAdapterToConfig(
+			ByteArrayId indexId,
+			ByteArrayId adapterId ) {
+		try (Admin admin = conn.getAdmin()) {
+			final SharedDataProtos.SharedDataRequest.Builder requestBuilder = SharedDataProtos.SharedDataRequest
+					.newBuilder();
+			requestBuilder.setKey(
+					MergingRegionObserver.COLUMN_FAMILIES_CONFIG_KEY);
+
+			String[] mergingAdapters = admin.getConfiguration().getStrings(
+					MergingRegionObserver.COLUMN_FAMILIES_CONFIG_KEY);
+
+			int length = 1;
+			if (mergingAdapters != null) {
+				length += mergingAdapters.length;
+			}
+
+			String[] newMergingAdapters = new String[length];
+
+			if (mergingAdapters != null) {
+				for (int i = 0; i < mergingAdapters.length; i++) {
+					newMergingAdapters[i] = mergingAdapters[i];
+				}
+			}
+
+			newMergingAdapters[length - 1] = adapterId.getString();
+
+			admin.getConfiguration().setStrings(
+					MergingRegionObserver.COLUMN_FAMILIES_CONFIG_KEY,
+					newMergingAdapters);
+
+			requestBuilder.setValue(
+					admin.getConfiguration().get(
+							MergingRegionObserver.COLUMN_FAMILIES_CONFIG_KEY));
+
+			final SharedDataProtos.SharedDataRequest request = requestBuilder.build();
+
+			SharedDataProtos.SharedDataService.BlockingInterface service = SharedDataProtos.SharedDataService
+					.newBlockingStub(
+							admin.coprocessorService());
+
+			final SharedDataProtos.SharedDataResponse response = service.share(
+					null,
+					request);
+
+			LOGGER.debug(
+					response.getValue());
+
+		}
+		catch (IOException e) {
+			LOGGER.error(
+					"Error updating RegionServer config!",
+					e);
+		}
+		catch (ServiceException e) {
+			LOGGER.error(
+					"Error updating RegionServer config!",
+					e);
+		}
+		catch (Throwable e) {
+			LOGGER.error(
+					"Error updating RegionServer config!",
+					e);
+		}
 	}
 
 	public Mergeable aggregateServerSide(

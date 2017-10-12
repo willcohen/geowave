@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.TableName;
@@ -44,7 +45,6 @@ public class MergingRegionObserver extends
 			MergingRegionObserver.class);
 
 	public final static String COLUMN_FAMILIES_CONFIG_KEY = "hbase.coprocessor.merging.columnfamilies";
-	public final static String COLUMN_FAMILIES_CONFIG_DEFAULT = "RasterDataAdapter";
 
 	// TEST ONLY!
 	static {
@@ -55,8 +55,33 @@ public class MergingRegionObserver extends
 	private HashMap<RegionScanner, HBaseMergingFilter> filterMap = new HashMap<RegionScanner, HBaseMergingFilter>();
 	private static HashSet<ByteArrayId> mergingColumnFamilies = null;
 
-	@Override
-	public void preBatchMutate(
+	private void updateMergingColumnFamilies(
+			Configuration config ) {
+		if (mergingColumnFamilies == null) {
+			mergingColumnFamilies = new HashSet<>();
+		}
+
+		String[] columnFamiliesList = config.getStrings(
+				COLUMN_FAMILIES_CONFIG_KEY);
+
+		if (columnFamiliesList != null && columnFamiliesList.length != mergingColumnFamilies.size()) {
+			LOGGER.debug(
+					">>> UPDATING CF CONFIG");
+
+			mergingColumnFamilies.clear();
+
+			for (String columnFamily : columnFamiliesList) {
+				mergingColumnFamilies.add(
+						new ByteArrayId(
+								columnFamily));
+
+				LOGGER.debug(
+						"Got CF: " + columnFamily + " from config");
+			}
+		}
+	}
+
+	public void preBatchMutateExperiment(
 			final ObserverContext<RegionCoprocessorEnvironment> c,
 			final MiniBatchOperationInProgress<Mutation> miniBatchOp )
 			throws IOException {
@@ -70,29 +95,12 @@ public class MergingRegionObserver extends
 				return;
 			}
 
+			updateMergingColumnFamilies(
+					env.getConfiguration());
+
 			LOGGER.debug(
 					">>> preBatchMutate for table: " + tableName.getNameAsString() + "; batch size = "
 							+ miniBatchOp.size());
-
-			// Retrieve config for mergeables
-			if (mergingColumnFamilies == null) {
-				mergingColumnFamilies = new HashSet<>();
-
-				String mcfConfig = env.getConfiguration().get(
-						COLUMN_FAMILIES_CONFIG_KEY,
-						COLUMN_FAMILIES_CONFIG_DEFAULT);
-
-				String[] columnFamiliesList = mcfConfig.split(
-						",");
-				for (String columnFamily : columnFamiliesList) {
-					mergingColumnFamilies.add(
-							new ByteArrayId(
-									StringUtils.stringToBinary(
-											columnFamily)));
-					LOGGER.debug(
-							"Got CF: " + columnFamily + " from config");
-				}
-			}
 
 			for (int i = 0; i < miniBatchOp.size(); i++) {
 				Mutation mutation = miniBatchOp.getOperation(
@@ -182,17 +190,27 @@ public class MergingRegionObserver extends
 			Store store,
 			InternalScanner scanner )
 			throws IOException {
-		TableName tableName = e.getEnvironment().getRegionInfo().getTable();
+		RegionCoprocessorEnvironment env = e.getEnvironment();
+		TableName tableName = env.getRegionInfo().getTable();
 
 		if (!tableName.isSystemTable()) {
-			LOGGER.debug(
-					">>> preFlush for table: " + store.getTableName());
-		}
+			// TEST ONLY!
+			if (!tableName.getNameAsString().equals(
+					"mil_nga_giat_geowave_test_SPATIAL_IDX")) {
+				return scanner;
+			}
 
-		return super.preFlush(
-				e,
-				store,
-				scanner);
+			updateMergingColumnFamilies(
+					env.getConfiguration());
+
+			LOGGER.debug(
+					">>> preFlush for table: " + tableName.getNameAsString());
+
+			return new MergingInternalScanner(
+					scanner);
+		}
+		
+		return scanner;
 	}
 
 	@Override
@@ -203,19 +221,28 @@ public class MergingRegionObserver extends
 			final ScanType scanType,
 			CompactionRequest request )
 			throws IOException {
-		TableName tableName = e.getEnvironment().getRegionInfo().getTable();
+		RegionCoprocessorEnvironment env = e.getEnvironment();
+		TableName tableName = env.getRegionInfo().getTable();
 
 		if (!tableName.isSystemTable()) {
-			LOGGER.debug(
-					">>> preCompact for table: " + store.getTableName());
-		}
+			// TEST ONLY!
+			if (!tableName.getNameAsString().equals(
+					"mil_nga_giat_geowave_test_SPATIAL_IDX")) {
+				return scanner;
+			}
 
-		return super.preCompact(
-				e,
-				store,
-				scanner,
-				scanType,
-				request);
+			updateMergingColumnFamilies(
+					env.getConfiguration());
+
+			LOGGER.debug(
+					">>> preCompact for table: " + tableName.getNameAsString());
+
+			return new MergingInternalScanner(
+					scanner);
+
+		}
+		
+		return scanner;
 	}
 
 	@Override

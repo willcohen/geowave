@@ -61,6 +61,7 @@ import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
+import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter.RowTransform;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.base.BaseDataStoreUtils;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveMetadata;
@@ -110,6 +111,7 @@ public class HBaseOperations implements
 	private final Map<TableName, Set<ByteArrayId>> partitionCache = new HashMap<>();
 	private final HashMap<TableName, Set<String>> cfCache = new HashMap<>();
 	private final Map<TableName, Set<ByteArrayId>> mergingAdapterCache = new HashMap<>();
+	private final Map<ByteArrayId, RowTransform> adapterTransformCache = new HashMap<>();
 
 	private final HBaseOptions options;
 
@@ -910,10 +912,12 @@ public class HBaseOperations implements
 	 * 
 	 * @param indexId
 	 * @param adapterId
+	 * @param rowTransform
 	 */
 	public void stageMergingAdapterForObserver(
 			ByteArrayId indexId,
-			ByteArrayId adapterId ) {
+			ByteArrayId adapterId,
+			RowTransform rowTransform ) {
 		TableName tableName = getTableName(indexId.getString());
 
 		Set<ByteArrayId> adapterIdList = mergingAdapterCache.get(tableName);
@@ -926,6 +930,10 @@ public class HBaseOperations implements
 		}
 
 		adapterIdList.add(adapterId);
+
+		adapterTransformCache.put(
+				adapterId,
+				rowTransform);
 	}
 
 	/**
@@ -940,63 +948,31 @@ public class HBaseOperations implements
 
 		Set<ByteArrayId> adapterIdList = mergingAdapterCache.get(tableName);
 		if (adapterIdList != null && !adapterIdList.isEmpty()) {
-			mergeDataMessage.setMergeData(toMergeData(
-					tableName,
-					adapterIdList));
+			for (ByteArrayId adapterId : adapterIdList) {
+				mergeDataMessage.setAdapterId(adapterId);
+				mergeDataMessage.setTransformData(adapterTransformCache.get(adapterId));
 
-			try {
-				Table table = conn.getTable(tableName);
+				try {
+					Table table = conn.getTable(tableName);
 
-				final Scan scanner = new Scan();
-				scanner.setFilter(mergeDataMessage);
+					final Scan scanner = new Scan();
+					scanner.setFilter(mergeDataMessage);
 
-				// Just send it. don't care about response
-				table.getScanner(scanner);
+					// Just send it. don't care about response
+					table.getScanner(scanner);
 
-				table.close();
-			}
-			catch (IOException e) {
-				LOGGER.error(
-						"Error sending merge message",
-						e);
+					table.close();
+				}
+				catch (IOException e) {
+					LOGGER.error(
+							"Error sending merge message",
+							e);
+				}
 			}
 
 			adapterIdList.clear();
+			adapterTransformCache.clear();
 		}
-	}
-
-	public static String toMergeData(
-			TableName tableName,
-			Set<ByteArrayId> adapterIdList ) {
-		StringBuffer buf = new StringBuffer();
-		buf.append(tableName.getNameAsString());
-
-		for (ByteArrayId byteArrayId : adapterIdList) {
-			buf.append(",");
-			buf.append(byteArrayId.getString());
-		}
-
-		return buf.toString();
-	}
-
-	public static String tableNameFromMergeData(
-			String mergeData ) {
-		String[] splits = mergeData.split(",");
-
-		return splits[0];
-	}
-
-	public static Set<ByteArrayId> adapterIdsFromMergeData(
-			String mergeData ) {
-		String[] splits = mergeData.split(",");
-		HashSet<ByteArrayId> adapterIdList = new HashSet<>();
-
-		for (int i = 1; i < splits.length; i++) {
-			adapterIdList.add(new ByteArrayId(
-					splits[i]));
-		}
-
-		return adapterIdList;
 	}
 
 	public Mergeable aggregateServerSide(

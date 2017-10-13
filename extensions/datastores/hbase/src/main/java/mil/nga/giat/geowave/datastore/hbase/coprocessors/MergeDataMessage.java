@@ -1,6 +1,7 @@
 package mil.nga.giat.geowave.datastore.hbase.coprocessors;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.exceptions.DeserializationException;
@@ -8,7 +9,9 @@ import org.apache.hadoop.hbase.filter.FilterBase;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import mil.nga.giat.geowave.core.index.StringUtils;
+import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.index.PersistenceUtils;
+import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter.RowTransform;
 
 public class MergeDataMessage extends
 		FilterBase
@@ -20,7 +23,8 @@ public class MergeDataMessage extends
 		LOGGER.setLevel(Level.DEBUG);
 	}
 
-	private String mergeData;
+	private ByteArrayId adapterId;
+	private RowTransform transformData;
 
 	public MergeDataMessage() {
 
@@ -29,10 +33,25 @@ public class MergeDataMessage extends
 	public static MergeDataMessage parseFrom(
 			final byte[] pbBytes )
 			throws DeserializationException {
-		MergeDataMessage mergingFilter = new MergeDataMessage();
+		final ByteBuffer buf = ByteBuffer.wrap(pbBytes);
 
-		String mergeData = StringUtils.stringFromBinary(pbBytes);
-		mergingFilter.setMergeData(mergeData);
+		final int adapterLength = buf.getInt();
+
+		final byte[] adapterBytes = new byte[adapterLength];
+		buf.get(adapterBytes);
+
+		final byte[] transformBytes = new byte[pbBytes.length - adapterLength - 4];
+		buf.get(transformBytes);
+
+		MergeDataMessage mergingFilter = new MergeDataMessage();
+		mergingFilter.setAdapterId(new ByteArrayId(
+				adapterBytes));
+
+		RowTransform rowTransform = PersistenceUtils.fromBinary(
+				transformBytes,
+				RowTransform.class);
+
+		mergingFilter.setTransformData(rowTransform);
 
 		return mergingFilter;
 	}
@@ -40,16 +59,34 @@ public class MergeDataMessage extends
 	@Override
 	public byte[] toByteArray()
 			throws IOException {
-		return StringUtils.stringToBinary(mergeData);
+		final byte[] adapterBinary = adapterId.getBytes();
+		final byte[] transformBinary = PersistenceUtils.toBinary(transformData);
+
+		final ByteBuffer buf = ByteBuffer.allocate(adapterBinary.length + transformBinary.length + 4);
+
+		buf.putInt(adapterBinary.length);
+		buf.put(adapterBinary);
+		buf.put(transformBinary);
+
+		return buf.array();
 	}
 
-	public String getMergeData() {
-		return mergeData;
+	public ByteArrayId getAdapterId() {
+		return adapterId;
 	}
 
-	public void setMergeData(
-			String mergeData ) {
-		this.mergeData = mergeData;
+	public void setAdapterId(
+			ByteArrayId adapterId ) {
+		this.adapterId = adapterId;
+	}
+
+	public RowTransform getTransformData() {
+		return transformData;
+	}
+
+	public void setTransformData(
+			RowTransform transformData ) {
+		this.transformData = transformData;
 	}
 
 	@Override

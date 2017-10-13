@@ -88,9 +88,11 @@ public class HBaseDataStore extends
 			final DataAdapter adapter,
 			final PrimaryIndex index ) {
 		if (adapter instanceof RowMergingDataAdapter) {
+
 			hbaseOperations.stageMergingAdapterForObserver(
 					index.getId(),
-					adapter.getAdapterId());
+					adapter.getAdapterId(),
+					((RowMergingDataAdapter) adapter).getTransform());
 		}
 	}
 

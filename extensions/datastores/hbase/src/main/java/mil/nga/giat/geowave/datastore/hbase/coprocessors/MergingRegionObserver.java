@@ -1,11 +1,10 @@
 package mil.nga.giat.geowave.datastore.hbase.coprocessors;
 
 import java.io.IOException;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
-import java.util.Set;
 
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
@@ -33,7 +32,7 @@ import org.apache.log4j.Logger;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.Mergeable;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
-import mil.nga.giat.geowave.datastore.hbase.operations.HBaseOperations;
+import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter.RowTransform;
 
 public class MergingRegionObserver extends
 		BaseRegionObserver
@@ -47,26 +46,20 @@ public class MergingRegionObserver extends
 		LOGGER.setLevel(Level.DEBUG);
 	}
 
-	private static HashSet<ByteArrayId> mergingColumnFamilies = null;
+	private static HashMap<ByteArrayId, RowTransform> mergingColumnFamilies = null;
 
 	private void updateMergingColumnFamilies(
-			String mergeData ) {
+			MergeDataMessage mergeDataMessage ) {
 		if (mergingColumnFamilies == null) {
-			mergingColumnFamilies = new HashSet<>();
+			mergingColumnFamilies = new HashMap<>();
 		}
 
-		LOGGER.debug("Updating CFs from message: " + mergeData);
+		LOGGER.debug("Updating CF from message: " + mergeDataMessage.getAdapterId().getString());
 
-		Set<ByteArrayId> adapterIdList = HBaseOperations.adapterIdsFromMergeData(mergeData);
-
-		if (adapterIdList != null && !adapterIdList.isEmpty()) {
-			for (ByteArrayId adapterId : adapterIdList) {
-				if (!mergingColumnFamilies.contains(adapterId)) {
-					mergingColumnFamilies.add(adapterId);
-
-					LOGGER.debug("Added CF: " + adapterId.getString() + " from filter message");
-				}
-			}
+		if (!mergingColumnFamilies.containsKey(mergeDataMessage.getAdapterId())) {
+			mergingColumnFamilies.put(
+					mergeDataMessage.getAdapterId(),
+					mergeDataMessage.getTransformData());
 		}
 	}
 
@@ -102,17 +95,21 @@ public class MergingRegionObserver extends
 							ByteArrayId family = new ByteArrayId(
 									CellUtil.cloneFamily(cell));
 							LOGGER.debug("Put has CF: " + family.getString());
-							if (mergingColumnFamilies.contains(family)) {
+							if (mergingColumnFamilies.containsKey(family)) {
+								RowTransform transform = mergingColumnFamilies.get(family);
 
-								Mergeable value = (Mergeable) PersistenceUtils.fromBinary(
-										CellUtil.cloneValue(cell),
-										Mergeable.class);
-								if (value != null) {
+								final Mergeable mergeable = transform.getRowAsMergeableObject(
+										family,
+										new ByteArrayId(
+												CellUtil.cloneQualifier(cell)),
+										CellUtil.cloneValue(cell));
+
+								if (mergeable != null) {
 									if (mergedValue == null) {
-										mergedValue = value;
+										mergedValue = mergeable;
 									}
 									else {
-										mergedValue.merge(value);
+										mergedValue.merge(mergeable);
 									}
 								}
 								else {
@@ -224,7 +221,8 @@ public class MergingRegionObserver extends
 					MergeDataMessage mergeDataMessage = extractMergeData(scanFilter);
 
 					if (mergeDataMessage != null) {
-						updateMergingColumnFamilies(mergeDataMessage.getMergeData());
+
+						updateMergingColumnFamilies(mergeDataMessage);
 
 						e.bypass();
 						e.complete();

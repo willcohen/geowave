@@ -12,13 +12,15 @@ import org.apache.log4j.Logger;
 public class MergingInternalScanner implements
 		InternalScanner
 {
-	private final static Logger LOGGER = Logger.getLogger(MergingInternalScanner.class);
+	private final static Logger LOGGER = Logger.getLogger(
+			MergingInternalScanner.class);
 
 	private final InternalScanner delegate;
 
 	// TEST ONLY!
 	static {
-		LOGGER.setLevel(Level.DEBUG);
+		LOGGER.setLevel(
+				Level.DEBUG);
 	}
 
 	public MergingInternalScanner(
@@ -30,9 +32,13 @@ public class MergingInternalScanner implements
 	public boolean next(
 			List<Cell> results )
 			throws IOException {
-		LOGGER.debug("MERGING SCANNER > next(1)");
+		LOGGER.debug(
+				"MERGING SCANNER > next(1)");
 
-		return delegate.next(results);
+		boolean done = delegate.next(
+				results);
+
+		return done;
 	}
 
 	@Override
@@ -40,11 +46,14 @@ public class MergingInternalScanner implements
 			List<Cell> result,
 			ScannerContext scannerContext )
 			throws IOException {
-		LOGGER.debug("MERGING SCANNER > next(2)");
-
-		return delegate.next(
+		boolean done = delegate.next(
 				result,
 				scannerContext);
+		
+		LOGGER.debug(
+				"MERGING SCANNER > next(2): got " + result.size() + " cells.");
+
+		return done;
 	}
 
 	@Override

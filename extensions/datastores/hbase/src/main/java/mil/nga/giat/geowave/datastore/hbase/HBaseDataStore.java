@@ -33,8 +33,7 @@ import mil.nga.giat.geowave.mapreduce.BaseMapReduceDataStore;
 public class HBaseDataStore extends
 		BaseMapReduceDataStore
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			HBaseDataStore.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(HBaseDataStore.class);
 
 	private final HBaseSplitsProvider splitsProvider = new HBaseSplitsProvider();
 	private final HBaseOperations hbaseOperations;
@@ -79,8 +78,7 @@ public class HBaseDataStore extends
 				operations,
 				options);
 
-		secondaryIndexDataStore.setDataStore(
-				this);
+		secondaryIndexDataStore.setDataStore(this);
 
 		hbaseOperations = operations;
 	}

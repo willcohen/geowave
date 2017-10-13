@@ -38,15 +38,13 @@ import mil.nga.giat.geowave.datastore.hbase.operations.HBaseOperations;
 public class MergingRegionObserver extends
 		BaseRegionObserver
 {
-	private final static Logger LOGGER = Logger.getLogger(
-			MergingRegionObserver.class);
+	private final static Logger LOGGER = Logger.getLogger(MergingRegionObserver.class);
 
 	public final static String COLUMN_FAMILIES_CONFIG_KEY = "hbase.coprocessor.merging.columnfamilies";
 
 	// TEST ONLY!
 	static {
-		LOGGER.setLevel(
-				Level.DEBUG);
+		LOGGER.setLevel(Level.DEBUG);
 	}
 
 	private static HashSet<ByteArrayId> mergingColumnFamilies = null;
@@ -57,21 +55,16 @@ public class MergingRegionObserver extends
 			mergingColumnFamilies = new HashSet<>();
 		}
 
-		LOGGER.debug(
-				"Updating CFs from message: " + mergeData);
+		LOGGER.debug("Updating CFs from message: " + mergeData);
 
-		Set<ByteArrayId> adapterIdList = HBaseOperations.adapterIdsFromMergeData(
-				mergeData);
+		Set<ByteArrayId> adapterIdList = HBaseOperations.adapterIdsFromMergeData(mergeData);
 
 		if (adapterIdList != null && !adapterIdList.isEmpty()) {
 			for (ByteArrayId adapterId : adapterIdList) {
-				if (!mergingColumnFamilies.contains(
-						adapterId)) {
-					mergingColumnFamilies.add(
-							adapterId);
+				if (!mergingColumnFamilies.contains(adapterId)) {
+					mergingColumnFamilies.add(adapterId);
 
-					LOGGER.debug(
-							"Added CF: " + adapterId.getString() + " from filter message");
+					LOGGER.debug("Added CF: " + adapterId.getString() + " from filter message");
 				}
 			}
 		}
@@ -91,13 +84,11 @@ public class MergingRegionObserver extends
 				return;
 			}
 
-			LOGGER.debug(
-					">>> preBatchMutate for table: " + tableName.getNameAsString() + "; batch size = "
-							+ miniBatchOp.size());
+			LOGGER.debug(">>> preBatchMutate for table: " + tableName.getNameAsString() + "; batch size = "
+					+ miniBatchOp.size());
 
 			for (int i = 0; i < miniBatchOp.size(); i++) {
-				Mutation mutation = miniBatchOp.getOperation(
-						i);
+				Mutation mutation = miniBatchOp.getOperation(i);
 				if (mutation instanceof Put) {
 					Put put = (Put) mutation;
 
@@ -109,64 +100,51 @@ public class MergingRegionObserver extends
 
 						for (Cell cell : entry.getValue()) {
 							ByteArrayId family = new ByteArrayId(
-									CellUtil.cloneFamily(
-											cell));
-							LOGGER.debug(
-									"Put has CF: " + family.getString());
-							if (mergingColumnFamilies.contains(
-									family)) {
+									CellUtil.cloneFamily(cell));
+							LOGGER.debug("Put has CF: " + family.getString());
+							if (mergingColumnFamilies.contains(family)) {
 
 								Mergeable value = (Mergeable) PersistenceUtils.fromBinary(
-										CellUtil.cloneValue(
-												cell),
+										CellUtil.cloneValue(cell),
 										Mergeable.class);
 								if (value != null) {
 									if (mergedValue == null) {
 										mergedValue = value;
 									}
 									else {
-										mergedValue.merge(
-												value);
+										mergedValue.merge(value);
 									}
 								}
 								else {
-									LOGGER.debug(
-											"Cell value is not Mergeable!");
+									LOGGER.debug("Cell value is not Mergeable!");
 								}
 							}
 						}
 
 						// Retrieve existing row if possible
 						if (mergedValue != null) {
-							LOGGER.debug(
-									">>> Getting existing row for merge...");
-							Table mergeTable = env.getTable(
-									tableName);
+							LOGGER.debug(">>> Getting existing row for merge...");
+							Table mergeTable = env.getTable(tableName);
 
 							Get get = new Get(
 									put.getRow());
-							Result result = mergeTable.get(
-									get);
+							Result result = mergeTable.get(get);
 
 							if (result != null && !result.isEmpty()) {
 								// merge values
-								LOGGER.debug(
-										">>> MERGING! " + result.toString());
+								LOGGER.debug(">>> MERGING! " + result.toString());
 
 								for (Cell cell : result.listCells()) {
 									Mergeable value = (Mergeable) PersistenceUtils.fromBinary(
-											CellUtil.cloneValue(
-													cell),
+											CellUtil.cloneValue(cell),
 											Mergeable.class);
 
-									mergedValue.merge(
-											value);
+									mergedValue.merge(value);
 								}
 
 								// TODO: update the Put w/ merged value,
 								// or do a new put and cancel this one?
-								LOGGER.debug(
-										">>> MERGED");
+								LOGGER.debug(">>> MERGED");
 							}
 						}
 					}
@@ -193,8 +171,7 @@ public class MergingRegionObserver extends
 				return scanner;
 			}
 
-			LOGGER.debug(
-					">>> preFlush for table: " + tableName.getNameAsString());
+			LOGGER.debug(">>> preFlush for table: " + tableName.getNameAsString());
 
 			return new MergingInternalScanner(
 					scanner);
@@ -221,8 +198,7 @@ public class MergingRegionObserver extends
 				return scanner;
 			}
 
-			LOGGER.debug(
-					">>> preCompact for table: " + tableName.getNameAsString());
+			LOGGER.debug(">>> preCompact for table: " + tableName.getNameAsString());
 
 			return new MergingInternalScanner(
 					scanner);
@@ -240,18 +216,15 @@ public class MergingRegionObserver extends
 		TableName tableName = e.getEnvironment().getRegionInfo().getTable();
 
 		if (!tableName.isSystemTable()) {
-			LOGGER.debug(
-					">>> preScannerOpen for table: " + tableName.getNameAsString());
+			LOGGER.debug(">>> preScannerOpen for table: " + tableName.getNameAsString());
 
 			if (scan != null) {
 				Filter scanFilter = scan.getFilter();
 				if (scanFilter != null) {
-					MergeDataMessage mergeDataMessage = extractMergeData(
-							scanFilter);
+					MergeDataMessage mergeDataMessage = extractMergeData(scanFilter);
 
 					if (mergeDataMessage != null) {
-						updateMergingColumnFamilies(
-								mergeDataMessage.getMergeData());
+						updateMergingColumnFamilies(mergeDataMessage.getMergeData());
 
 						e.bypass();
 						e.complete();
@@ -274,8 +247,7 @@ public class MergingRegionObserver extends
 		TableName tableName = e.getEnvironment().getRegionInfo().getTable();
 
 		if (!tableName.isSystemTable()) {
-			LOGGER.debug(
-					">>> postScannerOpen for table: " + tableName.getNameAsString());
+			LOGGER.debug(">>> postScannerOpen for table: " + tableName.getNameAsString());
 		}
 
 		return s;
@@ -289,8 +261,7 @@ public class MergingRegionObserver extends
 
 		if (checkFilter instanceof FilterList) {
 			for (Filter filter : ((FilterList) checkFilter).getFilters()) {
-				MergeDataMessage mergingFilter = extractMergeData(
-						filter);
+				MergeDataMessage mergingFilter = extractMergeData(filter);
 				if (mergingFilter != null) {
 					return mergingFilter;
 				}
@@ -311,8 +282,7 @@ public class MergingRegionObserver extends
 		TableName tableName = e.getEnvironment().getRegionInfo().getTable();
 
 		if (!tableName.isSystemTable()) {
-			LOGGER.debug(
-					">>> preScannerNext for table: " + tableName.getNameAsString());
+			LOGGER.debug(">>> preScannerNext for table: " + tableName.getNameAsString());
 		}
 
 		return super.preScannerNext(
@@ -334,8 +304,7 @@ public class MergingRegionObserver extends
 		TableName tableName = e.getEnvironment().getRegionInfo().getTable();
 
 		if (!tableName.isSystemTable()) {
-			LOGGER.debug(
-					">>> postScannerNext for table: " + tableName.getNameAsString());
+			LOGGER.debug(">>> postScannerNext for table: " + tableName.getNameAsString());
 		}
 
 		return super.postScannerNext(

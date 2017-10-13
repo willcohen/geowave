@@ -13,13 +13,11 @@ import mil.nga.giat.geowave.core.index.StringUtils;
 public class MergeDataMessage extends
 		FilterBase
 {
-	private final static Logger LOGGER = Logger.getLogger(
-			MergeDataMessage.class);
+	private final static Logger LOGGER = Logger.getLogger(MergeDataMessage.class);
 
 	// TEST ONLY!
 	static {
-		LOGGER.setLevel(
-				Level.DEBUG);
+		LOGGER.setLevel(Level.DEBUG);
 	}
 
 	private String mergeData;
@@ -33,10 +31,8 @@ public class MergeDataMessage extends
 			throws DeserializationException {
 		MergeDataMessage mergingFilter = new MergeDataMessage();
 
-		String mergeData = StringUtils.stringFromBinary(
-				pbBytes);
-		mergingFilter.setMergeData(
-				mergeData);
+		String mergeData = StringUtils.stringFromBinary(pbBytes);
+		mergingFilter.setMergeData(mergeData);
 
 		return mergingFilter;
 	}
@@ -44,8 +40,7 @@ public class MergeDataMessage extends
 	@Override
 	public byte[] toByteArray()
 			throws IOException {
-		return StringUtils.stringToBinary(
-				mergeData);
+		return StringUtils.stringToBinary(mergeData);
 	}
 
 	public String getMergeData() {

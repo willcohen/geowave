@@ -23,6 +23,7 @@ public class MergeDataMessage extends
 		LOGGER.setLevel(Level.DEBUG);
 	}
 
+	private ByteArrayId tableName;
 	private ByteArrayId adapterId;
 	private RowTransform transformData;
 
@@ -35,15 +36,23 @@ public class MergeDataMessage extends
 			throws DeserializationException {
 		final ByteBuffer buf = ByteBuffer.wrap(pbBytes);
 
+		final int tableLength = buf.getInt();
 		final int adapterLength = buf.getInt();
+
+		final byte[] tableBytes = new byte[tableLength];
+		buf.get(tableBytes);
 
 		final byte[] adapterBytes = new byte[adapterLength];
 		buf.get(adapterBytes);
 
-		final byte[] transformBytes = new byte[pbBytes.length - adapterLength - 4];
+		final byte[] transformBytes = new byte[pbBytes.length - adapterLength - tableLength - 8];
 		buf.get(transformBytes);
 
 		MergeDataMessage mergingFilter = new MergeDataMessage();
+
+		mergingFilter.setTableName(new ByteArrayId(
+				tableBytes));
+
 		mergingFilter.setAdapterId(new ByteArrayId(
 				adapterBytes));
 
@@ -59,16 +68,29 @@ public class MergeDataMessage extends
 	@Override
 	public byte[] toByteArray()
 			throws IOException {
+		final byte[] tableBinary = tableName.getBytes();
 		final byte[] adapterBinary = adapterId.getBytes();
 		final byte[] transformBinary = PersistenceUtils.toBinary(transformData);
 
-		final ByteBuffer buf = ByteBuffer.allocate(adapterBinary.length + transformBinary.length + 4);
+		final ByteBuffer buf = ByteBuffer.allocate(tableBinary.length + adapterBinary.length + transformBinary.length
+				+ 8);
 
+		buf.putInt(tableBinary.length);
 		buf.putInt(adapterBinary.length);
+		buf.put(tableBinary);
 		buf.put(adapterBinary);
 		buf.put(transformBinary);
 
 		return buf.array();
+	}
+
+	public ByteArrayId getTableName() {
+		return tableName;
+	}
+
+	public void setTableName(
+			ByteArrayId tableName ) {
+		this.tableName = tableName;
 	}
 
 	public ByteArrayId getAdapterId() {

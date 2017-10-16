@@ -1,6 +1,7 @@
 package mil.nga.giat.geowave.datastore.hbase.coprocessors;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.hadoop.hbase.Cell;
@@ -9,12 +10,16 @@ import org.apache.hadoop.hbase.regionserver.ScannerContext;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter.RowTransform;
+
 public class MergingInternalScanner implements
 		InternalScanner
 {
 	private final static Logger LOGGER = Logger.getLogger(MergingInternalScanner.class);
 
 	private final InternalScanner delegate;
+	private HashMap<ByteArrayId, RowTransform> mergingTransformMap;
 
 	// TEST ONLY!
 	static {
@@ -42,6 +47,8 @@ public class MergingInternalScanner implements
 			List<Cell> result,
 			ScannerContext scannerContext )
 			throws IOException {
+		// TODO: actual merging goes here...
+
 		boolean done = delegate.next(
 				result,
 				scannerContext);
@@ -55,5 +62,10 @@ public class MergingInternalScanner implements
 	public void close()
 			throws IOException {
 		delegate.close();
+	}
+
+	public void setTransformMap(
+			HashMap<ByteArrayId, RowTransform> mergingTransformMap ) {
+		this.mergingTransformMap = mergingTransformMap;
 	}
 }

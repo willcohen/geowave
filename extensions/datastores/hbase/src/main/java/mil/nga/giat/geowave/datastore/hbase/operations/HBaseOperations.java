@@ -243,7 +243,7 @@ public class HBaseOperations implements
 				sTableName);
 	}
 
-	public void createTable(
+	protected void createTable(
 			final String[] columnFamilies,
 			final TableName tableName )
 			throws IOException {
@@ -934,6 +934,18 @@ public class HBaseOperations implements
 		adapterTransformCache.put(
 				adapterId,
 				rowTransform);
+
+		// TODO: Check for table existence and send the data now if possible.
+		try {
+			if (indexExists(indexId)) {
+				sendMergingAdaptersToObserver(tableName);
+			}
+		}
+		catch (IOException e) {
+			LOGGER.error(
+					"Error checking index existence",
+					e);
+		}
 	}
 
 	/**
@@ -949,6 +961,8 @@ public class HBaseOperations implements
 		Set<ByteArrayId> adapterIdList = mergingAdapterCache.get(tableName);
 		if (adapterIdList != null && !adapterIdList.isEmpty()) {
 			for (ByteArrayId adapterId : adapterIdList) {
+				mergeDataMessage.setTableName(new ByteArrayId(
+						tableName.getName()));
 				mergeDataMessage.setAdapterId(adapterId);
 				mergeDataMessage.setTransformData(adapterTransformCache.get(adapterId));
 
@@ -968,6 +982,8 @@ public class HBaseOperations implements
 							"Error sending merge message",
 							e);
 				}
+
+				LOGGER.debug("Merge config sent for " + adapterId.getString());
 			}
 
 			adapterIdList.clear();

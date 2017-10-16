@@ -2,6 +2,7 @@ package mil.nga.giat.geowave.datastore.hbase.coprocessors;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
@@ -46,18 +47,20 @@ public class MergingRegionObserver extends
 		LOGGER.setLevel(Level.DEBUG);
 	}
 
-	private static HashMap<ByteArrayId, RowTransform> mergingColumnFamilies = null;
+	private HashSet<String> mergingTables = new HashSet<>();
+	private HashMap<ByteArrayId, RowTransform> mergingTransformMap = new HashMap<>();
 
 	private void updateMergingColumnFamilies(
 			MergeDataMessage mergeDataMessage ) {
-		if (mergingColumnFamilies == null) {
-			mergingColumnFamilies = new HashMap<>();
-		}
-
 		LOGGER.debug("Updating CF from message: " + mergeDataMessage.getAdapterId().getString());
 
-		if (!mergingColumnFamilies.containsKey(mergeDataMessage.getAdapterId())) {
-			mergingColumnFamilies.put(
+		String tableName = mergeDataMessage.getTableName().getString();
+		if (!mergingTables.contains(tableName)) {
+			mergingTables.add(tableName);
+		}
+
+		if (!mergingTransformMap.containsKey(mergeDataMessage.getAdapterId())) {
+			mergingTransformMap.put(
 					mergeDataMessage.getAdapterId(),
 					mergeDataMessage.getTransformData());
 		}
@@ -95,8 +98,8 @@ public class MergingRegionObserver extends
 							ByteArrayId family = new ByteArrayId(
 									CellUtil.cloneFamily(cell));
 							LOGGER.debug("Put has CF: " + family.getString());
-							if (mergingColumnFamilies.containsKey(family)) {
-								RowTransform transform = mergingColumnFamilies.get(family);
+							if (mergingTransformMap.containsKey(family)) {
+								RowTransform transform = mergingTransformMap.get(family);
 
 								final Mergeable mergeable = transform.getRowAsMergeableObject(
 										family,
@@ -162,16 +165,18 @@ public class MergingRegionObserver extends
 		TableName tableName = env.getRegionInfo().getTable();
 
 		if (!tableName.isSystemTable()) {
-			// TEST ONLY!
-			if (!tableName.getNameAsString().equals(
-					"mil_nga_giat_geowave_test_SPATIAL_IDX")) {
-				return scanner;
+			String tableNameString = tableName.getNameAsString();
+
+			if (mergingTables.contains(tableNameString)) {
+				LOGGER.debug(">>> preFlush for merging table: " + tableNameString);
+
+				MergingInternalScanner mergingScanner = new MergingInternalScanner(
+						scanner);
+
+				mergingScanner.setTransformMap(mergingTransformMap);
+
+				return mergingScanner;
 			}
-
-			LOGGER.debug(">>> preFlush for table: " + tableName.getNameAsString());
-
-			return new MergingInternalScanner(
-					scanner);
 		}
 
 		return scanner;
@@ -189,16 +194,18 @@ public class MergingRegionObserver extends
 		TableName tableName = env.getRegionInfo().getTable();
 
 		if (!tableName.isSystemTable()) {
-			// TEST ONLY!
-			if (!tableName.getNameAsString().equals(
-					"mil_nga_giat_geowave_test_SPATIAL_IDX")) {
-				return scanner;
+			String tableNameString = tableName.getNameAsString();
+
+			if (mergingTables.contains(tableNameString)) {
+				LOGGER.debug(">>> preCompact for merging table: " + tableNameString);
+
+				MergingInternalScanner mergingScanner = new MergingInternalScanner(
+						scanner);
+
+				mergingScanner.setTransformMap(mergingTransformMap);
+
+				return mergingScanner;
 			}
-
-			LOGGER.debug(">>> preCompact for table: " + tableName.getNameAsString());
-
-			return new MergingInternalScanner(
-					scanner);
 		}
 
 		return scanner;
@@ -221,7 +228,6 @@ public class MergingRegionObserver extends
 					MergeDataMessage mergeDataMessage = extractMergeData(scanFilter);
 
 					if (mergeDataMessage != null) {
-
 						updateMergingColumnFamilies(mergeDataMessage);
 
 						e.bypass();
@@ -231,21 +237,6 @@ public class MergingRegionObserver extends
 					}
 				}
 			}
-		}
-
-		return s;
-	}
-
-	@Override
-	public RegionScanner postScannerOpen(
-			final ObserverContext<RegionCoprocessorEnvironment> e,
-			final Scan scan,
-			final RegionScanner s )
-			throws IOException {
-		TableName tableName = e.getEnvironment().getRegionInfo().getTable();
-
-		if (!tableName.isSystemTable()) {
-			LOGGER.debug(">>> postScannerOpen for table: " + tableName.getNameAsString());
 		}
 
 		return s;
@@ -284,28 +275,6 @@ public class MergingRegionObserver extends
 		}
 
 		return super.preScannerNext(
-				e,
-				s,
-				results,
-				limit,
-				hasMore);
-	}
-
-	@Override
-	public boolean postScannerNext(
-			final ObserverContext<RegionCoprocessorEnvironment> e,
-			final InternalScanner s,
-			final List<Result> results,
-			final int limit,
-			final boolean hasMore )
-			throws IOException {
-		TableName tableName = e.getEnvironment().getRegionInfo().getTable();
-
-		if (!tableName.isSystemTable()) {
-			LOGGER.debug(">>> postScannerNext for table: " + tableName.getNameAsString());
-		}
-
-		return super.postScannerNext(
 				e,
 				s,
 				results,

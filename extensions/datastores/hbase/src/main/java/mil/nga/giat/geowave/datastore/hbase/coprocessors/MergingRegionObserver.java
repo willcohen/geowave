@@ -4,25 +4,16 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.NavigableMap;
 
-import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.Mutation;
-import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.coprocessor.BaseRegionObserver;
 import org.apache.hadoop.hbase.coprocessor.ObserverContext;
 import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.regionserver.InternalScanner;
-import org.apache.hadoop.hbase.regionserver.MiniBatchOperationInProgress;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.hadoop.hbase.regionserver.ScanType;
 import org.apache.hadoop.hbase.regionserver.Store;
@@ -31,8 +22,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
-import mil.nga.giat.geowave.core.index.Mergeable;
-import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter.RowTransform;
 
 public class MergingRegionObserver extends
@@ -50,119 +39,13 @@ public class MergingRegionObserver extends
 	private HashSet<String> mergingTables = new HashSet<>();
 	private HashMap<ByteArrayId, RowTransform> mergingTransformMap = new HashMap<>();
 
-	private void updateMergingColumnFamilies(
-			MergeDataMessage mergeDataMessage ) {
-		LOGGER.debug("Updating CF from message: " + mergeDataMessage.getAdapterId().getString());
-
-		String tableName = mergeDataMessage.getTableName().getString();
-		if (!mergingTables.contains(tableName)) {
-			mergingTables.add(tableName);
-		}
-
-		if (!mergingTransformMap.containsKey(mergeDataMessage.getAdapterId())) {
-			mergingTransformMap.put(
-					mergeDataMessage.getAdapterId(),
-					mergeDataMessage.getTransformData());
-		}
-	}
-
-	public void preBatchMutateExperiment(
-			final ObserverContext<RegionCoprocessorEnvironment> c,
-			final MiniBatchOperationInProgress<Mutation> miniBatchOp )
-			throws IOException {
-		RegionCoprocessorEnvironment env = c.getEnvironment();
-		TableName tableName = env.getRegionInfo().getTable();
-
-		if (!tableName.isSystemTable()) {
-			// TEST ONLY!
-			if (!tableName.getNameAsString().equals(
-					"mil_nga_giat_geowave_test_SPATIAL_IDX")) {
-				return;
-			}
-
-			LOGGER.debug(">>> preBatchMutate for table: " + tableName.getNameAsString() + "; batch size = "
-					+ miniBatchOp.size());
-
-			for (int i = 0; i < miniBatchOp.size(); i++) {
-				Mutation mutation = miniBatchOp.getOperation(i);
-				if (mutation instanceof Put) {
-					Put put = (Put) mutation;
-
-					// Get column family(ies) from put and check against merge
-					// list
-					NavigableMap<byte[], List<Cell>> familyMap = put.getFamilyCellMap();
-					for (Entry<byte[], List<Cell>> entry : familyMap.entrySet()) {
-						Mergeable mergedValue = null;
-
-						for (Cell cell : entry.getValue()) {
-							ByteArrayId family = new ByteArrayId(
-									CellUtil.cloneFamily(cell));
-							LOGGER.debug("Put has CF: " + family.getString());
-							if (mergingTransformMap.containsKey(family)) {
-								RowTransform transform = mergingTransformMap.get(family);
-
-								final Mergeable mergeable = transform.getRowAsMergeableObject(
-										family,
-										new ByteArrayId(
-												CellUtil.cloneQualifier(cell)),
-										CellUtil.cloneValue(cell));
-
-								if (mergeable != null) {
-									if (mergedValue == null) {
-										mergedValue = mergeable;
-									}
-									else {
-										mergedValue.merge(mergeable);
-									}
-								}
-								else {
-									LOGGER.debug("Cell value is not Mergeable!");
-								}
-							}
-						}
-
-						// Retrieve existing row if possible
-						if (mergedValue != null) {
-							LOGGER.debug(">>> Getting existing row for merge...");
-							Table mergeTable = env.getTable(tableName);
-
-							Get get = new Get(
-									put.getRow());
-							Result result = mergeTable.get(get);
-
-							if (result != null && !result.isEmpty()) {
-								// merge values
-								LOGGER.debug(">>> MERGING! " + result.toString());
-
-								for (Cell cell : result.listCells()) {
-									Mergeable value = (Mergeable) PersistenceUtils.fromBinary(
-											CellUtil.cloneValue(cell),
-											Mergeable.class);
-
-									mergedValue.merge(value);
-								}
-
-								// TODO: update the Put w/ merged value,
-								// or do a new put and cancel this one?
-								LOGGER.debug(">>> MERGED");
-							}
-						}
-					}
-
-				}
-			}
-		}
-
-	}
-
 	@Override
 	public InternalScanner preFlush(
 			ObserverContext<RegionCoprocessorEnvironment> e,
 			Store store,
 			InternalScanner scanner )
 			throws IOException {
-		RegionCoprocessorEnvironment env = e.getEnvironment();
-		TableName tableName = env.getRegionInfo().getTable();
+		TableName tableName = e.getEnvironment().getRegionInfo().getTable();
 
 		if (!tableName.isSystemTable()) {
 			String tableNameString = tableName.getNameAsString();
@@ -190,8 +73,7 @@ public class MergingRegionObserver extends
 			final ScanType scanType,
 			CompactionRequest request )
 			throws IOException {
-		RegionCoprocessorEnvironment env = e.getEnvironment();
-		TableName tableName = env.getRegionInfo().getTable();
+		TableName tableName = e.getEnvironment().getRegionInfo().getTable();
 
 		if (!tableName.isSystemTable()) {
 			String tableNameString = tableName.getNameAsString();
@@ -212,6 +94,29 @@ public class MergingRegionObserver extends
 	}
 
 	@Override
+	public boolean preScannerNext(
+			final ObserverContext<RegionCoprocessorEnvironment> e,
+			final InternalScanner s,
+			final List<Result> results,
+			final int limit,
+			final boolean hasMore )
+			throws IOException {
+		TableName tableName = e.getEnvironment().getRegionInfo().getTable();
+
+		if (!tableName.isSystemTable()) {
+			String tableNameString = tableName.getNameAsString();
+
+			if (mergingTables.contains(tableNameString)) {
+				LOGGER.debug(">>> preScannerNext for merging table: " + tableName.getNameAsString());
+
+				// TODO: grab current row, and any subsequent matching rows and merge them
+			}
+		}
+
+		return hasMore;
+	}
+
+	@Override
 	public RegionScanner preScannerOpen(
 			final ObserverContext<RegionCoprocessorEnvironment> e,
 			final Scan scan,
@@ -220,8 +125,6 @@ public class MergingRegionObserver extends
 		TableName tableName = e.getEnvironment().getRegionInfo().getTable();
 
 		if (!tableName.isSystemTable()) {
-			LOGGER.debug(">>> preScannerOpen for table: " + tableName.getNameAsString());
-
 			if (scan != null) {
 				Filter scanFilter = scan.getFilter();
 				if (scanFilter != null) {
@@ -259,26 +162,20 @@ public class MergingRegionObserver extends
 
 		return null;
 	}
+	
+	private void updateMergingColumnFamilies(
+			MergeDataMessage mergeDataMessage ) {
+		LOGGER.debug("Updating CF from message: " + mergeDataMessage.getAdapterId().getString());
 
-	@Override
-	public boolean preScannerNext(
-			final ObserverContext<RegionCoprocessorEnvironment> e,
-			final InternalScanner s,
-			final List<Result> results,
-			final int limit,
-			final boolean hasMore )
-			throws IOException {
-		TableName tableName = e.getEnvironment().getRegionInfo().getTable();
-
-		if (!tableName.isSystemTable()) {
-			LOGGER.debug(">>> preScannerNext for table: " + tableName.getNameAsString());
+		String tableName = mergeDataMessage.getTableName().getString();
+		if (!mergingTables.contains(tableName)) {
+			mergingTables.add(tableName);
 		}
 
-		return super.preScannerNext(
-				e,
-				s,
-				results,
-				limit,
-				hasMore);
+		if (!mergingTransformMap.containsKey(mergeDataMessage.getAdapterId())) {
+			mergingTransformMap.put(
+					mergeDataMessage.getAdapterId(),
+					mergeDataMessage.getTransformData());
+		}
 	}
 }

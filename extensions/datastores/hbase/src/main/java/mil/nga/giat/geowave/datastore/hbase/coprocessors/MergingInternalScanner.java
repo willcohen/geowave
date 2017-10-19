@@ -9,6 +9,7 @@ import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.regionserver.InternalScanner;
+import org.apache.hadoop.hbase.regionserver.KeyValueScanner;
 import org.apache.hadoop.hbase.regionserver.ScannerContext;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -24,7 +25,9 @@ public class MergingInternalScanner implements
 	private final static Logger LOGGER = Logger.getLogger(
 			MergingInternalScanner.class);
 
-	private final InternalScanner delegate;
+	private KeyValueScanner delegate = null;
+	private List<? extends KeyValueScanner> delegateList = null;
+	private InternalScanner internalDelegate = null;
 	private HashMap<ByteArrayId, RowTransform> mergingTransformMap;
 	private Cell peekedCell = null;
 
@@ -35,48 +38,63 @@ public class MergingInternalScanner implements
 	}
 
 	public MergingInternalScanner(
-			final InternalScanner delegate ) {
+			final KeyValueScanner delegate ) {
 		this.delegate = delegate;
+	}
+
+	public MergingInternalScanner(
+			final List<? extends KeyValueScanner> delegateList ) {
+		this.delegateList = delegateList;
+	}
+
+	public MergingInternalScanner(
+			final InternalScanner internalDelegate ) {
+		this.internalDelegate = internalDelegate;
+	}
+
+	@Override
+	public boolean next(
+			List<Cell> results,
+			ScannerContext scannerContext )
+			throws IOException {
+		return nextInternal(
+				results,
+				scannerContext);
 	}
 
 	@Override
 	public boolean next(
 			List<Cell> results )
 			throws IOException {
-		LOGGER.debug(
-				"MERGING SCANNER > next(1)");
-
-		boolean done = delegate.next(
-				results);
-
-		return done;
+		return nextInternal(
+				results,
+				null);
 	}
 
-	@Override
-	public boolean next(
-			List<Cell> result,
+	private boolean nextInternal(
+			List<Cell> results,
 			ScannerContext scannerContext )
 			throws IOException {
-		Mergeable mergedValue = null;
 		Cell mergedCell = null;
 		boolean hasMore = true;
 
 		if (peekedCell != null) {
-			mergedCell = peekedCell;
+			mergedCell = copyCell(
+					peekedCell,
+					null);
+
+			peekedCell = null;
 		}
 		else {
 			hasMore = getNextCell(
-					scannerContext,
 					mergedCell);
 		}
 
 		// Peek ahead to see if it needs to be merged with the next result
 		while (hasMore) {
 			hasMore = getNextCell(
-					scannerContext,
 					peekedCell);
-
-			if (CellUtil.matchingRow(
+			if (peekedCell != null && CellUtil.matchingRow(
 					mergedCell,
 					peekedCell)) {
 				mergeCells(
@@ -87,6 +105,10 @@ public class MergingInternalScanner implements
 				break;
 			}
 		}
+
+		results.clear();
+		results.add(
+				mergedCell);
 
 		return hasMore;
 	}
@@ -131,15 +153,8 @@ public class MergingInternalScanner implements
 							"Cell value is not Mergeable!");
 				}
 
-				mergedCell = CellUtil.createCell(
-						CellUtil.cloneRow(
-								mergedCell),
-						CellUtil.cloneFamily(
-								mergedCell),
-						CellUtil.cloneQualifier(
-								mergedCell),
-						mergedCell.getTimestamp(),
-						KeyValue.Type.Put.getCode(),
+				mergedCell = copyCell(
+						mergedCell,
 						PersistenceUtils.toBinary(
 								mergeable));
 			}
@@ -157,20 +172,78 @@ public class MergingInternalScanner implements
 	}
 
 	private boolean getNextCell(
-			ScannerContext scannerContext,
 			Cell nextCell )
+			throws IOException {
+		boolean hasMore;
+
+		if (delegate != null) {
+			nextCell = delegate.next();
+			hasMore = delegate.seek(
+					nextCell);
+		}
+		else if (delegateList != null) {
+			hasMore = getNextCellFromList(
+					nextCell);
+		}
+		else { // if (internalDelegate != null) {
+			hasMore = getNextCellInternal(
+					nextCell,
+					null);
+		}
+
+		return hasMore;
+	}
+
+	private boolean getNextCellFromList(
+			Cell nextCell )
+			throws IOException {
+		Cell mergedCell = null;
+		boolean hasMore;
+
+		for (KeyValueScanner scanner : delegateList) {
+			Cell cell = scanner.next();
+			if (mergedCell == null) {
+				mergedCell = cell;
+			}
+			else {
+				mergeCells(
+						mergedCell,
+						cell);
+			}
+
+			hasMore = scanner.peek() != null;
+		}
+
+		if (mergedCell != null) {
+			nextCell = copyCell(
+					mergedCell,
+					null);
+		}
+
+		return false;
+	}
+
+	private boolean getNextCellInternal(
+			Cell nextCell,
+			ScannerContext scannerContext )
 			throws IOException {
 		List<Cell> cellList = new ArrayList<>();
 
-		boolean hasMore = delegate.next(
-				cellList,
-				scannerContext);
+		boolean hasMore;
+		if (scannerContext != null) {
+			hasMore = internalDelegate.next(
+					cellList,
+					scannerContext);
+		}
+		else {
+			hasMore = internalDelegate.next(
+					cellList);
+		}
 
 		// Should generally be one cell for rasters
 		LOGGER.debug(
-				"MERGING SCANNER > next(2): got " + cellList.size() + " cells.");
+				"MERGING SCANNER > next: got " + cellList.size() + " cells.");
 
-		Mergeable mergedValue = null;
 		Cell mergedCell = null;
 
 		for (Cell cell : cellList) {
@@ -178,19 +251,57 @@ public class MergingInternalScanner implements
 				mergedCell = cell;
 			}
 			else {
-				mergeCells(mergedCell, cell);
+				mergeCells(
+						mergedCell,
+						cell);
 			}
 		}
-		
-		nextCell = mergedCell;
+
+		if (mergedCell != null) {
+			nextCell = copyCell(
+					mergedCell,
+					null);
+		}
 
 		return hasMore;
+	}
+
+	private Cell copyCell(
+			Cell sourceCell,
+			byte[] newValue ) {
+		if (newValue == null) {
+			newValue = CellUtil.cloneValue(
+					sourceCell);
+		}
+
+		Cell newCell = CellUtil.createCell(
+				CellUtil.cloneRow(
+						sourceCell),
+				CellUtil.cloneFamily(
+						sourceCell),
+				CellUtil.cloneQualifier(
+						sourceCell),
+				sourceCell.getTimestamp(),
+				KeyValue.Type.Put.getCode(),
+				newValue);
+
+		return newCell;
 	}
 
 	@Override
 	public void close()
 			throws IOException {
-		delegate.close();
+		if (delegate != null) {
+			delegate.close();
+		}
+		else if (delegateList != null) {
+			for (KeyValueScanner scanner : delegateList) {
+				scanner.close();
+			}
+		}
+		else {
+			internalDelegate.close();
+		}
 	}
 
 	public void setTransformMap(

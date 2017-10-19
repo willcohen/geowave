@@ -198,7 +198,7 @@ public class MergingInternalScanner implements
 			Cell nextCell )
 			throws IOException {
 		Cell mergedCell = null;
-		boolean hasMore;
+		boolean hasMore = false;
 
 		for (KeyValueScanner scanner : delegateList) {
 			Cell cell = scanner.next();
@@ -220,7 +220,7 @@ public class MergingInternalScanner implements
 					null);
 		}
 
-		return false;
+		return hasMore;
 	}
 
 	private boolean getNextCellInternal(

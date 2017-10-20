@@ -22,19 +22,23 @@ import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter.RowTransfor
 public class MergingInternalScanner implements
 		InternalScanner
 {
-	private final static Logger LOGGER = Logger.getLogger(
-			MergingInternalScanner.class);
+	private final static Logger LOGGER = Logger.getLogger(MergingInternalScanner.class);
 
 	private KeyValueScanner delegate = null;
 	private List<? extends KeyValueScanner> delegateList = null;
 	private InternalScanner internalDelegate = null;
 	private HashMap<ByteArrayId, RowTransform> mergingTransformMap;
-	private Cell peekedCell = null;
+	private NextCell peekedCell = null;
+
+	static class NextCell
+	{
+		boolean hasMore;
+		Cell cell;
+	}
 
 	// TEST ONLY!
 	static {
-		LOGGER.setLevel(
-				Level.DEBUG);
+		LOGGER.setLevel(Level.DEBUG);
 	}
 
 	public MergingInternalScanner(
@@ -75,31 +79,30 @@ public class MergingInternalScanner implements
 			List<Cell> results,
 			ScannerContext scannerContext )
 			throws IOException {
-		Cell mergedCell = null;
-		boolean hasMore = true;
+		NextCell mergedCell = new NextCell();
 
 		if (peekedCell != null) {
-			mergedCell = copyCell(
-					peekedCell,
+			mergedCell.cell = copyCell(
+					peekedCell.cell,
 					null);
+			mergedCell.hasMore = peekedCell.hasMore;
 
 			peekedCell = null;
 		}
 		else {
-			hasMore = getNextCell(
-					mergedCell);
+			mergedCell = getNextCell();
 		}
 
 		// Peek ahead to see if it needs to be merged with the next result
-		while (hasMore) {
-			hasMore = getNextCell(
-					peekedCell);
-			if (peekedCell != null && CellUtil.matchingRow(
-					mergedCell,
-					peekedCell)) {
-				mergeCells(
-						mergedCell,
-						peekedCell);
+		while (mergedCell.hasMore) {
+			peekedCell = getNextCell();
+			if (peekedCell.cell != null && CellUtil.matchingRow(
+					mergedCell.cell,
+					peekedCell.cell)) {
+				mergedCell.cell = mergeCells(
+						mergedCell.cell,
+						peekedCell.cell);
+				mergedCell.hasMore = peekedCell.hasMore;
 			}
 			else {
 				break;
@@ -107,96 +110,87 @@ public class MergingInternalScanner implements
 		}
 
 		results.clear();
-		results.add(
-				mergedCell);
+		results.add(mergedCell.cell);
 
-		return hasMore;
+		return mergedCell.hasMore;
 	}
 
-	private boolean mergeCells(
-			Cell mergedCell,
-			Cell peekedCell ) {
-		ByteArrayId family = new ByteArrayId(
-				CellUtil.cloneFamily(
-						mergedCell));
-		boolean merged = false;
+	/**
+	 * Assumes cells share family and qualifier
+	 * 
+	 * @param cell1
+	 * @param cell2
+	 * @return
+	 */
+	private Cell mergeCells(
+			Cell cell1,
+			Cell cell2 ) {
+		Cell mergedCell = null;
 
-		if (mergingTransformMap.containsKey(
-				family)) {
-			RowTransform transform = mergingTransformMap.get(
-					family);
+		ByteArrayId family = new ByteArrayId(
+				CellUtil.cloneFamily(cell1));
+
+		if (mergingTransformMap.containsKey(family)) {
+			RowTransform transform = mergingTransformMap.get(family);
 
 			final Mergeable mergeable = transform.getRowAsMergeableObject(
 					family,
 					new ByteArrayId(
-							CellUtil.cloneQualifier(
-									mergedCell)),
-					CellUtil.cloneValue(
-							mergedCell));
+							CellUtil.cloneQualifier(cell1)),
+					CellUtil.cloneValue(cell1));
 
 			if (mergeable != null) {
 				final Mergeable otherMergeable = transform.getRowAsMergeableObject(
 						family,
 						new ByteArrayId(
-								CellUtil.cloneQualifier(
-										mergedCell)),
-						CellUtil.cloneValue(
-								peekedCell));
+								CellUtil.cloneQualifier(cell1)),
+						CellUtil.cloneValue(cell2));
 
 				if (otherMergeable != null) {
-					mergeable.merge(
-							otherMergeable);
-					merged = true;
+					mergeable.merge(otherMergeable);
 				}
 				else {
-					LOGGER.error(
-							"Cell value is not Mergeable!");
+					LOGGER.error("Cell value is not Mergeable!");
 				}
 
 				mergedCell = copyCell(
-						mergedCell,
-						PersistenceUtils.toBinary(
-								mergeable));
+						cell1,
+						PersistenceUtils.toBinary(mergeable));
 			}
 			else {
-				LOGGER.error(
-						"Cell value is not Mergeable!");
+				LOGGER.error("Cell value is not Mergeable!");
 			}
 		}
 		else {
-			LOGGER.error(
-					"No merging transform for adapter: " + family.getString());
+			LOGGER.error("No merging transform for adapter: " + family.getString());
 		}
 
-		return merged;
+		return mergedCell;
 	}
 
-	private boolean getNextCell(
-			Cell nextCell )
+	private NextCell getNextCell()
 			throws IOException {
-		boolean hasMore;
+		NextCell nextCell;
 
 		if (delegate != null) {
-			nextCell = delegate.next();
-			hasMore = delegate.seek(
-					nextCell);
+			nextCell = new NextCell();
+			nextCell.cell = delegate.next();
+			nextCell.hasMore = delegate.peek() != null;
 		}
 		else if (delegateList != null) {
-			hasMore = getNextCellFromList(
-					nextCell);
+			nextCell = getNextCellFromList();
 		}
 		else { // if (internalDelegate != null) {
-			hasMore = getNextCellInternal(
-					nextCell,
-					null);
+			nextCell = getNextCellInternal();
 		}
 
-		return hasMore;
+		return nextCell;
 	}
 
-	private boolean getNextCellFromList(
-			Cell nextCell )
+	private NextCell getNextCellFromList()
 			throws IOException {
+		NextCell nextCell = new NextCell();
+
 		Cell mergedCell = null;
 		boolean hasMore = false;
 
@@ -206,7 +200,7 @@ public class MergingInternalScanner implements
 				mergedCell = cell;
 			}
 			else {
-				mergeCells(
+				mergedCell = mergeCells(
 						mergedCell,
 						cell);
 			}
@@ -215,34 +209,24 @@ public class MergingInternalScanner implements
 		}
 
 		if (mergedCell != null) {
-			nextCell = copyCell(
+			nextCell.cell = copyCell(
 					mergedCell,
 					null);
+			nextCell.hasMore = hasMore;
 		}
 
-		return hasMore;
+		return nextCell;
 	}
 
-	private boolean getNextCellInternal(
-			Cell nextCell,
-			ScannerContext scannerContext )
+	private NextCell getNextCellInternal()
 			throws IOException {
 		List<Cell> cellList = new ArrayList<>();
+		NextCell nextCell = new NextCell();
 
-		boolean hasMore;
-		if (scannerContext != null) {
-			hasMore = internalDelegate.next(
-					cellList,
-					scannerContext);
-		}
-		else {
-			hasMore = internalDelegate.next(
-					cellList);
-		}
+		boolean hasMore = internalDelegate.next(cellList);
 
 		// Should generally be one cell for rasters
-		LOGGER.debug(
-				"MERGING SCANNER > next: got " + cellList.size() + " cells.");
+		LOGGER.debug("MERGING SCANNER > next: got " + cellList.size() + " cells.");
 
 		Cell mergedCell = null;
 
@@ -251,36 +235,33 @@ public class MergingInternalScanner implements
 				mergedCell = cell;
 			}
 			else {
-				mergeCells(
+				mergedCell = mergeCells(
 						mergedCell,
 						cell);
 			}
 		}
 
 		if (mergedCell != null) {
-			nextCell = copyCell(
+			nextCell.cell = copyCell(
 					mergedCell,
 					null);
+			nextCell.hasMore = hasMore;
 		}
 
-		return hasMore;
+		return nextCell;
 	}
 
 	private Cell copyCell(
 			Cell sourceCell,
 			byte[] newValue ) {
 		if (newValue == null) {
-			newValue = CellUtil.cloneValue(
-					sourceCell);
+			newValue = CellUtil.cloneValue(sourceCell);
 		}
 
 		Cell newCell = CellUtil.createCell(
-				CellUtil.cloneRow(
-						sourceCell),
-				CellUtil.cloneFamily(
-						sourceCell),
-				CellUtil.cloneQualifier(
-						sourceCell),
+				CellUtil.cloneRow(sourceCell),
+				CellUtil.cloneFamily(sourceCell),
+				CellUtil.cloneQualifier(sourceCell),
 				sourceCell.getTimestamp(),
 				KeyValue.Type.Put.getCode(),
 				newValue);

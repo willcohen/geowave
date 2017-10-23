@@ -5,6 +5,7 @@ package mil.nga.giat.geowave.datastore.hbase;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.slf4j.Logger;
@@ -88,11 +89,11 @@ public class HBaseDataStore extends
 			final DataAdapter adapter,
 			final PrimaryIndex index ) {
 		if (adapter instanceof RowMergingDataAdapter) {
-
 			hbaseOperations.stageMergingAdapterForObserver(
 					index.getId(),
 					adapter.getAdapterId(),
-					((RowMergingDataAdapter) adapter).getTransform());
+					((RowMergingDataAdapter) adapter).getTransform(),
+					((RowMergingDataAdapter)adapter).getOptions(null));
 		}
 	}
 

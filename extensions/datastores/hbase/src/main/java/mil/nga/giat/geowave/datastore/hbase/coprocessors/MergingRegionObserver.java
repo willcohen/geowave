@@ -127,6 +127,8 @@ public class MergingRegionObserver extends
 				// Use merging scanner here
 				try (MergingInternalScanner mergingScanner = new MergingInternalScanner(
 						s)) {
+					mergingScanner.setTransformMap(mergingTransformMap);
+					
 					List<Cell> cellList = new ArrayList();
 					boolean notDone = mergingScanner.next(
 							cellList);

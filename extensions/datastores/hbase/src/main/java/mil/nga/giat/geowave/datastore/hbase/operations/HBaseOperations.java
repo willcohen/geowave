@@ -965,6 +965,11 @@ public class HBaseOperations implements
 						tableName.getName()));
 				mergeDataMessage.setAdapterId(adapterId);
 				mergeDataMessage.setTransformData(adapterTransformCache.get(adapterId));
+				
+				// TODO: What options?
+				HashMap<String, String> transformOptions = new HashMap();
+				transformOptions.put("KAMTEST", "KamTestValue");
+				mergeDataMessage.setOptions(transformOptions);
 
 				try {
 					Table table = conn.getTable(tableName);

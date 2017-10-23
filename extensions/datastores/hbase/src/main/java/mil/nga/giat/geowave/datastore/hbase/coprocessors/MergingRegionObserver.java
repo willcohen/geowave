@@ -30,13 +30,15 @@ import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter.RowTransfor
 public class MergingRegionObserver extends
 		BaseRegionObserver
 {
-	private final static Logger LOGGER = Logger.getLogger(MergingRegionObserver.class);
+	private final static Logger LOGGER = Logger.getLogger(
+			MergingRegionObserver.class);
 
 	public final static String COLUMN_FAMILIES_CONFIG_KEY = "hbase.coprocessor.merging.columnfamilies";
 
 	// TEST ONLY!
 	static {
-		LOGGER.setLevel(Level.DEBUG);
+		LOGGER.setLevel(
+				Level.DEBUG);
 	}
 
 	private HashSet<String> mergingTables = new HashSet<>();
@@ -53,13 +55,16 @@ public class MergingRegionObserver extends
 		if (!tableName.isSystemTable()) {
 			String tableNameString = tableName.getNameAsString();
 
-			if (mergingTables.contains(tableNameString)) {
-				LOGGER.debug(">>> preFlush for merging table: " + tableNameString);
+			if (mergingTables.contains(
+					tableNameString)) {
+				LOGGER.debug(
+						">>> preFlush for merging table: " + tableNameString);
 
 				MergingInternalScanner mergingScanner = new MergingInternalScanner(
 						memstoreScanner);
 
-				mergingScanner.setTransformMap(mergingTransformMap);
+				mergingScanner.setTransformMap(
+						mergingTransformMap);
 
 				return mergingScanner;
 			}
@@ -83,13 +88,16 @@ public class MergingRegionObserver extends
 		if (!tableName.isSystemTable()) {
 			String tableNameString = tableName.getNameAsString();
 
-			if (mergingTables.contains(tableNameString)) {
-				LOGGER.debug(">>> preCompact for merging table: " + tableNameString);
+			if (mergingTables.contains(
+					tableNameString)) {
+				LOGGER.debug(
+						">>> preCompact for merging table: " + tableNameString);
 
 				MergingInternalScanner mergingScanner = new MergingInternalScanner(
 						scanners);
 
-				mergingScanner.setTransformMap(mergingTransformMap);
+				mergingScanner.setTransformMap(
+						mergingTransformMap);
 
 				return mergingScanner;
 			}
@@ -111,16 +119,21 @@ public class MergingRegionObserver extends
 		if (!tableName.isSystemTable()) {
 			String tableNameString = tableName.getNameAsString();
 
-			if (mergingTables.contains(tableNameString)) {
-				LOGGER.debug(">>> preScannerNext for merging table: " + tableName.getNameAsString());
+			if (mergingTables.contains(
+					tableNameString)) {
+				LOGGER.debug(
+						">>> preScannerNext for merging table: " + tableName.getNameAsString());
 
 				// Use merging scanner here
 				try (MergingInternalScanner mergingScanner = new MergingInternalScanner(
 						s)) {
 					List<Cell> cellList = new ArrayList();
-					boolean notDone = mergingScanner.next(cellList);
+					boolean notDone = mergingScanner.next(
+							cellList);
 
-					results.add(Result.create(cellList));
+					results.add(
+							Result.create(
+									cellList));
 
 					e.bypass();
 
@@ -144,10 +157,12 @@ public class MergingRegionObserver extends
 			if (scan != null) {
 				Filter scanFilter = scan.getFilter();
 				if (scanFilter != null) {
-					MergeDataMessage mergeDataMessage = extractMergeData(scanFilter);
+					MergeDataMessage mergeDataMessage = extractMergeData(
+							scanFilter);
 
 					if (mergeDataMessage != null) {
-						updateMergingColumnFamilies(mergeDataMessage);
+						updateMergingColumnFamilies(
+								mergeDataMessage);
 
 						e.bypass();
 						e.complete();
@@ -169,7 +184,8 @@ public class MergingRegionObserver extends
 
 		if (checkFilter instanceof FilterList) {
 			for (Filter filter : ((FilterList) checkFilter).getFilters()) {
-				MergeDataMessage mergingFilter = extractMergeData(filter);
+				MergeDataMessage mergingFilter = extractMergeData(
+						filter);
 				if (mergingFilter != null) {
 					return mergingFilter;
 				}
@@ -181,17 +197,33 @@ public class MergingRegionObserver extends
 
 	private void updateMergingColumnFamilies(
 			MergeDataMessage mergeDataMessage ) {
-		LOGGER.debug("Updating CF from message: " + mergeDataMessage.getAdapterId().getString());
+		LOGGER.debug(
+				"Updating CF from message: " + mergeDataMessage.getAdapterId().getString());
 
 		String tableName = mergeDataMessage.getTableName().getString();
-		if (!mergingTables.contains(tableName)) {
-			mergingTables.add(tableName);
+		if (!mergingTables.contains(
+				tableName)) {
+			mergingTables.add(
+					tableName);
 		}
 
-		if (!mergingTransformMap.containsKey(mergeDataMessage.getAdapterId())) {
+		if (!mergingTransformMap.containsKey(
+				mergeDataMessage.getAdapterId())) {
+			RowTransform rowTransform = mergeDataMessage.getTransformData();
+
+			try {
+				rowTransform.initOptions(
+						mergeDataMessage.getOptions());
+			}
+			catch (IOException e) {
+				LOGGER.error(
+						"Error initializing row transform",
+						e);
+			}
+
 			mergingTransformMap.put(
 					mergeDataMessage.getAdapterId(),
-					mergeDataMessage.getTransformData());
+					rowTransform);
 		}
 	}
 }

@@ -11,6 +11,7 @@
 package mil.nga.giat.geowave.test;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -22,22 +23,21 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
+import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.util.VersionInfo;
 import org.apache.hadoop.util.VersionUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.geotools.data.DataStore;
 import org.geotools.data.DataStoreFinder;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.junit.Assert;
 import org.opengis.feature.simple.SimpleFeature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.beust.jcommander.ParameterException;
 import com.vividsolutions.jts.geom.Geometry;
@@ -445,5 +445,227 @@ public class TestUtils
 		if (errorPixels > 0) {
 			System.out.println(((float) errorPixels / (float) totalPixels) + "% pixels differed from expected");
 		}
+	}
+
+	public static double getTileValue(
+			final int x,
+			final int y,
+			final int b,
+			final int tileSize ) {
+		// just use an arbitrary 'r'
+		return getTileValue(
+				x,
+				y,
+				b,
+				3,
+				tileSize);
+	}
+
+	public static void fillTestRasters(
+			WritableRaster raster1,
+			WritableRaster raster2,
+			final int tileSize ) {
+		// for raster1 do the following:
+		// set every even row in bands 0 and 1
+		// set every value incorrectly in band 2
+		// set no values in band 3 and set every value in 4
+
+		// for raster2 do the following:
+		// set no value in band 0 and 4
+		// set every odd row in band 1
+		// set every value in bands 2 and 3
+
+		// for band 5, set the lower 2x2 samples for raster 1 and the rest for
+		// raster 2
+		// for band 6, set the upper quadrant samples for raster 1 and the rest
+		// for raster 2
+		// for band 7, set the lower 2x2 samples to the wrong value for raster 1
+		// and the expected value for raster 2 and set everything but the upper
+		// quadrant for raster 2
+		for (int x = 0; x < tileSize; x++) {
+			for (int y = 0; y < tileSize; y++) {
+
+				// just use x and y to arbitrarily end up with some wrong value
+				// that can be ingested
+				final double wrongValue = (getTileValue(
+						y,
+						x,
+						y,
+						tileSize) * 3) + 1;
+				if ((x < 2) && (y < 2)) {
+					raster1.setSample(
+							x,
+							y,
+							5,
+							getTileValue(
+									x,
+									y,
+									5,
+									tileSize));
+					raster1.setSample(
+							x,
+							y,
+							7,
+							wrongValue);
+					raster2.setSample(
+							x,
+							y,
+							7,
+							getTileValue(
+									x,
+									y,
+									7,
+									tileSize));
+				}
+				else {
+					raster2.setSample(
+							x,
+							y,
+							5,
+							getTileValue(
+									x,
+									y,
+									5,
+									tileSize));
+				}
+				if ((x > ((tileSize * 3) / 4)) && (y > ((tileSize * 3) / 4))) {
+					raster1.setSample(
+							x,
+							y,
+							6,
+							getTileValue(
+									x,
+									y,
+									6,
+									tileSize));
+				}
+				else {
+					raster2.setSample(
+							x,
+							y,
+							6,
+							getTileValue(
+									x,
+									y,
+									6,
+									tileSize));
+					raster2.setSample(
+							x,
+							y,
+							7,
+							getTileValue(
+									x,
+									y,
+									7,
+									tileSize));
+				}
+				if ((y % 2) == 0) {
+					raster1.setSample(
+							x,
+							y,
+							0,
+							getTileValue(
+									x,
+									y,
+									0,
+									tileSize));
+					raster1.setSample(
+							x,
+							y,
+							1,
+							getTileValue(
+									x,
+									y,
+									1,
+									tileSize));
+				}
+				raster1.setSample(
+						x,
+						y,
+						2,
+						wrongValue);
+
+				raster1.setSample(
+						x,
+						y,
+						4,
+						getTileValue(
+								x,
+								y,
+								4,
+								tileSize));
+				if ((y % 2) != 0) {
+					raster2.setSample(
+							x,
+							y,
+							1,
+							getTileValue(
+									x,
+									y,
+									1,
+									tileSize));
+				}
+				raster2.setSample(
+						x,
+						y,
+						2,
+						TestUtils.getTileValue(
+								x,
+								y,
+								2,
+								tileSize));
+
+				raster2.setSample(
+						x,
+						y,
+						3,
+						getTileValue(
+								x,
+								y,
+								3,
+								tileSize));
+			}
+		}
+	}
+
+	private static Random rng = null;
+
+	public static double getTileValue(
+			final int x,
+			final int y,
+			final int b,
+			final int r,
+			final int tileSize ) {
+		// make this some random but repeatable and vary the scale
+		final double resultOfFunction = randomFunction(
+				x,
+				y,
+				b,
+				r,
+				tileSize);
+		// this is meant to just vary the scale
+		if ((r % 2) == 0) {
+			return resultOfFunction;
+		}
+		else {
+			if (rng == null) {
+				rng = new Random(
+						(long) resultOfFunction);
+			}
+			else {
+				rng.setSeed((long) resultOfFunction);
+			}
+
+			return rng.nextDouble() * resultOfFunction;
+		}
+	}
+
+	private static double randomFunction(
+			final int x,
+			final int y,
+			final int b,
+			final int r,
+			final int tileSize ) {
+		return (((x + (y * tileSize)) * .1) / (b + 1)) + r;
 	}
 }

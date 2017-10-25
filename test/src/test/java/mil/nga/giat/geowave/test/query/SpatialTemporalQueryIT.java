@@ -12,20 +12,16 @@ package mil.nga.giat.geowave.test.query;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
@@ -39,6 +35,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.opengis.feature.simple.SimpleFeature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
@@ -73,9 +71,8 @@ import mil.nga.giat.geowave.test.annotation.NamespaceOverride;
 import mil.nga.giat.geowave.test.basic.AbstractGeoWaveIT;
 
 @RunWith(GeoWaveITRunner.class)
-@GeoWaveTestStore({
+@GeoWaveTestStore(value = {
 	GeoWaveStoreType.ACCUMULO,
-	// GeoWaveStoreType.BIGTABLE,
 	GeoWaveStoreType.HBASE
 })
 public class SpatialTemporalQueryIT extends
@@ -593,7 +590,7 @@ public class SpatialTemporalQueryIT extends
 		}
 	}
 
-	@Test
+	// @Test
 	public void testQueryMultipleBinsDay()
 			throws IOException,
 			CQLException {
@@ -610,7 +607,7 @@ public class SpatialTemporalQueryIT extends
 				"day");
 	}
 
-	@Test
+	// @Test
 	public void testQueryMultipleBinsMonth()
 			throws IOException,
 			CQLException {
@@ -628,7 +625,7 @@ public class SpatialTemporalQueryIT extends
 
 	}
 
-	@Test
+	// @Test
 	public void testQueryMultipleBinsYear()
 			throws IOException,
 			CQLException {

@@ -103,8 +103,6 @@ public class GeoServerIT extends
 		GeoWaveStoreType.ACCUMULO,
 		GeoWaveStoreType.BIGTABLE,
 		GeoWaveStoreType.HBASE
-	}, options = {
-		"disableServer=true",
 	})
 	protected DataStorePluginOptions dataStoreOptions;
 

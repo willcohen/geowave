@@ -63,6 +63,7 @@ public class GeoWaveITRunner extends
 
 	public static final String STORE_TYPE_ENVIRONMENT_VARIABLE_NAME = "STORE_TYPE";
 	public static final String STORE_TYPE_PROPERTY_NAME = "testStoreType";
+	public static final String SERVER_ENABLED_PROPERTY_NAME = "testServerEnabled";
 
 	@Override
 	protected Statement withBeforeClasses(

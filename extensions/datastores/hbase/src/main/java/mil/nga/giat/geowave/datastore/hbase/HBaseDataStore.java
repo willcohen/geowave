@@ -5,7 +5,6 @@ package mil.nga.giat.geowave.datastore.hbase;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.slf4j.Logger;
@@ -25,7 +24,6 @@ import mil.nga.giat.geowave.core.store.metadata.IndexStoreImpl;
 import mil.nga.giat.geowave.core.store.query.DistributableQuery;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseOptions;
-import mil.nga.giat.geowave.datastore.hbase.coprocessors.MergingRegionObserver;
 import mil.nga.giat.geowave.datastore.hbase.index.secondary.HBaseSecondaryIndexDataStore;
 import mil.nga.giat.geowave.datastore.hbase.mapreduce.HBaseSplitsProvider;
 import mil.nga.giat.geowave.datastore.hbase.operations.HBaseOperations;
@@ -89,11 +87,9 @@ public class HBaseDataStore extends
 			final DataAdapter adapter,
 			final PrimaryIndex index ) {
 		if (adapter instanceof RowMergingDataAdapter) {
-			hbaseOperations.stageMergingAdapterForObserver(
+			hbaseOperations.stageMergingAdapter(
 					index.getId(),
-					adapter.getAdapterId(),
-					((RowMergingDataAdapter) adapter).getTransform(),
-					((RowMergingDataAdapter)adapter).getOptions(null));
+					(RowMergingDataAdapter) adapter);
 		}
 	}
 

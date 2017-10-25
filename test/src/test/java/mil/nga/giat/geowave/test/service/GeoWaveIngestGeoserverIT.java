@@ -77,10 +77,6 @@ public class GeoWaveIngestGeoserverIT extends
 		GeoWaveStoreType.ACCUMULO,
 		GeoWaveStoreType.BIGTABLE,
 		GeoWaveStoreType.HBASE
-	}, options = {
-		"enableCustomFilters=true",
-		"enableCoprocessors=true",
-		"verifyCoprocessors=true"
 	})
 	protected DataStorePluginOptions dataStoreOptions;
 

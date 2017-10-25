@@ -207,6 +207,7 @@ public class BaseConstraintsQuery extends
 				try (final Reader reader = getReader(
 						datastoreOperations,
 						options,
+						adapterStore,
 						maxResolutionSubsamplingPerDimension,
 						limit)) {
 					Mergeable mergedAggregationResult = null;

@@ -81,8 +81,6 @@ public class BasicKafkaIT extends
 		GeoWaveStoreType.ACCUMULO,
 		GeoWaveStoreType.BIGTABLE,
 		GeoWaveStoreType.HBASE
-	}, options = {
-		"enableServerSideLibrary=true"
 	})
 	protected DataStorePluginOptions dataStorePluginOptions;
 
@@ -134,16 +132,6 @@ public class BasicKafkaIT extends
 		final DataStatisticsStore statsStore = dataStorePluginOptions.createDataStatisticsStore();
 		final AdapterStore adapterStore = dataStorePluginOptions.createAdapterStore();
 		int adapterCount = 0;
-
-		// Clear out old stats first
-		try (CloseableIterator<DataAdapter<?>> adapterIterator = adapterStore.getAdapters()) {
-			while (adapterIterator.hasNext()) {
-				final FeatureDataAdapter adapter = (FeatureDataAdapter) adapterIterator.next();
-				statsStore.removeAllStatistics(
-						adapter.getAdapterId(),
-						null);
-			}
-		}
 
 		try (CloseableIterator<DataAdapter<?>> adapterIterator = adapterStore.getAdapters()) {
 			while (adapterIterator.hasNext()) {

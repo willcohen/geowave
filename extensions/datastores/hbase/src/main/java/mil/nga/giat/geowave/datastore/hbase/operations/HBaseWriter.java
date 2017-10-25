@@ -83,9 +83,10 @@ public class HBaseWriter implements
 
 		String columnFamily = StringUtils.stringFromBinary(row.getAdapterId());
 
-		operations.verifyOrAddColumnFamily(
+		operations.verifyColumnFamily(
 				columnFamily,
-				tableName);
+				tableName,
+				true);
 
 		writeMutations(rowToMutation(row));
 	}
@@ -105,11 +106,13 @@ public class HBaseWriter implements
 	private static RowMutations rowToMutation(
 			final GeoWaveRow row ) {
 		final byte[] rowBytes = GeoWaveKey.getCompositeId(row);
+
 		final RowMutations mutation = new RowMutations(
 				rowBytes);
 		for (final GeoWaveValue value : row.getFieldValues()) {
 			final Put put = new Put(
-					rowBytes);
+					rowBytes,
+					System.currentTimeMillis());
 
 			put.addColumn(
 					row.getAdapterId(),

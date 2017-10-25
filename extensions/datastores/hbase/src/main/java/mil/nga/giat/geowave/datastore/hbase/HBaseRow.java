@@ -1,5 +1,7 @@
 package mil.nga.giat.geowave.datastore.hbase;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 
@@ -28,21 +30,29 @@ public class HBaseRow implements
 				partitionKeyLength);
 
 		NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> rowMapping = result.getMap();
-		fieldValues = new GeoWaveValue[rowMapping.size()];
-
-		int i = 0;
+		List<GeoWaveValue> fieldValueList = new ArrayList();
 
 		for (final Entry<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> cfEntry : rowMapping.entrySet()) {
 			for (final Entry<byte[], NavigableMap<Long, byte[]>> cqEntry : cfEntry.getValue().entrySet()) {
-				byte[] byteValue = cqEntry.getValue().lastEntry().getValue();
-				byte[] qualifier = cqEntry.getKey();
+				for (Entry<Long, byte[]> cqEntryValue : cqEntry.getValue().entrySet()) {
+					byte[] byteValue = cqEntryValue.getValue();
+					byte[] qualifier = cqEntry.getKey();
 
-				fieldValues[i++] = new GeoWaveValueImpl(
-						qualifier,
-						null,
-						byteValue);
+					fieldValueList.add(new GeoWaveValueImpl(
+							qualifier,
+							null,
+							byteValue));
+				}
 			}
 		}
+
+		fieldValues = new GeoWaveValue[fieldValueList.size()];
+		int i = 0;
+
+		for (GeoWaveValue gwValue : fieldValueList) {
+			fieldValues[i++] = gwValue;
+		}
+
 	}
 
 	@Override

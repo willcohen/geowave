@@ -18,13 +18,11 @@ import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter.RowTransfor
 public class MergeDataMessage extends
 		FilterBase
 {
-	private final static Logger LOGGER = Logger.getLogger(
-			MergeDataMessage.class);
+	private final static Logger LOGGER = Logger.getLogger(MergeDataMessage.class);
 
 	// TEST ONLY!
 	static {
-		LOGGER.setLevel(
-				Level.DEBUG);
+		LOGGER.setLevel(Level.DEBUG);
 	}
 
 	private ByteArrayId tableName;
@@ -39,51 +37,41 @@ public class MergeDataMessage extends
 	public static MergeDataMessage parseFrom(
 			final byte[] pbBytes )
 			throws DeserializationException {
-		final ByteBuffer buf = ByteBuffer.wrap(
-				pbBytes);
+		final ByteBuffer buf = ByteBuffer.wrap(pbBytes);
 
 		final int tableLength = buf.getInt();
 		final int adapterLength = buf.getInt();
 		final int transformLength = buf.getInt();
 
 		final byte[] tableBytes = new byte[tableLength];
-		buf.get(
-				tableBytes);
+		buf.get(tableBytes);
 
 		final byte[] adapterBytes = new byte[adapterLength];
-		buf.get(
-				adapterBytes);
+		buf.get(adapterBytes);
 
 		final byte[] transformBytes = new byte[transformLength];
-		buf.get(
-				transformBytes);
+		buf.get(transformBytes);
 
 		final byte[] optionsBytes = new byte[pbBytes.length - transformLength - adapterLength - tableLength - 12];
-		buf.get(
-				optionsBytes);
+		buf.get(optionsBytes);
 
 		MergeDataMessage mergingFilter = new MergeDataMessage();
 
-		mergingFilter.setTableName(
-				new ByteArrayId(
-						tableBytes));
+		mergingFilter.setTableName(new ByteArrayId(
+				tableBytes));
 
-		mergingFilter.setAdapterId(
-				new ByteArrayId(
-						adapterBytes));
+		mergingFilter.setAdapterId(new ByteArrayId(
+				adapterBytes));
 
 		RowTransform rowTransform = PersistenceUtils.fromBinary(
 				transformBytes,
 				RowTransform.class);
 
-		mergingFilter.setTransformData(
-				rowTransform);
+		mergingFilter.setTransformData(rowTransform);
 
-		HashMap<String, String> options = (HashMap<String, String>) SerializationUtils.deserialize(
-				optionsBytes);
-		
-		mergingFilter.setOptions(
-				options);
+		HashMap<String, String> options = (HashMap<String, String>) SerializationUtils.deserialize(optionsBytes);
+
+		mergingFilter.setOptions(options);
 
 		return mergingFilter;
 	}
@@ -93,28 +81,19 @@ public class MergeDataMessage extends
 			throws IOException {
 		final byte[] tableBinary = tableName.getBytes();
 		final byte[] adapterBinary = adapterId.getBytes();
-		final byte[] transformBinary = PersistenceUtils.toBinary(
-				transformData);
-		final byte[] optionsBinary = SerializationUtils.serialize(
-				options);
+		final byte[] transformBinary = PersistenceUtils.toBinary(transformData);
+		final byte[] optionsBinary = SerializationUtils.serialize(options);
 
-		final ByteBuffer buf = ByteBuffer.allocate(
-				tableBinary.length + adapterBinary.length + transformBinary.length + optionsBinary.length + 12);
+		final ByteBuffer buf = ByteBuffer.allocate(tableBinary.length + adapterBinary.length + transformBinary.length
+				+ optionsBinary.length + 12);
 
-		buf.putInt(
-				tableBinary.length);
-		buf.putInt(
-				adapterBinary.length);
-		buf.putInt(
-				transformBinary.length);
-		buf.put(
-				tableBinary);
-		buf.put(
-				adapterBinary);
-		buf.put(
-				transformBinary);
-		buf.put(
-				optionsBinary);
+		buf.putInt(tableBinary.length);
+		buf.putInt(adapterBinary.length);
+		buf.putInt(transformBinary.length);
+		buf.put(tableBinary);
+		buf.put(adapterBinary);
+		buf.put(transformBinary);
+		buf.put(optionsBinary);
 
 		return buf.array();
 	}

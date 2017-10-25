@@ -75,13 +75,11 @@ public class GeoWaveBasicSpatialTemporalVectorIT extends
 		GeoWaveStoreType.CASSANDRA,
 		GeoWaveStoreType.DYNAMODB,
 		GeoWaveStoreType.HBASE
-	}, options = {
-		"enableServerSideLibrary=true"
 	})
 	protected DataStorePluginOptions dataStore;
 	private static long startMillis;
 	private static final boolean POINTS_ONLY = false;
-	private static final int NUM_THREADS = 1;
+	private static final int NUM_THREADS = 4;
 
 	@BeforeClass
 	public static void reportTestStart() {
@@ -201,7 +199,7 @@ public class GeoWaveBasicSpatialTemporalVectorIT extends
 			testStats(
 					statsInputs,
 					TestUtils.DEFAULT_SPATIAL_TEMPORAL_INDEX,
-					false);
+					(NUM_THREADS > 1));
 		}
 		catch (final Exception e) {
 			e.printStackTrace();

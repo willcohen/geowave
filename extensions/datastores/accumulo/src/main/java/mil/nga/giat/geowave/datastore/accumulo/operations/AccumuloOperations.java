@@ -23,6 +23,7 @@ import org.apache.accumulo.core.client.BatchDeleter;
 import org.apache.accumulo.core.client.BatchScanner;
 import org.apache.accumulo.core.client.BatchWriter;
 import org.apache.accumulo.core.client.BatchWriterConfig;
+import org.apache.accumulo.core.client.ClientSideIteratorScanner;
 import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.Instance;
 import org.apache.accumulo.core.client.IteratorSetting;
@@ -113,11 +114,6 @@ public class AccumuloOperations implements
 	private final Map<String, Set<String>> insuredAuthorizationCache = new HashMap<>();
 	private final Map<String, Set<ByteArrayId>> insuredPartitionCache = new HashMap<>();
 	private final AccumuloOptions options;
-
-	// KAM: Temporarily splitting out stats merging from other server side
-	// operations
-	// This is replacing options.isServerSideLibraryEnabled in a few places.
-	public static final boolean SERVER_SIDE_STATS_MERGE = false;
 
 	/**
 	 * This is will create an Accumulo connector based on passed in connection
@@ -308,8 +304,9 @@ public class AccumuloOperations implements
 						e);
 			}
 			catch (TableNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				LOGGER.error(
+						"Error disabling version iterator",
+						e);
 			}
 		}
 	}
@@ -573,6 +570,16 @@ public class AccumuloOperations implements
 					localityGroupStr,
 					new Date().getTime());
 		}
+	}
+
+	public ClientSideIteratorScanner createClientScanner(
+			final String tableName,
+			final String... additionalAuthorizations )
+			throws TableNotFoundException {
+		return new ClientSideIteratorScanner(
+				createScanner(
+						tableName,
+						additionalAuthorizations));
 	}
 
 	public Scanner createScanner(
@@ -939,9 +946,16 @@ public class AccumuloOperations implements
 		ScannerBase scanner;
 		try {
 			if (!params.isAggregation() && (ranges != null) && (ranges.size() == 1)) {
-				scanner = createScanner(
-						tableName,
-						params.getAdditionalAuthorizations());
+				if (!options.isServerSideLibraryEnabled()) {
+					scanner = createClientScanner(
+							tableName,
+							params.getAdditionalAuthorizations());
+				}
+				else {
+					scanner = createScanner(
+							tableName,
+							params.getAdditionalAuthorizations());
+				}
 				final ByteArrayRange r = ranges.get(0);
 				if (r.isSingleValue()) {
 					((Scanner) scanner).setRange(Range.exact(new Text(
@@ -1014,7 +1028,7 @@ public class AccumuloOperations implements
 				params,
 				scanner);
 		IteratorSetting iteratorSettings = null;
-		if (params.isAggregation()) {
+		if (params.isServersideAggregation()) {
 			if (params.isMixedVisibility()) {
 				iteratorSettings = new IteratorSetting(
 						QueryFilterIterator.QUERY_ITERATOR_PRIORITY,
@@ -1065,7 +1079,7 @@ public class AccumuloOperations implements
 
 		boolean usingDistributableFilter = false;
 
-		if ((params.getFilter() != null) && options.isServerSideLibraryEnabled()) {
+		if (params.getFilter() != null) {
 			usingDistributableFilter = true;
 			if (iteratorSettings == null) {
 				if (params.isMixedVisibility()) {
@@ -1180,14 +1194,17 @@ public class AccumuloOperations implements
 	public Reader createReader(
 			final ReaderParams params ) {
 		final ScannerBase scanner = getScanner(params);
+
 		addConstraintsScanIteratorSettings(
 				params,
 				scanner,
 				options);
+
 		return new AccumuloReader(
 				scanner,
 				params.getIndex().getIndexStrategy().getPartitionKeyLength(),
-				params.isMixedVisibility() && !params.isServersideAggregation());
+				params.isMixedVisibility() && !params.isServersideAggregation(),
+				params.isClientsideRowMerging());
 	}
 
 	protected Scanner getScanner(
@@ -1266,7 +1283,8 @@ public class AccumuloOperations implements
 		return new AccumuloReader(
 				scanner,
 				readerParams.getIndex().getIndexStrategy().getPartitionKeyLength(),
-				readerParams.isMixedVisibility() && !readerParams.isServersideAggregation());
+				readerParams.isMixedVisibility() && !readerParams.isServersideAggregation(),
+				false);
 	}
 
 	@Override
@@ -1292,7 +1310,7 @@ public class AccumuloOperations implements
 		if (options.isCreateTable()) {
 			createTable(
 					tableName,
-					true,
+					options.isServerSideLibraryEnabled(),
 					options.isEnableBlockCache());
 		}
 
@@ -1336,13 +1354,10 @@ public class AccumuloOperations implements
 			// this checks for existence prior to create
 			createTable(
 					AbstractGeoWavePersistence.METADATA_TABLE,
-					// options.isServerSideLibraryEnabled(),
-					AccumuloOperations.SERVER_SIDE_STATS_MERGE,
+					options.isServerSideLibraryEnabled(),
 					options.isEnableBlockCache());
 		}
-		if (MetadataType.STATS.equals(metadataType)
-		// && options.isServerSideLibraryEnabled()
-				&& AccumuloOperations.SERVER_SIDE_STATS_MERGE) {
+		if (MetadataType.STATS.equals(metadataType) && options.isServerSideLibraryEnabled()) {
 			synchronized (this) {
 				if (!iteratorsAttached) {
 					iteratorsAttached = true;

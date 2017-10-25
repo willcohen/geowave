@@ -7,15 +7,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.apache.accumulo.core.client.AccumuloException;
-import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchScanner;
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,9 +91,7 @@ public class AccumuloMetadataReader implements
 			scanner.setRanges(ranges);
 
 			// For stats w/ no server-side support, need to merge here
-			if (metadataType == MetadataType.STATS
-			// && !options.isServerSideLibraryEnabled()
-					&& !AccumuloOperations.SERVER_SIDE_STATS_MERGE) {
+			if (metadataType == MetadataType.STATS && !options.isServerSideLibraryEnabled()) {
 
 				HashMap<Text, Key> keyMap = new HashMap();
 				HashMap<Text, DataStatistics> mergedDataMap = new HashMap();
@@ -171,9 +166,7 @@ public class AccumuloMetadataReader implements
 	}
 
 	private IteratorSetting[] getScanSettings() {
-		if (MetadataType.STATS.equals(metadataType)
-		// && options.isServerSideLibraryEnabled()
-				&& AccumuloOperations.SERVER_SIDE_STATS_MERGE) {
+		if (MetadataType.STATS.equals(metadataType) && options.isServerSideLibraryEnabled()) {
 			return getStatsScanSettings();
 		}
 		return null;

@@ -10,16 +10,28 @@
  ******************************************************************************/
 package mil.nga.giat.geowave.datastore.bigtable.index.secondary;
 
+import mil.nga.giat.geowave.core.store.StoreFactoryHelper;
 import mil.nga.giat.geowave.core.store.StoreFactoryOptions;
 import mil.nga.giat.geowave.core.store.index.SecondaryIndexDataStore;
-import mil.nga.giat.geowave.datastore.bigtable.AbstractBigTableStoreFactory;
-import mil.nga.giat.geowave.datastore.bigtable.operations.BigTableOperations;
+import mil.nga.giat.geowave.core.store.metadata.SecondaryIndexStoreFactory;
+import mil.nga.giat.geowave.core.store.operations.DataStoreOperations;
 import mil.nga.giat.geowave.datastore.bigtable.operations.config.BigTableOptions;
 import mil.nga.giat.geowave.datastore.hbase.index.secondary.HBaseSecondaryIndexDataStore;
+import mil.nga.giat.geowave.datastore.hbase.operations.HBaseOperations;
 
 public class BigTableSecondaryIndexDataStoreFactory extends
-		AbstractBigTableStoreFactory<SecondaryIndexDataStore>
+		SecondaryIndexStoreFactory
 {
+	public BigTableSecondaryIndexDataStoreFactory(
+			final String typeName,
+			final String description,
+			final StoreFactoryHelper helper ) {
+		super(
+				typeName,
+				description,
+				helper);
+	}
+
 	@Override
 	public SecondaryIndexDataStore createStore(
 			final StoreFactoryOptions options ) {
@@ -28,9 +40,10 @@ public class BigTableSecondaryIndexDataStoreFactory extends
 					"Expected " + BigTableOptions.class.getSimpleName());
 		}
 
-		final BigTableOperations bigTableOperations = createOperations((BigTableOptions) options);
+		final DataStoreOperations bigtableOperations = helper.createOperations(options);
+
 		return new HBaseSecondaryIndexDataStore(
-				bigTableOperations,
+				(HBaseOperations) bigtableOperations,
 				((BigTableOptions) options).getHBaseOptions());
 	}
 }

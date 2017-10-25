@@ -1,15 +1,16 @@
 package mil.nga.giat.geowave.datastore.hbase.coprocessors;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
+import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.regionserver.InternalScanner;
-import org.apache.hadoop.hbase.regionserver.KeyValueScanner;
+import org.apache.hadoop.hbase.regionserver.RegionScanner;
 import org.apache.hadoop.hbase.regionserver.ScannerContext;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -19,13 +20,12 @@ import mil.nga.giat.geowave.core.index.Mergeable;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter.RowTransform;
 
-public class MergingInternalScanner implements
-		InternalScanner
+public class MergingRegionScanner implements
+		RegionScanner
 {
-	private final static Logger LOGGER = Logger.getLogger(MergingInternalScanner.class);
+	private final static Logger LOGGER = Logger.getLogger(MergingRegionScanner.class);
 
-	private KeyValueScanner delegate = null;
-	private List<? extends KeyValueScanner> delegateList = null;
+	private RegionScanner delegate = null;
 	private HashMap<ByteArrayId, RowTransform> mergingTransformMap;
 	private NextCell peekedCell = null;
 	private String scannerId = UUID.randomUUID().toString();
@@ -41,14 +41,9 @@ public class MergingInternalScanner implements
 		LOGGER.setLevel(Level.DEBUG);
 	}
 
-	public MergingInternalScanner(
-			final KeyValueScanner delegate ) {
+	public MergingRegionScanner(
+			final RegionScanner delegate ) {
 		this.delegate = delegate;
-	}
-
-	public MergingInternalScanner(
-			final List<? extends KeyValueScanner> delegateList ) {
-		this.delegateList = delegateList;
 	}
 
 	public String getId() {
@@ -60,6 +55,8 @@ public class MergingInternalScanner implements
 			List<Cell> results,
 			ScannerContext scannerContext )
 			throws IOException {
+		LOGGER.debug(">>> RegionScanner(" + scannerId + ") NEXT(1)...");
+
 		return nextInternal(
 				results,
 				scannerContext);
@@ -69,6 +66,8 @@ public class MergingInternalScanner implements
 	public boolean next(
 			List<Cell> results )
 			throws IOException {
+		LOGGER.debug(">>> RegionScanner(" + scannerId + ") NEXT(2)...");
+
 		return nextInternal(
 				results,
 				null);
@@ -80,7 +79,7 @@ public class MergingInternalScanner implements
 			throws IOException {
 		NextCell mergedCell = new NextCell();
 
-		LOGGER.debug(">>> Scanner(" + scannerId + ") NEXT...");
+		LOGGER.debug(">>> RegionScanner(" + scannerId + ") NEXT...");
 
 		if (peekedCell != null) {
 			mergedCell.cell = copyCell(
@@ -118,29 +117,14 @@ public class MergingInternalScanner implements
 
 	private NextCell getNextCell()
 			throws IOException {
-		NextCell nextCell = null;
-
-		if (delegate != null) {
-			nextCell = new NextCell();
-			nextCell.cell = delegate.next();
-			nextCell.hasMore = delegate.peek() != null;
-		}
-		else if (delegateList != null) {
-			nextCell = getNextCellFromList();
-		}
-
-		return nextCell;
-	}
-
-	private NextCell getNextCellFromList()
-			throws IOException {
+		List<Cell> cellList = new ArrayList<>();
 		NextCell nextCell = new NextCell();
 
-		Cell mergedCell = null;
-		boolean hasMore = false;
+		boolean hasMore = delegate.next(cellList);
 
-		for (KeyValueScanner scanner : delegateList) {
-			Cell cell = scanner.next();
+		Cell mergedCell = null;
+
+		for (Cell cell : cellList) {
 			if (mergedCell == null) {
 				mergedCell = cell;
 			}
@@ -149,8 +133,6 @@ public class MergingInternalScanner implements
 						mergedCell,
 						cell);
 			}
-
-			hasMore = scanner.peek() != null;
 		}
 
 		if (mergedCell != null) {
@@ -238,18 +220,65 @@ public class MergingInternalScanner implements
 	@Override
 	public void close()
 			throws IOException {
-		if (delegate != null) {
-			delegate.close();
-		}
-		else if (delegateList != null) {
-			for (KeyValueScanner scanner : delegateList) {
-				scanner.close();
-			}
-		}
+		delegate.close();
 	}
 
 	public void setTransformMap(
 			HashMap<ByteArrayId, RowTransform> mergingTransformMap ) {
 		this.mergingTransformMap = mergingTransformMap;
+	}
+
+	@Override
+	public HRegionInfo getRegionInfo() {
+		return delegate.getRegionInfo();
+	}
+
+	@Override
+	public boolean isFilterDone()
+			throws IOException {
+		return delegate.isFilterDone();
+	}
+
+	@Override
+	public boolean reseek(
+			byte[] row )
+			throws IOException {
+		return delegate.reseek(row);
+	}
+
+	@Override
+	public long getMaxResultSize() {
+		return delegate.getMaxResultSize();
+	}
+
+	@Override
+	public long getMvccReadPoint() {
+		return delegate.getMvccReadPoint();
+	}
+
+	@Override
+	public int getBatch() {
+		return delegate.getBatch();
+	}
+
+	@Override
+	public boolean nextRaw(
+			List<Cell> result )
+			throws IOException {
+		LOGGER.debug(">>> RegionScanner(" + scannerId + ") NEXTRAW...");
+
+		return next(result);
+	}
+
+	@Override
+	public boolean nextRaw(
+			List<Cell> result,
+			ScannerContext scannerContext )
+			throws IOException {
+		LOGGER.debug(">>> RegionScanner(" + scannerId + ") NEXTRAW...");
+
+		return next(
+				result,
+				scannerContext);
 	}
 }

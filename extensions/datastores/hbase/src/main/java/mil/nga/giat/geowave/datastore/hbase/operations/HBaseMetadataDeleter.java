@@ -45,11 +45,13 @@ public class HBaseMetadataDeleter implements
 
 			Delete delete = new Delete(
 					query.getPrimaryId());
-			delete.addColumn(
+			delete.addColumns(
 					StringUtils.stringToBinary(metadataTypeName),
 					query.getSecondaryId());
 
 			deleter.mutate(delete);
+			deleter.close();
+
 			return true;
 		}
 		catch (IOException e) {

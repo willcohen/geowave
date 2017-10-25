@@ -132,7 +132,7 @@ public class AccumuloDataStore extends
 		final String indexName = index.getId().getString();
 
 		try {
-			if (adapter instanceof RowMergingDataAdapter) {
+			if (accumuloOptions.isServerSideLibraryEnabled() && adapter instanceof RowMergingDataAdapter) {
 				if (!DataAdapterAndIndexCache.getInstance(
 						RowMergingAdapterOptionProvider.ROW_MERGING_ADAPTER_CACHE_ID).add(
 						adapter.getAdapterId(),
@@ -167,6 +167,7 @@ public class AccumuloDataStore extends
 			final DistributableQuery query,
 			final QueryOptions queryOptions,
 			final AdapterStore adapterStore,
+			final AdapterIndexMappingStore aimStore,
 			final DataStatisticsStore statsStore,
 			final IndexStore indexStore,
 			final Integer minSplits,
@@ -180,7 +181,7 @@ public class AccumuloDataStore extends
 				adapterStore,
 				statsStore,
 				indexStore,
-				indexMappingStore,
+				aimStore,
 				minSplits,
 				maxSplits);
 	}

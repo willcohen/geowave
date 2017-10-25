@@ -5,7 +5,6 @@ package mil.nga.giat.geowave.datastore.hbase;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.slf4j.Logger;
@@ -25,7 +24,6 @@ import mil.nga.giat.geowave.core.store.metadata.IndexStoreImpl;
 import mil.nga.giat.geowave.core.store.query.DistributableQuery;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseOptions;
-import mil.nga.giat.geowave.datastore.hbase.coprocessors.MergingRegionObserver;
 import mil.nga.giat.geowave.datastore.hbase.index.secondary.HBaseSecondaryIndexDataStore;
 import mil.nga.giat.geowave.datastore.hbase.mapreduce.HBaseSplitsProvider;
 import mil.nga.giat.geowave.datastore.hbase.operations.HBaseOperations;
@@ -36,10 +34,11 @@ public class HBaseDataStore extends
 {
 	private final static Logger LOGGER = LoggerFactory.getLogger(HBaseDataStore.class);
 
-	private final HBaseSplitsProvider splitsProvider = new HBaseSplitsProvider();
+	private final HBaseSplitsProvider splitsProvider;
 	private final HBaseOperations hbaseOperations;
 
 	public HBaseDataStore(
+			final HBaseSplitsProvider splitsProvider,
 			final HBaseOperations operations,
 			final HBaseOptions options ) {
 		this(
@@ -58,6 +57,7 @@ public class HBaseDataStore extends
 				new HBaseSecondaryIndexDataStore(
 						operations,
 						options),
+				splitsProvider,
 				operations,
 				options);
 	}
@@ -68,6 +68,7 @@ public class HBaseDataStore extends
 			final DataStatisticsStore statisticsStore,
 			final AdapterIndexMappingStore indexMappingStore,
 			final HBaseSecondaryIndexDataStore secondaryIndexDataStore,
+			final HBaseSplitsProvider splitsProvider,
 			final HBaseOperations operations,
 			final HBaseOptions options ) {
 		super(
@@ -82,6 +83,7 @@ public class HBaseDataStore extends
 		secondaryIndexDataStore.setDataStore(this);
 
 		hbaseOperations = operations;
+		this.splitsProvider = splitsProvider;
 	}
 
 	@Override
@@ -89,11 +91,9 @@ public class HBaseDataStore extends
 			final DataAdapter adapter,
 			final PrimaryIndex index ) {
 		if (adapter instanceof RowMergingDataAdapter) {
-			hbaseOperations.stageMergingAdapterForObserver(
+			hbaseOperations.stageMergingAdapter(
 					index.getId(),
-					adapter.getAdapterId(),
-					((RowMergingDataAdapter) adapter).getTransform(),
-					((RowMergingDataAdapter)adapter).getOptions(null));
+					(RowMergingDataAdapter) adapter);
 		}
 	}
 
@@ -102,6 +102,7 @@ public class HBaseDataStore extends
 			final DistributableQuery query,
 			final QueryOptions queryOptions,
 			final AdapterStore adapterStore,
+			final AdapterIndexMappingStore aimStore,
 			final DataStatisticsStore statsStore,
 			final IndexStore indexStore,
 			final Integer minSplits,
@@ -115,7 +116,7 @@ public class HBaseDataStore extends
 				adapterStore,
 				statsStore,
 				indexStore,
-				indexMappingStore,
+				aimStore,
 				minSplits,
 				maxSplits);
 	}

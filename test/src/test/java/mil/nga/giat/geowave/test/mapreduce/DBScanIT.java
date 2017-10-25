@@ -75,7 +75,7 @@ import mil.nga.giat.geowave.test.basic.AbstractGeoWaveIT;
 public class DBScanIT extends
 		AbstractGeoWaveIT
 {
-	@GeoWaveTestStore({
+	@GeoWaveTestStore(value = {
 		GeoWaveStoreType.ACCUMULO,
 		GeoWaveStoreType.BIGTABLE,
 		GeoWaveStoreType.HBASE

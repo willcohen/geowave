@@ -14,6 +14,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeSet;
 
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -90,6 +91,11 @@ public class RowRangeHistogramStatistics<T> extends
 
 	public boolean isSet() {
 		return false;
+	}
+
+	public TreeSet<ByteArrayId> getPartitionKeys() {
+		return new TreeSet<>(
+				histogramPerPartition.keySet());
 	}
 
 	private synchronized NumericHistogram getHistogram(
@@ -271,7 +277,7 @@ public class RowRangeHistogramStatistics<T> extends
 		}
 	}
 
-	protected ByteArrayId getPartitionKey(
+	protected static ByteArrayId getPartitionKey(
 			final byte[] partitionBytes ) {
 		return ((partitionBytes == null) || (partitionBytes.length == 0)) ? null : new ByteArrayId(
 				partitionBytes);

@@ -1,8 +1,10 @@
 package mil.nga.giat.geowave.core.store.base;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
@@ -16,14 +18,17 @@ import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.DataStoreOptions;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
+import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
 import mil.nga.giat.geowave.core.store.data.visibility.DifferingFieldVisibilityEntryCount;
 import mil.nga.giat.geowave.core.store.filter.FilterList;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
+import mil.nga.giat.geowave.core.store.flatten.BitmaskUtils;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.operations.DataStoreOperations;
 import mil.nga.giat.geowave.core.store.operations.Reader;
 import mil.nga.giat.geowave.core.store.operations.ReaderClosableWrapper;
+import mil.nga.giat.geowave.core.store.util.MergingEntryIterator;
 import mil.nga.giat.geowave.core.store.util.NativeEntryIteratorWrapper;
 
 abstract class BaseFilteredIndexQuery extends
@@ -63,6 +68,7 @@ abstract class BaseFilteredIndexQuery extends
 		final Reader reader = getReader(
 				datastoreOperations,
 				options,
+				adapterStore,
 				maxResolutionSubsamplingPerDimension,
 				limit);
 		if (reader == null) {
@@ -89,6 +95,7 @@ abstract class BaseFilteredIndexQuery extends
 	protected Reader getReader(
 			final DataStoreOperations datastoreOperations,
 			final DataStoreOptions options,
+			final AdapterStore adapterStore,
 			final double[] maxResolutionSubsamplingPerDimension,
 			final Integer limit ) {
 		boolean exists = false;
@@ -108,8 +115,25 @@ abstract class BaseFilteredIndexQuery extends
 		return super.getReader(
 				datastoreOperations,
 				options,
+				adapterStore,
 				maxResolutionSubsamplingPerDimension,
 				limit);
+	}
+
+	protected Map<ByteArrayId, RowMergingDataAdapter> getMergingAdapters(
+			final AdapterStore adapterStore ) {
+		final Map<ByteArrayId, RowMergingDataAdapter> mergingAdapters = new HashMap<ByteArrayId, RowMergingDataAdapter>();
+		for (final ByteArrayId adapterId : adapterIds) {
+			final DataAdapter adapter = adapterStore.getAdapter(adapterId);
+			if ((adapter instanceof RowMergingDataAdapter)
+					&& (((RowMergingDataAdapter) adapter).getTransform() != null)) {
+				mergingAdapters.put(
+						adapterId,
+						(RowMergingDataAdapter) adapter);
+			}
+		}
+
+		return mergingAdapters;
 	}
 
 	protected Iterator initIterator(
@@ -120,12 +144,31 @@ abstract class BaseFilteredIndexQuery extends
 			final boolean decodePersistenceEncoding ) {
 		// TODO GEOWAVE-1018: this will be a logical place to subsample (and
 		// field subset?) if it is not already happening on the server
+
+		// Determine client-side row merging
+		if (!options.isServerSideLibraryEnabled()) {
+			final Map<ByteArrayId, RowMergingDataAdapter> mergingAdapters = getMergingAdapters(adapterStore);
+
+			if (!mergingAdapters.isEmpty()) {
+				return new MergingEntryIterator(
+						adapterStore,
+						index,
+						reader,
+						getClientFilter(options),
+						scanCallback,
+						mergingAdapters,
+						maxResolutionSubsamplingPerDimension);
+			}
+		}
+
 		return new NativeEntryIteratorWrapper(
 				adapterStore,
 				index,
 				reader,
 				getClientFilter(options),
 				scanCallback,
+				getFieldBitmask(),
+				maxResolutionSubsamplingPerDimension,
 				decodePersistenceEncoding);
 	}
 

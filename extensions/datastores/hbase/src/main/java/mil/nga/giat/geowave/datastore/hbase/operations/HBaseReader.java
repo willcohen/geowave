@@ -11,6 +11,7 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.MultiRowRangeFilter;
 import org.apache.hadoop.hbase.filter.MultiRowRangeFilter.RowRange;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +33,8 @@ import mil.nga.giat.geowave.datastore.hbase.HBaseRow;
 import mil.nga.giat.geowave.datastore.hbase.filters.FixedCardinalitySkippingFilter;
 import mil.nga.giat.geowave.datastore.hbase.filters.HBaseDistributableFilter;
 import mil.nga.giat.geowave.datastore.hbase.filters.HBaseNumericIndexStrategyFilter;
-import mil.nga.giat.geowave.mapreduce.splits.GeoWaveRowRange;
+import mil.nga.giat.geowave.datastore.hbase.mapreduce.HBaseSplitsProvider;
+import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils;
 import mil.nga.giat.geowave.mapreduce.splits.RecordReaderParams;
 
 public class HBaseReader implements
@@ -43,6 +45,7 @@ public class HBaseReader implements
 	private final ReaderParams readerParams;
 	private final RecordReaderParams recordReaderParams;
 	private final HBaseOperations operations;
+	private final boolean clientSideRowMerging;
 
 	private ResultScanner scanner;
 	private Iterator<Result> scanIt;
@@ -62,6 +65,7 @@ public class HBaseReader implements
 
 		this.partitionKeyLength = readerParams.getIndex().getIndexStrategy().getPartitionKeyLength();
 		this.wholeRowEncoding = readerParams.isMixedVisibility() && !readerParams.isServersideAggregation();
+		this.clientSideRowMerging = readerParams.isClientsideRowMerging();
 
 		if (readerParams.isServersideAggregation()) {
 			this.scanner = null;
@@ -83,6 +87,7 @@ public class HBaseReader implements
 
 		this.partitionKeyLength = recordReaderParams.getIndex().getIndexStrategy().getPartitionKeyLength();
 		this.wholeRowEncoding = recordReaderParams.isMixedVisibility() && !recordReaderParams.isServersideAggregation();
+		this.clientSideRowMerging = false;
 
 		initRecordScanner();
 	}
@@ -136,11 +141,28 @@ public class HBaseReader implements
 
 	protected void initRecordScanner() {
 		final FilterList filterList = new FilterList();
-		final GeoWaveRowRange range = recordReaderParams.getRowRange();
+		final ByteArrayRange range = HBaseSplitsProvider.toHBaseRange(recordReaderParams.getRowRange());
 
 		final Scan rscanner = createStandardScanner(recordReaderParams);
-		rscanner.setStartRow(range.getStartSortKey());
-		rscanner.setStopRow(range.getEndSortKey());
+
+		// Use this instead of setStartRow/setStopRow for single rowkeys
+		if (Bytes.equals(
+				range.getStart().getBytes(),
+				range.getEnd().getBytes())) {
+			rscanner.setRowPrefixFilter(range.getStart().getBytes());
+		}
+		else {
+			rscanner.setStartRow(range.getStart().getBytes());
+
+			if (recordReaderParams.getRowRange().isEndSortKeyInclusive()) {
+				byte[] stopRowInclusive = HBaseUtils.getInclusiveEndKey(range.getEnd().getBytes());
+
+				rscanner.setStopRow(stopRowInclusive);
+			}
+			else {
+				rscanner.setStopRow(range.getEnd().getBytes());
+			}
+		}
 
 		if (operations.isServerSideLibraryEnabled()) {
 			addSkipFilter(
@@ -308,14 +330,7 @@ public class HBaseReader implements
 			if (stopRowRange.isStopRowInclusive()) {
 				// because the end is always exclusive, to make an inclusive
 				// stop row into exlusive all we need to do is add a traling 0
-				stopRowExclusive = new byte[stopRowRange.getStopRow().length + 1];
-
-				System.arraycopy(
-						stopRowRange.getStopRow(),
-						0,
-						stopRowExclusive,
-						0,
-						stopRowExclusive.length - 1);
+				stopRowExclusive = HBaseUtils.getInclusiveEndKey(stopRowRange.getStopRow());
 			}
 			else {
 				stopRowExclusive = stopRowRange.getStopRow();
@@ -334,12 +349,27 @@ public class HBaseReader implements
 		scanner.setCaching(operations.getScanCacheSize());
 		scanner.setCacheBlocks(operations.isEnableBlockCache());
 
-		// Only return the most recent version
-		scanner.setMaxVersions(1);
+		// Only return the most recent version, unless merging
+		setMaxVersions(
+				scanner,
+				readerParams);
 
 		if ((readerParams.getAdapterIds() != null) && !readerParams.getAdapterIds().isEmpty()) {
 			for (final ByteArrayId adapterId : readerParams.getAdapterIds()) {
-				scanner.addFamily(adapterId.getBytes());
+				// TODO: This prevents the client from sending bad column family
+				// requests to hbase. There may be a more efficient way to do
+				// this,
+				// via the datastore's AIM store.
+				if (operations.verifyColumnFamily(
+						adapterId.getString(),
+						readerParams.getIndex().getId().getString(),
+						false)) {
+					scanner.addFamily(adapterId.getBytes());
+				}
+				else {
+					LOGGER.warn("Adapter ID: " + adapterId.getString() + " not found in table: "
+							+ readerParams.getIndex().getId().getString());
+				}
 			}
 		}
 
@@ -349,5 +379,17 @@ public class HBaseReader implements
 		}
 
 		return scanner;
+	}
+
+	private void setMaxVersions(
+			Scan scanner,
+			BaseReaderParams readerParams ) {
+		// TODO: Fix this once we have row merging working
+		if (clientSideRowMerging) {
+			scanner.setMaxVersions(HBaseOperations.MERGING_MAX_VERSIONS);
+		}
+		else {
+			scanner.setMaxVersions(HBaseOperations.DEFAULT_MAX_VERSIONS);
+		}
 	}
 }

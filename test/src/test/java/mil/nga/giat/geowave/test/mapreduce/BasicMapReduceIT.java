@@ -38,8 +38,6 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.geotools.data.DataStoreFinder;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -47,16 +45,22 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.opengis.feature.simple.SimpleFeature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vividsolutions.jts.geom.Geometry;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import mil.nga.giat.geowave.adapter.raster.util.ZipUtils;
+import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.export.VectorMRExportCommand;
 import mil.nga.giat.geowave.adapter.vector.export.VectorMRExportOptions;
+import mil.nga.giat.geowave.adapter.vector.stats.FeatureBoundingBoxStatistics;
 import mil.nga.giat.geowave.core.cli.parser.ManualOperationParams;
+import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayUtils;
+import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
 import mil.nga.giat.geowave.core.store.cli.remote.options.DataStorePluginOptions;
@@ -136,7 +140,7 @@ public class BasicMapReduceIT extends
 		ERROR
 	}
 
-	@GeoWaveTestStore({
+	@GeoWaveTestStore(value = {
 		GeoWaveStoreType.ACCUMULO,
 		GeoWaveStoreType.BIGTABLE,
 		GeoWaveStoreType.HBASE,
@@ -220,6 +224,9 @@ public class BasicMapReduceIT extends
 	@Test
 	public void testIngestOsmGpxMultipleIndices()
 			throws Exception {
+		// org.apache.log4j.Logger.getRootLogger().setLevel(
+		// org.apache.log4j.Level.INFO);
+
 		TestUtils.deleteAll(dataStorePluginOptions);
 		// ingest the data set into multiple indices and then try several query
 		// methods, by adapter and by index
@@ -236,20 +243,24 @@ public class BasicMapReduceIT extends
 					adapter.getAdapterId(),
 					TestUtils.getExpectedResults(geowaveStore.query(
 							new QueryOptions(
-									adapter),
+									adapter.getAdapterId(),
+									null),
 							new EverythingQuery())));
 		}
 
 		final List<DataAdapter<?>> firstTwoAdapters = new ArrayList<DataAdapter<?>>();
 		firstTwoAdapters.add(adapters[0]);
 		firstTwoAdapters.add(adapters[1]);
+
 		final ExpectedResults firstTwoAdaptersResults = TestUtils.getExpectedResults(geowaveStore.query(
 				new QueryOptions(
 						firstTwoAdapters),
 				new EverythingQuery()));
+
 		final ExpectedResults fullDataSetResults = TestUtils.getExpectedResults(geowaveStore.query(
 				new QueryOptions(),
 				new EverythingQuery()));
+
 		// just for sanity verify its greater than 0 (ie. that data was actually
 		// ingested in the first place)
 		Assert.assertTrue(
@@ -259,16 +270,45 @@ public class BasicMapReduceIT extends
 		// now that we have expected results, run map-reduce export and
 		// re-ingest it
 		testMapReduceExportAndReingest(DimensionalityType.ALL);
+
+		// Try gpxpoint adapter:
+		ByteArrayId gpxPointAdapterId = new ByteArrayId(
+				"gpxpoint");
+
+		for (final WritableDataAdapter<SimpleFeature> adapter : adapters) {
+			if (adapter.getAdapterId().equals(
+					gpxPointAdapterId)) {
+				ExpectedResults expResults = adapterIdToResultsMap.get(adapter.getAdapterId());
+
+				if (expResults.count > 0) {
+					runTestJob(
+							expResults,
+							null,
+							new DataAdapter[] {
+								adapter
+							},
+							null);
+				}
+			}
+		}
+
 		// first try each adapter individually
 		for (final WritableDataAdapter<SimpleFeature> adapter : adapters) {
-			runTestJob(
-					adapterIdToResultsMap.get(adapter.getAdapterId()),
-					null,
-					new DataAdapter[] {
-						adapter
-					},
-					null);
+			ExpectedResults expResults = adapterIdToResultsMap.get(adapter.getAdapterId());
+
+			if (expResults.count > 0) {
+				LOGGER.debug("Running test for adapter " + adapter.getAdapterId());
+
+				runTestJob(
+						expResults,
+						null,
+						new DataAdapter[] {
+							adapter
+						},
+						null);
+			}
 		}
+
 		// then try the first 2 adapters, and may as well try with both indices
 		// set (should be the default behavior anyways)
 		runTestJob(
@@ -282,11 +322,11 @@ public class BasicMapReduceIT extends
 
 		// now try all adapters and the spatial temporal index, the result
 		// should be the full data set
-		runTestJob(
-				fullDataSetResults,
-				null,
-				adapters,
-				TestUtils.DEFAULT_SPATIAL_TEMPORAL_INDEX);
+		// runTestJob(
+		// fullDataSetResults,
+		// null,
+		// adapters,
+		// TestUtils.DEFAULT_SPATIAL_TEMPORAL_INDEX);
 
 		// and finally run with nothing set, should be the full data set
 		runTestJob(
@@ -369,15 +409,17 @@ public class BasicMapReduceIT extends
 			jobRunner.setQuery(query);
 		}
 		final QueryOptions options = new QueryOptions();
-		if ((adapters != null) && (adapters.length > 0)) {
-			options.setAdapters(Arrays.asList(adapters));
-		}
+
 		if ((index != null)) {
 			options.setIndex(index);
 		}
 		jobRunner.setQueryOptions(options);
 		final Configuration conf = MapReduceTestUtils.getConfiguration();
+
 		MapReduceTestUtils.filterConfiguration(conf);
+		if ((adapters != null) && (adapters.length > 0)) {
+			options.setAdapters(Arrays.asList(adapters));
+		}
 		final int res = ToolRunner.run(
 				conf,
 				jobRunner,

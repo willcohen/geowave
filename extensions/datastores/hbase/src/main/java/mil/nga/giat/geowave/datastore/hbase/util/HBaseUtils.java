@@ -155,4 +155,24 @@ public class HBaseUtils
 		return mergedStats;
 	}
 
+	/**
+	 * Since HBase's end keys are always exclusive, just add a trailing zero if
+	 * you want an inclusive row range
+	 * 
+	 * @param endKey
+	 * @return
+	 */
+	public static byte[] getInclusiveEndKey(
+			byte[] endKey ) {
+		byte[] inclusiveEndKey = new byte[endKey.length + 1];
+
+		System.arraycopy(
+				endKey,
+				0,
+				inclusiveEndKey,
+				0,
+				inclusiveEndKey.length - 1);
+
+		return inclusiveEndKey;
+	}
 }

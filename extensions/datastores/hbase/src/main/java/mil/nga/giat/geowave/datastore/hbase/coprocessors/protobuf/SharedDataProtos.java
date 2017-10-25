@@ -3,1703 +3,1494 @@
 
 package mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf;
 
-public final class SharedDataProtos
-{
-	private SharedDataProtos() {}
-
-	public static void registerAllExtensions(
-			com.google.protobuf.ExtensionRegistry registry ) {}
-
-	public interface SharedDataRequestOrBuilder extends
-			com.google.protobuf.MessageOrBuilder
-	{
-
-		// required string key = 1;
-		/**
-		 * <code>required string key = 1;</code>
-		 */
-		boolean hasKey();
-
-		/**
-		 * <code>required string key = 1;</code>
-		 */
-		java.lang.String getKey();
-
-		/**
-		 * <code>required string key = 1;</code>
-		 */
-		com.google.protobuf.ByteString getKeyBytes();
-
-		// optional string value = 2;
-		/**
-		 * <code>optional string value = 2;</code>
-		 */
-		boolean hasValue();
-
-		/**
-		 * <code>optional string value = 2;</code>
-		 */
-		java.lang.String getValue();
-
-		/**
-		 * <code>optional string value = 2;</code>
-		 */
-		com.google.protobuf.ByteString getValueBytes();
-	}
-
-	/**
-	 * Protobuf type {@code SharedDataRequest}
-	 */
-	public static final class SharedDataRequest extends
-			com.google.protobuf.GeneratedMessage implements
-			SharedDataRequestOrBuilder
-	{
-		// Use SharedDataRequest.newBuilder() to construct.
-		private SharedDataRequest(
-				com.google.protobuf.GeneratedMessage.Builder<?> builder ) {
-			super(
-					builder);
-			this.unknownFields = builder.getUnknownFields();
-		}
-
-		private SharedDataRequest(
-				boolean noInit ) {
-			this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance();
-		}
-
-		private static final SharedDataRequest defaultInstance;
-
-		public static SharedDataRequest getDefaultInstance() {
-			return defaultInstance;
-		}
-
-		public SharedDataRequest getDefaultInstanceForType() {
-			return defaultInstance;
-		}
-
-		private final com.google.protobuf.UnknownFieldSet unknownFields;
-
-		@java.lang.Override
-		public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
-			return this.unknownFields;
-		}
-
-		private SharedDataRequest(
-				com.google.protobuf.CodedInputStream input,
-				com.google.protobuf.ExtensionRegistryLite extensionRegistry )
-				throws com.google.protobuf.InvalidProtocolBufferException {
-			initFields();
-			int mutable_bitField0_ = 0;
-			com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet
-					.newBuilder();
-			try {
-				boolean done = false;
-				while (!done) {
-					int tag = input.readTag();
-					switch (tag) {
-						case 0:
-							done = true;
-							break;
-						default: {
-							if (!parseUnknownField(
-									input,
-									unknownFields,
-									extensionRegistry,
-									tag)) {
-								done = true;
-							}
-							break;
-						}
-						case 10: {
-							bitField0_ |= 0x00000001;
-							key_ = input.readBytes();
-							break;
-						}
-						case 18: {
-							bitField0_ |= 0x00000002;
-							value_ = input.readBytes();
-							break;
-						}
-					}
-				}
-			}
-			catch (com.google.protobuf.InvalidProtocolBufferException e) {
-				throw e.setUnfinishedMessage(this);
-			}
-			catch (java.io.IOException e) {
-				throw new com.google.protobuf.InvalidProtocolBufferException(
-						e.getMessage()).setUnfinishedMessage(this);
-			}
-			finally {
-				this.unknownFields = unknownFields.build();
-				makeExtensionsImmutable();
-			}
-		}
-
-		public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-			return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.internal_static_SharedDataRequest_descriptor;
-		}
-
-		protected com.google.protobuf.GeneratedMessage.FieldAccessorTable internalGetFieldAccessorTable() {
-			return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.internal_static_SharedDataRequest_fieldAccessorTable
-					.ensureFieldAccessorsInitialized(
-							mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest.class,
-							mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest.Builder.class);
-		}
-
-		public static com.google.protobuf.Parser<SharedDataRequest> PARSER = new com.google.protobuf.AbstractParser<SharedDataRequest>() {
-			public SharedDataRequest parsePartialFrom(
-					com.google.protobuf.CodedInputStream input,
-					com.google.protobuf.ExtensionRegistryLite extensionRegistry )
-					throws com.google.protobuf.InvalidProtocolBufferException {
-				return new SharedDataRequest(
-						input,
-						extensionRegistry);
-			}
-		};
-
-		@java.lang.Override
-		public com.google.protobuf.Parser<SharedDataRequest> getParserForType() {
-			return PARSER;
-		}
-
-		private int bitField0_;
-		// required string key = 1;
-		public static final int KEY_FIELD_NUMBER = 1;
-		private java.lang.Object key_;
-
-		/**
-		 * <code>required string key = 1;</code>
-		 */
-		public boolean hasKey() {
-			return ((bitField0_ & 0x00000001) == 0x00000001);
-		}
-
-		/**
-		 * <code>required string key = 1;</code>
-		 */
-		public java.lang.String getKey() {
-			java.lang.Object ref = key_;
-			if (ref instanceof java.lang.String) {
-				return (java.lang.String) ref;
-			}
-			else {
-				com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-				java.lang.String s = bs.toStringUtf8();
-				if (bs.isValidUtf8()) {
-					key_ = s;
-				}
-				return s;
-			}
-		}
-
-		/**
-		 * <code>required string key = 1;</code>
-		 */
-		public com.google.protobuf.ByteString getKeyBytes() {
-			java.lang.Object ref = key_;
-			if (ref instanceof java.lang.String) {
-				com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-				key_ = b;
-				return b;
-			}
-			else {
-				return (com.google.protobuf.ByteString) ref;
-			}
-		}
-
-		// optional string value = 2;
-		public static final int VALUE_FIELD_NUMBER = 2;
-		private java.lang.Object value_;
-
-		/**
-		 * <code>optional string value = 2;</code>
-		 */
-		public boolean hasValue() {
-			return ((bitField0_ & 0x00000002) == 0x00000002);
-		}
-
-		/**
-		 * <code>optional string value = 2;</code>
-		 */
-		public java.lang.String getValue() {
-			java.lang.Object ref = value_;
-			if (ref instanceof java.lang.String) {
-				return (java.lang.String) ref;
-			}
-			else {
-				com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-				java.lang.String s = bs.toStringUtf8();
-				if (bs.isValidUtf8()) {
-					value_ = s;
-				}
-				return s;
-			}
-		}
-
-		/**
-		 * <code>optional string value = 2;</code>
-		 */
-		public com.google.protobuf.ByteString getValueBytes() {
-			java.lang.Object ref = value_;
-			if (ref instanceof java.lang.String) {
-				com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-				value_ = b;
-				return b;
-			}
-			else {
-				return (com.google.protobuf.ByteString) ref;
-			}
-		}
-
-		private void initFields() {
-			key_ = "";
-			value_ = "";
-		}
-
-		private byte memoizedIsInitialized = -1;
-
-		public final boolean isInitialized() {
-			byte isInitialized = memoizedIsInitialized;
-			if (isInitialized != -1) return isInitialized == 1;
-
-			if (!hasKey()) {
-				memoizedIsInitialized = 0;
-				return false;
-			}
-			memoizedIsInitialized = 1;
-			return true;
-		}
-
-		public void writeTo(
-				com.google.protobuf.CodedOutputStream output )
-				throws java.io.IOException {
-			getSerializedSize();
-			if (((bitField0_ & 0x00000001) == 0x00000001)) {
-				output.writeBytes(
-						1,
-						getKeyBytes());
-			}
-			if (((bitField0_ & 0x00000002) == 0x00000002)) {
-				output.writeBytes(
-						2,
-						getValueBytes());
-			}
-			getUnknownFields().writeTo(
-					output);
-		}
-
-		private int memoizedSerializedSize = -1;
-
-		public int getSerializedSize() {
-			int size = memoizedSerializedSize;
-			if (size != -1) return size;
-
-			size = 0;
-			if (((bitField0_ & 0x00000001) == 0x00000001)) {
-				size += com.google.protobuf.CodedOutputStream.computeBytesSize(
-						1,
-						getKeyBytes());
-			}
-			if (((bitField0_ & 0x00000002) == 0x00000002)) {
-				size += com.google.protobuf.CodedOutputStream.computeBytesSize(
-						2,
-						getValueBytes());
-			}
-			size += getUnknownFields().getSerializedSize();
-			memoizedSerializedSize = size;
-			return size;
-		}
-
-		private static final long serialVersionUID = 0L;
-
-		@java.lang.Override
-		protected java.lang.Object writeReplace()
-				throws java.io.ObjectStreamException {
-			return super.writeReplace();
-		}
-
-		@java.lang.Override
-		public boolean equals(
-				final java.lang.Object obj ) {
-			if (obj == this) {
-				return true;
-			}
-			if (!(obj instanceof mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest)) {
-				return super.equals(obj);
-			}
-			mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest other = (mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest) obj;
-
-			boolean result = true;
-			result = result && (hasKey() == other.hasKey());
-			if (hasKey()) {
-				result = result && getKey().equals(
-						other.getKey());
-			}
-			result = result && (hasValue() == other.hasValue());
-			if (hasValue()) {
-				result = result && getValue().equals(
-						other.getValue());
-			}
-			result = result && getUnknownFields().equals(
-					other.getUnknownFields());
-			return result;
-		}
-
-		private int memoizedHashCode = 0;
-
-		@java.lang.Override
-		public int hashCode() {
-			if (memoizedHashCode != 0) {
-				return memoizedHashCode;
-			}
-			int hash = 41;
-			hash = (19 * hash) + getDescriptorForType().hashCode();
-			if (hasKey()) {
-				hash = (37 * hash) + KEY_FIELD_NUMBER;
-				hash = (53 * hash) + getKey().hashCode();
-			}
-			if (hasValue()) {
-				hash = (37 * hash) + VALUE_FIELD_NUMBER;
-				hash = (53 * hash) + getValue().hashCode();
-			}
-			hash = (29 * hash) + getUnknownFields().hashCode();
-			memoizedHashCode = hash;
-			return hash;
-		}
-
-		public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest parseFrom(
-				com.google.protobuf.ByteString data )
-				throws com.google.protobuf.InvalidProtocolBufferException {
-			return PARSER.parseFrom(data);
-		}
-
-		public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest parseFrom(
-				com.google.protobuf.ByteString data,
-				com.google.protobuf.ExtensionRegistryLite extensionRegistry )
-				throws com.google.protobuf.InvalidProtocolBufferException {
-			return PARSER.parseFrom(
-					data,
-					extensionRegistry);
-		}
-
-		public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest parseFrom(
-				byte[] data )
-				throws com.google.protobuf.InvalidProtocolBufferException {
-			return PARSER.parseFrom(data);
-		}
-
-		public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest parseFrom(
-				byte[] data,
-				com.google.protobuf.ExtensionRegistryLite extensionRegistry )
-				throws com.google.protobuf.InvalidProtocolBufferException {
-			return PARSER.parseFrom(
-					data,
-					extensionRegistry);
-		}
-
-		public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest parseFrom(
-				java.io.InputStream input )
-				throws java.io.IOException {
-			return PARSER.parseFrom(input);
-		}
-
-		public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest parseFrom(
-				java.io.InputStream input,
-				com.google.protobuf.ExtensionRegistryLite extensionRegistry )
-				throws java.io.IOException {
-			return PARSER.parseFrom(
-					input,
-					extensionRegistry);
-		}
-
-		public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest parseDelimitedFrom(
-				java.io.InputStream input )
-				throws java.io.IOException {
-			return PARSER.parseDelimitedFrom(input);
-		}
-
-		public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest parseDelimitedFrom(
-				java.io.InputStream input,
-				com.google.protobuf.ExtensionRegistryLite extensionRegistry )
-				throws java.io.IOException {
-			return PARSER.parseDelimitedFrom(
-					input,
-					extensionRegistry);
-		}
-
-		public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest parseFrom(
-				com.google.protobuf.CodedInputStream input )
-				throws java.io.IOException {
-			return PARSER.parseFrom(input);
-		}
-
-		public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest parseFrom(
-				com.google.protobuf.CodedInputStream input,
-				com.google.protobuf.ExtensionRegistryLite extensionRegistry )
-				throws java.io.IOException {
-			return PARSER.parseFrom(
-					input,
-					extensionRegistry);
-		}
-
-		public static Builder newBuilder() {
-			return Builder.create();
-		}
-
-		public Builder newBuilderForType() {
-			return newBuilder();
-		}
-
-		public static Builder newBuilder(
-				mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest prototype ) {
-			return newBuilder().mergeFrom(
-					prototype);
-		}
-
-		public Builder toBuilder() {
-			return newBuilder(this);
-		}
-
-		@java.lang.Override
-		protected Builder newBuilderForType(
-				com.google.protobuf.GeneratedMessage.BuilderParent parent ) {
-			Builder builder = new Builder(
-					parent);
-			return builder;
-		}
-
-		/**
-		 * Protobuf type {@code SharedDataRequest}
-		 */
-		public static final class Builder extends
-				com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-				mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequestOrBuilder
-		{
-			public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-				return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.internal_static_SharedDataRequest_descriptor;
-			}
-
-			protected com.google.protobuf.GeneratedMessage.FieldAccessorTable internalGetFieldAccessorTable() {
-				return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.internal_static_SharedDataRequest_fieldAccessorTable
-						.ensureFieldAccessorsInitialized(
-								mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest.class,
-								mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest.Builder.class);
-			}
-
-			// Construct using
-			// mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest.newBuilder()
-			private Builder() {
-				maybeForceBuilderInitialization();
-			}
-
-			private Builder(
-					com.google.protobuf.GeneratedMessage.BuilderParent parent ) {
-				super(
-						parent);
-				maybeForceBuilderInitialization();
-			}
-
-			private void maybeForceBuilderInitialization() {
-				if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {}
-			}
-
-			private static Builder create() {
-				return new Builder();
-			}
-
-			public Builder clear() {
-				super.clear();
-				key_ = "";
-				bitField0_ = (bitField0_ & ~0x00000001);
-				value_ = "";
-				bitField0_ = (bitField0_ & ~0x00000002);
-				return this;
-			}
-
-			public Builder clone() {
-				return create().mergeFrom(
-						buildPartial());
-			}
-
-			public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-				return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.internal_static_SharedDataRequest_descriptor;
-			}
-
-			public mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest getDefaultInstanceForType() {
-				return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest
-						.getDefaultInstance();
-			}
-
-			public mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest build() {
-				mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest result = buildPartial();
-				if (!result.isInitialized()) {
-					throw newUninitializedMessageException(result);
-				}
-				return result;
-			}
-
-			public mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest buildPartial() {
-				mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest result = new mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest(
-						this);
-				int from_bitField0_ = bitField0_;
-				int to_bitField0_ = 0;
-				if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-					to_bitField0_ |= 0x00000001;
-				}
-				result.key_ = key_;
-				if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-					to_bitField0_ |= 0x00000002;
-				}
-				result.value_ = value_;
-				result.bitField0_ = to_bitField0_;
-				onBuilt();
-				return result;
-			}
-
-			public Builder mergeFrom(
-					com.google.protobuf.Message other ) {
-				if (other instanceof mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest) {
-					return mergeFrom((mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest) other);
-				}
-				else {
-					super.mergeFrom(other);
-					return this;
-				}
-			}
-
-			public Builder mergeFrom(
-					mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest other ) {
-				if (other == mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest
-						.getDefaultInstance()) return this;
-				if (other.hasKey()) {
-					bitField0_ |= 0x00000001;
-					key_ = other.key_;
-					onChanged();
-				}
-				if (other.hasValue()) {
-					bitField0_ |= 0x00000002;
-					value_ = other.value_;
-					onChanged();
-				}
-				this.mergeUnknownFields(other.getUnknownFields());
-				return this;
-			}
-
-			public final boolean isInitialized() {
-				if (!hasKey()) {
-
-					return false;
-				}
-				return true;
-			}
-
-			public Builder mergeFrom(
-					com.google.protobuf.CodedInputStream input,
-					com.google.protobuf.ExtensionRegistryLite extensionRegistry )
-					throws java.io.IOException {
-				mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest parsedMessage = null;
-				try {
-					parsedMessage = PARSER.parsePartialFrom(
-							input,
-							extensionRegistry);
-				}
-				catch (com.google.protobuf.InvalidProtocolBufferException e) {
-					parsedMessage = (mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest) e
-							.getUnfinishedMessage();
-					throw e;
-				}
-				finally {
-					if (parsedMessage != null) {
-						mergeFrom(parsedMessage);
-					}
-				}
-				return this;
-			}
-
-			private int bitField0_;
-
-			// required string key = 1;
-			private java.lang.Object key_ = "";
-
-			/**
-			 * <code>required string key = 1;</code>
-			 */
-			public boolean hasKey() {
-				return ((bitField0_ & 0x00000001) == 0x00000001);
-			}
-
-			/**
-			 * <code>required string key = 1;</code>
-			 */
-			public java.lang.String getKey() {
-				java.lang.Object ref = key_;
-				if (!(ref instanceof java.lang.String)) {
-					java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-					key_ = s;
-					return s;
-				}
-				else {
-					return (java.lang.String) ref;
-				}
-			}
-
-			/**
-			 * <code>required string key = 1;</code>
-			 */
-			public com.google.protobuf.ByteString getKeyBytes() {
-				java.lang.Object ref = key_;
-				if (ref instanceof String) {
-					com.google.protobuf.ByteString b = com.google.protobuf.ByteString
-							.copyFromUtf8((java.lang.String) ref);
-					key_ = b;
-					return b;
-				}
-				else {
-					return (com.google.protobuf.ByteString) ref;
-				}
-			}
-
-			/**
-			 * <code>required string key = 1;</code>
-			 */
-			public Builder setKey(
-					java.lang.String value ) {
-				if (value == null) {
-					throw new NullPointerException();
-				}
-				bitField0_ |= 0x00000001;
-				key_ = value;
-				onChanged();
-				return this;
-			}
-
-			/**
-			 * <code>required string key = 1;</code>
-			 */
-			public Builder clearKey() {
-				bitField0_ = (bitField0_ & ~0x00000001);
-				key_ = getDefaultInstance().getKey();
-				onChanged();
-				return this;
-			}
-
-			/**
-			 * <code>required string key = 1;</code>
-			 */
-			public Builder setKeyBytes(
-					com.google.protobuf.ByteString value ) {
-				if (value == null) {
-					throw new NullPointerException();
-				}
-				bitField0_ |= 0x00000001;
-				key_ = value;
-				onChanged();
-				return this;
-			}
-
-			// optional string value = 2;
-			private java.lang.Object value_ = "";
-
-			/**
-			 * <code>optional string value = 2;</code>
-			 */
-			public boolean hasValue() {
-				return ((bitField0_ & 0x00000002) == 0x00000002);
-			}
-
-			/**
-			 * <code>optional string value = 2;</code>
-			 */
-			public java.lang.String getValue() {
-				java.lang.Object ref = value_;
-				if (!(ref instanceof java.lang.String)) {
-					java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-					value_ = s;
-					return s;
-				}
-				else {
-					return (java.lang.String) ref;
-				}
-			}
-
-			/**
-			 * <code>optional string value = 2;</code>
-			 */
-			public com.google.protobuf.ByteString getValueBytes() {
-				java.lang.Object ref = value_;
-				if (ref instanceof String) {
-					com.google.protobuf.ByteString b = com.google.protobuf.ByteString
-							.copyFromUtf8((java.lang.String) ref);
-					value_ = b;
-					return b;
-				}
-				else {
-					return (com.google.protobuf.ByteString) ref;
-				}
-			}
-
-			/**
-			 * <code>optional string value = 2;</code>
-			 */
-			public Builder setValue(
-					java.lang.String value ) {
-				if (value == null) {
-					throw new NullPointerException();
-				}
-				bitField0_ |= 0x00000002;
-				value_ = value;
-				onChanged();
-				return this;
-			}
-
-			/**
-			 * <code>optional string value = 2;</code>
-			 */
-			public Builder clearValue() {
-				bitField0_ = (bitField0_ & ~0x00000002);
-				value_ = getDefaultInstance().getValue();
-				onChanged();
-				return this;
-			}
-
-			/**
-			 * <code>optional string value = 2;</code>
-			 */
-			public Builder setValueBytes(
-					com.google.protobuf.ByteString value ) {
-				if (value == null) {
-					throw new NullPointerException();
-				}
-				bitField0_ |= 0x00000002;
-				value_ = value;
-				onChanged();
-				return this;
-			}
-
-			// @@protoc_insertion_point(builder_scope:SharedDataRequest)
-		}
-
-		static {
-			defaultInstance = new SharedDataRequest(
-					true);
-			defaultInstance.initFields();
-		}
-
-		// @@protoc_insertion_point(class_scope:SharedDataRequest)
-	}
-
-	public interface SharedDataResponseOrBuilder extends
-			com.google.protobuf.MessageOrBuilder
-	{
-
-		// required string value = 1;
-		/**
-		 * <code>required string value = 1;</code>
-		 */
-		boolean hasValue();
-
-		/**
-		 * <code>required string value = 1;</code>
-		 */
-		java.lang.String getValue();
-
-		/**
-		 * <code>required string value = 1;</code>
-		 */
-		com.google.protobuf.ByteString getValueBytes();
-	}
-
-	/**
-	 * Protobuf type {@code SharedDataResponse}
-	 */
-	public static final class SharedDataResponse extends
-			com.google.protobuf.GeneratedMessage implements
-			SharedDataResponseOrBuilder
-	{
-		// Use SharedDataResponse.newBuilder() to construct.
-		private SharedDataResponse(
-				com.google.protobuf.GeneratedMessage.Builder<?> builder ) {
-			super(
-					builder);
-			this.unknownFields = builder.getUnknownFields();
-		}
-
-		private SharedDataResponse(
-				boolean noInit ) {
-			this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance();
-		}
-
-		private static final SharedDataResponse defaultInstance;
-
-		public static SharedDataResponse getDefaultInstance() {
-			return defaultInstance;
-		}
-
-		public SharedDataResponse getDefaultInstanceForType() {
-			return defaultInstance;
-		}
-
-		private final com.google.protobuf.UnknownFieldSet unknownFields;
-
-		@java.lang.Override
-		public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
-			return this.unknownFields;
-		}
-
-		private SharedDataResponse(
-				com.google.protobuf.CodedInputStream input,
-				com.google.protobuf.ExtensionRegistryLite extensionRegistry )
-				throws com.google.protobuf.InvalidProtocolBufferException {
-			initFields();
-			int mutable_bitField0_ = 0;
-			com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet
-					.newBuilder();
-			try {
-				boolean done = false;
-				while (!done) {
-					int tag = input.readTag();
-					switch (tag) {
-						case 0:
-							done = true;
-							break;
-						default: {
-							if (!parseUnknownField(
-									input,
-									unknownFields,
-									extensionRegistry,
-									tag)) {
-								done = true;
-							}
-							break;
-						}
-						case 10: {
-							bitField0_ |= 0x00000001;
-							value_ = input.readBytes();
-							break;
-						}
-					}
-				}
-			}
-			catch (com.google.protobuf.InvalidProtocolBufferException e) {
-				throw e.setUnfinishedMessage(this);
-			}
-			catch (java.io.IOException e) {
-				throw new com.google.protobuf.InvalidProtocolBufferException(
-						e.getMessage()).setUnfinishedMessage(this);
-			}
-			finally {
-				this.unknownFields = unknownFields.build();
-				makeExtensionsImmutable();
-			}
-		}
-
-		public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-			return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.internal_static_SharedDataResponse_descriptor;
-		}
-
-		protected com.google.protobuf.GeneratedMessage.FieldAccessorTable internalGetFieldAccessorTable() {
-			return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.internal_static_SharedDataResponse_fieldAccessorTable
-					.ensureFieldAccessorsInitialized(
-							mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse.class,
-							mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse.Builder.class);
-		}
-
-		public static com.google.protobuf.Parser<SharedDataResponse> PARSER = new com.google.protobuf.AbstractParser<SharedDataResponse>() {
-			public SharedDataResponse parsePartialFrom(
-					com.google.protobuf.CodedInputStream input,
-					com.google.protobuf.ExtensionRegistryLite extensionRegistry )
-					throws com.google.protobuf.InvalidProtocolBufferException {
-				return new SharedDataResponse(
-						input,
-						extensionRegistry);
-			}
-		};
-
-		@java.lang.Override
-		public com.google.protobuf.Parser<SharedDataResponse> getParserForType() {
-			return PARSER;
-		}
-
-		private int bitField0_;
-		// required string value = 1;
-		public static final int VALUE_FIELD_NUMBER = 1;
-		private java.lang.Object value_;
-
-		/**
-		 * <code>required string value = 1;</code>
-		 */
-		public boolean hasValue() {
-			return ((bitField0_ & 0x00000001) == 0x00000001);
-		}
-
-		/**
-		 * <code>required string value = 1;</code>
-		 */
-		public java.lang.String getValue() {
-			java.lang.Object ref = value_;
-			if (ref instanceof java.lang.String) {
-				return (java.lang.String) ref;
-			}
-			else {
-				com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-				java.lang.String s = bs.toStringUtf8();
-				if (bs.isValidUtf8()) {
-					value_ = s;
-				}
-				return s;
-			}
-		}
-
-		/**
-		 * <code>required string value = 1;</code>
-		 */
-		public com.google.protobuf.ByteString getValueBytes() {
-			java.lang.Object ref = value_;
-			if (ref instanceof java.lang.String) {
-				com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-				value_ = b;
-				return b;
-			}
-			else {
-				return (com.google.protobuf.ByteString) ref;
-			}
-		}
-
-		private void initFields() {
-			value_ = "";
-		}
-
-		private byte memoizedIsInitialized = -1;
-
-		public final boolean isInitialized() {
-			byte isInitialized = memoizedIsInitialized;
-			if (isInitialized != -1) return isInitialized == 1;
-
-			if (!hasValue()) {
-				memoizedIsInitialized = 0;
-				return false;
-			}
-			memoizedIsInitialized = 1;
-			return true;
-		}
-
-		public void writeTo(
-				com.google.protobuf.CodedOutputStream output )
-				throws java.io.IOException {
-			getSerializedSize();
-			if (((bitField0_ & 0x00000001) == 0x00000001)) {
-				output.writeBytes(
-						1,
-						getValueBytes());
-			}
-			getUnknownFields().writeTo(
-					output);
-		}
-
-		private int memoizedSerializedSize = -1;
-
-		public int getSerializedSize() {
-			int size = memoizedSerializedSize;
-			if (size != -1) return size;
-
-			size = 0;
-			if (((bitField0_ & 0x00000001) == 0x00000001)) {
-				size += com.google.protobuf.CodedOutputStream.computeBytesSize(
-						1,
-						getValueBytes());
-			}
-			size += getUnknownFields().getSerializedSize();
-			memoizedSerializedSize = size;
-			return size;
-		}
-
-		private static final long serialVersionUID = 0L;
-
-		@java.lang.Override
-		protected java.lang.Object writeReplace()
-				throws java.io.ObjectStreamException {
-			return super.writeReplace();
-		}
-
-		@java.lang.Override
-		public boolean equals(
-				final java.lang.Object obj ) {
-			if (obj == this) {
-				return true;
-			}
-			if (!(obj instanceof mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse)) {
-				return super.equals(obj);
-			}
-			mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse other = (mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse) obj;
-
-			boolean result = true;
-			result = result && (hasValue() == other.hasValue());
-			if (hasValue()) {
-				result = result && getValue().equals(
-						other.getValue());
-			}
-			result = result && getUnknownFields().equals(
-					other.getUnknownFields());
-			return result;
-		}
-
-		private int memoizedHashCode = 0;
-
-		@java.lang.Override
-		public int hashCode() {
-			if (memoizedHashCode != 0) {
-				return memoizedHashCode;
-			}
-			int hash = 41;
-			hash = (19 * hash) + getDescriptorForType().hashCode();
-			if (hasValue()) {
-				hash = (37 * hash) + VALUE_FIELD_NUMBER;
-				hash = (53 * hash) + getValue().hashCode();
-			}
-			hash = (29 * hash) + getUnknownFields().hashCode();
-			memoizedHashCode = hash;
-			return hash;
-		}
-
-		public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse parseFrom(
-				com.google.protobuf.ByteString data )
-				throws com.google.protobuf.InvalidProtocolBufferException {
-			return PARSER.parseFrom(data);
-		}
-
-		public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse parseFrom(
-				com.google.protobuf.ByteString data,
-				com.google.protobuf.ExtensionRegistryLite extensionRegistry )
-				throws com.google.protobuf.InvalidProtocolBufferException {
-			return PARSER.parseFrom(
-					data,
-					extensionRegistry);
-		}
-
-		public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse parseFrom(
-				byte[] data )
-				throws com.google.protobuf.InvalidProtocolBufferException {
-			return PARSER.parseFrom(data);
-		}
-
-		public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse parseFrom(
-				byte[] data,
-				com.google.protobuf.ExtensionRegistryLite extensionRegistry )
-				throws com.google.protobuf.InvalidProtocolBufferException {
-			return PARSER.parseFrom(
-					data,
-					extensionRegistry);
-		}
-
-		public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse parseFrom(
-				java.io.InputStream input )
-				throws java.io.IOException {
-			return PARSER.parseFrom(input);
-		}
-
-		public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse parseFrom(
-				java.io.InputStream input,
-				com.google.protobuf.ExtensionRegistryLite extensionRegistry )
-				throws java.io.IOException {
-			return PARSER.parseFrom(
-					input,
-					extensionRegistry);
-		}
-
-		public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse parseDelimitedFrom(
-				java.io.InputStream input )
-				throws java.io.IOException {
-			return PARSER.parseDelimitedFrom(input);
-		}
-
-		public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse parseDelimitedFrom(
-				java.io.InputStream input,
-				com.google.protobuf.ExtensionRegistryLite extensionRegistry )
-				throws java.io.IOException {
-			return PARSER.parseDelimitedFrom(
-					input,
-					extensionRegistry);
-		}
-
-		public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse parseFrom(
-				com.google.protobuf.CodedInputStream input )
-				throws java.io.IOException {
-			return PARSER.parseFrom(input);
-		}
-
-		public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse parseFrom(
-				com.google.protobuf.CodedInputStream input,
-				com.google.protobuf.ExtensionRegistryLite extensionRegistry )
-				throws java.io.IOException {
-			return PARSER.parseFrom(
-					input,
-					extensionRegistry);
-		}
-
-		public static Builder newBuilder() {
-			return Builder.create();
-		}
-
-		public Builder newBuilderForType() {
-			return newBuilder();
-		}
-
-		public static Builder newBuilder(
-				mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse prototype ) {
-			return newBuilder().mergeFrom(
-					prototype);
-		}
-
-		public Builder toBuilder() {
-			return newBuilder(this);
-		}
-
-		@java.lang.Override
-		protected Builder newBuilderForType(
-				com.google.protobuf.GeneratedMessage.BuilderParent parent ) {
-			Builder builder = new Builder(
-					parent);
-			return builder;
-		}
-
-		/**
-		 * Protobuf type {@code SharedDataResponse}
-		 */
-		public static final class Builder extends
-				com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-				mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponseOrBuilder
-		{
-			public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-				return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.internal_static_SharedDataResponse_descriptor;
-			}
-
-			protected com.google.protobuf.GeneratedMessage.FieldAccessorTable internalGetFieldAccessorTable() {
-				return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.internal_static_SharedDataResponse_fieldAccessorTable
-						.ensureFieldAccessorsInitialized(
-								mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse.class,
-								mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse.Builder.class);
-			}
-
-			// Construct using
-			// mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse.newBuilder()
-			private Builder() {
-				maybeForceBuilderInitialization();
-			}
-
-			private Builder(
-					com.google.protobuf.GeneratedMessage.BuilderParent parent ) {
-				super(
-						parent);
-				maybeForceBuilderInitialization();
-			}
-
-			private void maybeForceBuilderInitialization() {
-				if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {}
-			}
-
-			private static Builder create() {
-				return new Builder();
-			}
-
-			public Builder clear() {
-				super.clear();
-				value_ = "";
-				bitField0_ = (bitField0_ & ~0x00000001);
-				return this;
-			}
-
-			public Builder clone() {
-				return create().mergeFrom(
-						buildPartial());
-			}
-
-			public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-				return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.internal_static_SharedDataResponse_descriptor;
-			}
-
-			public mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse getDefaultInstanceForType() {
-				return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse
-						.getDefaultInstance();
-			}
-
-			public mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse build() {
-				mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse result = buildPartial();
-				if (!result.isInitialized()) {
-					throw newUninitializedMessageException(result);
-				}
-				return result;
-			}
-
-			public mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse buildPartial() {
-				mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse result = new mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse(
-						this);
-				int from_bitField0_ = bitField0_;
-				int to_bitField0_ = 0;
-				if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-					to_bitField0_ |= 0x00000001;
-				}
-				result.value_ = value_;
-				result.bitField0_ = to_bitField0_;
-				onBuilt();
-				return result;
-			}
-
-			public Builder mergeFrom(
-					com.google.protobuf.Message other ) {
-				if (other instanceof mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse) {
-					return mergeFrom((mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse) other);
-				}
-				else {
-					super.mergeFrom(other);
-					return this;
-				}
-			}
-
-			public Builder mergeFrom(
-					mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse other ) {
-				if (other == mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse
-						.getDefaultInstance()) return this;
-				if (other.hasValue()) {
-					bitField0_ |= 0x00000001;
-					value_ = other.value_;
-					onChanged();
-				}
-				this.mergeUnknownFields(other.getUnknownFields());
-				return this;
-			}
-
-			public final boolean isInitialized() {
-				if (!hasValue()) {
-
-					return false;
-				}
-				return true;
-			}
-
-			public Builder mergeFrom(
-					com.google.protobuf.CodedInputStream input,
-					com.google.protobuf.ExtensionRegistryLite extensionRegistry )
-					throws java.io.IOException {
-				mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse parsedMessage = null;
-				try {
-					parsedMessage = PARSER.parsePartialFrom(
-							input,
-							extensionRegistry);
-				}
-				catch (com.google.protobuf.InvalidProtocolBufferException e) {
-					parsedMessage = (mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse) e
-							.getUnfinishedMessage();
-					throw e;
-				}
-				finally {
-					if (parsedMessage != null) {
-						mergeFrom(parsedMessage);
-					}
-				}
-				return this;
-			}
-
-			private int bitField0_;
-
-			// required string value = 1;
-			private java.lang.Object value_ = "";
-
-			/**
-			 * <code>required string value = 1;</code>
-			 */
-			public boolean hasValue() {
-				return ((bitField0_ & 0x00000001) == 0x00000001);
-			}
-
-			/**
-			 * <code>required string value = 1;</code>
-			 */
-			public java.lang.String getValue() {
-				java.lang.Object ref = value_;
-				if (!(ref instanceof java.lang.String)) {
-					java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-					value_ = s;
-					return s;
-				}
-				else {
-					return (java.lang.String) ref;
-				}
-			}
-
-			/**
-			 * <code>required string value = 1;</code>
-			 */
-			public com.google.protobuf.ByteString getValueBytes() {
-				java.lang.Object ref = value_;
-				if (ref instanceof String) {
-					com.google.protobuf.ByteString b = com.google.protobuf.ByteString
-							.copyFromUtf8((java.lang.String) ref);
-					value_ = b;
-					return b;
-				}
-				else {
-					return (com.google.protobuf.ByteString) ref;
-				}
-			}
-
-			/**
-			 * <code>required string value = 1;</code>
-			 */
-			public Builder setValue(
-					java.lang.String value ) {
-				if (value == null) {
-					throw new NullPointerException();
-				}
-				bitField0_ |= 0x00000001;
-				value_ = value;
-				onChanged();
-				return this;
-			}
-
-			/**
-			 * <code>required string value = 1;</code>
-			 */
-			public Builder clearValue() {
-				bitField0_ = (bitField0_ & ~0x00000001);
-				value_ = getDefaultInstance().getValue();
-				onChanged();
-				return this;
-			}
-
-			/**
-			 * <code>required string value = 1;</code>
-			 */
-			public Builder setValueBytes(
-					com.google.protobuf.ByteString value ) {
-				if (value == null) {
-					throw new NullPointerException();
-				}
-				bitField0_ |= 0x00000001;
-				value_ = value;
-				onChanged();
-				return this;
-			}
-
-			// @@protoc_insertion_point(builder_scope:SharedDataResponse)
-		}
-
-		static {
-			defaultInstance = new SharedDataResponse(
-					true);
-			defaultInstance.initFields();
-		}
-
-		// @@protoc_insertion_point(class_scope:SharedDataResponse)
-	}
-
-	/**
-	 * Protobuf service {@code SharedDataService}
-	 */
-	public static abstract class SharedDataService implements
-			com.google.protobuf.Service
-	{
-		protected SharedDataService() {}
-
-		public interface Interface
-		{
-			/**
-			 * <code>rpc share(.SharedDataRequest) returns (.SharedDataResponse);</code>
-			 */
-			public abstract void share(
-					com.google.protobuf.RpcController controller,
-					mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest request,
-					com.google.protobuf.RpcCallback<mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse> done );
-
-		}
-
-		public static com.google.protobuf.Service newReflectiveService(
-				final Interface impl ) {
-			return new SharedDataService() {
-				@java.lang.Override
-				public void share(
-						com.google.protobuf.RpcController controller,
-						mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest request,
-						com.google.protobuf.RpcCallback<mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse> done ) {
-					impl.share(
-							controller,
-							request,
-							done);
-				}
-
-			};
-		}
-
-		public static com.google.protobuf.BlockingService newReflectiveBlockingService(
-				final BlockingInterface impl ) {
-			return new com.google.protobuf.BlockingService() {
-				public final com.google.protobuf.Descriptors.ServiceDescriptor getDescriptorForType() {
-					return getDescriptor();
-				}
-
-				public final com.google.protobuf.Message callBlockingMethod(
-						com.google.protobuf.Descriptors.MethodDescriptor method,
-						com.google.protobuf.RpcController controller,
-						com.google.protobuf.Message request )
-						throws com.google.protobuf.ServiceException {
-					if (method.getService() != getDescriptor()) {
-						throw new java.lang.IllegalArgumentException(
-								"Service.callBlockingMethod() given method descriptor for " + "wrong service type.");
-					}
-					switch (method.getIndex()) {
-						case 0:
-							return impl
-									.share(
-											controller,
-											(mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest) request);
-						default:
-							throw new java.lang.AssertionError(
-									"Can't get here.");
-					}
-				}
-
-				public final com.google.protobuf.Message getRequestPrototype(
-						com.google.protobuf.Descriptors.MethodDescriptor method ) {
-					if (method.getService() != getDescriptor()) {
-						throw new java.lang.IllegalArgumentException(
-								"Service.getRequestPrototype() given method " + "descriptor for wrong service type.");
-					}
-					switch (method.getIndex()) {
-						case 0:
-							return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest
-									.getDefaultInstance();
-						default:
-							throw new java.lang.AssertionError(
-									"Can't get here.");
-					}
-				}
-
-				public final com.google.protobuf.Message getResponsePrototype(
-						com.google.protobuf.Descriptors.MethodDescriptor method ) {
-					if (method.getService() != getDescriptor()) {
-						throw new java.lang.IllegalArgumentException(
-								"Service.getResponsePrototype() given method " + "descriptor for wrong service type.");
-					}
-					switch (method.getIndex()) {
-						case 0:
-							return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse
-									.getDefaultInstance();
-						default:
-							throw new java.lang.AssertionError(
-									"Can't get here.");
-					}
-				}
-
-			};
-		}
-
-		/**
-		 * <code>rpc share(.SharedDataRequest) returns (.SharedDataResponse);</code>
-		 */
-		public abstract void share(
-				com.google.protobuf.RpcController controller,
-				mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest request,
-				com.google.protobuf.RpcCallback<mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse> done );
-
-		public static final com.google.protobuf.Descriptors.ServiceDescriptor getDescriptor() {
-			return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos
-					.getDescriptor()
-					.getServices()
-					.get(
-							0);
-		}
-
-		public final com.google.protobuf.Descriptors.ServiceDescriptor getDescriptorForType() {
-			return getDescriptor();
-		}
-
-		public final void callMethod(
-				com.google.protobuf.Descriptors.MethodDescriptor method,
-				com.google.protobuf.RpcController controller,
-				com.google.protobuf.Message request,
-				com.google.protobuf.RpcCallback<com.google.protobuf.Message> done ) {
-			if (method.getService() != getDescriptor()) {
-				throw new java.lang.IllegalArgumentException(
-						"Service.callMethod() given method descriptor for wrong " + "service type.");
-			}
-			switch (method.getIndex()) {
-				case 0:
-					this
-							.share(
-									controller,
-									(mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest) request,
-									com.google.protobuf.RpcUtil
-											.<mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse> specializeCallback(done));
-					return;
-				default:
-					throw new java.lang.AssertionError(
-							"Can't get here.");
-			}
-		}
-
-		public final com.google.protobuf.Message getRequestPrototype(
-				com.google.protobuf.Descriptors.MethodDescriptor method ) {
-			if (method.getService() != getDescriptor()) {
-				throw new java.lang.IllegalArgumentException(
-						"Service.getRequestPrototype() given method " + "descriptor for wrong service type.");
-			}
-			switch (method.getIndex()) {
-				case 0:
-					return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest
-							.getDefaultInstance();
-				default:
-					throw new java.lang.AssertionError(
-							"Can't get here.");
-			}
-		}
-
-		public final com.google.protobuf.Message getResponsePrototype(
-				com.google.protobuf.Descriptors.MethodDescriptor method ) {
-			if (method.getService() != getDescriptor()) {
-				throw new java.lang.IllegalArgumentException(
-						"Service.getResponsePrototype() given method " + "descriptor for wrong service type.");
-			}
-			switch (method.getIndex()) {
-				case 0:
-					return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse
-							.getDefaultInstance();
-				default:
-					throw new java.lang.AssertionError(
-							"Can't get here.");
-			}
-		}
-
-		public static Stub newStub(
-				com.google.protobuf.RpcChannel channel ) {
-			return new Stub(
-					channel);
-		}
-
-		public static final class Stub extends
-				mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataService implements
-				Interface
-		{
-			private Stub(
-					com.google.protobuf.RpcChannel channel ) {
-				this.channel = channel;
-			}
-
-			private final com.google.protobuf.RpcChannel channel;
-
-			public com.google.protobuf.RpcChannel getChannel() {
-				return channel;
-			}
-
-			public void share(
-					com.google.protobuf.RpcController controller,
-					mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest request,
-					com.google.protobuf.RpcCallback<mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse> done ) {
-				channel
-						.callMethod(
-								getDescriptor().getMethods().get(
-										0),
-								controller,
-								request,
-								mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse
-										.getDefaultInstance(),
-								com.google.protobuf.RpcUtil
-										.generalizeCallback(
-												done,
-												mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse.class,
-												mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse
-														.getDefaultInstance()));
-			}
-		}
-
-		public static BlockingInterface newBlockingStub(
-				com.google.protobuf.BlockingRpcChannel channel ) {
-			return new BlockingStub(
-					channel);
-		}
-
-		public interface BlockingInterface
-		{
-			public mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse share(
-					com.google.protobuf.RpcController controller,
-					mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest request )
-					throws com.google.protobuf.ServiceException;
-		}
-
-		private static final class BlockingStub implements
-				BlockingInterface
-		{
-			private BlockingStub(
-					com.google.protobuf.BlockingRpcChannel channel ) {
-				this.channel = channel;
-			}
-
-			private final com.google.protobuf.BlockingRpcChannel channel;
-
-			public mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse share(
-					com.google.protobuf.RpcController controller,
-					mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest request )
-					throws com.google.protobuf.ServiceException {
-				return (mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse) channel
-						.callBlockingMethod(
-								getDescriptor().getMethods().get(
-										0),
-								controller,
-								request,
-								mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse
-										.getDefaultInstance());
-			}
-
-		}
-
-		// @@protoc_insertion_point(class_scope:SharedDataService)
-	}
-
-	private static com.google.protobuf.Descriptors.Descriptor internal_static_SharedDataRequest_descriptor;
-	private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_SharedDataRequest_fieldAccessorTable;
-	private static com.google.protobuf.Descriptors.Descriptor internal_static_SharedDataResponse_descriptor;
-	private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_SharedDataResponse_fieldAccessorTable;
-
-	public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
-		return descriptor;
-	}
-
-	private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
-	static {
-		java.lang.String[] descriptorData = {
-			"\n\027SharedDataService.proto\"/\n\021SharedDataR"
-					+ "equest\022\013\n\003key\030\001 \002(\t\022\r\n\005value\030\002 \001(\t\"#\n\022Sh"
-					+ "aredDataResponse\022\r\n\005value\030\001 \002(\t2E\n\021Share"
-					+ "dDataService\0220\n\005share\022\022.SharedDataReques"
-					+ "t\032\023.SharedDataResponseBV\n:mil.nga.giat.g" + "eowave.datastore.hbase.coprocessors.prot"
-					+ "obufB\020SharedDataProtosH\001\210\001\001\240\001\001"
-		};
-		com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-			public com.google.protobuf.ExtensionRegistry assignDescriptors(
-					com.google.protobuf.Descriptors.FileDescriptor root ) {
-				descriptor = root;
-				internal_static_SharedDataRequest_descriptor = getDescriptor().getMessageTypes().get(
-						0);
-				internal_static_SharedDataRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-						internal_static_SharedDataRequest_descriptor,
-						new java.lang.String[] {
-							"Key",
-							"Value",
-						});
-				internal_static_SharedDataResponse_descriptor = getDescriptor().getMessageTypes().get(
-						1);
-				internal_static_SharedDataResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-						internal_static_SharedDataResponse_descriptor,
-						new java.lang.String[] {
-							"Value",
-						});
-				return null;
-			}
-		};
-		com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
-				descriptorData,
-				new com.google.protobuf.Descriptors.FileDescriptor[] {},
-				assigner);
-	}
-
-	// @@protoc_insertion_point(outer_class_scope)
+public final class SharedDataProtos {
+  private SharedDataProtos() {}
+  public static void registerAllExtensions(
+      com.google.protobuf.ExtensionRegistry registry) {
+  }
+  public interface SharedDataRequestOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // required string key = 1;
+    /**
+     * <code>required string key = 1;</code>
+     */
+    boolean hasKey();
+    /**
+     * <code>required string key = 1;</code>
+     */
+    java.lang.String getKey();
+    /**
+     * <code>required string key = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getKeyBytes();
+
+    // optional string value = 2;
+    /**
+     * <code>optional string value = 2;</code>
+     */
+    boolean hasValue();
+    /**
+     * <code>optional string value = 2;</code>
+     */
+    java.lang.String getValue();
+    /**
+     * <code>optional string value = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getValueBytes();
+  }
+  /**
+   * Protobuf type {@code SharedDataRequest}
+   */
+  public static final class SharedDataRequest extends
+      com.google.protobuf.GeneratedMessage
+      implements SharedDataRequestOrBuilder {
+    // Use SharedDataRequest.newBuilder() to construct.
+    private SharedDataRequest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private SharedDataRequest(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final SharedDataRequest defaultInstance;
+    public static SharedDataRequest getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public SharedDataRequest getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private SharedDataRequest(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              key_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              value_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.internal_static_SharedDataRequest_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.internal_static_SharedDataRequest_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest.class, mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<SharedDataRequest> PARSER =
+        new com.google.protobuf.AbstractParser<SharedDataRequest>() {
+      public SharedDataRequest parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new SharedDataRequest(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<SharedDataRequest> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // required string key = 1;
+    public static final int KEY_FIELD_NUMBER = 1;
+    private java.lang.Object key_;
+    /**
+     * <code>required string key = 1;</code>
+     */
+    public boolean hasKey() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required string key = 1;</code>
+     */
+    public java.lang.String getKey() {
+      java.lang.Object ref = key_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          key_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string key = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getKeyBytes() {
+      java.lang.Object ref = key_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        key_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string value = 2;
+    public static final int VALUE_FIELD_NUMBER = 2;
+    private java.lang.Object value_;
+    /**
+     * <code>optional string value = 2;</code>
+     */
+    public boolean hasValue() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional string value = 2;</code>
+     */
+    public java.lang.String getValue() {
+      java.lang.Object ref = value_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          value_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string value = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getValueBytes() {
+      java.lang.Object ref = value_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        value_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private void initFields() {
+      key_ = "";
+      value_ = "";
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      if (!hasKey()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getKeyBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, getValueBytes());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getKeyBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getValueBytes());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest)) {
+        return super.equals(obj);
+      }
+      mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest other = (mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest) obj;
+
+      boolean result = true;
+      result = result && (hasKey() == other.hasKey());
+      if (hasKey()) {
+        result = result && getKey()
+            .equals(other.getKey());
+      }
+      result = result && (hasValue() == other.hasValue());
+      if (hasValue()) {
+        result = result && getValue()
+            .equals(other.getValue());
+      }
+      result = result &&
+          getUnknownFields().equals(other.getUnknownFields());
+      return result;
+    }
+
+    private int memoizedHashCode = 0;
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptorForType().hashCode();
+      if (hasKey()) {
+        hash = (37 * hash) + KEY_FIELD_NUMBER;
+        hash = (53 * hash) + getKey().hashCode();
+      }
+      if (hasValue()) {
+        hash = (37 * hash) + VALUE_FIELD_NUMBER;
+        hash = (53 * hash) + getValue().hashCode();
+      }
+      hash = (29 * hash) + getUnknownFields().hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code SharedDataRequest}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequestOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.internal_static_SharedDataRequest_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.internal_static_SharedDataRequest_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest.class, mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest.Builder.class);
+      }
+
+      // Construct using mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        key_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        value_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.internal_static_SharedDataRequest_descriptor;
+      }
+
+      public mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest getDefaultInstanceForType() {
+        return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest.getDefaultInstance();
+      }
+
+      public mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest build() {
+        mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest buildPartial() {
+        mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest result = new mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.key_ = key_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.value_ = value_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest) {
+          return mergeFrom((mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest other) {
+        if (other == mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest.getDefaultInstance()) return this;
+        if (other.hasKey()) {
+          bitField0_ |= 0x00000001;
+          key_ = other.key_;
+          onChanged();
+        }
+        if (other.hasValue()) {
+          bitField0_ |= 0x00000002;
+          value_ = other.value_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasKey()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // required string key = 1;
+      private java.lang.Object key_ = "";
+      /**
+       * <code>required string key = 1;</code>
+       */
+      public boolean hasKey() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required string key = 1;</code>
+       */
+      public java.lang.String getKey() {
+        java.lang.Object ref = key_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          key_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string key = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getKeyBytes() {
+        java.lang.Object ref = key_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          key_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string key = 1;</code>
+       */
+      public Builder setKey(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        key_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string key = 1;</code>
+       */
+      public Builder clearKey() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        key_ = getDefaultInstance().getKey();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string key = 1;</code>
+       */
+      public Builder setKeyBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        key_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string value = 2;
+      private java.lang.Object value_ = "";
+      /**
+       * <code>optional string value = 2;</code>
+       */
+      public boolean hasValue() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string value = 2;</code>
+       */
+      public java.lang.String getValue() {
+        java.lang.Object ref = value_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          value_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string value = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getValueBytes() {
+        java.lang.Object ref = value_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          value_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string value = 2;</code>
+       */
+      public Builder setValue(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        value_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string value = 2;</code>
+       */
+      public Builder clearValue() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        value_ = getDefaultInstance().getValue();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string value = 2;</code>
+       */
+      public Builder setValueBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        value_ = value;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:SharedDataRequest)
+    }
+
+    static {
+      defaultInstance = new SharedDataRequest(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:SharedDataRequest)
+  }
+
+  public interface SharedDataResponseOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // required string value = 1;
+    /**
+     * <code>required string value = 1;</code>
+     */
+    boolean hasValue();
+    /**
+     * <code>required string value = 1;</code>
+     */
+    java.lang.String getValue();
+    /**
+     * <code>required string value = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getValueBytes();
+  }
+  /**
+   * Protobuf type {@code SharedDataResponse}
+   */
+  public static final class SharedDataResponse extends
+      com.google.protobuf.GeneratedMessage
+      implements SharedDataResponseOrBuilder {
+    // Use SharedDataResponse.newBuilder() to construct.
+    private SharedDataResponse(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private SharedDataResponse(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final SharedDataResponse defaultInstance;
+    public static SharedDataResponse getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public SharedDataResponse getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private SharedDataResponse(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              value_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.internal_static_SharedDataResponse_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.internal_static_SharedDataResponse_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse.class, mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<SharedDataResponse> PARSER =
+        new com.google.protobuf.AbstractParser<SharedDataResponse>() {
+      public SharedDataResponse parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new SharedDataResponse(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<SharedDataResponse> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // required string value = 1;
+    public static final int VALUE_FIELD_NUMBER = 1;
+    private java.lang.Object value_;
+    /**
+     * <code>required string value = 1;</code>
+     */
+    public boolean hasValue() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required string value = 1;</code>
+     */
+    public java.lang.String getValue() {
+      java.lang.Object ref = value_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          value_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string value = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getValueBytes() {
+      java.lang.Object ref = value_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        value_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private void initFields() {
+      value_ = "";
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      if (!hasValue()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getValueBytes());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getValueBytes());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse)) {
+        return super.equals(obj);
+      }
+      mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse other = (mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse) obj;
+
+      boolean result = true;
+      result = result && (hasValue() == other.hasValue());
+      if (hasValue()) {
+        result = result && getValue()
+            .equals(other.getValue());
+      }
+      result = result &&
+          getUnknownFields().equals(other.getUnknownFields());
+      return result;
+    }
+
+    private int memoizedHashCode = 0;
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptorForType().hashCode();
+      if (hasValue()) {
+        hash = (37 * hash) + VALUE_FIELD_NUMBER;
+        hash = (53 * hash) + getValue().hashCode();
+      }
+      hash = (29 * hash) + getUnknownFields().hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code SharedDataResponse}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponseOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.internal_static_SharedDataResponse_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.internal_static_SharedDataResponse_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse.class, mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse.Builder.class);
+      }
+
+      // Construct using mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        value_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.internal_static_SharedDataResponse_descriptor;
+      }
+
+      public mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse getDefaultInstanceForType() {
+        return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse.getDefaultInstance();
+      }
+
+      public mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse build() {
+        mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse buildPartial() {
+        mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse result = new mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.value_ = value_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse) {
+          return mergeFrom((mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse other) {
+        if (other == mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse.getDefaultInstance()) return this;
+        if (other.hasValue()) {
+          bitField0_ |= 0x00000001;
+          value_ = other.value_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasValue()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // required string value = 1;
+      private java.lang.Object value_ = "";
+      /**
+       * <code>required string value = 1;</code>
+       */
+      public boolean hasValue() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required string value = 1;</code>
+       */
+      public java.lang.String getValue() {
+        java.lang.Object ref = value_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          value_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string value = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getValueBytes() {
+        java.lang.Object ref = value_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          value_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string value = 1;</code>
+       */
+      public Builder setValue(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        value_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string value = 1;</code>
+       */
+      public Builder clearValue() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        value_ = getDefaultInstance().getValue();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string value = 1;</code>
+       */
+      public Builder setValueBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        value_ = value;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:SharedDataResponse)
+    }
+
+    static {
+      defaultInstance = new SharedDataResponse(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:SharedDataResponse)
+  }
+
+  /**
+   * Protobuf service {@code SharedDataService}
+   */
+  public static abstract class SharedDataService
+      implements com.google.protobuf.Service {
+    protected SharedDataService() {}
+
+    public interface Interface {
+      /**
+       * <code>rpc share(.SharedDataRequest) returns (.SharedDataResponse);</code>
+       */
+      public abstract void share(
+          com.google.protobuf.RpcController controller,
+          mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest request,
+          com.google.protobuf.RpcCallback<mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse> done);
+
+    }
+
+    public static com.google.protobuf.Service newReflectiveService(
+        final Interface impl) {
+      return new SharedDataService() {
+        @java.lang.Override
+        public  void share(
+            com.google.protobuf.RpcController controller,
+            mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest request,
+            com.google.protobuf.RpcCallback<mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse> done) {
+          impl.share(controller, request, done);
+        }
+
+      };
+    }
+
+    public static com.google.protobuf.BlockingService
+        newReflectiveBlockingService(final BlockingInterface impl) {
+      return new com.google.protobuf.BlockingService() {
+        public final com.google.protobuf.Descriptors.ServiceDescriptor
+            getDescriptorForType() {
+          return getDescriptor();
+        }
+
+        public final com.google.protobuf.Message callBlockingMethod(
+            com.google.protobuf.Descriptors.MethodDescriptor method,
+            com.google.protobuf.RpcController controller,
+            com.google.protobuf.Message request)
+            throws com.google.protobuf.ServiceException {
+          if (method.getService() != getDescriptor()) {
+            throw new java.lang.IllegalArgumentException(
+              "Service.callBlockingMethod() given method descriptor for " +
+              "wrong service type.");
+          }
+          switch(method.getIndex()) {
+            case 0:
+              return impl.share(controller, (mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest)request);
+            default:
+              throw new java.lang.AssertionError("Can't get here.");
+          }
+        }
+
+        public final com.google.protobuf.Message
+            getRequestPrototype(
+            com.google.protobuf.Descriptors.MethodDescriptor method) {
+          if (method.getService() != getDescriptor()) {
+            throw new java.lang.IllegalArgumentException(
+              "Service.getRequestPrototype() given method " +
+              "descriptor for wrong service type.");
+          }
+          switch(method.getIndex()) {
+            case 0:
+              return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest.getDefaultInstance();
+            default:
+              throw new java.lang.AssertionError("Can't get here.");
+          }
+        }
+
+        public final com.google.protobuf.Message
+            getResponsePrototype(
+            com.google.protobuf.Descriptors.MethodDescriptor method) {
+          if (method.getService() != getDescriptor()) {
+            throw new java.lang.IllegalArgumentException(
+              "Service.getResponsePrototype() given method " +
+              "descriptor for wrong service type.");
+          }
+          switch(method.getIndex()) {
+            case 0:
+              return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse.getDefaultInstance();
+            default:
+              throw new java.lang.AssertionError("Can't get here.");
+          }
+        }
+
+      };
+    }
+
+    /**
+     * <code>rpc share(.SharedDataRequest) returns (.SharedDataResponse);</code>
+     */
+    public abstract void share(
+        com.google.protobuf.RpcController controller,
+        mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest request,
+        com.google.protobuf.RpcCallback<mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse> done);
+
+    public static final
+        com.google.protobuf.Descriptors.ServiceDescriptor
+        getDescriptor() {
+      return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.getDescriptor().getServices().get(0);
+    }
+    public final com.google.protobuf.Descriptors.ServiceDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+
+    public final void callMethod(
+        com.google.protobuf.Descriptors.MethodDescriptor method,
+        com.google.protobuf.RpcController controller,
+        com.google.protobuf.Message request,
+        com.google.protobuf.RpcCallback<
+          com.google.protobuf.Message> done) {
+      if (method.getService() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "Service.callMethod() given method descriptor for wrong " +
+          "service type.");
+      }
+      switch(method.getIndex()) {
+        case 0:
+          this.share(controller, (mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest)request,
+            com.google.protobuf.RpcUtil.<mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse>specializeCallback(
+              done));
+          return;
+        default:
+          throw new java.lang.AssertionError("Can't get here.");
+      }
+    }
+
+    public final com.google.protobuf.Message
+        getRequestPrototype(
+        com.google.protobuf.Descriptors.MethodDescriptor method) {
+      if (method.getService() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "Service.getRequestPrototype() given method " +
+          "descriptor for wrong service type.");
+      }
+      switch(method.getIndex()) {
+        case 0:
+          return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest.getDefaultInstance();
+        default:
+          throw new java.lang.AssertionError("Can't get here.");
+      }
+    }
+
+    public final com.google.protobuf.Message
+        getResponsePrototype(
+        com.google.protobuf.Descriptors.MethodDescriptor method) {
+      if (method.getService() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "Service.getResponsePrototype() given method " +
+          "descriptor for wrong service type.");
+      }
+      switch(method.getIndex()) {
+        case 0:
+          return mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse.getDefaultInstance();
+        default:
+          throw new java.lang.AssertionError("Can't get here.");
+      }
+    }
+
+    public static Stub newStub(
+        com.google.protobuf.RpcChannel channel) {
+      return new Stub(channel);
+    }
+
+    public static final class Stub extends mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataService implements Interface {
+      private Stub(com.google.protobuf.RpcChannel channel) {
+        this.channel = channel;
+      }
+
+      private final com.google.protobuf.RpcChannel channel;
+
+      public com.google.protobuf.RpcChannel getChannel() {
+        return channel;
+      }
+
+      public  void share(
+          com.google.protobuf.RpcController controller,
+          mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest request,
+          com.google.protobuf.RpcCallback<mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse> done) {
+        channel.callMethod(
+          getDescriptor().getMethods().get(0),
+          controller,
+          request,
+          mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse.getDefaultInstance(),
+          com.google.protobuf.RpcUtil.generalizeCallback(
+            done,
+            mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse.class,
+            mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse.getDefaultInstance()));
+      }
+    }
+
+    public static BlockingInterface newBlockingStub(
+        com.google.protobuf.BlockingRpcChannel channel) {
+      return new BlockingStub(channel);
+    }
+
+    public interface BlockingInterface {
+      public mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse share(
+          com.google.protobuf.RpcController controller,
+          mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest request)
+          throws com.google.protobuf.ServiceException;
+    }
+
+    private static final class BlockingStub implements BlockingInterface {
+      private BlockingStub(com.google.protobuf.BlockingRpcChannel channel) {
+        this.channel = channel;
+      }
+
+      private final com.google.protobuf.BlockingRpcChannel channel;
+
+      public mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse share(
+          com.google.protobuf.RpcController controller,
+          mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataRequest request)
+          throws com.google.protobuf.ServiceException {
+        return (mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse) channel.callBlockingMethod(
+          getDescriptor().getMethods().get(0),
+          controller,
+          request,
+          mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.SharedDataProtos.SharedDataResponse.getDefaultInstance());
+      }
+
+    }
+
+    // @@protoc_insertion_point(class_scope:SharedDataService)
+  }
+
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_SharedDataRequest_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_SharedDataRequest_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_SharedDataResponse_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_SharedDataResponse_fieldAccessorTable;
+
+  public static com.google.protobuf.Descriptors.FileDescriptor
+      getDescriptor() {
+    return descriptor;
+  }
+  private static com.google.protobuf.Descriptors.FileDescriptor
+      descriptor;
+  static {
+    java.lang.String[] descriptorData = {
+      "\n\027SharedDataService.proto\"/\n\021SharedDataR" +
+      "equest\022\013\n\003key\030\001 \002(\t\022\r\n\005value\030\002 \001(\t\"#\n\022Sh" +
+      "aredDataResponse\022\r\n\005value\030\001 \002(\t2E\n\021Share" +
+      "dDataService\0220\n\005share\022\022.SharedDataReques" +
+      "t\032\023.SharedDataResponseBV\n:mil.nga.giat.g" +
+      "eowave.datastore.hbase.coprocessors.prot" +
+      "obufB\020SharedDataProtosH\001\210\001\001\240\001\001"
+    };
+    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
+      new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
+        public com.google.protobuf.ExtensionRegistry assignDescriptors(
+            com.google.protobuf.Descriptors.FileDescriptor root) {
+          descriptor = root;
+          internal_static_SharedDataRequest_descriptor =
+            getDescriptor().getMessageTypes().get(0);
+          internal_static_SharedDataRequest_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_SharedDataRequest_descriptor,
+              new java.lang.String[] { "Key", "Value", });
+          internal_static_SharedDataResponse_descriptor =
+            getDescriptor().getMessageTypes().get(1);
+          internal_static_SharedDataResponse_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_SharedDataResponse_descriptor,
+              new java.lang.String[] { "Value", });
+          return null;
+        }
+      };
+    com.google.protobuf.Descriptors.FileDescriptor
+      .internalBuildGeneratedFileFrom(descriptorData,
+        new com.google.protobuf.Descriptors.FileDescriptor[] {
+        }, assigner);
+  }
+
+  // @@protoc_insertion_point(outer_class_scope)
 }

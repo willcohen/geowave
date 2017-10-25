@@ -36,19 +36,27 @@ public class BigtableEmulator
 {
 	private final static org.slf4j.Logger LOGGER = LoggerFactory.getLogger(BigtableEmulator.class);
 
-	// these need to move to config
-	private final static String GCLOUD_URL = "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/";
-	private final static String GCLOUD_TAR = "google-cloud-sdk-136.0.0-linux-x86_64.tar.gz";
-	private final static String GCLOUD_EXE = "google-cloud-sdk/bin/gcloud";
-	private static final String HOST_PORT = "localhost:8128";
+	// Property names
+	public static final String HOST_PORT_PROPERTY = "bigtable.emulator.endpoint";
+	public static final String INTERNAL_PROPERTY = "bigtable.emulator.internal";
+	public static final String DOWNLOAD_URL_PROPERTY = "bigtable.sdk.url";
+	public static final String DOWNLOAD_FILE_PROPERTY = "bigtable.sdk.file";
 
-	private static final long EMULATOR_SPINUP_DELAY_MS = 30000L;
+	// Download and executable paths
+	private String downloadUrl;
+	private String tarFile;
+
+	private final static String GCLOUD_EXE_DIR = "google-cloud-sdk/bin";
+
+	private static final long EMULATOR_SPINUP_DELAY_MS = 60000L;
 
 	private final File sdkDir;
 	private ExecuteWatchdog watchdog;
 
 	public BigtableEmulator(
-			String sdkDir ) {
+			String sdkDir,
+			String sdkDownloadUrl,
+			String sdkTarFile ) {
 		if (TestUtils.isSet(sdkDir)) {
 			this.sdkDir = new File(
 					sdkDir);
@@ -59,12 +67,16 @@ public class BigtableEmulator
 					"gcloud");
 		}
 
+		this.downloadUrl = sdkDownloadUrl;
+		this.tarFile = sdkTarFile;
+
 		if (!this.sdkDir.exists() && !this.sdkDir.mkdirs()) {
 			LOGGER.warn("unable to create directory " + this.sdkDir.getAbsolutePath());
 		}
 	}
 
-	public boolean start() {
+	public boolean start(
+			final String emulatorHostPort ) {
 		if (!isInstalled()) {
 			try {
 				if (!install()) {
@@ -78,7 +90,7 @@ public class BigtableEmulator
 		}
 
 		try {
-			startEmulator();
+			startEmulator(emulatorHostPort);
 		}
 		catch (IOException | InterruptedException e) {
 			LOGGER.error(e.getMessage());
@@ -152,7 +164,7 @@ public class BigtableEmulator
 	private boolean isInstalled() {
 		final File gcloudExe = new File(
 				sdkDir,
-				GCLOUD_EXE);
+				GCLOUD_EXE_DIR + "/gcloud");
 
 		return (gcloudExe.canExecute());
 	}
@@ -160,11 +172,11 @@ public class BigtableEmulator
 	protected boolean install()
 			throws IOException {
 		URL url = new URL(
-				GCLOUD_URL + GCLOUD_TAR);
+				downloadUrl + "/" + tarFile);
 
 		final File downloadFile = new File(
 				sdkDir,
-				GCLOUD_TAR);
+				tarFile);
 		if (!downloadFile.exists()) {
 			try (FileOutputStream fos = new FileOutputStream(
 					downloadFile)) {
@@ -194,8 +206,12 @@ public class BigtableEmulator
 		}
 
 		// Install the beta components
+		final File gcloudExe = new File(
+				sdkDir,
+				GCLOUD_EXE_DIR + "/gcloud");
+
 		CommandLine cmdLine = new CommandLine(
-				sdkDir + "/" + GCLOUD_EXE);
+				gcloudExe);
 		cmdLine.addArgument("components");
 		cmdLine.addArgument("install");
 		cmdLine.addArgument("beta");
@@ -217,19 +233,20 @@ public class BigtableEmulator
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	private void startEmulator()
+	private void startEmulator(
+			final String emulatorHostPort )
 			throws ExecuteException,
 			IOException,
 			InterruptedException {
 		CommandLine cmdLine = new CommandLine(
-				sdkDir + "/" + GCLOUD_EXE);
+				sdkDir + "/" + GCLOUD_EXE_DIR + "/gcloud");
 		cmdLine.addArgument("beta");
 		cmdLine.addArgument("emulators");
 		cmdLine.addArgument("bigtable");
 		cmdLine.addArgument("start");
 		cmdLine.addArgument("--quiet");
 		cmdLine.addArgument("--host-port");
-		cmdLine.addArgument(HOST_PORT);
+		cmdLine.addArgument(emulatorHostPort);
 
 		// Using a result handler makes the emulator run async
 		DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
@@ -239,6 +256,9 @@ public class BigtableEmulator
 				ExecuteWatchdog.INFINITE_TIMEOUT);
 		Executor executor = new DefaultExecutor();
 		executor.setWatchdog(watchdog);
+
+		LOGGER.warn("Starting BigTable Emulator: " + cmdLine.toString());
+
 		executor.execute(
 				cmdLine,
 				resultHandler);

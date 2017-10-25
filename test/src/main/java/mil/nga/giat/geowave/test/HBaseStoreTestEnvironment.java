@@ -37,6 +37,7 @@ import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.GenericStoreFactory;
 import mil.nga.giat.geowave.core.store.StoreFactoryOptions;
 import mil.nga.giat.geowave.datastore.hbase.HBaseStoreFactoryFamily;
+import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseOptions;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseRequiredOptions;
 import mil.nga.giat.geowave.datastore.hbase.coprocessors.MergingRegionObserver;
 import mil.nga.giat.geowave.datastore.hbase.util.ConnectionPool;
@@ -50,8 +51,8 @@ public class HBaseStoreTestEnvironment extends
 	private static HBaseStoreTestEnvironment singletonInstance = null;
 
 	// TODO: Research the impact of vis setup on the other ITs
-	private static boolean enableVisibility = false;
-	private static boolean enableCoprocessors = true;
+	private static boolean enableVisibility = true;
+	private static boolean enableCoprocessors = false;
 
 	public static synchronized HBaseStoreTestEnvironment getInstance() {
 		if (singletonInstance == null) {
@@ -72,7 +73,8 @@ public class HBaseStoreTestEnvironment extends
 	private static String[] auths = new String[] {
 		"a",
 		"b",
-		"c"
+		"c",
+		"z"
 	};
 
 	protected User SUPERUSER;
@@ -80,7 +82,21 @@ public class HBaseStoreTestEnvironment extends
 	@Override
 	protected void initOptions(
 			final StoreFactoryOptions options ) {
-		((HBaseRequiredOptions) options).setZookeeper(zookeeper);
+		HBaseRequiredOptions hbaseRequiredOptions = (HBaseRequiredOptions) options;
+		hbaseRequiredOptions.setZookeeper(zookeeper);
+
+		String serverEnabledProp = System.getProperty(GeoWaveITRunner.SERVER_ENABLED_PROPERTY_NAME);
+		if (TestUtils.isSet(serverEnabledProp)) {
+			Boolean enabled = Boolean.parseBoolean(serverEnabledProp);
+			((HBaseOptions) hbaseRequiredOptions.getStoreOptions()).setServerSideLibraryEnabled(enabled);
+
+			LOGGER.warn("HBase server-side libraries enabled: " + enabled);
+		}
+		else {
+			LOGGER.warn("HBase server-side libraries enabled: "
+					+ ((HBaseOptions) hbaseRequiredOptions.getStoreOptions()).isServerSideLibraryEnabled()
+					+ " (DEFAULT)");
+		}
 	}
 
 	@Override
@@ -124,19 +140,6 @@ public class HBaseStoreTestEnvironment extends
 					conf.setStrings(
 							CoprocessorHost.REGION_COPROCESSOR_CONF_KEY,
 							MergingRegionObserver.class.getName());
-					// conf.setStrings(
-					// CoprocessorHost.MASTER_COPROCESSOR_CONF_KEY,
-					// SharedDataEndpoint.class.getName());
-
-					String[] testCfs = {
-						"testNoDataMergeStrategy",
-						"testMultipleMergeStrategies_NoDataMergeStrategy",
-						"testMultipleMergeStrategies_SummingMergeStrategy",
-						"testMultipleMergeStrategies_SumAndAveragingMergeStrategy"
-					};
-					conf.setStrings(
-							MergingRegionObserver.COLUMN_FAMILIES_CONFIG_KEY,
-							testCfs);
 				}
 
 				if (enableVisibility) {

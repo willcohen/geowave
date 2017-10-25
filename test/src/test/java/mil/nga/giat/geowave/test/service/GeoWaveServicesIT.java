@@ -75,7 +75,7 @@ public class GeoWaveServicesIT extends
 	private static GeoserverServiceClient geoserverServiceClient;
 	private static IngestServiceClient ingestServiceClient;
 
-	@GeoWaveTestStore({
+	@GeoWaveTestStore(value = {
 		GeoWaveStoreType.ACCUMULO,
 		GeoWaveStoreType.BIGTABLE,
 		GeoWaveStoreType.HBASE

@@ -32,6 +32,7 @@ import mil.nga.giat.geowave.core.store.filter.DistributableFilterList;
 import mil.nga.giat.geowave.core.store.filter.DistributableQueryFilter;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
+import mil.nga.giat.geowave.core.store.memory.MemoryAdapterStore;
 import mil.nga.giat.geowave.core.store.operations.DataStoreOperations;
 import mil.nga.giat.geowave.core.store.operations.Reader;
 import mil.nga.giat.geowave.core.store.query.CoordinateRangeQueryFilter;
@@ -166,7 +167,8 @@ public class BaseConstraintsQuery extends
 			final double[] maxResolutionSubsamplingPerDimension,
 			final Integer limit ) {
 		if (isAggregation()) {
-			if ((options == null) || !options.isServerSideLibraryEnabled()) {
+			if ((options == null) || !options.isServerSideLibraryEnabled()
+					|| adapterStore instanceof MemoryAdapterStore) {
 				// Aggregate client-side
 				final CloseableIterator<Object> it = super.query(
 						datastoreOperations,
@@ -207,6 +209,7 @@ public class BaseConstraintsQuery extends
 				try (final Reader reader = getReader(
 						datastoreOperations,
 						options,
+						adapterStore,
 						maxResolutionSubsamplingPerDimension,
 						limit)) {
 					Mergeable mergedAggregationResult = null;

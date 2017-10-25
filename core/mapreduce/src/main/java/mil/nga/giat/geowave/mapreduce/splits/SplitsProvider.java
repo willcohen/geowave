@@ -25,9 +25,6 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
@@ -39,6 +36,7 @@ import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.operations.DataStoreOperations;
 import mil.nga.giat.geowave.core.store.query.DistributableQuery;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
+import mil.nga.giat.geowave.mapreduce.MapReduceUtils;
 
 public abstract class SplitsProvider
 {
@@ -76,16 +74,7 @@ public abstract class SplitsProvider
 						indexStore)) {
 			indexIdToAdaptersMap.put(
 					indexAdapterPair.getKey().getId(),
-					Lists.transform(
-							indexAdapterPair.getValue(),
-							new Function<DataAdapter<Object>, ByteArrayId>() {
-
-								@Override
-								public ByteArrayId apply(
-										final DataAdapter<Object> input ) {
-									return input.getAdapterId();
-								}
-							}));
+					MapReduceUtils.idsFromAdapters(indexAdapterPair.getValue()));
 			populateIntermediateSplits(
 					splits,
 					operations,

@@ -52,8 +52,6 @@ public class GeoWaveBasicSpatialVectorIT extends
 		GeoWaveStoreType.CASSANDRA,
 		GeoWaveStoreType.DYNAMODB,
 		GeoWaveStoreType.HBASE
-	}, options = {
-		"enableServerSideLibrary=true"
 	})
 	protected DataStorePluginOptions dataStore;
 
@@ -93,9 +91,12 @@ public class GeoWaveBasicSpatialVectorIT extends
 		long mark = System.currentTimeMillis();
 
 		// org.apache.log4j.Logger.getRootLogger().setLevel(
-		// org.apache.log4j.Level.INFO);
+		// org.apache.log4j.Level.DEBUG);
 
-		LOGGER.info("Testing DataStore Type: " + dataStore.getType());
+		LOGGER.debug("Testing DataStore Type: " + dataStore.getType());
+
+		// Ensure empty datastore
+		TestUtils.deleteAll(dataStore);
 
 		// ingest both lines and points
 		TestUtils.testLocalIngest(
@@ -105,7 +106,7 @@ public class GeoWaveBasicSpatialVectorIT extends
 				nthreads);
 
 		long dur = (System.currentTimeMillis() - mark);
-		LOGGER.info("Ingest (points) duration = " + dur + " ms with " + nthreads + " thread(s).");
+		LOGGER.debug("Ingest (points) duration = " + dur + " ms with " + nthreads + " thread(s).");
 
 		// org.apache.log4j.Logger.getRootLogger().setLevel(
 		// org.apache.log4j.Level.WARN);
@@ -120,7 +121,7 @@ public class GeoWaveBasicSpatialVectorIT extends
 					nthreads);
 
 			dur = (System.currentTimeMillis() - mark);
-			LOGGER.info("Ingest (lines) duration = " + dur + " ms with " + nthreads + " thread(s).");
+			LOGGER.debug("Ingest (lines) duration = " + dur + " ms with " + nthreads + " thread(s).");
 		}
 
 		try {
@@ -150,7 +151,7 @@ public class GeoWaveBasicSpatialVectorIT extends
 					"bounding box constraint only");
 
 			dur = (System.currentTimeMillis() - mark);
-			LOGGER.info("BBOX query duration = " + dur + " ms.");
+			LOGGER.debug("BBOX query duration = " + dur + " ms.");
 		}
 		catch (final Exception e) {
 			e.printStackTrace();
@@ -185,7 +186,7 @@ public class GeoWaveBasicSpatialVectorIT extends
 					"polygon constraint only");
 
 			dur = (System.currentTimeMillis() - mark);
-			LOGGER.info("POLY query duration = " + dur + " ms.");
+			LOGGER.debug("POLY query duration = " + dur + " ms.");
 		}
 		catch (final Exception e) {
 			e.printStackTrace();

@@ -598,7 +598,6 @@ public class BaseDataStore implements
 				partitionKey,
 				sortPrefix,
 				(ScanCallback<Object, ?>) sanitizedQueryOptions.getScanCallback(),
-				sanitizedQueryOptions.getLimit(),
 				DifferingFieldVisibilityEntryCount.getVisibilityCounts(
 						index,
 						adapterIdsToQuery,
@@ -610,7 +609,8 @@ public class BaseDataStore implements
 				baseOperations,
 				baseOptions,
 				sanitizedQueryOptions.getMaxResolutionSubsamplingPerDimension(),
-				tempAdapterStore);
+				tempAdapterStore,
+				sanitizedQueryOptions.getLimit());
 
 	}
 

@@ -21,8 +21,6 @@ import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 class BaseRowPrefixQuery<T> extends
 		AbstractBaseRowQuery<T>
 {
-
-	final Integer limit;
 	final QueryRanges queryRanges;
 
 	public BaseRowPrefixQuery(
@@ -30,7 +28,6 @@ class BaseRowPrefixQuery<T> extends
 			final ByteArrayId partitionKey,
 			final ByteArrayId sortKeyPrefix,
 			final ScanCallback<T, ?> scanCallback,
-			final Integer limit,
 			final DifferingFieldVisibilityEntryCount visibilityCounts,
 			final String[] authorizations ) {
 		super(
@@ -38,7 +35,6 @@ class BaseRowPrefixQuery<T> extends
 				authorizations,
 				scanCallback,
 				visibilityCounts);
-		this.limit = limit;
 
 		final ByteArrayRange sortKeyPrefixRange = new ByteArrayRange(
 				sortKeyPrefix,
@@ -51,11 +47,6 @@ class BaseRowPrefixQuery<T> extends
 				sortKeys));
 		queryRanges = new QueryRanges(
 				ranges);
-	}
-
-	@Override
-	protected Integer getScannerLimit() {
-		return limit;
 	}
 
 	@Override

@@ -1,12 +1,21 @@
 package mil.nga.giat.geowave.service.rest.webapp;
 
+
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Modifier;
 import java.net.InetAddress;
+//=======
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+//>>>>>>> fc56a1429f955dfab0c96af83a1f04a5e89a0022
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+
 import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
@@ -15,11 +24,13 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import javax.management.Query;
 import javax.management.QueryExp;
+
 import javax.servlet.ServletContext;
 
 import org.reflections.Reflections;
 import org.restlet.Application;
 import org.restlet.Restlet;
+
 import org.restlet.routing.Router;
 import org.restlet.service.CorsService;
 import org.slf4j.Logger;
@@ -34,6 +45,20 @@ import mil.nga.giat.geowave.service.rest.SwaggerApiParser;
 import mil.nga.giat.geowave.service.rest.SwaggerResource;
 import mil.nga.giat.geowave.service.rest.operations.FileUpload;
 import scala.reflect.api.Quasiquotes.Quasiquote.api;
+//=======
+import org.restlet.engine.Engine;
+import org.restlet.resource.ServerResource;
+import org.restlet.routing.Router;
+import org.restlet.service.CorsService;
+
+import mil.nga.giat.geowave.core.cli.annotations.GeowaveOperation;
+import mil.nga.giat.geowave.core.cli.api.DefaultOperation;
+import mil.nga.giat.geowave.service.rest.MainResource;
+import mil.nga.giat.geowave.service.rest.GeoWaveOperationFinder;
+import mil.nga.giat.geowave.service.rest.RestRoute;
+import mil.nga.giat.geowave.service.rest.SwaggerApiParser;
+import mil.nga.giat.geowave.service.rest.SwaggerResource;
+//>>>>>>> fc56a1429f955dfab0c96af83a1f04a5e89a0022
 
 /**
  * This class provides the main webapp entry point
@@ -55,8 +80,7 @@ public class ApiRestletApplication extends
 		corsService.setAllowedOrigins(new HashSet(
 				Arrays.asList("*")));
 		corsService.setAllowedCredentials(true);
-		getServices().add(
-				corsService);
+		getServices().add(corsService);
 	}
 
 	@Override
@@ -83,6 +107,59 @@ public class ApiRestletApplication extends
 		return router;
 	}
 
+/*=======
+		getContext().getAttributes().put(
+				"unavailableCommands",
+				unavailableCommands);
+
+		final ServletContext servlet = (ServletContext) getContext().getAttributes().get(
+				"org.restlet.ext.servlet.ServletContext");
+		final String realPath = servlet.getRealPath(
+				"/");
+		getContext().getAttributes().put(
+				"databaseUrl",
+				"jdbc:sqlite:" + realPath + "api.db");
+
+		// actual mapping here
+		router.attachDefault(
+				MainResource.class);
+		router.attach(
+				"/api",
+				SwaggerResource.class);
+		attachApiRoutes(
+				router);
+
+		initApiKeyDatabase(
+				realPath + "api.db");
+		return router;
+	}
+
+	public void initApiKeyDatabase(
+			String fileName ) {
+
+		String url = "jdbc:sqlite:" + fileName;
+
+		try (Connection conn = DriverManager.getConnection(
+				url)) {
+			if (conn != null) {
+				// SQL statement for creating a new table
+				String sql = "CREATE TABLE IF NOT EXISTS api_keys (\n" + "	id integer PRIMARY KEY,\n"
+						+ "	apiKey blob NOT NULL,\n" + "	username text NOT NULL\n" + ");";
+
+				Statement stmnt = conn.createStatement();
+				stmnt.execute(
+						sql);
+				stmnt.close();
+			}
+		}
+		catch (SQLException e) {
+			getContext().getLogger().log(
+					Level.SEVERE,
+					e.getMessage());
+		}
+	}
+
+>>>>>>> fc56a1429f955dfab0c96af83a1f04a5e89a0022 */
 	/**
 	 * This method parses all the Geowave Operation classes and creates the info
 	 * to generate a Restlet route based on the operation. These routes are
@@ -109,6 +186,36 @@ public class ApiRestletApplication extends
 		}
 
 		Collections.sort(availableRoutes);
+/*=======
+		unavailableCommands = new ArrayList<String>();
+
+		for (final Class<?> operation : new Reflections(
+				"mil.nga.giat.geowave").getTypesAnnotatedWith(
+						GeowaveOperation.class)) {
+			if ((operation.getAnnotation(
+					GeowaveOperation.class).restEnabled() == GeowaveOperation.RestEnabledType.GET)
+					|| (((operation.getAnnotation(
+							GeowaveOperation.class).restEnabled() == GeowaveOperation.RestEnabledType.POST))
+							&& DefaultOperation.class.isAssignableFrom(
+									operation))
+					|| ServerResource.class.isAssignableFrom(
+							operation)) {
+
+				availableRoutes.add(
+						new RestRoute(
+								operation));
+			}
+			else {
+				final GeowaveOperation operationInfo = operation.getAnnotation(
+						GeowaveOperation.class);
+				unavailableCommands.add(
+						operation.getName() + " " + operationInfo.name());
+			}
+		}
+
+		Collections.sort(
+				availableRoutes);
+>>>>>>> fc56a1429f955dfab0c96af83a1f04a5e89a0022 */
 	}
 
 	/**
@@ -147,6 +254,35 @@ public class ApiRestletApplication extends
 
 			apiParser.addRoute(route);
 
+/*=======
+			Router router ) {
+		final SwaggerApiParser apiParser = new SwaggerApiParser(
+				"localhost:8080/geowave-service-rest-webapp",
+				"1.0.0",
+				"GeoWave API",
+				"REST API for GeoWave CLI commands");
+		for (final RestRoute route : availableRoutes) {
+
+			if (DefaultOperation.class.isAssignableFrom(
+					route.getOperation())) {
+				router.attach(
+						"/" + route.getPath(),
+						new GeoWaveOperationFinder(
+								(Class<? extends DefaultOperation<?>>) route.getOperation()));
+
+				final Class<? extends DefaultOperation<?>> opClass = ((Class<? extends DefaultOperation<?>>) route
+						.getOperation());
+
+				apiParser.addRoute(
+						route);
+
+			}
+			else {
+				router.attach(
+						route.getPath(),
+						(Class<? extends ServerResource>) route.getOperation());
+			}
+>>>>>>> fc56a1429f955dfab0c96af83a1f04a5e89a0022 */
 		}
 
 		// determine path on file system where the servlet resides
@@ -206,4 +342,20 @@ public class ApiRestletApplication extends
 		}
 		return "localhost:8080";
 	}
+/*=======
+		final ServletContext servlet = (ServletContext) router.getContext().getAttributes().get(
+				"org.restlet.ext.servlet.ServletContext");
+		final String realPath = servlet.getRealPath(
+				"/");
+
+		if (!apiParser.serializeSwaggerJson(
+				realPath + "swagger.json"))
+			getLogger().warning(
+					"Serialization of swagger.json Failed");
+		else
+			getLogger().info(
+					"Serialization of swagger.json Succeeded");
+	}
+
+>>>>>>> fc56a1429f955dfab0c96af83a1f04a5e89a0022 */
 }

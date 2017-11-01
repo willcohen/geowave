@@ -1,6 +1,7 @@
 package mil.nga.giat.geowave.service.rest;
 
 import java.io.File;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -13,6 +14,15 @@ import org.restlet.resource.Get;
 import org.restlet.resource.Patch;
 import org.restlet.resource.Post;
 import org.restlet.resource.Put;
+/*=======
+import java.lang.reflect.Field;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;*/
+
 import org.restlet.resource.ServerResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -200,6 +210,139 @@ public class GeoWaveOperationServiceWrapper<T> extends
 						f.getName());
 			}
 		}
+/*=======
+	 
+	private void injectParameters(
+			final Form form )
+			throws MissingArgumentException {
+
+		for (final Field field : FieldUtils.getFieldsWithAnnotation(
+				// TODO Take out this loop?
+				operation.getClass(),
+				Parameter.class)) {
+			processField(
+					form,
+					field);
+
+		}
+	}
+
+	private Field processField(
+			final Form form,
+			final Field field )
+			throws MissingArgumentException {
+		final Parameter parameter = field.getAnnotation(
+				Parameter.class);
+
+		ParametersDelegate parametersDelegate = null;
+		parametersDelegate = field.getAnnotation(
+				ParametersDelegate.class);
+
+		if (parameter != null) {
+			if (field.getType() == String.class) {
+				final String value = getFieldValue(
+						form,
+						field.getName());
+				if (value != null) {
+					field.setAccessible(
+							true); // Get around restrictions on
+									// private fields. JCommander
+									// does this too.
+					try {
+						field.set(
+								operation,
+								value);
+					}
+					catch (final IllegalAccessException e) {
+						throw new RuntimeException(
+								e);
+					}
+				}
+				else if (parameter.required()) {
+					throw new MissingArgumentException(
+							field.getName());
+				}
+			}
+			else if ((field.getType() == Boolean.class) || (field.getType() == boolean.class)) {
+				final String value = getFieldValue(
+						form,
+						field.getName());
+				if (value != null) {
+					field.setAccessible(
+							true);
+					try {
+						field.set(
+								operation,
+								Boolean.valueOf(
+										value));
+					}
+					catch (final IllegalAccessException e) {
+						throw new RuntimeException(
+								e);
+					}
+				}
+				else if (parameter.required()) {
+					throw new MissingArgumentException(
+							field.getName());
+				}
+			}
+			else if ((field.getType() == Integer.class) || (field.getType() == int.class)) {
+				final String value = getFieldValue(
+						form,
+						field.getName());
+				if (value != null) {
+					field.setAccessible(
+							true);
+					try {
+						field.set(
+								operation,
+								Integer.valueOf(
+										value));
+					}
+					catch (final IllegalAccessException e) {
+						throw new RuntimeException(
+								e);
+					}
+				}
+				else if (parameter.required()) {
+					throw new MissingArgumentException(
+							field.getName());
+				}
+			}
+			else if (field.getType() == List.class) {
+				field.setAccessible(
+						true);
+				String[] parameters = getFieldValues(
+						form,
+						field.getName());
+
+				try {
+					field.set(
+							operation,
+							Arrays.asList(
+									parameters));
+				}
+				catch (final IllegalAccessException e) {
+					throw new RuntimeException(
+							e);
+				}
+			}
+			else {
+				throw new RuntimeException(
+						"Unsupported format on field " + field);
+			}
+			return field;
+		}
+		else if (parametersDelegate != null) {
+			for (final Field f : FieldUtils.getAllFields(
+					field.getType())) {
+				return processField(
+						form,
+						f);
+			}
+		}
+		return null;
+>>>>>>> fc56a1429f955dfab0c96af83a1f04a5e89a0022 */
 	}
 
 	private String[] getFieldValues(
@@ -241,8 +384,10 @@ public class GeoWaveOperationServiceWrapper<T> extends
 	private T handleRequest(
 			final Form form )
 			throws Exception {
+
 		final String configFileParameter = (form == null) ? getQueryValue("config_file") : form
 				.getFirstValue("config_file");
+
 		final File configFile = (configFileParameter != null) ? new File(
 				configFileParameter) : ConfigOptions.getDefaultPropertyFile();
 
@@ -257,6 +402,66 @@ public class GeoWaveOperationServiceWrapper<T> extends
 					operation);
 		}
 
+/*=======
+		String apiKey = getQueryValue(
+				"apiKey");
+		if (apiKey == null) {
+			setStatus(
+					Status.CLIENT_ERROR_BAD_REQUEST,
+					"apiKey is null");
+			return null;
+		}
+		else {
+			Application app = this.getApplication();
+			Context c = app.getContext();
+			final String dbUrl = (String) c.getAttributes().get(
+					"databaseUrl");
+
+			try (Connection conn = DriverManager.getConnection(
+					dbUrl)) {
+				if (conn != null) {
+
+					final String sql_query = "SELECT * FROM api_keys WHERE apiKey=?;";
+					PreparedStatement query_stmnt = conn.prepareStatement(
+							sql_query);
+					query_stmnt.setString(
+							1,
+							apiKey);
+					ResultSet rs = query_stmnt.executeQuery();
+					// There is no existing row, the apiKey is invalid
+					if (!rs.next()) {
+
+						// close resources we are done with
+						rs.close();
+						query_stmnt.close();
+						conn.close();
+						setStatus(
+								Status.CLIENT_ERROR_BAD_REQUEST,
+								"apiKey is invalid");
+						return null;
+					}
+					else {
+						// final String apiKeyStr = rs.getString("apiKey");
+						// userAndKey = userAndKey + ":" + apiKeyStr;
+						// close resources we are done with
+						rs.close();
+						query_stmnt.close();
+					}
+					conn.close();
+				}
+
+			}
+			catch (SQLException e) {
+				LOGGER.error("Error SQLException: ",
+						e.getMessage());
+			}
+		}
+
+		try {
+			injectParameters(
+					form);
+		}
+>>>>>>> fc56a1429f955dfab0c96af83a1f04a5e89a0022 */
 		catch (final MissingArgumentException e) {
 			setStatus(
 					Status.CLIENT_ERROR_BAD_REQUEST,
@@ -303,6 +508,6 @@ public class GeoWaveOperationServiceWrapper<T> extends
 			super(
 					"Missing argument: " + argumentName);
 		}
-
 	}
 }
+

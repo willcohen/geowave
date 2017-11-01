@@ -10,6 +10,7 @@ import org.restlet.ext.jackson.JacksonRepresentation;
 import org.restlet.representation.FileRepresentation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +25,6 @@ public class SwaggerResource extends
 
 	@Get("json")
 	public String listResources() {
-
 		final ServletContext servlet = (ServletContext) getContext().getAttributes().get(
 				"org.restlet.ext.servlet.ServletContext");
 		final String realPath = servlet.getRealPath("/");

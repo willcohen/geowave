@@ -20,13 +20,14 @@ import mil.nga.giat.geowave.core.cli.api.ServiceEnabledCommand;
 public class SwaggerApiParser
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SwaggerApiParser.class);
+	
 	/**
 	 * Reads RestRoute(s) and operations and parses class fields for particular
 	 * annotations ( @Parameter and @ParametersDelegate from JCommander) The
 	 * parsed data is then used to build up JSON objects that can be written to
 	 * file and used by Swagger for API documentation and generation
 	 */
-
+	
 	private final JsonObject routesJson;
 	private final String swaggerHeader;
 	private final String fileUpload;

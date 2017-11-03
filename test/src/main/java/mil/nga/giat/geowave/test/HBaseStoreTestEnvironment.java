@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -15,7 +15,6 @@ import java.security.PrivilegedExceptionAction;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.coprocessor.CoprocessorHost;
 import org.apache.hadoop.hbase.protobuf.generated.VisibilityLabelsProtos.VisibilityLabelsResponse;
 import org.apache.hadoop.hbase.security.User;
 import org.apache.hadoop.hbase.security.visibility.ScanLabelGenerator;
@@ -39,7 +38,6 @@ import mil.nga.giat.geowave.core.store.StoreFactoryOptions;
 import mil.nga.giat.geowave.datastore.hbase.HBaseStoreFactoryFamily;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseOptions;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseRequiredOptions;
-import mil.nga.giat.geowave.datastore.hbase.coprocessors.MergingRegionObserver;
 import mil.nga.giat.geowave.datastore.hbase.util.ConnectionPool;
 import mil.nga.giat.geowave.test.annotation.GeoWaveTestStore.GeoWaveStoreType;
 
@@ -52,7 +50,6 @@ public class HBaseStoreTestEnvironment extends
 
 	// TODO: Research the impact of vis setup on the other ITs
 	private static boolean enableVisibility = true;
-	private static boolean enableCoprocessors = false;
 
 	public static synchronized HBaseStoreTestEnvironment getInstance() {
 		if (singletonInstance == null) {
@@ -136,12 +133,6 @@ public class HBaseStoreTestEnvironment extends
 						"hbase.online.schema.update.enable",
 						"true");
 
-				if (enableCoprocessors) {
-					conf.setStrings(
-							CoprocessorHost.REGION_COPROCESSOR_CONF_KEY,
-							MergingRegionObserver.class.getName());
-				}
-
 				if (enableVisibility) {
 					conf.set(
 							"hbase.superuser",
@@ -198,7 +189,7 @@ public class HBaseStoreTestEnvironment extends
 				if (enableVisibility) {
 
 					// Set valid visibilities for the vis IT
-					Connection conn = ConnectionPool.getInstance().getConnection(
+					final Connection conn = ConnectionPool.getInstance().getConnection(
 							zookeeper);
 					try {
 						SUPERUSER = User.createUserForTesting(
@@ -208,12 +199,6 @@ public class HBaseStoreTestEnvironment extends
 									"supergroup"
 								});
 
-						// List<SecurityCapability> capabilities =
-						// conn.getAdmin().getSecurityCapabilities();
-						// assertTrue(
-						// "CELL_VISIBILITY capability is missing",
-						// capabilities.contains(SecurityCapability.CELL_VISIBILITY));
-
 						// Set up valid visibilities for the user
 						addLabels(
 								conn.getConfiguration(),
@@ -221,13 +206,13 @@ public class HBaseStoreTestEnvironment extends
 								User.getCurrent().getName());
 
 						// Verify hfile version
-						String hfileVersionStr = conn.getAdmin().getConfiguration().get(
+						final String hfileVersionStr = conn.getAdmin().getConfiguration().get(
 								"hfile.format.version");
 						Assert.assertTrue(
 								"HFile version is incorrect",
 								hfileVersionStr.equals("3"));
 					}
-					catch (Throwable e) {
+					catch (final Throwable e) {
 						LOGGER.error(
 								"Error creating test user",
 								e);
@@ -244,11 +229,12 @@ public class HBaseStoreTestEnvironment extends
 	}
 
 	private void addLabels(
-			Configuration conf,
-			String[] labels,
-			String user )
+			final Configuration conf,
+			final String[] labels,
+			final String user )
 			throws Exception {
-		PrivilegedExceptionAction<VisibilityLabelsResponse> action = new PrivilegedExceptionAction<VisibilityLabelsResponse>() {
+		final PrivilegedExceptionAction<VisibilityLabelsResponse> action = new PrivilegedExceptionAction<VisibilityLabelsResponse>() {
+			@Override
 			public VisibilityLabelsResponse run()
 					throws Exception {
 				try {
@@ -261,7 +247,7 @@ public class HBaseStoreTestEnvironment extends
 							labels,
 							user);
 				}
-				catch (Throwable t) {
+				catch (final Throwable t) {
 					throw new IOException(
 							t);
 				}

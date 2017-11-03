@@ -23,6 +23,7 @@ import mil.nga.giat.geowave.core.index.ByteArrayUtils;
 import mil.nga.giat.geowave.core.index.Mergeable;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter.RowTransform;
+import mil.nga.giat.geowave.core.store.server.RowMergingAdapterOptionProvider;
 
 public class RowMergingVisibilityCombiner extends
 		MergingVisibilityCombiner

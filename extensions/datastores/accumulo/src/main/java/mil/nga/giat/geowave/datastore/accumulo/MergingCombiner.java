@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -10,21 +10,41 @@
  ******************************************************************************/
 package mil.nga.giat.geowave.datastore.accumulo;
 
+import java.io.IOException;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.iterators.Combiner;
+import org.apache.accumulo.core.iterators.IteratorEnvironment;
+import org.apache.accumulo.core.iterators.SortedKeyValueIterator;
 
 import mil.nga.giat.geowave.core.index.Mergeable;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
+import mil.nga.giat.geowave.core.store.server.RowMergingAdapterOptionProvider;
 
 public class MergingCombiner extends
 		Combiner
 {
 	// this is "columns" because it is mimicing the behavior of
 	// org.apache.accumulo.core.iterators.Combiner.setColumns()
-	public static final String COLUMNS_OPTION = "columns";
+	private static final String COLUMNS_OPTION = "columns";
+
+	@Override
+	public void init(
+			final SortedKeyValueIterator<Key, Value> source,
+			final Map<String, String> options,
+			final IteratorEnvironment env )
+			throws IOException {
+		options.put(
+				COLUMNS_OPTION,
+				options.get(RowMergingAdapterOptionProvider.ADAPTER_IDS_OPTION));
+		super.init(
+				source,
+				options,
+				env);
+	}
 
 	@Override
 	public Value reduce(

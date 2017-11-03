@@ -20,7 +20,6 @@ import mil.nga.giat.geowave.core.store.metadata.AbstractGeoWavePersistence;
 import mil.nga.giat.geowave.core.store.operations.MetadataQuery;
 import mil.nga.giat.geowave.core.store.operations.MetadataReader;
 import mil.nga.giat.geowave.core.store.operations.MetadataType;
-import mil.nga.giat.geowave.datastore.hbase.filters.HBaseMergingFilter;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils.ScannerClosableWrapper;
 
@@ -33,9 +32,9 @@ public class HBaseMetadataReader implements
 	private final MetadataType metadataType;
 
 	public HBaseMetadataReader(
-			HBaseOperations operations,
-			DataStoreOptions options,
-			MetadataType metadataType ) {
+			final HBaseOperations operations,
+			final DataStoreOptions options,
+			final MetadataType metadataType ) {
 		this.operations = operations;
 		this.options = options;
 		this.metadataType = metadataType;
@@ -65,23 +64,17 @@ public class HBaseMetadataReader implements
 				scanner.setStartRow(query.getPrimaryId());
 				scanner.setStopRow(query.getPrimaryId());
 			}
-
-			if (metadataType == MetadataType.STATS) {
+			final boolean clientsideStatsMerge = (metadataType == MetadataType.STATS)
+					&& !options.isServerSideLibraryEnabled();
+			if (clientsideStatsMerge) {
 				scanner.setMaxVersions(); // Get all versions
-
-				if (options.isServerSideLibraryEnabled()) {
-					scanner.setFilter(new HBaseMergingFilter());
-				}
-			}
-			else {
-				scanner.setMaxVersions(1);
 			}
 
-			ResultScanner rS = operations.getScannedResults(
+			final ResultScanner rS = operations.getScannedResults(
 					scanner,
 					AbstractGeoWavePersistence.METADATA_TABLE,
 					query.getAuthorizations());
-			Iterator<Result> it = rS.iterator();
+			final Iterator<Result> it = rS.iterator();
 
 			return new CloseableIteratorWrapper<>(
 					new ScannerClosableWrapper(
@@ -91,12 +84,14 @@ public class HBaseMetadataReader implements
 							new com.google.common.base.Function<Result, GeoWaveMetadata>() {
 								@Override
 								public GeoWaveMetadata apply(
-										Result result ) {
+										final Result result ) {
 									return new GeoWaveMetadata(
 											result.getRow(),
 											columnQualifier,
 											null,
-											getMergedStats(result));
+											getMergedStats(
+													result,
+													clientsideStatsMerge));
 								}
 							}));
 
@@ -111,8 +106,9 @@ public class HBaseMetadataReader implements
 	}
 
 	private byte[] getMergedStats(
-			Result result ) {
-		if (metadataType != MetadataType.STATS || result.size() == 1) {
+			final Result result,
+			final boolean clientsideStatsMerge ) {
+		if (!clientsideStatsMerge || (result.size() == 1)) {
 			return result.value();
 		}
 

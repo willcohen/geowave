@@ -33,7 +33,10 @@ public class DataStatisticsStoreImpl extends
 		DataStatisticsStore
 {
 	// this is fairly arbitrary at the moment because it is the only custom
-	// iterator added
+	// server op added
+	public static final int STATS_COMBINER_PRIORITY = 10;
+	public static final String STATISTICS_COMBINER_NAME = "STATS_COMBINER";
+	public static final String COLUMN_OPTION = "COLUMN";
 
 	public DataStatisticsStoreImpl(
 			final DataStoreOperations operations,

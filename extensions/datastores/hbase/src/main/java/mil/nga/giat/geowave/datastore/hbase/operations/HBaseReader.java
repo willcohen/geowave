@@ -358,10 +358,11 @@ public class HBaseReader implements
 			for (final ByteArrayId adapterId : readerParams.getAdapterIds()) {
 				// TODO: This prevents the client from sending bad column family
 				// requests to hbase. There may be a more efficient way to do
-				// this,
-				// via the datastore's AIM store.
+				// this, via the datastore's AIM store.
+
 				if (operations.verifyColumnFamily(
 						adapterId.getString(),
+						true, // because they're not added
 						readerParams.getIndex().getId().getString(),
 						false)) {
 					scanner.addFamily(adapterId.getBytes());

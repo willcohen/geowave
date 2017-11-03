@@ -12,6 +12,7 @@ package mil.nga.giat.geowave.datastore.hbase.util;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.hadoop.hbase.Cell;
@@ -23,6 +24,11 @@ import org.apache.hadoop.hbase.filter.MultiRowRangeFilter.RowRange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
+
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.index.NumericIndexStrategy;
@@ -30,6 +36,7 @@ import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.QueryRanges;
 import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
+import mil.nga.giat.geowave.core.store.server.ServerOpConfig.ServerOpScope;
 
 @SuppressWarnings("rawtypes")
 public class HBaseUtils
@@ -153,6 +160,21 @@ public class HBaseUtils
 		}
 
 		return mergedStats;
+	}
+
+	public static ImmutableSet<ServerOpScope> stringToScopes(
+			final String value ) {
+		final String[] scopes = value.split(",");
+		return Sets.immutableEnumSet(Iterables.transform(
+				Arrays.asList(scopes),
+				new Function<String, ServerOpScope>() {
+
+					@Override
+					public ServerOpScope apply(
+							final String input ) {
+						return ServerOpScope.valueOf(input);
+					}
+				}));
 	}
 
 	/**

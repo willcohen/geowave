@@ -23,10 +23,16 @@ import mil.nga.giat.geowave.core.store.metadata.DataStatisticsStoreImpl;
 import mil.nga.giat.geowave.core.store.metadata.IndexStoreImpl;
 import mil.nga.giat.geowave.core.store.query.DistributableQuery;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
+import mil.nga.giat.geowave.core.store.server.RowMergingAdapterOptionProvider;
+import mil.nga.giat.geowave.core.store.server.ServerOpHelper;
+import mil.nga.giat.geowave.core.store.server.ServerSideOperations;
+import mil.nga.giat.geowave.core.store.util.DataAdapterAndIndexCache;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseOptions;
 import mil.nga.giat.geowave.datastore.hbase.index.secondary.HBaseSecondaryIndexDataStore;
 import mil.nga.giat.geowave.datastore.hbase.mapreduce.HBaseSplitsProvider;
 import mil.nga.giat.geowave.datastore.hbase.operations.HBaseOperations;
+import mil.nga.giat.geowave.datastore.hbase.server.RowMergingServerOp;
+import mil.nga.giat.geowave.datastore.hbase.server.RowMergingVisibilityServerOp;
 import mil.nga.giat.geowave.mapreduce.BaseMapReduceDataStore;
 
 public class HBaseDataStore extends
@@ -86,11 +92,34 @@ public class HBaseDataStore extends
 	protected void initOnIndexWriterCreate(
 			final DataAdapter adapter,
 			final PrimaryIndex index ) {
+		final String indexName = index.getId().getString();
+		final String columnFamily = adapter.getAdapterId().getString();
 		if (adapter instanceof RowMergingDataAdapter) {
-			hbaseOperations.stageMergingAdapter(
-					index.getId(),
-					(RowMergingDataAdapter) adapter);
+			if (!DataAdapterAndIndexCache.getInstance(
+					RowMergingAdapterOptionProvider.ROW_MERGING_ADAPTER_CACHE_ID).add(
+					adapter.getAdapterId(),
+					indexName)) {
+				if (baseOptions.isCreateTable()) {
+					((HBaseOperations) baseOperations).createTable(
+							index.getId(),
+							baseOptions.isServerSideLibraryEnabled(),
+							adapter.getAdapterId());
+				}
+				((HBaseOperations) baseOperations).ensureServerSideOperationsObserverAttached(index.getId());
+				ServerOpHelper.addServerSideRowMerging(
+						((RowMergingDataAdapter<?, ?>) adapter),
+						(ServerSideOperations) baseOperations,
+						RowMergingServerOp.class.getName(),
+						RowMergingVisibilityServerOp.class.getName(),
+						indexName);
+			}
 		}
+
+		hbaseOperations.verifyColumnFamily(
+				columnFamily,
+				baseOptions.isServerSideLibraryEnabled(),
+				indexName,
+				true);
 	}
 
 	@Override

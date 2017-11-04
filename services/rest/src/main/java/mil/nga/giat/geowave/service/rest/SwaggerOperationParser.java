@@ -115,14 +115,14 @@ public class SwaggerOperationParser<T>
 		// (name and description)
 		final JsonObject op_json = new JsonObject();
 		final String opId = operation.getId();
-		
+
 		op_json.addProperty(
 				"operationId",
 				opId);
 
 		final Parameters command_annotation = this.operation.getClass().getAnnotation(
 				Parameters.class);
-		
+
 		op_json.addProperty(
 				"description",
 				command_annotation.commandDescription());

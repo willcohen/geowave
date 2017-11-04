@@ -12,24 +12,34 @@
 							 http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
 							 http://www.springframework.org/schema/security/oauth2 http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 	
+<!-- The application is configured by default with oauth2 security (Facebook login in this case)
+	 and also provides api key generation and protection for api end-points. This configuration is 
+	 provided as an example, if you wish to start with a bare-bones setup (no security, no api-keys etc)
+	 simply uncomment the two elements below and delete everything below them. -->
+	 
 <!--  
 	<security:http pattern="/api" security="none"/>
 	<security:http pattern="/v0/**" security="none"/>
 -->
 	<context:property-placeholder location="classpath:/application.properties" />
 
-	<security:http pattern="/api" security="none"/>
-	<security:http pattern="/geowave/**" security="none"/>
+	<security:http pattern="/api" security = "none"/>
+	<security:http pattern="/v0/**">
+		<security:intercept-url pattern="/v0/**" access="ROLE_ANONYMOUS"/>
+		<security:custom-filter ref="apiKeyFilter" before="PRE_AUTH_FILTER"/>
+		<security:http-basic />
+	</security:http>
 	<security:http entry-point-ref="authenticationEntryPoint">
 	    <security:form-login />
 	    <security:anonymous enabled="false"/>
         <security:intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY"/>
 	    <security:custom-filter ref="oAuth2ClientContextFilter" after="EXCEPTION_TRANSLATION_FILTER"/>
         <security:custom-filter ref="oAuth2AuthenticationProcessingFilter" before="FILTER_SECURITY_INTERCEPTOR"/>
+        <security:custom-filter ref="apiKeySetterFilter" position="LAST"/>
   	</security:http>
   	
 	<!-- default authentication for BASIC auth. The user service below may also be used
-	     to configure allowed users who are authenticating with another scheme such as OAuth2 -->
+	     to configure allowed users who are authenticating with another scheme besides OAuth2 -->
 	<security:authentication-manager>
 	  	<security:authentication-provider user-service-ref="defaultAdmin">         
  		</security:authentication-provider>
@@ -38,6 +48,14 @@
 	<security:user-service id="defaultAdmin">
  		<security:user name="geowave_username" password="geowave_password" authorities="ROLE_USER, ROLE_ADMIN" />
 	</security:user-service>
+	
+	<!-- The following three "apiKey" beans/filters are necessary for use-cases where the application
+		 needs to facilitate key generation and protecting calls to the api endpoints  -->
+	<b:bean id="apiKeyDB" class="mil.nga.giat.geowave.service.rest.webapp.security.GeoWaveSQLiteApiKeyDB" >
+		<b:constructor-arg index = "0" value = "ApiKeys.db"/>
+	</b:bean>
+	<b:bean id="apiKeyFilter" class="mil.nga.giat.geowave.service.rest.webapp.security.GeoWaveApiKeyFilter" />
+	<b:bean id="apiKeySetterFilter" class="mil.nga.giat.geowave.service.rest.webapp.security.GeoWaveApiKeySetterFilter" />
 	
 	<!-- Login entry point, unauthenticated users will be redirected here -->
     <b:bean id="authenticationEntryPoint"  class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
@@ -58,7 +76,7 @@
 		Token services definition, depending on your auth provider (Facebook, Google, etc.)
 		you may end up having to write a custom token services class and a custom token converter class  
 	-->
-	<b:bean id="oAuth2TokenServices" class="mil.nga.giat.geowave.service.rest.webapp.FacebookTokenServices">
+	<b:bean id="oAuth2TokenServices" class="mil.nga.giat.geowave.service.rest.webapp.security.oauth2.FacebookTokenServices">
 		<b:property name="checkTokenEndpointUrl" value="${oauth.checkTokenEndpointUri}"/>
 		<b:property name="clientId" value="${oauth.client.id}"/>
 		<b:property name="clientSecret" value="${oauth.client.secret}"/>

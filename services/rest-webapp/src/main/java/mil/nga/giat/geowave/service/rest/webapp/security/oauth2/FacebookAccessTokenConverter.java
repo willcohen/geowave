@@ -1,4 +1,4 @@
-package mil.nga.giat.geowave.service.rest.webapp;
+package mil.nga.giat.geowave.service.rest.webapp.security.oauth2;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
@@ -45,31 +45,25 @@ public class FacebookAccessTokenConverter extends
 
 	public void setDefaultAuthorities(
 			String[] defaultAuthorities ) {
-		this.defaultAuthorities = AuthorityUtils.commaSeparatedStringToAuthorityList(
-				StringUtils.arrayToCommaDelimitedString(
-						defaultAuthorities));
+		this.defaultAuthorities = AuthorityUtils.commaSeparatedStringToAuthorityList(StringUtils
+				.arrayToCommaDelimitedString(defaultAuthorities));
 	}
 
 	public OAuth2Authentication extractAuthentication(
 			Map<String, ?> map ) {
 		Map<String, String> parameters = new HashMap<>();
-		Set<String> scope = parseScopes(
-				map);
-		Object principal = map.get(
-				"name");
+		Set<String> scope = parseScopes(map);
+		Object principal = map.get("name");
 		Authentication user = new UsernamePasswordAuthenticationToken(
 				principal,
 				"N/A",
 				defaultAuthorities);
-		String clientId = (String) map.get(
-				CLIENT_ID);
+		String clientId = (String) map.get(CLIENT_ID);
 		parameters.put(
 				CLIENT_ID,
 				clientId);
 		Set<String> resourceIds = new LinkedHashSet<>(
-				map.containsKey(
-						AUD) ? (Collection<String>) map.get(
-								AUD) : Collections.<String> emptySet());
+				map.containsKey(AUD) ? (Collection<String>) map.get(AUD) : Collections.<String> emptySet());
 		OAuth2Request request = new OAuth2Request(
 				parameters,
 				clientId,
@@ -88,23 +82,17 @@ public class FacebookAccessTokenConverter extends
 	private Set<String> parseScopes(
 			Map<String, ?> map ) {
 		// Parse scopes by comma
-		Object scopeAsObject = map.containsKey(
-				SCOPE) ? map.get(
-						SCOPE) : EMPTY;
+		Object scopeAsObject = map.containsKey(SCOPE) ? map.get(SCOPE) : EMPTY;
 		Set<String> scope = new LinkedHashSet<>();
-		if (String.class.isAssignableFrom(
-				scopeAsObject.getClass())) {
+		if (String.class.isAssignableFrom(scopeAsObject.getClass())) {
 			String scopeAsString = (String) scopeAsObject;
 			Collections.addAll(
 					scope,
-					scopeAsString.split(
-							","));
+					scopeAsString.split(","));
 		}
-		else if (Collection.class.isAssignableFrom(
-				scopeAsObject.getClass())) {
+		else if (Collection.class.isAssignableFrom(scopeAsObject.getClass())) {
 			Collection<String> scopes = (Collection<String>) scopeAsObject;
-			scope.addAll(
-					scopes);
+			scope.addAll(scopes);
 		}
 		return scope;
 	}

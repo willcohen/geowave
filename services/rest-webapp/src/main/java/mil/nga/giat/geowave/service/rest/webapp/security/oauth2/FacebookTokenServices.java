@@ -1,4 +1,4 @@
-package mil.nga.giat.geowave.service.rest.webapp;
+package mil.nga.giat.geowave.service.rest.webapp.security.oauth2;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -27,8 +27,7 @@ import org.springframework.web.client.RestTemplate;
 public class FacebookTokenServices extends
 		RemoteTokenServices
 {
-	protected final Log logger = LogFactory.getLog(
-			getClass());
+	protected final Log logger = LogFactory.getLog(getClass());
 
 	private RestOperations restTemplate;
 
@@ -40,19 +39,17 @@ public class FacebookTokenServices extends
 
 	public FacebookTokenServices() {
 		restTemplate = new RestTemplate();
-		((RestTemplate) restTemplate).setErrorHandler(
-				new DefaultResponseErrorHandler() {
-					@Override
-					// Ignore 400
-					public void handleError(
-							ClientHttpResponse response )
-							throws IOException {
-						if (response.getRawStatusCode() != 400) {
-							super.handleError(
-									response);
-						}
-					}
-				});
+		((RestTemplate) restTemplate).setErrorHandler(new DefaultResponseErrorHandler() {
+			@Override
+			// Ignore 400
+			public void handleError(
+					ClientHttpResponse response )
+					throws IOException {
+				if (response.getRawStatusCode() != 400) {
+					super.handleError(response);
+				}
+			}
+		});
 	}
 
 	public void setRestTemplate(
@@ -103,17 +100,13 @@ public class FacebookTokenServices extends
 				formData,
 				headers);
 
-		if (map.containsKey(
-				"error")) {
-			logger.debug(
-					"check_token returned error: " + map.get(
-							"error"));
+		if (map.containsKey("error")) {
+			logger.debug("check_token returned error: " + map.get("error"));
 			throw new InvalidTokenException(
 					accessToken);
 		}
 
-		return tokenConverter.extractAuthentication(
-				map);
+		return tokenConverter.extractAuthentication(map);
 	}
 
 	@Override
@@ -128,8 +121,7 @@ public class FacebookTokenServices extends
 			MultiValueMap<String, String> formData,
 			HttpHeaders headers ) {
 		if (headers.getContentType() == null) {
-			headers.setContentType(
-					MediaType.APPLICATION_FORM_URLENCODED);
+			headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 		}
 		@SuppressWarnings("rawtypes")
 		Map map = restTemplate.exchange(

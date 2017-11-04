@@ -2,117 +2,56 @@ package mil.nga.giat.geowave.service.rest;
 
 import java.util.ArrayList;
 
+import javax.servlet.ServletContext;
+
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
-/*=======
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.UUID;
-import java.util.logging.Level;
-
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-*/
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MainResource extends
 		ServerResource
 {
+	private static final Logger LOGGER = LoggerFactory.getLogger(MainResource.class);
 
 	/**
 	 * This is the main resource (essentially index.html) it displays the user's
-	 * API Key and the list of mapped commands
+	 * API Key and the list of mapped commands, it also displays the user's
+	 * apiKey if the GeoWaveApiKeyFilter and GeoWaveApiKeySetterFilter
 	 */
 
 	@Get("html")
 	public String listResources() {
+		String output = "";
+		try {
+			final StringBuilder routeStringBuilder = new StringBuilder();
+			final ServletContext servletContext = (ServletContext) getContext().getAttributes().get(
+					"org.restlet.ext.servlet.ServletContext");
+			final String userName = (String) servletContext.getAttribute("userName");
+			final String apiKey = (String) servletContext.getAttribute("apiKey");
+			final ArrayList<RestRoute> availableRoutes = (ArrayList<RestRoute>) getContext().getAttributes().get(
+					"availableRoutes");
 
-		final StringBuilder routeStringBuilder = new StringBuilder();
-/*=======
-		final SecurityContext context = SecurityContextHolder.getContext();
-		final String username = context.getAuthentication().getName();
+			routeStringBuilder.append("Available Routes:<br>");
 
-		// key will be appended below
-		String userKey = "";
-
-		final String dbUrl = (String) getContext().getAttributes().get(
-				"databaseUrl");
-
-		try (Connection conn = DriverManager.getConnection(dbUrl)) {
-			if (conn != null) {
-
-				final String sql_query = "SELECT * FROM api_keys WHERE username=?;";
-				PreparedStatement query_stmnt = conn.prepareStatement(sql_query);
-				query_stmnt.setString(
-						1,
-						username);
-				ResultSet rs = query_stmnt.executeQuery();
-				// There is no existing row, so we should generate a key for
-				// this user and add it to
-				// the table
-				if (!rs.next()) {
-
-					// close resources we are done with
-					rs.close();
-					query_stmnt.close();
-
-					// generate new api key
-					final UUID apiKey = UUID.randomUUID();
-					userKey = apiKey.toString();
-
-					// SQL statement for inserting a new user/api key
-					final String sql = "INSERT INTO api_keys (apiKey, username)\n" + "VALUES(?, ?);";
-					getContext().getLogger().info("Inserting a new api key and user.");
-					PreparedStatement stmnt = conn.prepareStatement(sql);
-					stmnt.setString(
-							1,
-							apiKey.toString());
-					stmnt.setString(
-							2,
-							username);
-					stmnt.executeUpdate();
-					stmnt.close();
-				}
-				else {
-					final String apiKeyStr = rs.getString("apiKey");
-					userKey = apiKeyStr;
-					// close resources we are done with
-					rs.close();
-					query_stmnt.close();
-				}
-				conn.close();
+			for (final RestRoute route : availableRoutes) {
+				routeStringBuilder.append(route.getPath() + " --> " + route.getOperation() + "<br>");
 			}
 
+			if (userName != null && !userName.equals("")) {
+				output = "<b>Welcome " + userName + "!</b><br><b>API key:</b> " + apiKey + "<br><br>"
+						+ routeStringBuilder.toString();
+			}
+			else {
+				output = routeStringBuilder.toString();
+			}
 		}
-		catch (SQLException e) {
-			getContext().getLogger().log(Level.SEVERE, e.getMessage());
+		catch (Exception e) {
+			LOGGER.error(
+					"Error listing resources",
+					e);
 		}
->>>>>>> fc56a1429f955dfab0c96af83a1f04a5e89a0022 */
-
-		final ArrayList<RestRoute> availableRoutes = (ArrayList<RestRoute>) getContext().getAttributes().get(
-				"availableRoutes");
-		final ArrayList<String> unavailableCommands = (ArrayList<String>) getContext().getAttributes().get(
-				"unavailableCommands");
-
-		routeStringBuilder.append("Available Routes:<br>");
-
-		for (final RestRoute route : availableRoutes) {
-			routeStringBuilder.append(route.getPath() + " --> " + route.getOperation() + "<br>");
-		}
-
-		routeStringBuilder.append("<br><br><span style='color:blue'>Unavailable Routes:</span><br>");
-		for (final String command : unavailableCommands) {
-			routeStringBuilder.append("<span style='color:blue'>" + command + "</span><br>");
-		}
-
-		return routeStringBuilder.toString();
-/* =======
-		return "<b>Welcome " + username + "!</b><br><b>API key:</b> " + userKey + "<br><br>"
-				+ routeStringBuilder.toString();
->>>>>>> fc56a1429f955dfab0c96af83a1f04a5e89a0022 */
+		return output;
 	}
 
 	/**

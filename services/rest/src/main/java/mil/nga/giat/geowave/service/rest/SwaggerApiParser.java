@@ -20,6 +20,7 @@ import mil.nga.giat.geowave.core.cli.api.ServiceEnabledCommand;
 public class SwaggerApiParser
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SwaggerApiParser.class);
+
 	/**
 	 * Reads RestRoute(s) and operations and parses class fields for particular
 	 * annotations ( @Parameter and @ParametersDelegate from JCommander) The
@@ -122,7 +123,24 @@ public class SwaggerApiParser
 		catch (final IOException e1) {
 			e1.printStackTrace();
 		}
+		finally {
+			safeClose(writer);
+		}
 
 		return true;
+	}
+
+	public static void safeClose(
+			Writer writer ) {
+		if (writer != null) {
+			try {
+				writer.close();
+			}
+			catch (IOException e) {
+				LOGGER.warn(
+						"Unable to close Writer",
+						e);
+			}
+		}
 	}
 }

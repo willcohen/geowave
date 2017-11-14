@@ -11,29 +11,42 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "mil.nga.giat.geowave.grpc.adapter.vector.query.protobuf";
-option java_outer_classname = "AdapterVectorQueryService";
+option java_package = "mil.nga.giat.geowave.grpc.vector.query.protobuf";
+option java_outer_classname = "VectorQueryService";
 //option objc_class_prefix = "RTG";
 
 //package adapter;
 
 // Interface exported by the server.
-service AdapterVectorQuery {
+service VectorQuery {
   // CQL query for vector-based data
   rpc CqlQuery(CQLQueryParameters) returns (stream Feature) {}
+  rpc SpatialQuery(SpatialQueryParameters) returns (stream Feature) {}
 }
 
 // Base query parameters as defined by AbstractGeoWaveQuery.java
 message BaseGeoWaveQueryParamters {
 	string storeName = 1;
-	string indexId = 2;
-	string adapterId = 3;
+	bytes indexId = 2;
+	bytes adapterId = 3;
+}
+
+//decimal degree coordinate type
+message Coordinate {
+	double lat = 1;
+	double lon = 2;
 }
 
 // A CQL query string to be executed by the server
 message CQLQueryParameters {
   BaseGeoWaveQueryParamters baseParams = 1;
   string cql = 2;
+}
+
+message SpatialQueryParameters {
+	BaseGeoWaveQueryParamters baseParams = 1;
+	string geometryType = 2;	//can be "polygon", "line", etc
+	repeated Coordinate coordinates = 3;
 }
 
 //a feature in this case is just a map of string key value pairs

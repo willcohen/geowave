@@ -15,7 +15,7 @@ public abstract class AbstractGeoWaveIT
 	@Before
 	public void cleanBefore()
 			throws IOException {
-		TestUtils.deleteAll(getDataStorePluginOptions());
+		// TestUtils.deleteAll(getDataStorePluginOptions());
 	}
 
 	@After

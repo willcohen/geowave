@@ -20,13 +20,11 @@ import mil.nga.giat.geowave.core.store.DataStoreOptions;
 import mil.nga.giat.geowave.core.store.StoreFactoryFamilySpi;
 import mil.nga.giat.geowave.core.store.StoreFactoryOptions;
 import mil.nga.giat.geowave.datastore.bigtable.BigTableStoreFactoryFamily;
-import mil.nga.giat.geowave.datastore.hbase.HBaseStoreFactoryFamily;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseOptions;
 
 public class BigTableOptions extends
 		StoreFactoryOptions
 {
-
 	public static final String DEFAULT_PROJECT_ID = "geowave-bigtable-project-id";
 	public static final String DEFAULT_INSTANCE_ID = "geowave-bigtable-instance-id";
 

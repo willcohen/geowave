@@ -39,10 +39,10 @@ public class BigtableEmulator
 	// these need to move to config
 	private final static String GCLOUD_URL = "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/";
 	private final static String GCLOUD_TAR = "google-cloud-sdk-136.0.0-linux-x86_64.tar.gz";
-	private final static String GCLOUD_EXE = "google-cloud-sdk/bin/gcloud";
-	private static final String HOST_PORT = "localhost:8128";
+	private final static String GCLOUD_EXE_DIR = "google-cloud-sdk/bin";
+	private static final String HOST_PORT = "127.0.0.1:9000";
 
-	private static final long EMULATOR_SPINUP_DELAY_MS = 30000L;
+	private static final long EMULATOR_SPINUP_DELAY_MS = 60000L;
 
 	private final File sdkDir;
 	private ExecuteWatchdog watchdog;
@@ -152,7 +152,7 @@ public class BigtableEmulator
 	private boolean isInstalled() {
 		final File gcloudExe = new File(
 				sdkDir,
-				GCLOUD_EXE);
+				GCLOUD_EXE_DIR + "/gcloud");
 
 		return (gcloudExe.canExecute());
 	}
@@ -194,8 +194,12 @@ public class BigtableEmulator
 		}
 
 		// Install the beta components
+		final File gcloudExe = new File(
+				sdkDir,
+				GCLOUD_EXE_DIR + "/gcloud");
+
 		CommandLine cmdLine = new CommandLine(
-				sdkDir + "/" + GCLOUD_EXE);
+				gcloudExe);
 		cmdLine.addArgument("components");
 		cmdLine.addArgument("install");
 		cmdLine.addArgument("beta");
@@ -222,12 +226,13 @@ public class BigtableEmulator
 			IOException,
 			InterruptedException {
 		CommandLine cmdLine = new CommandLine(
-				sdkDir + "/" + GCLOUD_EXE);
+				sdkDir + "/" + GCLOUD_EXE_DIR + "/gcloud");
 		cmdLine.addArgument("beta");
 		cmdLine.addArgument("emulators");
 		cmdLine.addArgument("bigtable");
 		cmdLine.addArgument("start");
 		cmdLine.addArgument("--quiet");
+		cmdLine.addArgument("--no-legacy");
 		cmdLine.addArgument("--host-port");
 		cmdLine.addArgument(HOST_PORT);
 
@@ -239,6 +244,9 @@ public class BigtableEmulator
 				ExecuteWatchdog.INFINITE_TIMEOUT);
 		Executor executor = new DefaultExecutor();
 		executor.setWatchdog(watchdog);
+
+		LOGGER.warn("Starting BigTable Emulator: " + cmdLine.toString());
+
 		executor.execute(
 				cmdLine,
 				resultHandler);

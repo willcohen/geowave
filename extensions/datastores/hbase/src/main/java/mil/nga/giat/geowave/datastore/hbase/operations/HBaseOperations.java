@@ -101,7 +101,8 @@ public class HBaseOperations implements
 	public static final Object ADMIN_MUTEX = new Object();
 	private static final long SLEEP_INTERVAL = HConstants.DEFAULT_HBASE_SERVER_PAUSE;
 
-	private final Connection conn;
+	protected final Connection conn;
+
 	private final String tableNamespace;
 	private final boolean schemaUpdateEnabled;
 	private final HashMap<String, List<String>> coprocessorCache = new HashMap<>();
@@ -127,6 +128,21 @@ public class HBaseOperations implements
 			throws IOException {
 		conn = ConnectionPool.getInstance().getConnection(
 				zookeeperInstances);
+		tableNamespace = geowaveNamespace;
+
+		schemaUpdateEnabled = conn.getConfiguration().getBoolean(
+				"hbase.online.schema.update.enable",
+				true);
+
+		this.options = options;
+	}
+
+	public HBaseOperations(
+			Connection connection,
+			String geowaveNamespace,
+			final HBaseOptions options ) {
+		this.conn = connection;
+
 		tableNamespace = geowaveNamespace;
 
 		schemaUpdateEnabled = conn.getConfiguration().getBoolean(
@@ -343,14 +359,12 @@ public class HBaseOperations implements
 							if (!enableVersioning) {
 								column.setMaxVersions(Integer.MAX_VALUE);
 							}
-							existingTableDescriptor.addFamily(column);
+							admin.addColumn(
+									tableName,
+									column);
 
 							cfCacheSet.add(newColumnFamily);
 						}
-
-						admin.modifyTable(
-								tableName,
-								existingTableDescriptor);
 
 						waitForUpdate(
 								admin,

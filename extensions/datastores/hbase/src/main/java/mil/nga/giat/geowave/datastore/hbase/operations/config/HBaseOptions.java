@@ -29,6 +29,7 @@ public class HBaseOptions extends
 
 	protected boolean disableCustomFilters = false;
 
+	@Parameter(names = "--disableCoprocessors")
 	protected boolean disableCoprocessors = false;
 
 	@Parameter(names = "--disableVerifyCoprocessors")

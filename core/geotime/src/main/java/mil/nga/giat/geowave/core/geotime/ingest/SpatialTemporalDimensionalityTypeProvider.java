@@ -28,7 +28,8 @@ import mil.nga.giat.geowave.core.geotime.store.dimension.TimeField;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.dimension.NumericDimensionDefinition;
 import mil.nga.giat.geowave.core.index.sfc.SFCFactory.SFCType;
-import mil.nga.giat.geowave.core.index.sfc.xz.XZHierarchicalIndexFactory;
+
+import mil.nga.giat.geowave.core.index.sfc.tiered.TieredSFCIndexFactory;
 import mil.nga.giat.geowave.core.store.dimension.NumericDimensionField;
 import mil.nga.giat.geowave.core.store.index.BasicIndexModel;
 import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
@@ -163,7 +164,7 @@ public class SpatialTemporalDimensionalityTypeProvider implements
 		final String combinedId = combinedArrayID;
 
 		return new CustomIdIndex(
-				XZHierarchicalIndexFactory.createFullIncrementalTieredStrategy(
+				TieredSFCIndexFactory.createFullIncrementalTieredStrategy(
 						dimensions,
 						new int[] {
 							options.bias.getSpatialPrecision(),

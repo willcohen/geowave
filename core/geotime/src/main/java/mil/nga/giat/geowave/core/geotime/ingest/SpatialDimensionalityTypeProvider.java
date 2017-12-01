@@ -32,7 +32,7 @@ import mil.nga.giat.geowave.core.geotime.store.dimension.TimeField;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.dimension.NumericDimensionDefinition;
 import mil.nga.giat.geowave.core.index.sfc.SFCFactory.SFCType;
-import mil.nga.giat.geowave.core.index.sfc.xz.XZHierarchicalIndexFactory;
+import mil.nga.giat.geowave.core.index.sfc.tiered.TieredSFCIndexFactory;
 import mil.nga.giat.geowave.core.store.dimension.NumericDimensionField;
 import mil.nga.giat.geowave.core.store.index.BasicIndexModel;
 import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
@@ -164,8 +164,13 @@ public class SpatialDimensionalityTypeProvider implements
 		}
 
 		return new CustomIdIndex(
+<<<<<<< HEAD
 				XZHierarchicalIndexFactory.createFullIncrementalTieredStrategy(
 						dimensions,
+=======
+				TieredSFCIndexFactory.createFullIncrementalTieredStrategy(
+						SPATIAL_DIMENSIONS,
+>>>>>>> Switching to tiered index and adding initial test harness
 						new int[] {
 							// TODO this is only valid for 2D coordinate
 							// systems, again consider the possibility of being

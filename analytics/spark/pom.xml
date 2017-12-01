@@ -83,7 +83,7 @@
 					</args>
 					<scalaVersion>${scala.version}</scalaVersion>
 				</configuration>
-				<executions>
+				<!-- <executions>
 					<execution>
 						<id>scala-compile-first</id>
 						<phase>process-resources</phase>
@@ -99,7 +99,7 @@
 							<goal>testCompile</goal>
 						</goals>
 					</execution>
-				</executions>
+				</executions> -->
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>

@@ -35,17 +35,29 @@ public class S3URLConnection extends
 	@Override
 	public InputStream getInputStream()
 			throws IOException {
-		final S3Params s3Params = S3ParamsExtractor.extract(url);
-
-		final ClientConfiguration clientConfig = buildClientConfig();
-
-		final AmazonS3 s3Client = new AmazonS3Client(
-				clientConfig);
+		final S3Params s3Params = getS3Params();
+		final AmazonS3 s3Client = getS3Client();
 
 		final S3Object object = s3Client.getObject(
 				s3Params.getBucket(),
 				s3Params.getKey());
 		return object.getObjectContent();
+	}
+
+	public S3Params getS3Params()
+			throws IOException {
+		return S3ParamsExtractor.extract(url);
+	}
+
+	@SuppressWarnings("deprecation")
+	public AmazonS3 getS3Client()
+			throws IOException {
+		if (url != null) {
+			final ClientConfiguration clientConfig = buildClientConfig();
+			return new AmazonS3Client(
+					clientConfig);
+		}
+		return null;
 	}
 
 	@Override

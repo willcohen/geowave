@@ -1188,9 +1188,8 @@ public class AccumuloUtils
 			}
 		}
 
-		LOGGER.error("Error: Unable to locate URLStreamHandler for " + fileStr);
-
-		return false;
+		LOGGER.debug("Assuming good URLStreamHandler for " + fileStr);
+		return true;
 	}
 
 	public static byte[] toBinary(

@@ -96,6 +96,11 @@ public class KafkaToGeowaveCommand extends
 		computeResults(params);
 	}
 
+	@Override
+	public boolean runAsync() {
+		return true;
+	}
+
 	public IngestFromKafkaDriver getDriver() {
 		return driver;
 	}

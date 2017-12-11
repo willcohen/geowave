@@ -12,35 +12,27 @@ package mil.nga.giat.geowave.core.ingest.local;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLStreamHandlerFactory;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.hadoop.fs.FsUrlStreamHandlerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.upplication.s3fs.S3Path;
 
 import mil.nga.giat.geowave.core.cli.operations.config.options.ConfigOptions;
-import mil.nga.giat.geowave.core.ingest.DataAdapterProvider;
 import mil.nga.giat.geowave.core.ingest.IngestUtils;
 import mil.nga.giat.geowave.core.ingest.IngestUtils.URLTYPE;
-import mil.nga.giat.geowave.core.ingest.hdfs.HdfsUrlStreamHandlerFactory;
 import mil.nga.giat.geowave.core.ingest.operations.ConfigAWSCommand;
-import mil.nga.giat.geowave.core.ingest.s3.S3URLStreamHandlerFactory;
-import mil.nga.giat.geowave.core.store.operations.remote.options.IndexPluginOptions;
 import mil.nga.giat.geowave.mapreduce.operations.ConfigHDFSCommand;
 
 /**
@@ -63,26 +55,6 @@ abstract public class AbstractLocalFileDriver<P extends LocalPluginBase, R>
 	public AbstractLocalFileDriver(
 			LocalInputCommandLineOptions input ) {
 		localInput = input;
-	}
-
-	protected boolean checkIndexesAgainstProvider(
-			String providerName,
-			DataAdapterProvider<?> adapterProvider,
-			List<IndexPluginOptions> indexOptions ) {
-		boolean valid = true;
-		for (IndexPluginOptions option : indexOptions) {
-			if (!IngestUtils.isCompatible(
-					adapterProvider,
-					option)) {
-				// HP Fortify "Log Forging" false positive
-				// What Fortify considers "user input" comes only
-				// from users with OS-level access anyway
-				LOGGER.warn("Local file ingest plugin for ingest type '" + providerName
-						+ "' does not support dimensionality '" + option.getType() + "'");
-				valid = false;
-			}
-		}
-		return valid;
 	}
 
 	protected void processInput(

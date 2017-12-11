@@ -59,7 +59,7 @@ public class BasicHBaseOperations implements
 
 	private final Connection conn;
 	private final String tableNamespace;
-	private final boolean schemaUpdateEnabled = false; // KAM EXPERIMENTAL
+	private final boolean schemaUpdateEnabled;
 
 	public BasicHBaseOperations(
 			final Connection connection,
@@ -68,10 +68,9 @@ public class BasicHBaseOperations implements
 		conn = connection;
 		tableNamespace = geowaveNamespace;
 
-		// KAM EXPERIMENTAL
-		// schemaUpdateEnabled = conn.getConfiguration().getBoolean(
-		// "hbase.online.schema.update.enable",
-		// false);
+		schemaUpdateEnabled = conn.getConfiguration().getBoolean(
+				"hbase.online.schema.update.enable",
+				false);
 	}
 
 	public BasicHBaseOperations(
@@ -82,10 +81,9 @@ public class BasicHBaseOperations implements
 				zookeeperInstances);
 		tableNamespace = geowaveNamespace;
 
-		// KAM EXPERIMENTAL
-		// schemaUpdateEnabled = conn.getConfiguration().getBoolean(
-		// "hbase.online.schema.update.enable",
-		// false);
+		schemaUpdateEnabled = conn.getConfiguration().getBoolean(
+				"hbase.online.schema.update.enable",
+				false);
 	}
 
 	public static BasicHBaseOperations createOperations(
@@ -355,11 +353,6 @@ public class BasicHBaseOperations implements
 
 			LOGGER.debug(tableNameStr + " does not have coprocessor. Adding " + coprocessorName);
 
-			// KAM EXPERIMENTAL
-			td.setConfiguration(
-					"hbase.table.sanity.checks",
-					"false");
-
 			synchronized (ADMIN_MUTEX) {
 				if (!schemaUpdateEnabled && !admin.isTableDisabled(tableName)) {
 					LOGGER.debug("- disable table...");
@@ -370,6 +363,7 @@ public class BasicHBaseOperations implements
 
 				// Retrieve coprocessor jar path from config
 				if (coprocessorJar == null) {
+					LOGGER.debug("Coprocessor jar path: DEFAULT");
 					td.addCoprocessor(coprocessorName);
 				}
 				else {

@@ -10,11 +10,13 @@
  ******************************************************************************/
 package mil.nga.giat.geowave.datastore.hbase.operations;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
@@ -35,6 +37,7 @@ import org.apache.hadoop.ipc.RemoteException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import mil.nga.giat.geowave.core.cli.operations.config.options.ConfigOptions;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStoreOperations;
@@ -43,6 +46,7 @@ import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
+import mil.nga.giat.geowave.datastore.hbase.cli.HBaseConstants;
 import mil.nga.giat.geowave.datastore.hbase.io.HBaseWriter;
 import mil.nga.giat.geowave.datastore.hbase.operations.config.HBaseRequiredOptions;
 import mil.nga.giat.geowave.datastore.hbase.util.ConnectionPool;
@@ -360,22 +364,26 @@ public class BasicHBaseOperations implements
 				}
 
 				LOGGER.debug("- add coprocessor...");
+				String jarPath;
 
 				// Retrieve coprocessor jar path from config
 				if (coprocessorJar == null) {
-					LOGGER.debug("Coprocessor jar path: DEFAULT");
-					td.addCoprocessor(coprocessorName);
+					jarPath = getGlobalJarPath();
 				}
 				else {
-					final Path hdfsJarPath = new Path(
-							coprocessorJar);
-					LOGGER.debug("Coprocessor jar path: " + hdfsJarPath.toString());
-					td.addCoprocessor(
-							coprocessorName,
-							hdfsJarPath,
-							Coprocessor.PRIORITY_USER,
-							null);
+					jarPath = coprocessorJar;
 				}
+
+				final Path hdfsJarPath = jarPath != null ? new Path(
+						jarPath) : null;
+
+				LOGGER.debug("Coprocessor jar path: " + hdfsJarPath != null ? hdfsJarPath.toString() : "DEFAULT");
+
+				td.addCoprocessor(
+						coprocessorName,
+						hdfsJarPath,
+						Coprocessor.PRIORITY_USER,
+						null);
 
 				LOGGER.debug("- modify table...");
 				admin.modifyTable(
@@ -428,6 +436,26 @@ public class BasicHBaseOperations implements
 		}
 
 		return true;
+	}
+
+	private String getGlobalJarPath() {
+		File propFile = ConfigOptions.getDefaultPropertyFile();
+
+		if (propFile != null && propFile.exists()) {
+			Properties configProperties = ConfigOptions.loadProperties(
+					propFile,
+					null);
+
+			String jarPath = configProperties.getProperty(HBaseConstants.HBASE_JAR_PATH);
+
+			if (jarPath != null) {
+				LOGGER.debug("Global jar path found in properties: " + jarPath);
+				return jarPath;
+			}
+		}
+
+		LOGGER.debug("Global jar path not found.");
+		return null;
 	}
 
 	@Override

@@ -20,7 +20,11 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.filecache.DistributedCache;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.hbase.Coprocessor;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
@@ -368,7 +372,7 @@ public class BasicHBaseOperations implements
 
 				// Retrieve coprocessor jar path from config
 				if (coprocessorJar == null) {
-					jarPath = getGlobalJarPath();
+					jarPath = getGlobalJarPath(admin);
 				}
 				else {
 					jarPath = coprocessorJar;
@@ -438,7 +442,47 @@ public class BasicHBaseOperations implements
 		return true;
 	}
 
-	private String getGlobalJarPath() {
+	private String getGlobalJarPath(
+			Admin admin ) {
+		String jarPath = null;
+
+		Configuration hbaseConfig = admin.getConfiguration();
+		String dynJarsDir = "/user/hbase/lib"; // hbaseConfig.get(HBaseConstants.HBASE_DYNAMIC_JARS_DIR);
+		try {
+			Path libPath = new Path(
+					dynJarsDir);
+
+			FileSystem fs = FileSystem.get(hbaseConfig);
+
+			RemoteIterator<LocatedFileStatus> itr = fs.listFiles(
+					libPath,
+					true);
+
+			while (itr.hasNext()) {
+				LocatedFileStatus f = itr.next();
+
+				if (!f.isDirectory()) {
+					String filePath = f.getPath().getName();
+
+					if (filePath.contains("geowave-hbase") && filePath.endsWith(".jar")) {
+						jarPath = f.getPath().toString();
+						LOGGER.debug("Located the geowave jar! " + jarPath);
+						
+						break;
+					}
+				}
+			}
+		}
+		catch (Exception e) {
+			LOGGER.error(
+					"Error reading hbase config for jar path",
+					e);
+		}
+
+		if (jarPath != null) {
+			return jarPath;
+		}
+
 		File propFile = ConfigOptions.getDefaultPropertyFile();
 
 		if (propFile != null && propFile.exists()) {
@@ -446,7 +490,7 @@ public class BasicHBaseOperations implements
 					propFile,
 					null);
 
-			String jarPath = configProperties.getProperty(HBaseConstants.HBASE_JAR_PATH);
+			jarPath = configProperties.getProperty(HBaseConstants.HBASE_JAR_PATH);
 
 			if (jarPath != null) {
 				LOGGER.debug("Global jar path found in properties: " + jarPath);
@@ -454,7 +498,8 @@ public class BasicHBaseOperations implements
 			}
 		}
 
-		LOGGER.debug("Global jar path not found.");
+		LOGGER.error("Global jar path not found.");
+
 		return null;
 	}
 

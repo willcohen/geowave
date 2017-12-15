@@ -23,7 +23,6 @@ import mil.nga.giat.geowave.core.cli.prefix.TranslationEntry;
 
 @GeowaveOperation(name = "jarpath", parentOperation = HBaseSection.class)
 @Parameters(commandDescription = "Set the jar path for coprocessor registration")
-
 public class HBaseSetJarPathCommand extends
 		ServiceEnabledCommand<String>
 {
@@ -36,8 +35,7 @@ public class HBaseSetJarPathCommand extends
 			OperationParams params )
 			throws Exception {
 		JCommander.getConsole().println(
-				computeResults(
-						params));
+				computeResults(params));
 	}
 
 	@Override
@@ -48,10 +46,8 @@ public class HBaseSetJarPathCommand extends
 			throw new ParameterException(
 					"Requires argument: <GeoServer URL>");
 		}
-		jarPath = parameters.get(
-				0);
-		final Properties existingProps = getGeoWaveConfigProperties(
-				params);
+		jarPath = parameters.get(0);
+		final Properties existingProps = getGeoWaveConfigProperties(params);
 
 		// all switches are optional
 		if (jarPath != null) {
@@ -62,8 +58,7 @@ public class HBaseSetJarPathCommand extends
 
 		// Write properties file
 		ConfigOptions.writeProperties(
-				getGeoWaveConfigFile(
-						params),
+				getGeoWaveConfigFile(params),
 				existingProps,
 				this.getClass(),
 				HBaseConstants.HBASE_NAMESPACE_PREFIX);
@@ -73,9 +68,7 @@ public class HBaseSetJarPathCommand extends
 		for (Object key : existingProps.keySet()) {
 			if (key.toString().startsWith(
 					"hbase")) {
-				builder.append(
-						key.toString() + "=" + existingProps.getProperty(
-								key.toString()) + "\n");
+				builder.append(key.toString() + "=" + existingProps.getProperty(key.toString()) + "\n");
 			}
 		}
 
@@ -87,8 +80,7 @@ public class HBaseSetJarPathCommand extends
 
 		final List<String> nameArray = new ArrayList<String>();
 		final JCommanderPrefixTranslator translator = new JCommanderPrefixTranslator();
-		translator.addObject(
-				this);
+		translator.addObject(this);
 		final JCommanderTranslationMap map = translator.translate();
 		map.createFacadeObjects();
 
@@ -100,11 +92,9 @@ public class HBaseSetJarPathCommand extends
 		final Map<String, TranslationEntry> translations = map.getEntries();
 		for (final Object obj : map.getObjects()) {
 			for (final Field field : obj.getClass().getDeclaredFields()) {
-				final TranslationEntry tEntry = translations.get(
-						field.getName());
+				final TranslationEntry tEntry = translations.get(field.getName());
 				if ((tEntry != null) && (tEntry.getObject() instanceof HBaseSetJarPathCommand)) {
-					jc.addObject(
-							obj);
+					jc.addObject(obj);
 					break;
 				}
 			}
@@ -113,52 +103,40 @@ public class HBaseSetJarPathCommand extends
 		final String programName = StringUtils.join(
 				nameArray,
 				" ");
-		jc.setProgramName(
-				programName);
-		jc.usage(
-				builder);
+		jc.setProgramName(programName);
+		jc.usage(builder);
 
 		// Trim excess newlines.
 		final String operations = builder.toString().trim();
 
 		builder = new StringBuilder();
-		builder.append(
-				operations);
-		builder.append(
-				"\n\n");
-		builder.append(
-				"  ");
+		builder.append(operations);
+		builder.append("\n\n");
+		builder.append("  ");
 
 		jc = new JCommander();
 
 		for (final Object obj : map.getObjects()) {
 			for (final Field field : obj.getClass().getDeclaredFields()) {
-				final TranslationEntry tEntry = translations.get(
-						field.getName());
+				final TranslationEntry tEntry = translations.get(field.getName());
 				if ((tEntry != null) && !(tEntry.getObject() instanceof HBaseSetJarPathCommand)) {
 					final Parameters parameters = tEntry.getObject().getClass().getAnnotation(
 							Parameters.class);
 					if (parameters != null) {
-						builder.append(
-								parameters.commandDescription());
+						builder.append(parameters.commandDescription());
 					}
 					else {
-						builder.append(
-								"Additional Parameters");
+						builder.append("Additional Parameters");
 					}
-					jc.addObject(
-							obj);
+					jc.addObject(obj);
 					break;
 				}
 			}
 		}
 
-		jc.setProgramName(
-				programName);
-		jc.usage(
-				builder);
-		builder.append(
-				"\n\n");
+		jc.setProgramName(programName);
+		jc.usage(builder);
+		builder.append("\n\n");
 
 		return builder.toString().trim();
 	}

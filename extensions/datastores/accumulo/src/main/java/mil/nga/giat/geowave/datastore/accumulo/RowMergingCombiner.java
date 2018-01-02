@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -43,9 +43,18 @@ public class RowMergingCombiner extends
 	}
 
 	@Override
+	protected String getColumnOptionValue(
+			final Map<String, String> options ) {
+		//if this is  "row" merging than it is by adapter ID
+		return options.get(
+				RowMergingAdapterOptionProvider.ADAPTER_IDS_OPTION);
+	}
+
+	@Override
 	protected byte[] getBinary(
 			final Mergeable mergeable ) {
-		return rowTransform.getBinaryFromMergedObject(mergeable);
+		return rowTransform.getBinaryFromMergedObject(
+				mergeable);
 	}
 
 	@Override
@@ -58,12 +67,15 @@ public class RowMergingCombiner extends
 				source,
 				options,
 				env);
-		final String rowTransformStr = options.get(RowMergingAdapterOptionProvider.ROW_TRANSFORM_KEY);
-		final byte[] rowTransformBytes = ByteArrayUtils.byteArrayFromString(rowTransformStr);
+		final String rowTransformStr = options.get(
+				RowMergingAdapterOptionProvider.ROW_TRANSFORM_KEY);
+		final byte[] rowTransformBytes = ByteArrayUtils.byteArrayFromString(
+				rowTransformStr);
 		rowTransform = PersistenceUtils.fromBinary(
 				rowTransformBytes,
 				RowTransform.class);
-		rowTransform.initOptions(options);
+		rowTransform.initOptions(
+				options);
 	}
 
 }

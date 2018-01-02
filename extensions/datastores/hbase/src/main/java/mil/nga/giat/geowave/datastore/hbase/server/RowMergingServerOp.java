@@ -29,6 +29,14 @@ public class RowMergingServerOp extends
 						CellUtil.cloneQualifier(cell)),
 				bytes);
 	}
+	
+	@Override
+	protected String getColumnOptionValue(
+			final Map<String, String> options ) {
+		//if this is  "row" merging than it is by adapter ID
+		return options.get(
+				RowMergingAdapterOptionProvider.ADAPTER_IDS_OPTION);
+	}
 
 	@Override
 	protected byte[] getBinary(

@@ -22,7 +22,7 @@ import org.apache.accumulo.core.iterators.SortedKeyValueIterator;
 
 import mil.nga.giat.geowave.core.index.Mergeable;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
-import mil.nga.giat.geowave.core.store.server.RowMergingAdapterOptionProvider;
+import mil.nga.giat.geowave.core.store.operations.MetadataType;
 
 public class MergingCombiner extends
 		Combiner
@@ -39,11 +39,19 @@ public class MergingCombiner extends
 			throws IOException {
 		options.put(
 				COLUMNS_OPTION,
-				options.get(RowMergingAdapterOptionProvider.ADAPTER_IDS_OPTION));
+				getColumnOptionValue(
+						options));
 		super.init(
 				source,
 				options,
 				env);
+	}
+
+	protected String getColumnOptionValue(
+			final Map<String, String> options ) {
+		// if this is not "row" merging than it is merging stats on the metadata
+		// table
+		return MetadataType.STATS.name();
 	}
 
 	@Override
@@ -63,13 +71,15 @@ public class MergingCombiner extends
 					currentMergeable = mergeable;
 				}
 				else {
-					currentMergeable.merge(mergeable);
+					currentMergeable.merge(
+							mergeable);
 				}
 			}
 		}
 		if (currentMergeable != null) {
 			return new Value(
-					getBinary(currentMergeable));
+					getBinary(
+							currentMergeable));
 		}
 		return super.getTopValue();
 	}
@@ -84,6 +94,7 @@ public class MergingCombiner extends
 
 	protected byte[] getBinary(
 			final Mergeable mergeable ) {
-		return PersistenceUtils.toBinary(mergeable);
+		return PersistenceUtils.toBinary(
+				mergeable);
 	}
 }

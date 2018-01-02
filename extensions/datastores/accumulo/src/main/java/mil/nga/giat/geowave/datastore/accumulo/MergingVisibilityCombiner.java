@@ -30,12 +30,13 @@ import com.google.common.collect.Lists;
 import mil.nga.giat.geowave.core.index.Mergeable;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.StringUtils;
-import mil.nga.giat.geowave.core.store.server.RowMergingAdapterOptionProvider;
+import mil.nga.giat.geowave.core.store.operations.MetadataType;
 
 public class MergingVisibilityCombiner extends
 		TransformingIterator
 {
-	private static final byte[] AMPRISAND = StringUtils.stringToBinary("&");
+	private static final byte[] AMPRISAND = StringUtils.stringToBinary(
+			"&");
 
 	private ColumnSet combiners;
 	private final Key workKey = new Key();
@@ -50,21 +51,32 @@ public class MergingVisibilityCombiner extends
 				source,
 				options,
 				env);
-		final String encodedColumns = options.get(RowMergingAdapterOptionProvider.ADAPTER_IDS_OPTION);
+		final String encodedColumns = 
+				getColumnOptionValue(options);
 		if (encodedColumns.length() == 0) {
 			throw new IllegalArgumentException(
-					"The " + RowMergingAdapterOptionProvider.ADAPTER_IDS_OPTION + " must not be empty");
+					"The column must not be empty");
 		}
 		combiners = new ColumnSet(
-				Lists.newArrayList(Splitter.on(
-						",").split(
-						encodedColumns)));
+				Lists.newArrayList(
+						Splitter
+								.on(
+										",")
+								.split(
+										encodedColumns)));
+	}
+
+	protected String getColumnOptionValue(
+			final Map<String, String> options ) {
+		//if this is not "row" merging than it is merging stats on the metadata table
+		return MetadataType.STATS.name();
 	}
 
 	@Override
 	public SortedKeyValueIterator<Key, Value> deepCopy(
 			final IteratorEnvironment env ) {
-		final SortedKeyValueIterator<Key, Value> retVal = super.deepCopy(env);
+		final SortedKeyValueIterator<Key, Value> retVal = super.deepCopy(
+				env);
 		if (retVal instanceof MergingVisibilityCombiner) {
 			((MergingVisibilityCombiner) retVal).combiners = combiners;
 		}
@@ -83,10 +95,12 @@ public class MergingVisibilityCombiner extends
 			throws IOException {
 		Mergeable currentMergeable = null;
 		Key outputKey = null;
-		workKey.set(input.getTopKey());
+		workKey.set(
+				input.getTopKey());
 		// default to not combining, only combine when combiners does not
 		// contain this column
-		if ((combiners == null) || !combiners.contains(workKey)) {
+		if ((combiners == null) || !combiners.contains(
+				workKey)) {
 			// don't transform at all
 			return;
 		}
@@ -104,7 +118,8 @@ public class MergingVisibilityCombiner extends
 				output.append(
 						outputKey,
 						new Value(
-								PersistenceUtils.toBinary(currentMergeable)));
+								PersistenceUtils.toBinary(
+										currentMergeable)));
 				currentMergeable = null;
 				outputKey = currentKey;
 				continue;
@@ -128,7 +143,8 @@ public class MergingVisibilityCombiner extends
 					currentMergeable = mergeable;
 				}
 				else {
-					currentMergeable.merge(mergeable);
+					currentMergeable.merge(
+							mergeable);
 				}
 			}
 			input.next();
@@ -137,7 +153,8 @@ public class MergingVisibilityCombiner extends
 			output.append(
 					outputKey,
 					new Value(
-							getBinary(currentMergeable)));
+							getBinary(
+									currentMergeable)));
 		}
 	}
 
@@ -151,7 +168,8 @@ public class MergingVisibilityCombiner extends
 
 	protected byte[] getBinary(
 			final Mergeable mergeable ) {
-		return PersistenceUtils.toBinary(mergeable);
+		return PersistenceUtils.toBinary(
+				mergeable);
 	}
 
 	private static byte[] combineVisibilities(
@@ -166,9 +184,11 @@ public class MergingVisibilityCombiner extends
 		return new ColumnVisibility(
 				ArrayUtils.addAll(
 						ArrayUtils.addAll(
-								ColumnVisibility.quote(vis1),
+								ColumnVisibility.quote(
+										vis1),
 								AMPRISAND),
-						ColumnVisibility.quote(vis2))).flatten();
+						ColumnVisibility.quote(
+								vis2))).flatten();
 	}
 
 }

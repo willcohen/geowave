@@ -1379,12 +1379,8 @@ public class AccumuloOperations implements
 				if (!iteratorsAttached) {
 					iteratorsAttached = true;
 
-					final Map<String, String> options = new HashMap<String, String>();
-					options.put(
-							DataStatisticsStoreImpl.COLUMN_OPTION,
-							MetadataType.STATS.name());
 					final BasicOptionProvider optionProvider = new BasicOptionProvider(
-							options);
+							new HashMap<>());
 					ServerOpHelper.addServerSideMerging(
 							this,
 							DataStatisticsStoreImpl.STATISTICS_COMBINER_NAME,

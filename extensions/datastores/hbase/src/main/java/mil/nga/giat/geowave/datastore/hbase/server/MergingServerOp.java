@@ -24,13 +24,14 @@ import com.google.common.collect.Sets;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.Mergeable;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
+import mil.nga.giat.geowave.core.store.operations.MetadataType;
 import mil.nga.giat.geowave.core.store.server.RowMergingAdapterOptionProvider;
 
 public class MergingServerOp implements
 		HBaseServerOp
 {
 	public static Object MUTEX = new Object();
-	protected Set<ByteArrayId> adapterIds = new HashSet<>();
+	protected Set<ByteArrayId> columnFamilyIds = new HashSet<>();
 	private static final String OLD_MAX_VERSIONS_KEY = "MAX_VERSIONS";
 
 	protected Mergeable getMergeable(
@@ -85,9 +86,9 @@ public class MergingServerOp implements
 						final Cell cell = iter.next();
 						// TODO consider avoiding extra byte array allocations
 						final byte[] familyBytes = CellUtil.cloneFamily(cell);
-						final ByteArrayId adapterId = new ByteArrayId(
+						final ByteArrayId familyId = new ByteArrayId(
 								familyBytes);
-						if (adapterIds.contains(adapterId)) {
+						if (columnFamilyIds.contains(familyId)) {
 							final PartialCellEquality key = new PartialCellEquality(
 									cell,
 									includeTags());
@@ -212,16 +213,16 @@ public class MergingServerOp implements
 	public void init(
 			final Map<String, String> options )
 			throws IOException {
-		final String adapterIdsStr = options.get(RowMergingAdapterOptionProvider.ADAPTER_IDS_OPTION);
+		final String columnStr = options.get(RowMergingAdapterOptionProvider.ADAPTER_IDS_OPTION);
 
-		if (adapterIdsStr.length() == 0) {
+		if (columnStr.length() == 0) {
 			throw new IllegalArgumentException(
-					"The " + RowMergingAdapterOptionProvider.ADAPTER_IDS_OPTION + " must not be empty");
+					"The column must not be empty");
 		}
-		adapterIds = Sets.newHashSet(Iterables.transform(
+		columnFamilyIds = Sets.newHashSet(Iterables.transform(
 				Splitter.on(
 						",").split(
-						adapterIdsStr),
+								columnStr),
 				new Function<String, ByteArrayId>() {
 
 					@Override
@@ -233,6 +234,13 @@ public class MergingServerOp implements
 				}));
 	}
 
+	protected String getColumnOptionValue(
+			final Map<String, String> options ) {
+		// if this is not "row" merging than it is merging stats on the metadata
+		// table
+		return MetadataType.STATS.name();
+	}
+	
 	@Override
 	public void preScannerOpen(
 			final Scan scan ) {

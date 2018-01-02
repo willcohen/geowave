@@ -12,6 +12,7 @@ package mil.nga.giat.geowave.datastore.hbase.operations;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -755,12 +756,8 @@ public class HBaseOperations implements
 					if (!iteratorsAttached) {
 						iteratorsAttached = true;
 
-						final Map<String, String> options = new HashMap<String, String>();
-						options.put(
-								DataStatisticsStoreImpl.COLUMN_OPTION,
-								MetadataType.STATS.name());
 						final BasicOptionProvider optionProvider = new BasicOptionProvider(
-								options);
+								new HashMap<>());
 						ServerOpHelper.addServerSideMerging(
 								this,
 								DataStatisticsStoreImpl.STATISTICS_COMBINER_NAME,

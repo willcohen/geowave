@@ -222,7 +222,7 @@ public class MergingServerOp implements
 		columnFamilyIds = Sets.newHashSet(Iterables.transform(
 				Splitter.on(
 						",").split(
-								columnStr),
+						columnStr),
 				new Function<String, ByteArrayId>() {
 
 					@Override
@@ -240,7 +240,7 @@ public class MergingServerOp implements
 		// table
 		return MetadataType.STATS.name();
 	}
-	
+
 	@Override
 	public void preScannerOpen(
 			final Scan scan ) {

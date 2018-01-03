@@ -11,6 +11,7 @@
 package mil.nga.giat.geowave.datastore.accumulo;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -37,13 +38,14 @@ public class MergingCombiner extends
 			final Map<String, String> options,
 			final IteratorEnvironment env )
 			throws IOException {
-		options.put(
+		//the original may be unmodifiable so we need to create a modifiable clone 
+		Map<String, String> modifiableOptions = new HashMap<>(options);
+		modifiableOptions.put(
 				COLUMNS_OPTION,
-				getColumnOptionValue(
-						options));
+				getColumnOptionValue(options));
 		super.init(
 				source,
-				options,
+				modifiableOptions,
 				env);
 	}
 
@@ -71,15 +73,13 @@ public class MergingCombiner extends
 					currentMergeable = mergeable;
 				}
 				else {
-					currentMergeable.merge(
-							mergeable);
+					currentMergeable.merge(mergeable);
 				}
 			}
 		}
 		if (currentMergeable != null) {
 			return new Value(
-					getBinary(
-							currentMergeable));
+					getBinary(currentMergeable));
 		}
 		return super.getTopValue();
 	}
@@ -94,7 +94,6 @@ public class MergingCombiner extends
 
 	protected byte[] getBinary(
 			final Mergeable mergeable ) {
-		return PersistenceUtils.toBinary(
-				mergeable);
+		return PersistenceUtils.toBinary(mergeable);
 	}
 }

@@ -99,11 +99,6 @@ public class HBaseDataStore extends
 		final String indexName = index.getId().getString();
 		final String columnFamily = adapter.getAdapterId().getString();
 		if (adapter instanceof RowMergingDataAdapter) {
-<<<<<<< HEAD
-			hbaseOperations.stageMergingAdapter(
-					index.getId(),
-					(RowMergingDataAdapter) adapter);
-=======
 			if (!DataAdapterAndIndexCache.getInstance(
 					RowMergingAdapterOptionProvider.ROW_MERGING_ADAPTER_CACHE_ID).add(
 					adapter.getAdapterId(),
@@ -122,7 +117,6 @@ public class HBaseDataStore extends
 						RowMergingVisibilityServerOp.class.getName(),
 						indexName);
 			}
->>>>>>> casanamo-hbase-kam-merge
 		}
 
 		hbaseOperations.verifyColumnFamily(

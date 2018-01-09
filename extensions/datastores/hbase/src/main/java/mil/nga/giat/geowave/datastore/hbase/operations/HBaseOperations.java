@@ -881,7 +881,6 @@ public class HBaseOperations implements
 		return null;
 	}
 
-
 	public Mergeable aggregateServerSide(
 			final ReaderParams readerParams ) {
 		final String tableName = readerParams.getIndex().getId().getString();

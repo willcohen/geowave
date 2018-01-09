@@ -38,8 +38,10 @@ public class MergingCombiner extends
 			final Map<String, String> options,
 			final IteratorEnvironment env )
 			throws IOException {
-		//the original may be unmodifiable so we need to create a modifiable clone 
-		Map<String, String> modifiableOptions = new HashMap<>(options);
+		// the original may be unmodifiable so we need to create a modifiable
+		// clone
+		Map<String, String> modifiableOptions = new HashMap<>(
+				options);
 		modifiableOptions.put(
 				COLUMNS_OPTION,
 				getColumnOptionValue(options));

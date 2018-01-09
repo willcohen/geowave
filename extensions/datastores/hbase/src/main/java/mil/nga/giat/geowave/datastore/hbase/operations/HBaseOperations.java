@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.hadoop.fs.Path;
@@ -101,6 +102,7 @@ public class HBaseOperations implements
 	protected static final String DEFAULT_TABLE_NAMESPACE = "";
 	public static final Object ADMIN_MUTEX = new Object();
 	private static final long SLEEP_INTERVAL = HConstants.DEFAULT_HBASE_SERVER_PAUSE;
+	private static final String SPLIT_STRING = Pattern.quote(".");
 
 	protected final Connection conn;
 
@@ -1107,7 +1109,7 @@ public class HBaseOperations implements
 				if (e.getKey().startsWith(
 						ServerSideOperationsObserver.SERVER_OP_PREFIX)) {
 					final String[] parts = e.getKey().split(
-							".");
+							SPLIT_STRING);
 					if ((parts.length == 5) && parts[1].equals(namespace) && parts[2].equals(qualifier)
 							&& parts[3].equals(ServerSideOperationsObserver.SERVER_OP_SCOPES_KEY)) {
 						map.put(
@@ -1143,7 +1145,7 @@ public class HBaseOperations implements
 				if (e.getKey().startsWith(
 						ServerSideOperationsObserver.SERVER_OP_PREFIX)) {
 					final String[] parts = e.getKey().split(
-							".");
+							SPLIT_STRING);
 					if ((parts.length == 6) && parts[1].equals(namespace) && parts[2].equals(qualifier)
 							&& parts[3].equals(serverOpName)
 							&& parts[4].equals(ServerSideOperationsObserver.SERVER_OP_OPTIONS_PREFIX)) {
@@ -1204,7 +1206,7 @@ public class HBaseOperations implements
 			if (e.getKey().startsWith(
 					ServerSideOperationsObserver.SERVER_OP_PREFIX)) {
 				final String[] parts = e.getKey().split(
-						".");
+						SPLIT_STRING);
 				if ((parts.length >= 5) && parts[1].equals(namespace) && parts[2].equals(qualifier)
 						&& parts[3].equals(serverOpName)) {
 					changed = true;

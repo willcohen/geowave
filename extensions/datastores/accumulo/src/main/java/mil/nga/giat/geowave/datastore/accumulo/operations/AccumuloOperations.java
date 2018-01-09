@@ -1427,7 +1427,12 @@ public class AccumuloOperations implements
 			final PrimaryIndex index,
 			final AdapterStore adapterStore,
 			final AdapterIndexMappingStore adapterIndexMappingStore ) {
-		final String tableName = getQualifiedTableName(index.getId().getString());
+		return compactTable(index.getId().getString());
+	}
+
+	public boolean compactTable(
+			String unqualifiedTableName ) {
+		final String tableName = getQualifiedTableName(unqualifiedTableName);
 		try {
 			LOGGER.info("Compacting table '" + tableName + "'");
 			connector.tableOperations().compact(

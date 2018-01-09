@@ -27,6 +27,7 @@ import org.apache.hadoop.io.Text;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 
+import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.Mergeable;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.StringUtils;
@@ -93,8 +94,14 @@ public class MergingVisibilityCombiner extends
 		workKey.set(input.getTopKey());
 		// default to not combining, only combine when combiners does not
 		// contain this column
-		if ((combiners == null) || !combiners.contains(workKey)) {
+		if ((combiners == null) || !combiners.contains(workKey) || workKey.isDeleted()) {
 			// don't transform at all
+			while (input.hasTop()) {
+				output.append(
+						input.getTopKey(),
+						input.getTopValue());
+				input.next();
+			}
 			return;
 		}
 		while (input.hasTop()) {

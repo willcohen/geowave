@@ -58,8 +58,6 @@ public class DataStatisticsStoreIT extends
 	@GeoWaveTestStore(value = {
 		GeoWaveStoreType.ACCUMULO,
 		GeoWaveStoreType.HBASE
-	}, options = {
-		"enableServerSideLibrary=true"
 	})
 	protected DataStorePluginOptions dataStore;
 

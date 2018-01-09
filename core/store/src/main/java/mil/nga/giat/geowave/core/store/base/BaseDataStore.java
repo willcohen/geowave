@@ -505,16 +505,9 @@ public class BaseDataStore implements
 			throws IOException {
 		final String altIdxTableName = index.getId().getString() + ALT_INDEX_TABLE;
 
-		try (final CloseableIterator<DataStatistics<?>> it = statisticsStore.getDataStatistics(adapter.getAdapterId())) {
-
-			while (it.hasNext()) {
-				final DataStatistics<?> stats = it.next();
-				statisticsStore.removeStatistics(
-						adapter.getAdapterId(),
-						stats.getStatisticsId(),
-						additionalAuthorizations);
-			}
-		}
+		statisticsStore.removeAllStatistics(
+				adapter.getAdapterId(),
+				additionalAuthorizations);
 
 		// cannot delete because authorizations are not used
 		// this.indexMappingStore.remove(adapter.getAdapterId());
@@ -680,7 +673,7 @@ public class BaseDataStore implements
 		}
 		catch (final Exception e) {
 			LOGGER.error(
-					"Unable to create table table for alt index to  [" + indexName + "]",
+					"Unable to create table for alt index to  [" + indexName + "]",
 					e);
 		}
 	}
@@ -709,6 +702,10 @@ public class BaseDataStore implements
 			try {
 				if (baseOperations.indexExists(new ByteArrayId(
 						indexName))) {
+					// TODO GEOWAVE-1018 the secondaryIndexDataStore isn't
+					// really implemented fully, so this warning will likely
+					// occur because there really is no "alt index" without
+					// secondary indexing
 					if (!baseOperations.indexExists(new ByteArrayId(
 							altIdxTableName))) {
 						throw new IllegalArgumentException(

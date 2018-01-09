@@ -493,10 +493,9 @@ public class QueryOptions implements
 				}
 			}
 			return adapters.toArray(new DataAdapter[adapters.size()]);
-
 		}
 		final List<DataAdapter> list = new ArrayList<DataAdapter>();
-		if (adapterStore != null && adapterStore.getAdapters() != null) {
+		if (adapterStore != null) {
 			try (CloseableIterator<DataAdapter<?>> it = adapterStore.getAdapters()) {
 				while (it.hasNext()) {
 					list.add(it.next());

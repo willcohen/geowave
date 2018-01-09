@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -16,6 +17,8 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Nonnull;
 
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
@@ -46,6 +49,13 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.io.Text;
 import org.apache.log4j.Logger;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.index.ByteArrayUtils;
@@ -60,6 +70,7 @@ import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.metadata.AbstractGeoWavePersistence;
+import mil.nga.giat.geowave.core.store.metadata.DataStatisticsStoreImpl;
 import mil.nga.giat.geowave.core.store.operations.BaseReaderParams;
 import mil.nga.giat.geowave.core.store.operations.Deleter;
 import mil.nga.giat.geowave.core.store.operations.MetadataDeleter;
@@ -71,7 +82,13 @@ import mil.nga.giat.geowave.core.store.operations.ReaderParams;
 import mil.nga.giat.geowave.core.store.operations.Writer;
 import mil.nga.giat.geowave.core.store.query.aggregate.Aggregation;
 import mil.nga.giat.geowave.core.store.query.aggregate.CommonIndexAggregation;
+import mil.nga.giat.geowave.core.store.server.BasicOptionProvider;
+import mil.nga.giat.geowave.core.store.server.ServerOpConfig.ServerOpScope;
+import mil.nga.giat.geowave.core.store.server.ServerOpHelper;
+import mil.nga.giat.geowave.core.store.server.ServerSideOperations;
 import mil.nga.giat.geowave.datastore.accumulo.IteratorConfig;
+import mil.nga.giat.geowave.datastore.accumulo.MergingCombiner;
+import mil.nga.giat.geowave.datastore.accumulo.MergingVisibilityCombiner;
 import mil.nga.giat.geowave.datastore.accumulo.cli.config.AccumuloOptions;
 import mil.nga.giat.geowave.datastore.accumulo.cli.config.AccumuloRequiredOptions;
 import mil.nga.giat.geowave.datastore.accumulo.iterators.AggregationIterator;
@@ -94,7 +111,8 @@ import mil.nga.giat.geowave.mapreduce.splits.RecordReaderParams;
  * and a batch writer
  */
 public class AccumuloOperations implements
-		MapReduceDataStoreOperations
+		MapReduceDataStoreOperations,
+		ServerSideOperations
 {
 	private final static Logger LOGGER = Logger.getLogger(AccumuloOperations.class);
 	private static final int DEFAULT_NUM_THREADS = 16;
@@ -274,9 +292,9 @@ public class AccumuloOperations implements
 		if (!connector.tableOperations().exists(
 				qName)) {
 			try {
-				NewTableConfiguration config = new NewTableConfiguration();
+				final NewTableConfiguration config = new NewTableConfiguration();
 
-				Map<String, String> propMap = new HashMap(
+				final Map<String, String> propMap = new HashMap(
 						config.getProperties());
 
 				if (enableBlockCache) {
@@ -303,7 +321,7 @@ public class AccumuloOperations implements
 						"Unable to create table '" + qName + "'",
 						e);
 			}
-			catch (TableNotFoundException e) {
+			catch (final TableNotFoundException e) {
 				LOGGER.error(
 						"Error disabling version iterator",
 						e);
@@ -1349,7 +1367,6 @@ public class AccumuloOperations implements
 	@Override
 	public MetadataWriter createMetadataWriter(
 			final MetadataType metadataType ) {
-
 		if (options.isCreateTable()) {
 			// this checks for existence prior to create
 			createTable(
@@ -1361,22 +1378,17 @@ public class AccumuloOperations implements
 			synchronized (this) {
 				if (!iteratorsAttached) {
 					iteratorsAttached = true;
-					final IteratorConfig[] configs = AccumuloMetadataWriter.getStatsIteratorConfig();
-					if ((configs != null) && (configs.length > 0)) {
-						try {
-							attachIterators(
-									AbstractGeoWavePersistence.METADATA_TABLE,
-									true,
-									true,
-									true,
-									configs);
-						}
-						catch (final TableNotFoundException e) {
-							LOGGER.error(
-									"Cannot attach stats iterator, table not found",
-									e);
-						}
-					}
+
+					final BasicOptionProvider optionProvider = new BasicOptionProvider(
+							new HashMap<>());
+					ServerOpHelper.addServerSideMerging(
+							this,
+							DataStatisticsStoreImpl.STATISTICS_COMBINER_NAME,
+							DataStatisticsStoreImpl.STATS_COMBINER_PRIORITY,
+							MergingCombiner.class.getName(),
+							MergingVisibilityCombiner.class.getName(),
+							optionProvider,
+							AbstractGeoWavePersistence.METADATA_TABLE);
 				}
 			}
 		}
@@ -1415,7 +1427,12 @@ public class AccumuloOperations implements
 			final PrimaryIndex index,
 			final AdapterStore adapterStore,
 			final AdapterIndexMappingStore adapterIndexMappingStore ) {
-		final String tableName = getQualifiedTableName(index.getId().getString());
+		return compactTable(index.getId().getString());
+	}
+
+	public boolean compactTable(
+			String unqualifiedTableName ) {
+		final String tableName = getQualifiedTableName(unqualifiedTableName);
 		try {
 			LOGGER.info("Compacting table '" + tableName + "'");
 			connector.tableOperations().compact(
@@ -1442,7 +1459,7 @@ public class AccumuloOperations implements
 			AccumuloException,
 			TableNotFoundException {
 		synchronized (this) {
-			String qName = getQualifiedTableName(tableName);
+			final String qName = getQualifiedTableName(tableName);
 
 			if (enable) {
 				connector.tableOperations().attachIterator(
@@ -1464,15 +1481,194 @@ public class AccumuloOperations implements
 
 	public void setMaxVersions(
 			final String tableName,
-			int maxVersions )
+			final int maxVersions )
 			throws AccumuloException,
 			TableNotFoundException,
 			AccumuloSecurityException {
-		for (IteratorScope iterScope : IteratorScope.values()) {
+		for (final IteratorScope iterScope : IteratorScope.values()) {
 			connector.tableOperations().setProperty(
 					getQualifiedTableName(tableName),
 					Property.TABLE_ITERATOR_PREFIX + iterScope.name() + ".vers.opt.maxVersions",
 					Integer.toString(maxVersions));
 		}
+	}
+
+	@Override
+	public Map<String, ImmutableSet<ServerOpScope>> listServerOps(
+			final String index ) {
+		try {
+			return Maps.transformValues(
+					connector.tableOperations().listIterators(
+							getQualifiedTableName(index)),
+					new Function<EnumSet<IteratorScope>, ImmutableSet<ServerOpScope>>() {
+
+						@Override
+						public ImmutableSet<ServerOpScope> apply(
+								final EnumSet<IteratorScope> input ) {
+							return Sets.immutableEnumSet(Iterables.transform(
+									input,
+									new Function<IteratorScope, ServerOpScope>() {
+
+										@Override
+										public ServerOpScope apply(
+												final IteratorScope input ) {
+											return fromAccumulo(input);
+										}
+									}));
+						}
+					});
+		}
+		catch (AccumuloSecurityException | AccumuloException | TableNotFoundException e) {
+			LOGGER.error(
+					"Unable to list iterators for table '" + index + "'",
+					e);
+		}
+		return null;
+	}
+
+	private static IteratorScope toAccumulo(
+			final ServerOpScope scope ) {
+		switch (scope) {
+			case MAJOR_COMPACTION:
+				return IteratorScope.majc;
+			case MINOR_COMPACTION:
+				return IteratorScope.minc;
+			case SCAN:
+				return IteratorScope.scan;
+		}
+		return null;
+	}
+
+	private static ServerOpScope fromAccumulo(
+			final IteratorScope scope ) {
+		switch (scope) {
+			case majc:
+				return ServerOpScope.MAJOR_COMPACTION;
+			case minc:
+				return ServerOpScope.MINOR_COMPACTION;
+			case scan:
+				return ServerOpScope.SCAN;
+		}
+		return null;
+	}
+
+	private static EnumSet<IteratorScope> toEnumSet(
+			final ImmutableSet<ServerOpScope> scopes ) {
+		final Collection<IteratorScope> c = Collections2.transform(
+				scopes,
+				new Function<ServerOpScope, IteratorScope>() {
+
+					@Override
+					public IteratorScope apply(
+							@Nonnull
+							final ServerOpScope scope ) {
+						return toAccumulo(scope);
+					}
+				});
+		EnumSet<IteratorScope> itSet;
+		if (!c.isEmpty()) {
+			final Iterator<IteratorScope> it = c.iterator();
+			final IteratorScope first = it.next();
+			final IteratorScope[] rest = new IteratorScope[c.size() - 1];
+			int i = 0;
+			while (it.hasNext()) {
+				rest[i++] = it.next();
+			}
+			itSet = EnumSet.of(
+					first,
+					rest);
+		}
+		else {
+			itSet = EnumSet.noneOf(IteratorScope.class);
+		}
+		return itSet;
+	}
+
+	@Override
+	public Map<String, String> getServerOpOptions(
+			final String index,
+			final String serverOpName,
+			final ServerOpScope scope ) {
+		try {
+			final IteratorSetting setting = connector.tableOperations().getIteratorSetting(
+					getQualifiedTableName(index),
+					serverOpName,
+					toAccumulo(scope));
+			if (setting != null) {
+				return setting.getOptions();
+			}
+		}
+		catch (AccumuloSecurityException | AccumuloException | TableNotFoundException e) {
+			LOGGER.error(
+					"Unable to get iterator options for table '" + index + "'",
+					e);
+		}
+		return Collections.emptyMap();
+	}
+
+	@Override
+	public void removeServerOp(
+			final String index,
+			final String serverOpName,
+			final ImmutableSet<ServerOpScope> scopes ) {
+
+		try {
+			connector.tableOperations().removeIterator(
+					getQualifiedTableName(index),
+					serverOpName,
+					toEnumSet(scopes));
+		}
+		catch (AccumuloSecurityException | AccumuloException | TableNotFoundException e) {
+			LOGGER.error(
+					"Unable to remove iterator",
+					e);
+		}
+	}
+
+	@Override
+	public void addServerOp(
+			final String index,
+			final int priority,
+			final String name,
+			final String operationClass,
+			final Map<String, String> properties,
+			final ImmutableSet<ServerOpScope> configuredScopes ) {
+		try {
+			connector.tableOperations().attachIterator(
+					getQualifiedTableName(index),
+					new IteratorSetting(
+							priority,
+							name,
+							operationClass,
+							properties),
+					toEnumSet(configuredScopes));
+		}
+		catch (AccumuloSecurityException | AccumuloException | TableNotFoundException e) {
+			LOGGER.error(
+					"Unable to attach iterator",
+					e);
+		}
+	}
+
+	@Override
+	public void updateServerOp(
+			final String index,
+			final int priority,
+			final String name,
+			final String operationClass,
+			final Map<String, String> properties,
+			final ImmutableSet<ServerOpScope> currentScopes,
+			final ImmutableSet<ServerOpScope> newScopes ) {
+		removeServerOp(
+				index,
+				name,
+				currentScopes);
+		addServerOp(
+				index,
+				priority,
+				name,
+				operationClass,
+				properties,
+				newScopes);
 	}
 }

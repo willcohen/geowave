@@ -245,6 +245,7 @@ public class BigtableEmulator
 		cmdLine.addArgument("bigtable");
 		cmdLine.addArgument("start");
 		cmdLine.addArgument("--quiet");
+		cmdLine.addArgument("--no-legacy");
 		cmdLine.addArgument("--host-port");
 		cmdLine.addArgument(emulatorHostPort);
 

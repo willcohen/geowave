@@ -14,13 +14,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.Coprocessor;
 import org.apache.hadoop.hbase.HColumnDescriptor;
@@ -35,7 +35,6 @@ import org.apache.hadoop.hbase.client.BufferedMutator;
 import org.apache.hadoop.hbase.client.BufferedMutatorParams;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.RegionLocator;
-import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
@@ -47,7 +46,7 @@ import org.apache.hadoop.hbase.security.visibility.Authorizations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Iterators;
+import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
@@ -56,22 +55,15 @@ import mil.nga.giat.geowave.core.index.Mergeable;
 import mil.nga.giat.geowave.core.index.MultiDimensionalCoordinateRangesArray;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.StringUtils;
-import mil.nga.giat.geowave.core.store.CloseableIterator;
-import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
-import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
-import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
-import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.base.BaseDataStoreUtils;
-import mil.nga.giat.geowave.core.store.entities.GeoWaveMetadata;
-import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.filter.DistributableQueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.metadata.AbstractGeoWavePersistence;
+import mil.nga.giat.geowave.core.store.metadata.DataStatisticsStoreImpl;
 import mil.nga.giat.geowave.core.store.operations.Deleter;
 import mil.nga.giat.geowave.core.store.operations.MetadataDeleter;
-import mil.nga.giat.geowave.core.store.operations.MetadataQuery;
 import mil.nga.giat.geowave.core.store.operations.MetadataReader;
 import mil.nga.giat.geowave.core.store.operations.MetadataType;
 import mil.nga.giat.geowave.core.store.operations.MetadataWriter;
@@ -80,29 +72,34 @@ import mil.nga.giat.geowave.core.store.operations.ReaderParams;
 import mil.nga.giat.geowave.core.store.operations.Writer;
 import mil.nga.giat.geowave.core.store.query.aggregate.Aggregation;
 import mil.nga.giat.geowave.core.store.query.aggregate.CommonIndexAggregation;
+import mil.nga.giat.geowave.core.store.server.BasicOptionProvider;
+import mil.nga.giat.geowave.core.store.server.ServerOpConfig.ServerOpScope;
+import mil.nga.giat.geowave.core.store.server.ServerOpHelper;
+import mil.nga.giat.geowave.core.store.server.ServerSideOperations;
 import mil.nga.giat.geowave.core.store.util.DataStoreUtils;
-import mil.nga.giat.geowave.core.store.util.MergingEntryIterator;
-import mil.nga.giat.geowave.datastore.hbase.HBaseRow;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseOptions;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseRequiredOptions;
 import mil.nga.giat.geowave.datastore.hbase.coprocessors.AggregationEndpoint;
-import mil.nga.giat.geowave.datastore.hbase.coprocessors.MergeDataMessage;
+import mil.nga.giat.geowave.datastore.hbase.coprocessors.ServerSideOperationsObserver;
 import mil.nga.giat.geowave.datastore.hbase.coprocessors.protobuf.AggregationProtos;
 import mil.nga.giat.geowave.datastore.hbase.filters.HBaseNumericIndexStrategyFilter;
+import mil.nga.giat.geowave.datastore.hbase.server.MergingServerOp;
+import mil.nga.giat.geowave.datastore.hbase.server.MergingVisibilityServerOp;
 import mil.nga.giat.geowave.datastore.hbase.util.ConnectionPool;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils;
-import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils.ScannerClosableWrapper;
 import mil.nga.giat.geowave.mapreduce.MapReduceDataStoreOperations;
 import mil.nga.giat.geowave.mapreduce.splits.RecordReaderParams;
 
 public class HBaseOperations implements
-		MapReduceDataStoreOperations
+		MapReduceDataStoreOperations,
+		ServerSideOperations
 {
 	private final static Logger LOGGER = LoggerFactory.getLogger(HBaseOperations.class);
-
+	private boolean iteratorsAttached;
 	protected static final String DEFAULT_TABLE_NAMESPACE = "";
 	public static final Object ADMIN_MUTEX = new Object();
 	private static final long SLEEP_INTERVAL = HConstants.DEFAULT_HBASE_SERVER_PAUSE;
+	private static final String SPLIT_STRING = Pattern.quote(".");
 
 	protected final Connection conn;
 
@@ -111,7 +108,6 @@ public class HBaseOperations implements
 	private final HashMap<String, List<String>> coprocessorCache = new HashMap<>();
 	private final Map<TableName, Set<ByteArrayId>> partitionCache = new HashMap<>();
 	private final HashMap<TableName, Set<String>> cfCache = new HashMap<>();
-	private final Map<TableName, Set<RowMergingDataAdapter>> mergingAdapterCache = new HashMap<>();
 
 	private final HBaseOptions options;
 
@@ -121,11 +117,6 @@ public class HBaseOperations implements
 		MetadataType.STATS.name(),
 		MetadataType.INDEX.name()
 	};
-
-	// KAM NOTE: This can probably be removed since
-	// we do need to wait for async updates to finish
-	// (see waitForUpdate method).
-	private static final boolean ASYNC_WAIT = true;
 
 	public static final int MERGING_MAX_VERSIONS = HConstants.ALL_VERSIONS;
 	public static final int DEFAULT_MAX_VERSIONS = 1;
@@ -170,10 +161,6 @@ public class HBaseOperations implements
 				(HBaseOptions) options.getStoreOptions());
 	}
 
-	public Configuration getConfig() {
-		return conn.getConfiguration();
-	}
-
 	public boolean isSchemaUpdateEnabled() {
 		return schemaUpdateEnabled;
 	}
@@ -215,16 +202,31 @@ public class HBaseOperations implements
 			final String[] columnFamilies,
 			final boolean createTable )
 			throws IOException {
+		return createWriter(
+				sTableName,
+				columnFamilies,
+				createTable,
+				null);
+	}
+
+	public HBaseWriter createWriter(
+			final String sTableName,
+			final String[] columnFamilies,
+			final boolean createTable,
+			final Set<ByteArrayId> splits )
+			throws IOException {
 		final TableName tableName = getTableName(sTableName);
 
 		if (createTable) {
 			createTable(
 					columnFamilies,
+					options.isServerSideLibraryEnabled(),
 					tableName);
 		}
 
 		verifyColumnFamilies(
 				columnFamilies,
+				options.isServerSideLibraryEnabled(),
 				tableName,
 				true);
 
@@ -236,6 +238,7 @@ public class HBaseOperations implements
 
 	protected void createTable(
 			final String[] columnFamilies,
+			final boolean enableVersioning,
 			final TableName tableName )
 			throws IOException {
 		synchronized (ADMIN_MUTEX) {
@@ -249,11 +252,9 @@ public class HBaseOperations implements
 					for (final String columnFamily : columnFamilies) {
 						final HColumnDescriptor column = new HColumnDescriptor(
 								columnFamily);
-
-						column.setMaxVersions(getMaxVersions(
-								tableName,
-								columnFamily));
-
+						if (!enableVersioning) {
+							column.setMaxVersions(Integer.MAX_VALUE);
+						}
 						desc.addFamily(column);
 
 						cfSet.add(columnFamily);
@@ -272,41 +273,14 @@ public class HBaseOperations implements
 							throw (e);
 						}
 					}
-
-					if (mergingAdapterCache.containsKey(tableName)) {
-						sendMergingAdaptersToObserver(tableName);
-					}
 				}
 			}
 		}
 	}
 
-	private int getMaxVersions(
-			final TableName tableName,
-			final String columnFamily ) {
-		// We want one version of a row, unless it's a statistic
-		if (tableName.getNameAsString().contains(
-				AbstractGeoWavePersistence.METADATA_TABLE)) {
-			if (columnFamily.equals(MetadataType.STATS.name())) {
-				return HConstants.ALL_VERSIONS;
-			}
-			else {
-				return DEFAULT_MAX_VERSIONS;
-			}
-		}
-
-		if (isMergingAdapter(
-				tableName,
-				new ByteArrayId(
-						columnFamily))) {
-			return MERGING_MAX_VERSIONS;
-		}
-
-		return DEFAULT_MAX_VERSIONS;
-	}
-
 	public boolean verifyColumnFamily(
 			final String columnFamily,
+			final boolean enableVersioning,
 			final String tableNameStr,
 			final boolean addIfNotExist ) {
 		final TableName tableName = getTableName(tableNameStr);
@@ -317,6 +291,7 @@ public class HBaseOperations implements
 		try {
 			return verifyColumnFamilies(
 					columnFamilies,
+					enableVersioning,
 					tableName,
 					addIfNotExist);
 		}
@@ -331,6 +306,7 @@ public class HBaseOperations implements
 
 	protected boolean verifyColumnFamilies(
 			final String[] columnFamilies,
+			final boolean enableVersioning,
 			final TableName tableName,
 			final boolean addIfNotExist )
 			throws IOException {
@@ -380,11 +356,9 @@ public class HBaseOperations implements
 						for (final String newColumnFamily : newColumnFamilies) {
 							final HColumnDescriptor column = new HColumnDescriptor(
 									newColumnFamily);
-
-							column.setMaxVersions(getMaxVersions(
-									tableName,
-									newColumnFamily));
-
+							if (!enableVersioning) {
+								column.setMaxVersions(Integer.MAX_VALUE);
+							}
 							admin.addColumn(
 									tableName,
 									column);
@@ -411,18 +385,16 @@ public class HBaseOperations implements
 			final Admin admin,
 			final TableName tableName,
 			final long sleepTimeMs ) {
-		if (ASYNC_WAIT) {
-			try {
-				while (admin.getAlterStatus(
-						tableName).getFirst() > 0) {
-					Thread.sleep(sleepTimeMs);
-				}
+		try {
+			while (admin.getAlterStatus(
+					tableName).getFirst() > 0) {
+				Thread.sleep(sleepTimeMs);
 			}
-			catch (final Exception e) {
-				LOGGER.error(
-						"Error waiting for table update",
-						e);
-			}
+		}
+		catch (final Exception e) {
+			LOGGER.error(
+					"Error waiting for table update",
+					e);
 		}
 	}
 
@@ -547,11 +519,8 @@ public class HBaseOperations implements
 					if (!td.hasCoprocessor(coprocessorName)) {
 						LOGGER.debug(tableNameStr + " does not have coprocessor. Adding " + coprocessorName);
 
-						// if (!schemaUpdateEnabled &&
-						// !admin.isTableDisabled(tableName)) {
 						LOGGER.debug("- disable table...");
 						admin.disableTable(tableName);
-						// }
 
 						LOGGER.debug("- add coprocessor...");
 
@@ -575,11 +544,9 @@ public class HBaseOperations implements
 								tableName,
 								td);
 
-						// if (!schemaUpdateEnabled) {
 						LOGGER.debug("- enable table...");
 						admin.enableTable(tableName);
 					}
-					// }
 
 					waitForUpdate(
 							admin,
@@ -625,84 +592,24 @@ public class HBaseOperations implements
 			final PrimaryIndex index,
 			final AdapterStore adapterStore,
 			final AdapterIndexMappingStore adapterIndexMappingStore ) {
-		// loop through all adapters and find row merging adapters
-		final Map<ByteArrayId, RowMergingDataAdapter> map = new HashMap<>();
-		final List<String> columnFamilies = new ArrayList<>();
-		try (CloseableIterator<DataAdapter<?>> it = adapterStore.getAdapters()) {
-			while (it.hasNext()) {
-				final DataAdapter a = it.next();
-				if (a instanceof RowMergingDataAdapter) {
-					if (adapterIndexMappingStore.getIndicesForAdapter(
-							a.getAdapterId()).contains(
-							index.getId())) {
-						map.put(
-								a.getAdapterId(),
-								(RowMergingDataAdapter) a);
-						columnFamilies.add(a.getAdapterId().getString());
-					}
-				}
-			}
+		// simply compact the table,
+		// NOTE: this is an asynchronous operations and this does not block and
+		// wait for the table to be fully compacted, which may be a long-running
+		// distributed process, but this is primarily used for efficiency not
+		// correctness so it seems ok to just let it compact in the background
+		// but we can consider blocking and waiting for completion
+		try {
+			conn.getAdmin().compact(
+					getTableName(index.getId().getString()));
 		}
 		catch (final IOException e) {
 			LOGGER.error(
-					"Cannot lookup data adapters",
+					"Cannot compact table '" + index.getId().getString() + "'",
 					e);
 			return false;
 		}
-		if (columnFamilies.isEmpty()) {
-			LOGGER.warn("There is no mergeable data found in datastore");
-			return false;
-		}
-		final String table = index.getId().getString();
-		try (HBaseWriter writer = createWriter(
-				index.getId().getString(),
-				columnFamilies.toArray(new String[] {}),
-				false)) {
-			final Scan scanner = new Scan();
-			for (final String cf : columnFamilies) {
-				scanner.addFamily(new ByteArrayId(
-						cf).getBytes());
-			}
-			final ResultScanner rs = getScannedResults(
-					scanner,
-					table);
 
-			// Get a GeoWaveRow iterator from ResultScanner
-			final Iterator<GeoWaveRow> it = new CloseableIteratorWrapper<>(
-					new ScannerClosableWrapper(
-							rs),
-					Iterators.transform(
-							rs.iterator(),
-							new com.google.common.base.Function<Result, GeoWaveRow>() {
-								@Override
-								public GeoWaveRow apply(
-										final Result result ) {
-									return new HBaseRow(
-											result,
-											index.getIndexStrategy().getPartitionKeyLength());
-								}
-
-							}));
-
-			final MergingEntryIterator iterator = new MergingEntryIterator<>(
-					adapterStore,
-					index,
-					it,
-					null,
-					null,
-					map,
-					null);
-			while (iterator.hasNext()) {
-				iterator.next();
-			}
-			return true;
-		}
-		catch (final IOException e) {
-			LOGGER.error(
-					"Cannot create writer for table '" + index.getId().getString() + "'",
-					e);
-		}
-		return false;
+		return true;
 	}
 
 	public void insurePartition(
@@ -757,6 +664,36 @@ public class HBaseOperations implements
 		return true;
 	}
 
+	public void ensureServerSideOperationsObserverAttached(
+			final ByteArrayId indexId ) {
+		// Use the server-side operations observer
+		verifyCoprocessor(
+				indexId.getString(),
+				ServerSideOperationsObserver.class.getName(),
+				options.getCoprocessorJar());
+	}
+
+	public void createTable(
+			final ByteArrayId indexId,
+			final boolean enableVersioning,
+			final ByteArrayId adapterId ) {
+		final TableName tableName = getTableName(indexId.getString());
+
+		final String[] columnFamilies = new String[1];
+		columnFamilies[0] = adapterId.getString();
+		try {
+			createTable(
+					columnFamilies,
+					enableVersioning,
+					tableName);
+		}
+		catch (final IOException e) {
+			LOGGER.error(
+					"Error creating table: " + indexId.getString(),
+					e);
+		}
+	}
+
 	@Override
 	public Writer createWriter(
 			final ByteArrayId indexId,
@@ -769,11 +706,13 @@ public class HBaseOperations implements
 			if (options.isCreateTable()) {
 				createTable(
 						columnFamilies,
+						options.isServerSideLibraryEnabled(),
 						tableName);
 			}
 
 			verifyColumnFamilies(
 					columnFamilies,
+					options.isServerSideLibraryEnabled(),
 					tableName,
 					true);
 
@@ -804,9 +743,27 @@ public class HBaseOperations implements
 			if (options.isCreateTable()) {
 				createTable(
 						METADATA_CFS,
+						options.isServerSideLibraryEnabled(),
 						tableName);
 			}
+			if (MetadataType.STATS.equals(metadataType) && options.isServerSideLibraryEnabled()) {
+				synchronized (this) {
+					if (!iteratorsAttached) {
+						iteratorsAttached = true;
 
+						final BasicOptionProvider optionProvider = new BasicOptionProvider(
+								new HashMap<>());
+						ServerOpHelper.addServerSideMerging(
+								this,
+								DataStatisticsStoreImpl.STATISTICS_COMBINER_NAME,
+								DataStatisticsStoreImpl.STATS_COMBINER_PRIORITY,
+								MergingServerOp.class.getName(),
+								MergingVisibilityServerOp.class.getName(),
+								optionProvider,
+								AbstractGeoWavePersistence.METADATA_TABLE);
+					}
+				}
+			}
 			return new HBaseMetadataWriter(
 					this,
 					getBufferedMutator(tableName),
@@ -924,149 +881,10 @@ public class HBaseOperations implements
 		return null;
 	}
 
-	/**
-	 * Called by HBaseDataStore's initOnIndexWriterCreate Hold on to request
-	 * until table is created.
-	 * 
-	 * @param indexId
-	 * @param adapterId
-	 * @param rowTransform
-	 */
-	public void stageMergingAdapter(
-			ByteArrayId indexId,
-			RowMergingDataAdapter mergingAdapter ) {
-		TableName tableName = getTableName(indexId.getString());
-
-		Set<RowMergingDataAdapter> adapterList = mergingAdapterCache.get(tableName);
-
-		if (adapterList == null) {
-			adapterList = new HashSet<>();
-			mergingAdapterCache.put(
-					tableName,
-					adapterList);
-		}
-
-		adapterList.add(mergingAdapter);
-
-		// Check for table existence and send the data now if possible.
-		try {
-			if (indexExists(indexId)) {
-				sendMergingAdaptersToObserver(tableName);
-			}
-		}
-		catch (IOException e) {
-			LOGGER.error(
-					"Error checking index existence",
-					e);
-		}
-	}
-
-	/**
-	 * This is called after createTable, so merging adapter info can be
-	 * communicated to the merging observer
-	 * 
-	 * @param tableName
-	 */
-	public void sendMergingAdaptersToObserver(
-			TableName tableName ) {
-		// NO-OP until region observer is working
-	}
-
-	protected void sendMergingAdaptersToObserverWhenWeHaveARegionObserver(
-			TableName tableName ) {
-		if (!options.isServerSideLibraryEnabled()) {
-			return; // No observer to inform
-		}
-
-		Set<RowMergingDataAdapter> adapterList = mergingAdapterCache.get(tableName);
-
-		if (adapterList != null && !adapterList.isEmpty()) {
-			for (RowMergingDataAdapter adapter : adapterList) {
-				MergeDataMessage mergeDataMessage = new MergeDataMessage();
-				mergeDataMessage.setTableName(new ByteArrayId(
-						tableName.getName()));
-				mergeDataMessage.setAdapterId(adapter.getAdapterId());
-				mergeDataMessage.setTransformData(adapter.getTransform());
-
-				// Serialization requires a HashMap, so we just make one and
-				// transfer options
-				HashMap<String, String> transformOptions = new HashMap();
-				Map<String, String> mergeOptions = adapter.getOptions(null);
-
-				for (Entry<String, String> entry : mergeOptions.entrySet()) {
-					transformOptions.put(
-							entry.getKey(),
-							entry.getValue());
-				}
-				mergeDataMessage.setOptions(transformOptions);
-
-				try {
-					Table table = conn.getTable(tableName);
-
-					final Scan scanner = new Scan();
-					scanner.setFilter(mergeDataMessage);
-
-					// Just send it. don't care about response
-					table.getScanner(scanner);
-
-					table.close();
-				}
-				catch (IOException e) {
-					LOGGER.error(
-							"Error sending merge message",
-							e);
-				}
-
-				LOGGER.debug("Merge config sent for " + adapter.getAdapterId().getString());
-			}
-		}
-	}
-
-	public boolean isMergingAdapter(
-			final TableName tableName,
-			final ByteArrayId adapterId ) {
-		return getMergingAdapter(
-				tableName,
-				adapterId) != null;
-	}
-
-	public RowMergingDataAdapter getMergingAdapter(
-			final TableName tableName,
-			final ByteArrayId adapterId ) {
-		Set<RowMergingDataAdapter> adapters = mergingAdapterCache.get(tableName);
-
-		if (adapters != null) {
-			for (RowMergingDataAdapter rowMergingDataAdapter : adapters) {
-				if (rowMergingDataAdapter.getAdapterId().equals(
-						adapterId)) {
-					return rowMergingDataAdapter;
-				}
-			}
-		}
-
-		return null;
-	}
-
-	public static Map<ByteArrayId, RowMergingDataAdapter> getMergingAdapters(
-			final AdapterStore adapterStore,
-			final List<ByteArrayId> adapterIds ) {
-		final Map<ByteArrayId, RowMergingDataAdapter> mergingAdapters = new HashMap<ByteArrayId, RowMergingDataAdapter>();
-		for (final ByteArrayId adapterId : adapterIds) {
-			final DataAdapter adapter = adapterStore.getAdapter(adapterId);
-			if ((adapter instanceof RowMergingDataAdapter)
-					&& (((RowMergingDataAdapter) adapter).getTransform() != null)) {
-				mergingAdapters.put(
-						adapterId,
-						(RowMergingDataAdapter) adapter);
-			}
-		}
-
-		return mergingAdapters;
-	}
 
 	public Mergeable aggregateServerSide(
 			final ReaderParams readerParams ) {
-		final String tableName = StringUtils.stringFromBinary(readerParams.getIndex().getId().getBytes());
+		final String tableName = readerParams.getIndex().getId().getString();
 
 		try {
 			// Use the row count coprocessor
@@ -1268,40 +1086,258 @@ public class HBaseOperations implements
 		return regionIdList;
 	}
 
-	/**
-	 * Whenever a stats query returns multiple versions, we combine them and
-	 * rewrite the data
-	 *
-	 * @param query
-	 * @param mergedStats
-	 */
-	public void updateStats(
-			final MetadataQuery query,
-			final DataStatistics mergedStats ) {
-		try (final MetadataDeleter deleter = createMetadataDeleter(MetadataType.STATS)) {
-			if (deleter != null) {
-				deleter.delete(query);
+	@Override
+	public Map<String, ImmutableSet<ServerOpScope>> listServerOps(
+			final String index ) {
+		final Map<String, ImmutableSet<ServerOpScope>> map = new HashMap<>();
+		try {
+			final TableName tableName = getTableName(index);
+			final String namespace = tableName.getNamespaceAsString();
+			final String qualifier = tableName.getQualifierAsString();
+			final HTableDescriptor desc = conn.getAdmin().getTableDescriptor(
+					tableName);
+			final Map<String, String> config = desc.getConfiguration();
+
+			for (final Entry<String, String> e : config.entrySet()) {
+				if (e.getKey().startsWith(
+						ServerSideOperationsObserver.SERVER_OP_PREFIX)) {
+					final String[] parts = e.getKey().split(
+							SPLIT_STRING);
+					if ((parts.length == 5) && parts[1].equals(namespace) && parts[2].equals(qualifier)
+							&& parts[3].equals(ServerSideOperationsObserver.SERVER_OP_SCOPES_KEY)) {
+						map.put(
+								parts[4],
+								HBaseUtils.stringToScopes(e.getValue()));
+					}
+				}
 			}
 		}
-		catch (final Exception e) {
-			LOGGER.warn(
-					"Unable to close metadata deleter",
+		catch (final IOException e) {
+			LOGGER.error(
+					"Unable to get table descriptor",
 					e);
 		}
+		return map;
+	}
 
-		try (final MetadataWriter writer = createMetadataWriter(MetadataType.STATS)) {
-			if (writer != null) {
-				final GeoWaveMetadata metadata = new GeoWaveMetadata(
-						query.getPrimaryId(),
-						query.getSecondaryId(),
-						null,
-						PersistenceUtils.toBinary(mergedStats));
-				writer.write(metadata);
+	@Override
+	public Map<String, String> getServerOpOptions(
+			final String index,
+			final String serverOpName,
+			final ServerOpScope scope ) {
+		final Map<String, String> map = new HashMap<>();
+		try {
+			final TableName tableName = getTableName(index);
+			final String namespace = tableName.getNamespaceAsString();
+			final String qualifier = tableName.getQualifierAsString();
+			final HTableDescriptor desc = conn.getAdmin().getTableDescriptor(
+					tableName);
+			final Map<String, String> config = desc.getConfiguration();
+
+			for (final Entry<String, String> e : config.entrySet()) {
+				if (e.getKey().startsWith(
+						ServerSideOperationsObserver.SERVER_OP_PREFIX)) {
+					final String[] parts = e.getKey().split(
+							SPLIT_STRING);
+					if ((parts.length == 6) && parts[1].equals(namespace) && parts[2].equals(qualifier)
+							&& parts[3].equals(serverOpName)
+							&& parts[4].equals(ServerSideOperationsObserver.SERVER_OP_OPTIONS_PREFIX)) {
+						map.put(
+								parts[5],
+								e.getValue());
+					}
+				}
 			}
 		}
-		catch (final Exception e) {
+		catch (final IOException e) {
+			LOGGER.error(
+					"Unable to get table descriptor",
+					e);
+		}
+		return map;
+	}
+
+	@Override
+	public void removeServerOp(
+			final String index,
+			final String serverOpName,
+			final ImmutableSet<ServerOpScope> scopes ) {
+		final TableName table = getTableName(index);
+		try {
+			final HTableDescriptor desc = conn.getAdmin().getTableDescriptor(
+					table);
+
+			if (removeConfig(
+					desc,
+					table.getNamespaceAsString(),
+					table.getQualifierAsString(),
+					serverOpName)) {
+				conn.getAdmin().modifyTable(
+						table,
+						desc);
+				waitForUpdate(
+						conn.getAdmin(),
+						table,
+						SLEEP_INTERVAL);
+			}
+		}
+		catch (final IOException e) {
+			LOGGER.error(
+					"Unable to remove server operation",
+					e);
+		}
+	}
+
+	private static boolean removeConfig(
+			final HTableDescriptor desc,
+			final String namespace,
+			final String qualifier,
+			final String serverOpName ) {
+		final Map<String, String> config = desc.getConfiguration();
+		boolean changed = false;
+		for (final Entry<String, String> e : config.entrySet()) {
+			if (e.getKey().startsWith(
+					ServerSideOperationsObserver.SERVER_OP_PREFIX)) {
+				final String[] parts = e.getKey().split(
+						SPLIT_STRING);
+				if ((parts.length >= 5) && parts[1].equals(namespace) && parts[2].equals(qualifier)
+						&& parts[3].equals(serverOpName)) {
+					changed = true;
+					desc.removeConfiguration(e.getKey());
+				}
+			}
+		}
+		return changed;
+	}
+
+	private static void addConfig(
+			final HTableDescriptor desc,
+			final String namespace,
+			final String qualifier,
+			final int priority,
+			final String serverOpName,
+			final String operationClass,
+			final ImmutableSet<ServerOpScope> scopes,
+			final Map<String, String> properties ) {
+		final String basePrefix = new StringBuilder(
+				ServerSideOperationsObserver.SERVER_OP_PREFIX)
+						.append(
+								".")
+						.append(
+								namespace)
+						.append(
+								".")
+						.append(
+								qualifier)
+						.append(
+								".")
+						.append(
+								serverOpName)
+						.append(
+								".")
+						.toString();
+
+		desc.setConfiguration(
+				basePrefix + ServerSideOperationsObserver.SERVER_OP_CLASS_KEY,
+				operationClass);
+		desc.setConfiguration(
+				basePrefix + ServerSideOperationsObserver.SERVER_OP_PRIORITY_KEY,
+				Integer.toString(
+						priority));
+
+		desc.setConfiguration(
+				basePrefix + ServerSideOperationsObserver.SERVER_OP_SCOPES_KEY,
+				scopes.stream().map(
+						ServerOpScope::name).collect(
+								Collectors.joining(
+										",")));
+		final String optionsPrefix = String.format(
+				basePrefix + ServerSideOperationsObserver.SERVER_OP_OPTIONS_PREFIX + ".");
+		for (final Entry<String, String> e : properties.entrySet()) {
+			desc.setConfiguration(
+					optionsPrefix + e.getKey(),
+					e.getValue());
+		}
+	}
+
+	@Override
+	public void addServerOp(
+			final String index,
+			final int priority,
+			final String name,
+			final String operationClass,
+			final Map<String, String> properties,
+			final ImmutableSet<ServerOpScope> configuredScopes ) {
+		final TableName table = getTableName(index);
+		try {
+			final HTableDescriptor desc = conn.getAdmin().getTableDescriptor(
+					table);
+
+			addConfig(
+					desc,
+					table.getNamespaceAsString(),
+					table.getQualifierAsString(),
+					priority,
+					name,
+					operationClass,
+					configuredScopes,
+					properties);
+			conn.getAdmin().modifyTable(
+					table,
+					desc);
+			waitForUpdate(
+					conn.getAdmin(),
+					table,
+					SLEEP_INTERVAL);
+		}
+		catch (final IOException e) {
 			LOGGER.warn(
-					"Unable to close metadata writer",
+					"Cannot add server op",
+					e);
+		}
+	}
+
+	@Override
+	public void updateServerOp(
+			final String index,
+			final int priority,
+			final String name,
+			final String operationClass,
+			final Map<String, String> properties,
+			final ImmutableSet<ServerOpScope> currentScopes,
+			final ImmutableSet<ServerOpScope> newScopes ) {
+		final TableName table = getTableName(index);
+		try {
+			final HTableDescriptor desc = conn.getAdmin().getTableDescriptor(
+					table);
+
+			final String namespace = table.getNamespaceAsString();
+			final String qualifier = table.getQualifierAsString();
+			removeConfig(
+					desc,
+					namespace,
+					qualifier,
+					name);
+			addConfig(
+					desc,
+					namespace,
+					qualifier,
+					priority,
+					name,
+					operationClass,
+					newScopes,
+					properties);
+			conn.getAdmin().modifyTable(
+					table,
+					desc);
+			waitForUpdate(
+					conn.getAdmin(),
+					table,
+					SLEEP_INTERVAL);
+		}
+		catch (final IOException e) {
+			LOGGER.error(
+					"Unable to update server operation",
 					e);
 		}
 	}

@@ -49,8 +49,13 @@ public class HBaseMetadataWriter implements
 	@Override
 	public void write(
 			final GeoWaveMetadata metadata ) {
+		// we use our own timestamp so that we can retain multiple versions
+		// (otherwise timestamps will be applied on the server side in
+		// batches and if the same row exists within a batch we will not
+		// retain multiple versions)
 		final Put put = new Put(
-				metadata.getPrimaryId());
+				metadata.getPrimaryId(),
+				System.currentTimeMillis());
 
 		byte[] secondaryBytes = metadata.getSecondaryId() != null ? metadata.getSecondaryId() : new byte[0];
 

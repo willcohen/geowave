@@ -493,7 +493,6 @@ public class QueryOptions implements
 				}
 			}
 			return adapters.toArray(new DataAdapter[adapters.size()]);
-
 		}
 		final List<DataAdapter> list = new ArrayList<DataAdapter>();
 		if (adapterStore != null && adapterStore.getAdapters() != null) {

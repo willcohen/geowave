@@ -45,22 +45,16 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.opengis.feature.simple.SimpleFeature;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.vividsolutions.jts.geom.Geometry;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import mil.nga.giat.geowave.adapter.raster.util.ZipUtils;
-import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.export.VectorMRExportCommand;
 import mil.nga.giat.geowave.adapter.vector.export.VectorMRExportOptions;
-import mil.nga.giat.geowave.adapter.vector.stats.FeatureBoundingBoxStatistics;
 import mil.nga.giat.geowave.core.cli.parser.ManualOperationParams;
-import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayUtils;
-import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
 import mil.nga.giat.geowave.core.store.cli.remote.options.DataStorePluginOptions;
@@ -224,9 +218,6 @@ public class BasicMapReduceIT extends
 	@Test
 	public void testIngestOsmGpxMultipleIndices()
 			throws Exception {
-		// org.apache.log4j.Logger.getRootLogger().setLevel(
-		// org.apache.log4j.Level.INFO);
-
 		TestUtils.deleteAll(dataStorePluginOptions);
 		// ingest the data set into multiple indices and then try several query
 		// methods, by adapter and by index
@@ -270,28 +261,6 @@ public class BasicMapReduceIT extends
 		// now that we have expected results, run map-reduce export and
 		// re-ingest it
 		testMapReduceExportAndReingest(DimensionalityType.ALL);
-
-		// Try gpxpoint adapter:
-		ByteArrayId gpxPointAdapterId = new ByteArrayId(
-				"gpxpoint");
-
-		for (final WritableDataAdapter<SimpleFeature> adapter : adapters) {
-			if (adapter.getAdapterId().equals(
-					gpxPointAdapterId)) {
-				ExpectedResults expResults = adapterIdToResultsMap.get(adapter.getAdapterId());
-
-				if (expResults.count > 0) {
-					runTestJob(
-							expResults,
-							null,
-							new DataAdapter[] {
-								adapter
-							},
-							null);
-				}
-			}
-		}
-
 		// first try each adapter individually
 		for (final WritableDataAdapter<SimpleFeature> adapter : adapters) {
 			ExpectedResults expResults = adapterIdToResultsMap.get(adapter.getAdapterId());
@@ -322,11 +291,11 @@ public class BasicMapReduceIT extends
 
 		// now try all adapters and the spatial temporal index, the result
 		// should be the full data set
-		// runTestJob(
-		// fullDataSetResults,
-		// null,
-		// adapters,
-		// TestUtils.DEFAULT_SPATIAL_TEMPORAL_INDEX);
+		runTestJob(
+				fullDataSetResults,
+				null,
+				adapters,
+				TestUtils.DEFAULT_SPATIAL_TEMPORAL_INDEX);
 
 		// and finally run with nothing set, should be the full data set
 		runTestJob(

@@ -19,6 +19,7 @@ import mil.nga.giat.geowave.core.index.ByteArrayId;
 
 public class DataAdapterAndIndexCache
 {
+
 	private static Map<String, DataAdapterAndIndexCache> CACHE_MAP = new HashMap<String, DataAdapterAndIndexCache>();
 
 	public static synchronized DataAdapterAndIndexCache getInstance(
@@ -35,6 +36,9 @@ public class DataAdapterAndIndexCache
 
 	private final Set<DataAdapterAndIndex> cache = new HashSet<DataAdapterAndIndex>();
 
+	// TODO: there should techinically be a notion of geowave datastore in here,
+	// as multiple different datastores (perhaps simply different gwNamespaces)
+	// could use the same adapter and index
 	public synchronized boolean add(
 			final ByteArrayId adapterId,
 			final String indexId ) {

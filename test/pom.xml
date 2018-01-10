@@ -226,10 +226,22 @@
 					</arguments>
 				</configuration>
 			</plugin>
-			<!-- <plugin> <groupId>com.google.cloud.bigtable</groupId> <artifactId>bigtable-emulator-maven-plugin</artifactId> 
-				<version>1.0.0</version> <executions> <execution> <goals> <goal>start</goal> 
-				<goal>stop</goal> </goals> <configuration> <propertyName>bigtable.emulator.endpoint</propertyName> 
-				</configuration> </execution> </executions> </plugin> -->
+			<!-- <plugin>
+				<groupId>com.google.cloud.bigtable</groupId>
+				<artifactId>bigtable-emulator-maven-plugin</artifactId>
+				<version>1.0.0</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>start</goal>
+							<goal>stop</goal>
+						</goals>
+						<configuration>
+							<propertyName>bigtable.emulator.endpoint</propertyName>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin> -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>

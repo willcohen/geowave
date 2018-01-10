@@ -8,26 +8,23 @@
  * Version 2.0 which accompanies this distribution and is available at
  * http://www.apache.org/licenses/LICENSE-2.0.txt
  ******************************************************************************/
-package mil.nga.giat.geowave.datastore.accumulo;
+package mil.nga.giat.geowave.core.store.server;
 
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.accumulo.core.client.IteratorSetting.Column;
-import org.apache.accumulo.core.iterators.conf.ColumnSet;
-import org.apache.hadoop.io.Text;
-
 import mil.nga.giat.geowave.core.index.ByteArrayUtils;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
-import mil.nga.giat.geowave.datastore.accumulo.IteratorConfig.OptionProvider;
+import mil.nga.giat.geowave.core.store.server.ServerOpConfig.OptionProvider;
 
 public class RowMergingAdapterOptionProvider implements
 		OptionProvider
 {
 	public static final String ROW_TRANSFORM_KEY = "ROW_TRANSFORM";
 	public static final String ROW_MERGING_ADAPTER_CACHE_ID = "ROW_MERGING_ADAPTER";
+	public static final String ADAPTER_IDS_OPTION = "adapters";
 
 	private final RowMergingDataAdapter<?, ?> adapter;
 
@@ -41,32 +38,27 @@ public class RowMergingAdapterOptionProvider implements
 			final Map<String, String> existingOptions ) {
 		final Map<String, String> newOptions = adapter.getOptions(existingOptions);
 
-		final Column adapterColumn = new Column(
-				new Text(
-						adapter.getAdapterId().getBytes()));
+		String nextAdapterIdsValue = adapter.getAdapterId().getString();
 
-		String nextColumnValue = ColumnSet.encodeColumns(
-				adapterColumn.getFirst(),
-				adapterColumn.getSecond());
-		if ((existingOptions != null) && existingOptions.containsKey(MergingCombiner.COLUMNS_OPTION)) {
-			final String encodedColumns = existingOptions.get(MergingCombiner.COLUMNS_OPTION);
-			final Set<String> nextColumns = new HashSet<String>();
-			for (final String column : nextColumnValue.split(",")) {
-				nextColumns.add(column);
+		if ((existingOptions != null) && existingOptions.containsKey(ADAPTER_IDS_OPTION)) {
+			final String existingAdapterIds = existingOptions.get(ADAPTER_IDS_OPTION);
+			final Set<String> nextAdapters = new HashSet<String>();
+			for (final String id : nextAdapterIdsValue.split(",")) {
+				nextAdapters.add(id);
 			}
 			final StringBuffer str = new StringBuffer(
-					nextColumnValue);
-			for (final String column : encodedColumns.split(",")) {
-				if (!nextColumns.contains(column)) {
+					nextAdapterIdsValue);
+			for (final String id : existingAdapterIds.split(",")) {
+				if (!nextAdapters.contains(id)) {
 					str.append(",");
-					str.append(column);
+					str.append(id);
 				}
 			}
-			nextColumnValue = str.toString();
+			nextAdapterIdsValue = str.toString();
 		}
 		newOptions.put(
-				MergingCombiner.COLUMNS_OPTION,
-				nextColumnValue);
+				ADAPTER_IDS_OPTION,
+				nextAdapterIdsValue);
 		newOptions.put(
 				ROW_TRANSFORM_KEY,
 				ByteArrayUtils.byteArrayToString(PersistenceUtils.toBinary(adapter.getTransform())));

@@ -14,7 +14,6 @@ import mil.nga.giat.geowave.core.index.Persistable;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStoreOptions;
-import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveMetadata;
 import mil.nga.giat.geowave.core.store.operations.DataStoreOperations;
 import mil.nga.giat.geowave.core.store.operations.MetadataDeleter;
@@ -144,6 +143,10 @@ public abstract class AbstractGeoWavePersistence<T extends Persistable>
 			final ByteArrayId primaryId,
 			final ByteArrayId secondaryId,
 			final String... authorizations ) {
+		// TODO if the cache isn't taking authorizations into account, this
+		// seems insufficient for mixed visibility use cases, but on the
+		// otherhand this is an optimization for the majority use case that
+		// doesn't include mixed visibility that we want to take advantage of
 		return deleteObjectFromCache(
 				primaryId,
 				secondaryId) && deleteObjects(
@@ -256,12 +259,6 @@ public abstract class AbstractGeoWavePersistence<T extends Persistable>
 				authorizations))) {
 			if (!it.hasNext()) {
 				if (warnIfNotExists) {
-					if (getCombinedId(
-							primaryId,
-							secondaryId).getString().equals(
-							"gpxpoint")) {
-						System.err.println("crap");
-					}
 					LOGGER.warn("Object '" + getCombinedId(
 							primaryId,
 							secondaryId).getString() + "' not found");
@@ -389,7 +386,6 @@ public abstract class AbstractGeoWavePersistence<T extends Persistable>
 							authorizations));
 				}
 			}
-
 			return retVal;
 		}
 		catch (final Exception e) {

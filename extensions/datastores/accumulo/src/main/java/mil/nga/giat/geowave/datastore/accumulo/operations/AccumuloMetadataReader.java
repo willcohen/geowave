@@ -42,9 +42,9 @@ public class AccumuloMetadataReader implements
 	private final MetadataType metadataType;
 
 	public AccumuloMetadataReader(
-			AccumuloOperations operations,
-			DataStoreOptions options,
-			MetadataType metadataType ) {
+			final AccumuloOperations operations,
+			final DataStoreOptions options,
+			final MetadataType metadataType ) {
 		this.operations = operations;
 		this.options = options;
 		this.metadataType = metadataType;
@@ -54,16 +54,9 @@ public class AccumuloMetadataReader implements
 	public CloseableIterator<GeoWaveMetadata> query(
 			final MetadataQuery query ) {
 		try {
-			BatchScanner scanner = operations.createBatchScanner(
+			final BatchScanner scanner = operations.createBatchScanner(
 					AbstractGeoWavePersistence.METADATA_TABLE,
 					query.getAuthorizations());
-
-			final IteratorSetting[] settings = getScanSettings();
-			if ((settings != null) && (settings.length > 0)) {
-				for (final IteratorSetting setting : settings) {
-					scanner.addScanIterator(setting);
-				}
-			}
 			final String columnFamily = metadataType.name();
 			final byte[] columnQualifier = query.getSecondaryId();
 			if (columnFamily != null) {
@@ -93,19 +86,19 @@ public class AccumuloMetadataReader implements
 			// For stats w/ no server-side support, need to merge here
 			if (metadataType == MetadataType.STATS && !options.isServerSideLibraryEnabled()) {
 
-				HashMap<Text, Key> keyMap = new HashMap();
-				HashMap<Text, DataStatistics> mergedDataMap = new HashMap();
-				Iterator<Entry<Key, Value>> it = scanner.iterator();
+				final HashMap<Text, Key> keyMap = new HashMap();
+				final HashMap<Text, DataStatistics> mergedDataMap = new HashMap();
+				final Iterator<Entry<Key, Value>> it = scanner.iterator();
 
 				while (it.hasNext()) {
-					Entry<Key, Value> row = it.next();
+					final Entry<Key, Value> row = it.next();
 
-					DataStatistics stats = PersistenceUtils.fromBinary(
+					final DataStatistics stats = PersistenceUtils.fromBinary(
 							row.getValue().get(),
 							DataStatistics.class);
 
 					if (keyMap.containsKey(row.getKey().getRow())) {
-						DataStatistics mergedStats = mergedDataMap.get(row.getKey().getRow());
+						final DataStatistics mergedStats = mergedDataMap.get(row.getKey().getRow());
 						mergedStats.merge(stats);
 					}
 					else {
@@ -118,11 +111,11 @@ public class AccumuloMetadataReader implements
 					}
 				}
 
-				List<GeoWaveMetadata> metadataList = new ArrayList();
-				for (Entry<Text, Key> entry : keyMap.entrySet()) {
-					Text rowId = entry.getKey();
-					Key key = keyMap.get(rowId);
-					DataStatistics mergedStats = mergedDataMap.get(rowId);
+				final List<GeoWaveMetadata> metadataList = new ArrayList();
+				for (final Entry<Text, Key> entry : keyMap.entrySet()) {
+					final Text rowId = entry.getKey();
+					final Key key = keyMap.get(rowId);
+					final DataStatistics mergedStats = mergedDataMap.get(rowId);
 
 					metadataList.add(new GeoWaveMetadata(
 							key.getRow().getBytes(),
@@ -165,19 +158,4 @@ public class AccumuloMetadataReader implements
 				Iterators.emptyIterator());
 	}
 
-	private IteratorSetting[] getScanSettings() {
-		if (MetadataType.STATS.equals(metadataType) && options.isServerSideLibraryEnabled()) {
-			return getStatsScanSettings();
-		}
-		return null;
-	}
-
-	private static IteratorSetting[] getStatsScanSettings() {
-		final IteratorSetting statsMultiVisibilityCombiner = new IteratorSetting(
-				STATS_MULTI_VISIBILITY_COMBINER_PRIORITY,
-				MergingVisibilityCombiner.class);
-		return new IteratorSetting[] {
-			statsMultiVisibilityCombiner
-		};
-	}
 }

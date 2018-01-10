@@ -58,9 +58,6 @@ import mil.nga.giat.geowave.test.store.DataStatisticsStoreIT;
 	PolygonDataIdQueryIT.class,
 	ConfigCacheIT.class,
 	DataStatisticsStoreIT.class,
-// SecondaryIndexIT.class
-// GeoWaveKMeansIT.class,
-// GeoWaveKMeansIT.class,
 })
 public class GeoWaveITSuite
 {

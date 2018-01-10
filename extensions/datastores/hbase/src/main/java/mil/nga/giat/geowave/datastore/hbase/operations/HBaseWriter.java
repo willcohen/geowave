@@ -65,7 +65,7 @@ public class HBaseWriter implements
 	@Override
 	public void write(
 			final GeoWaveRow[] rows ) {
-		for (GeoWaveRow row : rows) {
+		for (final GeoWaveRow row : rows) {
 			write(row);
 		}
 	}
@@ -85,6 +85,7 @@ public class HBaseWriter implements
 
 		operations.verifyColumnFamily(
 				columnFamily,
+				operations.isServerSideLibraryEnabled(),
 				tableName,
 				true);
 
@@ -110,9 +111,13 @@ public class HBaseWriter implements
 		final RowMutations mutation = new RowMutations(
 				rowBytes);
 		for (final GeoWaveValue value : row.getFieldValues()) {
+			// we use our own timestamp so that we can retain multiple versions
+			// (otherwise timestamps will be applied on the server side in
+			// batches and if the same row exists within a batch we will not
+			// retain multiple versions)
 			final Put put = new Put(
 					rowBytes,
-					System.currentTimeMillis());
+					System.nanoTime());
 
 			put.addColumn(
 					row.getAdapterId(),
@@ -127,7 +132,7 @@ public class HBaseWriter implements
 			try {
 				mutation.add(put);
 			}
-			catch (IOException e) {
+			catch (final IOException e) {
 				LOGGER.error("Error creating HBase row mutation: " + e.getMessage());
 			}
 		}

@@ -116,15 +116,18 @@ public class GeoWaveITRunner extends
 	{
 		private final Map<String, GeoWaveStoreType> fieldNameStoreTypePair;
 		private final String nameSuffix;
+		private final String[] profileOptions;
 
 		private TestClassRunnerForStoreTypes(
 				final Class<?> type,
-				final Map<String, GeoWaveStoreType> fieldNameStoreTypePair )
+				final Map<String, GeoWaveStoreType> fieldNameStoreTypePair,
+				final String[] profileOptions)
 				throws InitializationError {
 			super(
 					type);
 
 			this.fieldNameStoreTypePair = fieldNameStoreTypePair;
+			this.profileOptions = profileOptions;
 
 			final StringBuilder nameBldr = new StringBuilder();
 			for (final Entry<String, GeoWaveStoreType> e : fieldNameStoreTypePair.entrySet()) {
@@ -189,10 +192,8 @@ public class GeoWaveITRunner extends
 				}
 			}
 			
-			String[][] profileOptions = getProfileOptions();
+			final Object testClassInstance = getTestClass().getJavaClass().newInstance();			
 			
-			// TODO: iterate through profileOptions and duplicate the field list for each set
-			final Object testClassInstance = getTestClass().getJavaClass().newInstance();
 			for (final Pair<Field, GeoWaveTestStore> field : fieldsAndStorePairs) {
 				final GeoWaveStoreType type = fieldNameStoreTypePair.get(field.getLeft().getName());
 				field.getLeft().setAccessible(
@@ -202,30 +203,12 @@ public class GeoWaveITRunner extends
 						testClassInstance,
 						type.getTestEnvironment().getDataStoreOptions(
 								store,
-								null)); // TODO: this will be the profileOption list for the current iteration
+								profileOptions));
 			}
+			
 			return testClassInstance;
 		}
 		
-		private String[][] getProfileOptions() {
-			String optionsStr = System.getenv(DATASTORE_OPTIONS_ENVIRONMENT_VARIABLE_NAME);
-			if (!TestUtils.isSet(optionsStr)) {
-				optionsStr = System.getProperty(DATASTORE_OPTIONS_PROPERTY_NAME);
-			}
-
-			String[][] profileOptions = null;
-			if (TestUtils.isSet(optionsStr)) {
-				String[] optionSets = optionsStr.split("!");
-				profileOptions = new String[optionSets.length][];
-				
-				for (int i = 0; i < optionSets.length; i++) {
-					profileOptions[i] = optionSets[i].split(",");
-				}
-			}			
-
-			return profileOptions;
-		}
-
 		@Override
 		protected String getName() {
 			return super.getName() + nameSuffix;
@@ -356,15 +339,46 @@ public class GeoWaveITRunner extends
 				}
 			}
 		}
+		
+		// Get the set of profile options from the profile, if any
+		String[][] profileOptionSets = getProfileOptionSets();
 
-		// Create a test runner for each store type / config
-		for (final GeoWaveStoreRunnerConfig config : configs) {
-			final TestClassRunnerForStoreTypes runner = new TestClassRunnerForStoreTypes(
-					getTestClass().getJavaClass(),
-					config.fieldNameStoreTypePair);
-			runners.add(runner);
+		// Iterate through option sets to create runners
+		for (String[] profileOptions : profileOptionSets) {
+			// Create a test runner for each store type / config
+			for (final GeoWaveStoreRunnerConfig config : configs) {
+				final TestClassRunnerForStoreTypes runner = new TestClassRunnerForStoreTypes(
+						getTestClass().getJavaClass(),
+						config.fieldNameStoreTypePair,
+						profileOptions);
+				runners.add(runner);
+			}
 		}
 	}
+	
+	private String[][] getProfileOptionSets() {
+		String optionsStr = System.getenv(DATASTORE_OPTIONS_ENVIRONMENT_VARIABLE_NAME);
+		if (!TestUtils.isSet(optionsStr)) {
+			optionsStr = System.getProperty(DATASTORE_OPTIONS_PROPERTY_NAME);
+		}
+
+		String[][] profileOptions = null;
+		if (TestUtils.isSet(optionsStr)) {
+			String[] optionSets = optionsStr.split("!");
+			profileOptions = new String[optionSets.length][];
+			
+			for (int i = 0; i < optionSets.length; i++) {
+				profileOptions[i] = optionSets[i].split(",");
+			}
+		}
+		
+		if (profileOptions == null) {
+			profileOptions = new String[1][];
+		}
+
+		return profileOptions;
+	}
+
 
 	private boolean containsAnnotationForType(
 			final GeoWaveStoreType storeType ) {

@@ -45,6 +45,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.opengis.feature.simple.SimpleFeature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vividsolutions.jts.geom.Geometry;
 
@@ -85,6 +87,9 @@ import mil.nga.giat.geowave.test.basic.AbstractGeoWaveIT;
 public class BasicMapReduceIT extends
 		AbstractGeoWaveIT
 {
+	private final static Logger LOGGER = LoggerFactory.getLogger(BasicMapReduceIT.class);
+	private static final String TEST_EXPORT_DIRECTORY = "basicMapReduceIT-export";
+
 	protected static final String TEST_DATA_ZIP_RESOURCE_PATH = TestUtils.TEST_RESOURCE_PACKAGE
 			+ "mapreduce-testdata.zip";
 	protected static final String TEST_CASE_GENERAL_GPX_BASE = TestUtils.TEST_CASE_BASE + "general_gpx_test_case/";
@@ -124,9 +129,6 @@ public class BasicMapReduceIT extends
 		LOGGER.warn("*                                       *");
 		LOGGER.warn("-----------------------------------------");
 	}
-
-	private final static Logger LOGGER = LoggerFactory.getLogger(BasicMapReduceIT.class);
-	private static final String TEST_EXPORT_DIRECTORY = "basicMapReduceIT-export";
 
 	public static enum ResultCounterType {
 		EXPECTED,

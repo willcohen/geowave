@@ -82,18 +82,18 @@ public class HBaseStoreTestEnvironment extends
 		HBaseRequiredOptions hbaseRequiredOptions = (HBaseRequiredOptions) options;
 		hbaseRequiredOptions.setZookeeper(zookeeper);
 
-		String serverEnabledProp = System.getProperty(GeoWaveITRunner.SERVER_ENABLED_PROPERTY_NAME);
-		if (TestUtils.isSet(serverEnabledProp)) {
-			Boolean enabled = Boolean.parseBoolean(serverEnabledProp);
-			((HBaseOptions) hbaseRequiredOptions.getStoreOptions()).setServerSideLibraryEnabled(enabled);
-
-			LOGGER.warn("HBase server-side libraries enabled: " + enabled);
-		}
-		else {
-			LOGGER.warn("HBase server-side libraries enabled: "
-					+ ((HBaseOptions) hbaseRequiredOptions.getStoreOptions()).isServerSideLibraryEnabled()
-					+ " (DEFAULT)");
-		}
+//		String serverEnabledProp = System.getProperty(GeoWaveITRunner.SERVER_ENABLED_PROPERTY_NAME);
+//		if (TestUtils.isSet(serverEnabledProp)) {
+//			Boolean enabled = Boolean.parseBoolean(serverEnabledProp);
+//			((HBaseOptions) hbaseRequiredOptions.getStoreOptions()).setServerSideLibraryEnabled(enabled);
+//
+//			LOGGER.warn("HBase server-side libraries enabled: " + enabled);
+//		}
+//		else {
+//			LOGGER.warn("HBase server-side libraries enabled: "
+//					+ ((HBaseOptions) hbaseRequiredOptions.getStoreOptions()).isServerSideLibraryEnabled()
+//					+ " (DEFAULT)");
+//		}
 	}
 
 	@Override

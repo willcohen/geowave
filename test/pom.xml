@@ -260,7 +260,7 @@
 								<username>${username}</username>
 								<password>${password}</password>
 								<testStoreType>${testStoreType}</testStoreType>
-								<testServerEnabled>${testServerEnabled}</testServerEnabled>
+								<testStoreOptions>${testStoreOptions}</testStoreOptions>
 								<geoserver.version>${geoserver.version}</geoserver.version>
 								<log4j.configuration>file:${project.build.testOutputDirectory}/log4j-test.properties</log4j.configuration>
 								<java.util.logging.config.file>${project.build.testOutputDirectory}/jul-test.properties</java.util.logging.config.file>
@@ -393,14 +393,6 @@
 			</properties>
 		</profile>
 		<profile>
-			<id>accumulo-it-client</id>
-			<properties>
-				<skipITs>false</skipITs>
-				<testStoreType>ACCUMULO</testStoreType>
-				<testServerEnabled>false</testServerEnabled>
-			</properties>
-		</profile>
-		<profile>
 			<id>hbase-it</id>
 			<properties>
 				<skipITs>false</skipITs>
@@ -409,11 +401,11 @@
 			</properties>
 		</profile>
 		<profile>
-			<id>hbase-it-client</id>
+			<id>hbase-it-options</id>
 			<properties>
 				<skipITs>false</skipITs>
 				<testStoreType>HBASE</testStoreType>
-				<testServerEnabled>false</testServerEnabled>
+				<testStoreOptions>enableServerSideLibrary=true|enableServerSideLibrary=false</testStoreOptions>
 			</properties>
 		</profile>
 		<profile>

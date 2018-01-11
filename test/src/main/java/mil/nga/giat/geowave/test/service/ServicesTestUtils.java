@@ -49,7 +49,8 @@ public class ServicesTestUtils
 									type
 								},
 								new String[] {},
-								GeoWaveTestStore.class));
+								GeoWaveTestStore.class),
+						new String[] {});
 				storeOptions.save(
 						storeProps,
 						DataStorePluginOptions.getStoreNamespace(type.name()));

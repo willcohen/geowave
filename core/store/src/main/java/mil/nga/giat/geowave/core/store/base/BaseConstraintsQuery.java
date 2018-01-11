@@ -167,8 +167,8 @@ public class BaseConstraintsQuery extends
 			final double[] maxResolutionSubsamplingPerDimension,
 			final Integer limit ) {
 		if (isAggregation()) {
-			if ((options == null) || !options.isServerSideLibraryEnabled()
-					|| adapterStore instanceof MemoryAdapterStore) {
+			if ((options == null) || !options.isServerSideLibraryEnabled()) {
+//					|| adapterStore instanceof MemoryAdapterStore) {
 				// Aggregate client-side
 				final CloseableIterator<Object> it = super.query(
 						datastoreOperations,

@@ -243,17 +243,21 @@ public class AccumuloStoreTestEnvironment extends
 		accumuloOpts.setInstance(accumuloInstance);
 		accumuloOpts.setZookeeper(zookeeper);
 
-		String serverEnabledProp = System.getProperty(GeoWaveITRunner.SERVER_ENABLED_PROPERTY_NAME);
-		if (TestUtils.isSet(serverEnabledProp)) {
-			Boolean enabled = Boolean.parseBoolean(serverEnabledProp);
-			((AccumuloOptions) accumuloOpts.getStoreOptions()).setServerSideLibraryEnabled(enabled);
-
-			LOGGER.warn("Accumulo server-side libraries enabled: " + enabled);
-		}
-		else {
-			LOGGER.warn("Accumulo server-side libraries enabled: "
-					+ ((AccumuloOptions) accumuloOpts.getStoreOptions()).isServerSideLibraryEnabled() + " (DEFAULT)");
-		}
+		// String serverEnabledProp =
+		// System.getProperty(GeoWaveITRunner.SERVER_ENABLED_PROPERTY_NAME);
+		// if (TestUtils.isSet(serverEnabledProp)) {
+		// Boolean enabled = Boolean.parseBoolean(serverEnabledProp);
+		// ((AccumuloOptions)
+		// accumuloOpts.getStoreOptions()).setServerSideLibraryEnabled(enabled);
+		//
+		// LOGGER.warn("Accumulo server-side libraries enabled: " + enabled);
+		// }
+		// else {
+		// LOGGER.warn("Accumulo server-side libraries enabled: "
+		// + ((AccumuloOptions)
+		// accumuloOpts.getStoreOptions()).isServerSideLibraryEnabled() +
+		// " (DEFAULT)");
+		// }
 
 	}
 

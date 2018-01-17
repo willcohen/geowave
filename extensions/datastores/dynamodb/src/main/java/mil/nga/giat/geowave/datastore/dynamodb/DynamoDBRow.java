@@ -6,15 +6,23 @@ import java.util.Map;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.google.common.base.Function;
 
+import mil.nga.giat.geowave.core.index.StringUtils;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveKey;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveKeyImpl;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveValue;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveValueImpl;
 
-public class DynamoDBRow extends
-		GeoWaveKeyImpl
+public class DynamoDBRow implements
+		GeoWaveRow
 {
 	public static final String GW_PARTITION_ID_KEY = "P";
 	public static final String GW_RANGE_KEY = "R";
 	public static final String GW_FIELD_MASK_KEY = "F";
 	public static final String GW_VALUE_KEY = "V";
+
+	private final GeoWaveKey key;
+	private final GeoWaveValue[] fieldValues;
 
 	private final Map<String, AttributeValue> objMap;
 	private String partitionId;
@@ -23,19 +31,27 @@ public class DynamoDBRow extends
 			final String partitionId,
 			final byte[] dataId,
 			final byte[] adapterId,
-			final byte[] index,
+			final byte[] sortKey,
 			final byte[] fieldMask,
 			final byte[] value,
 			final int numberOfDuplicates ) {
-		super(
-				dataId,
-				adapterId,
-				index,
-				fieldMask,
-				value,
-				numberOfDuplicates);
 		this.partitionId = partitionId;
 		this.objMap = null; // not needed for ingest
+		byte[] partitionKey = StringUtils.stringToBinary(
+				this.partitionId);
+
+		this.key = new GeoWaveKeyImpl(
+				dataId,
+				adapterId,
+				partitionKey,
+				sortKey,
+				numberOfDuplicates);
+
+		this.fieldValues = new GeoWaveValueImpl[1];
+		this.fieldValues[0] = new GeoWaveValueImpl(
+				fieldMask,
+				null,
+				value);
 	}
 
 	public DynamoDBRow(
@@ -57,43 +73,44 @@ public class DynamoDBRow extends
 				rowId,
 				offset,
 				length - 12);
-		final byte[] index = new byte[length - 12 - adapterIdLength - dataIdLength];
+		final byte[] sortKey = new byte[length - 12 - adapterIdLength - dataIdLength];
 		final byte[] adapterId = new byte[adapterIdLength];
 		final byte[] dataId = new byte[dataIdLength];
 		// get adapterId first
-		buf.get(adapterId);
-		buf.get(index);
-		buf.get(dataId);
-
-		this.dataId = dataId;
-		this.adapterId = adapterId;
-		this.index = index;
-		this.numberOfDuplicates = numberOfDuplicates;
+		buf.get(
+				adapterId);
+		buf.get(
+				sortKey);
+		buf.get(
+				dataId);
 
 		this.objMap = objMap;
 
 		this.partitionId = objMap.get(
 				GW_PARTITION_ID_KEY).getN();
 
-		this.fieldMask = objMap.get(
+		byte[] partitionKey = StringUtils.stringToBinary(
+				this.partitionId);
+
+		this.key = new GeoWaveKeyImpl(
+				dataId,
+				adapterId,
+				partitionKey,
+				sortKey,
+				numberOfDuplicates);
+
+		byte[] fieldMask = objMap.get(
 				GW_FIELD_MASK_KEY).getB().array();
 
-		this.value = objMap.get(
+		byte[] value = objMap.get(
 				GW_VALUE_KEY).getB().array();
-	}
 
-	@Override
-	public byte[] getRowId() {
-		final ByteBuffer buf = ByteBuffer.allocate(12 + dataId.length + adapterId.length + index.length);
-		buf.put(adapterId);
-		buf.put(index);
-		buf.put(dataId);
-		buf.putInt(adapterId.length);
-		buf.putInt(dataId.length);
-		buf.putInt(numberOfDuplicates);
-		buf.rewind();
+		this.fieldValues = new GeoWaveValueImpl[1];
+		this.fieldValues[0] = new GeoWaveValueImpl(
+				fieldMask,
+				null,
+				value);
 
-		return buf.array();
 	}
 
 	public Map<String, AttributeValue> getAttributeMapping() {
@@ -114,5 +131,35 @@ public class DynamoDBRow extends
 					input);
 		}
 
+	}
+
+	@Override
+	public byte[] getDataId() {
+		return key.getDataId();
+	}
+
+	@Override
+	public byte[] getAdapterId() {
+		return key.getAdapterId();
+	}
+
+	@Override
+	public byte[] getSortKey() {
+		return key.getSortKey();
+	}
+
+	@Override
+	public byte[] getPartitionKey() {
+		return key.getPartitionKey();
+	}
+
+	@Override
+	public int getNumberOfDuplicates() {
+		return key.getNumberOfDuplicates();
+	}
+
+	@Override
+	public GeoWaveValue[] getFieldValues() {
+		return fieldValues;
 	}
 }

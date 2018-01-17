@@ -11,7 +11,7 @@ import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.query.DistributableQuery;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
-import mil.nga.giat.geowave.datastore.dynamodb.DynamoDBOperations;
+import mil.nga.giat.geowave.datastore.dynamodb.operations.DynamoDBOperations;
 import mil.nga.giat.geowave.datastore.dynamodb.query.InputFormatDynamoDBRangeQuery;
 import mil.nga.giat.geowave.datastore.dynamodb.split.DynamoDBSplitsProvider;
 import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputKey;

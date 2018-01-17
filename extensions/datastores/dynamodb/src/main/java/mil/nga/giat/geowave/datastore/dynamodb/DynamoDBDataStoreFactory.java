@@ -6,6 +6,7 @@ import mil.nga.giat.geowave.datastore.dynamodb.metadata.DynamoDBAdapterIndexMapp
 import mil.nga.giat.geowave.datastore.dynamodb.metadata.DynamoDBAdapterStore;
 import mil.nga.giat.geowave.datastore.dynamodb.metadata.DynamoDBDataStatisticsStore;
 import mil.nga.giat.geowave.datastore.dynamodb.metadata.DynamoDBIndexStore;
+import mil.nga.giat.geowave.datastore.dynamodb.operations.DynamoDBOperations;
 
 public class DynamoDBDataStoreFactory extends
 		AbstractDynamoDBStoreFactory<DataStore>

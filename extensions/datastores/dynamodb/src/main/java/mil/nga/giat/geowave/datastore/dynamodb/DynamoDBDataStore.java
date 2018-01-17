@@ -1,17 +1,14 @@
 package mil.nga.giat.geowave.datastore.dynamodb;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.mapreduce.InputSplit;
-import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.log4j.Logger;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
@@ -22,26 +19,21 @@ import com.google.common.collect.Lists;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
-import mil.nga.giat.geowave.core.store.DataStoreOptions;
-import mil.nga.giat.geowave.core.store.IndexWriter;
+import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DuplicateEntryCount;
-import mil.nga.giat.geowave.core.store.base.BaseDataStore;
 import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo;
-import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo.FieldInfo;
-import mil.nga.giat.geowave.core.store.callback.IngestCallback;
+import mil.nga.giat.geowave.core.store.base.IntermediaryWriteEntryInfo.FieldInfo;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
 import mil.nga.giat.geowave.core.store.data.visibility.DifferingFieldVisibilityEntryCount;
-import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveKeyImpl;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.filter.DedupeFilter;
 import mil.nga.giat.geowave.core.store.index.IndexMetaDataSet;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
-import mil.nga.giat.geowave.core.store.operations.DataStoreOperations;
-import mil.nga.giat.geowave.core.store.operations.Deleter;
 import mil.nga.giat.geowave.core.store.operations.Writer;
 import mil.nga.giat.geowave.core.store.query.DistributableQuery;
 import mil.nga.giat.geowave.core.store.query.Query;
@@ -49,26 +41,25 @@ import mil.nga.giat.geowave.core.store.query.QueryOptions;
 import mil.nga.giat.geowave.core.store.util.DataStoreUtils;
 import mil.nga.giat.geowave.core.store.util.NativeEntryIteratorWrapper;
 import mil.nga.giat.geowave.datastore.dynamodb.index.secondary.DynamoDBSecondaryIndexDataStore;
-import mil.nga.giat.geowave.datastore.dynamodb.mapreduce.GeoWaveDynamoDBRecordReader;
 import mil.nga.giat.geowave.datastore.dynamodb.metadata.DynamoDBAdapterIndexMappingStore;
 import mil.nga.giat.geowave.datastore.dynamodb.metadata.DynamoDBAdapterStore;
 import mil.nga.giat.geowave.datastore.dynamodb.metadata.DynamoDBDataStatisticsStore;
 import mil.nga.giat.geowave.datastore.dynamodb.metadata.DynamoDBIndexStore;
+import mil.nga.giat.geowave.datastore.dynamodb.operations.DynamoDBOperations;
 import mil.nga.giat.geowave.datastore.dynamodb.query.DynamoDBConstraintsQuery;
 import mil.nga.giat.geowave.datastore.dynamodb.query.DynamoDBRowIdsQuery;
 import mil.nga.giat.geowave.datastore.dynamodb.query.DynamoDBRowPrefixQuery;
 import mil.nga.giat.geowave.datastore.dynamodb.split.DynamoDBSplitsProvider;
-import mil.nga.giat.geowave.mapreduce.MapReduceDataStore;
-import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputKey;
+import mil.nga.giat.geowave.mapreduce.BaseMapReduceDataStore;
 
 public class DynamoDBDataStore extends
-		BaseDataStore implements
-		MapReduceDataStore
+		BaseMapReduceDataStore
 {
 	public final static String TYPE = "dynamodb";
 	public static final Integer PARTITIONS = 1;
 
-	private final static Logger LOGGER = Logger.getLogger(DynamoDBDataStore.class);
+	private final static Logger LOGGER = Logger.getLogger(
+			DynamoDBDataStore.class);
 	private final DynamoDBOperations dynamodbOperations;
 	private static int counter = 0;
 
@@ -93,30 +84,12 @@ public class DynamoDBDataStore extends
 	}
 
 	@Override
-	protected IndexWriter createIndexWriter(
-			final DataAdapter adapter,
-			final PrimaryIndex index,
-			final DataStoreOperations baseOperations,
-			final DataStoreOptions baseOptions,
-			final IngestCallback callback,
-			final Closeable closable ) {
-		return new DynamoDBIndexWriter<>(
-				this,
-				adapter,
-				index,
-				dynamodbOperations,
-				callback,
-				closable);
-	}
-
-	@Override
 	protected void initOnIndexWriterCreate(
 			final DataAdapter adapter,
 			final PrimaryIndex index ) {
 		// TODO
 	}
 
-	@Override
 	protected CloseableIterator<Object> queryConstraints(
 			final List<ByteArrayId> adapterIdsToQuery,
 			final PrimaryIndex index,
@@ -157,7 +130,6 @@ public class DynamoDBDataStore extends
 				sanitizedQueryOptions.getLimit());
 	}
 
-	@Override
 	protected CloseableIterator<Object> queryRowPrefix(
 			final PrimaryIndex index,
 			final ByteArrayId rowPrefix,
@@ -182,7 +154,6 @@ public class DynamoDBDataStore extends
 				tempAdapterStore);
 	}
 
-	@Override
 	protected CloseableIterator<Object> queryRowIds(
 			final DataAdapter<Object> adapter,
 			final PrimaryIndex index,
@@ -206,7 +177,6 @@ public class DynamoDBDataStore extends
 				sanitizedQueryOptions.getLimit());
 	}
 
-	@Override
 	protected CloseableIterator<Object> getEntryRows(
 			final PrimaryIndex index,
 			final AdapterStore adapterStore,
@@ -226,7 +196,7 @@ public class DynamoDBDataStore extends
 								return input.getBytes();
 							}
 						}).toArray(
-						new byte[][] {}),
+								new byte[][] {}),
 				adapter.getAdapterId().getBytes(),
 				authorizations);
 		return new CloseableIterator.Wrapper<>(
@@ -240,48 +210,7 @@ public class DynamoDBDataStore extends
 						true));
 	}
 
-	@Override
-	protected List<ByteArrayId> getAltIndexRowIds(
-			final String tableName,
-			final List<ByteArrayId> dataIds,
-			final ByteArrayId adapterId,
-			final String... authorizations ) {
-		// TODO
 
-		return Collections.EMPTY_LIST;
-	}
-
-	@Override
-	protected boolean deleteAll(
-			final String tableName,
-			final String columnFamily,
-			final String... additionalAuthorizations ) {
-		return false;
-	}
-
-	@Override
-	protected Deleter createIndexDeleter(
-			final String indexTableName,
-			final boolean isAltIndex,
-			final String... authorizations )
-			throws Exception {
-		return new DynamoDBRowDeleter(
-				dynamodbOperations,
-				indexTableName,
-				authorizations);
-	}
-
-	@Override
-	protected <T> void addAltIndexCallback(
-			final List<IngestCallback<T>> callbacks,
-			final String indexName,
-			final DataAdapter<T> adapter,
-			final ByteArrayId primaryIndexId ) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
 	protected Iterable<GeoWaveRow> getRowsFromIngest(
 			byte[] adapterId,
 			DataStoreEntryInfo ingestInfo,
@@ -316,14 +245,15 @@ public class DynamoDBDataStore extends
 					rowIdIterator.next().getBytes());
 			int numDuplicates = tempRow.getNumberOfDuplicates();
 
-			rows.add(new DynamoDBRow(
-					nextPartitionId(),
-					uniqueDataId,
-					adapterId,
-					insertionIdBytes,
-					fieldMask,
-					value,
-					numDuplicates));
+			rows.add(
+					new DynamoDBRow(
+							nextPartitionId(),
+							uniqueDataId,
+							adapterId,
+							insertionIdBytes,
+							fieldMask,
+							value,
+							numDuplicates));
 		}
 
 		return rows;
@@ -332,11 +262,11 @@ public class DynamoDBDataStore extends
 	private String nextPartitionId() {
 		counter = (counter + 1) % PARTITIONS;
 
-		return Integer.toString(counter);
+		return Integer.toString(
+				counter);
 	}
 
-	@Override
-	public void write(
+	protected void write(
 			Writer writer,
 			Iterable<GeoWaveRow> rows,
 			String unused ) {
@@ -348,60 +278,52 @@ public class DynamoDBDataStore extends
 			String partitionId = ((DynamoDBRow) row).getPartitionId();
 
 			byte[] rowId = row.getRowId();
-			final ByteBuffer rangeKeyBuffer = ByteBuffer.allocate(rowId.length);
-			rangeKeyBuffer.put(rowId);
+			final ByteBuffer rangeKeyBuffer = ByteBuffer.allocate(
+					rowId.length);
+			rangeKeyBuffer.put(
+					rowId);
 			rangeKeyBuffer.rewind();
 
-			final ByteBuffer fieldMaskBuffer = ByteBuffer.allocate(row.getFieldMask().length);
-			fieldMaskBuffer.put(row.getFieldMask());
+			final ByteBuffer fieldMaskBuffer = ByteBuffer.allocate(
+					row.getFieldMask().length);
+			fieldMaskBuffer.put(
+					row.getFieldMask());
 			fieldMaskBuffer.rewind();
 
-			final ByteBuffer valueBuffer = ByteBuffer.allocate(row.getValue().length);
-			valueBuffer.put(row.getValue());
+			final ByteBuffer valueBuffer = ByteBuffer.allocate(
+					row.getValue().length);
+			valueBuffer.put(
+					row.getValue());
 			valueBuffer.rewind();
 
 			map.put(
 					DynamoDBRow.GW_PARTITION_ID_KEY,
-					new AttributeValue().withN(partitionId));
+					new AttributeValue().withN(
+							partitionId));
 
 			map.put(
 					DynamoDBRow.GW_RANGE_KEY,
-					new AttributeValue().withB(rangeKeyBuffer));
+					new AttributeValue().withB(
+							rangeKeyBuffer));
 
 			map.put(
 					DynamoDBRow.GW_FIELD_MASK_KEY,
-					new AttributeValue().withB(fieldMaskBuffer));
+					new AttributeValue().withB(
+							fieldMaskBuffer));
 
 			map.put(
 					DynamoDBRow.GW_VALUE_KEY,
-					new AttributeValue().withB(valueBuffer));
+					new AttributeValue().withB(
+							valueBuffer));
 
-			mutations.add(new WriteRequest(
-					new PutRequest(
-							map)));
+			mutations.add(
+					new WriteRequest(
+							new PutRequest(
+									map)));
 		}
 
-		writer.write(mutations);
-	}
-
-	@Override
-	public RecordReader<GeoWaveInputKey, ?> createRecordReader(
-			DistributableQuery query,
-			QueryOptions queryOptions,
-			AdapterStore adapterStore,
-			DataStatisticsStore statsStore,
-			IndexStore indexStore,
-			boolean isOutputWritable,
-			InputSplit inputSplit )
-			throws IOException,
-			InterruptedException {
-		return new GeoWaveDynamoDBRecordReader(
-				query,
-				queryOptions,
-				isOutputWritable,
-				adapterStore,
-				this,
-				dynamodbOperations);
+		writer.write(
+				mutations);
 	}
 
 	@Override
@@ -409,6 +331,7 @@ public class DynamoDBDataStore extends
 			DistributableQuery query,
 			QueryOptions queryOptions,
 			AdapterStore adapterStore,
+			AdapterIndexMappingStore aimStore,
 			DataStatisticsStore statsStore,
 			IndexStore indexStore,
 			Integer minSplits,

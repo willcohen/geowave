@@ -3,8 +3,8 @@ package mil.nga.giat.geowave.datastore.dynamodb.index.secondary;
 import mil.nga.giat.geowave.core.store.StoreFactoryOptions;
 import mil.nga.giat.geowave.core.store.index.SecondaryIndexDataStore;
 import mil.nga.giat.geowave.datastore.dynamodb.AbstractDynamoDBStoreFactory;
-import mil.nga.giat.geowave.datastore.dynamodb.DynamoDBOperations;
 import mil.nga.giat.geowave.datastore.dynamodb.DynamoDBOptions;
+import mil.nga.giat.geowave.datastore.dynamodb.operations.DynamoDBOperations;
 
 public class DynamoDBSecondaryIndexDataStoreFactory extends
 		AbstractDynamoDBStoreFactory<SecondaryIndexDataStore>

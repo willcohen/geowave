@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import mil.nga.giat.geowave.core.store.GenericStoreFactory;
+import mil.nga.giat.geowave.datastore.dynamodb.operations.DynamoDBOperations;
 
 abstract public class AbstractDynamoDBStoreFactory<T> extends
 		AbstractDynamoDBFactory implements

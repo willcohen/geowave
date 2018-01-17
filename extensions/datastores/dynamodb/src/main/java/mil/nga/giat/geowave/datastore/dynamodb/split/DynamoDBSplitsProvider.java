@@ -21,10 +21,10 @@ import mil.nga.giat.geowave.core.store.adapter.statistics.RowRangeHistogramStati
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.query.DistributableQuery;
 import mil.nga.giat.geowave.core.store.util.DataStoreUtils;
-import mil.nga.giat.geowave.datastore.dynamodb.DynamoDBOperations;
 import mil.nga.giat.geowave.datastore.dynamodb.mapreduce.DynamoDBRangeLocatorPair;
 import mil.nga.giat.geowave.datastore.dynamodb.mapreduce.DynamoDBRowRange;
 import mil.nga.giat.geowave.datastore.dynamodb.mapreduce.GeoWaveDynamoDBInputSplit;
+import mil.nga.giat.geowave.datastore.dynamodb.operations.DynamoDBOperations;
 import mil.nga.giat.geowave.mapreduce.splits.GeoWaveInputSplit;
 import mil.nga.giat.geowave.mapreduce.splits.GeoWaveRowRange;
 import mil.nga.giat.geowave.mapreduce.splits.IntermediateSplitInfo;

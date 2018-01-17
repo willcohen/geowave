@@ -29,9 +29,9 @@ import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.query.FilteredIndexQuery;
 import mil.nga.giat.geowave.core.store.util.MergingEntryIterator;
 import mil.nga.giat.geowave.core.store.util.NativeEntryIteratorWrapper;
-import mil.nga.giat.geowave.datastore.dynamodb.DynamoDBOperations;
 import mil.nga.giat.geowave.datastore.dynamodb.DynamoDBRow;
 import mil.nga.giat.geowave.datastore.dynamodb.DynamoDBRow.GuavaRowTranslationHelper;
+import mil.nga.giat.geowave.datastore.dynamodb.operations.DynamoDBOperations;
 
 public abstract class DynamoDBFilteredIndexQuery extends
 		DynamoDBQuery implements

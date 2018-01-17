@@ -17,8 +17,8 @@ import mil.nga.giat.geowave.core.store.filter.DedupeFilter;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
-import mil.nga.giat.geowave.datastore.dynamodb.DynamoDBOperations;
 import mil.nga.giat.geowave.datastore.dynamodb.DynamoDBRow;
+import mil.nga.giat.geowave.datastore.dynamodb.operations.DynamoDBOperations;
 import mil.nga.giat.geowave.datastore.dynamodb.util.DynamoDBInputFormatIteratorWrapper;
 
 public class InputFormatDynamoDBRangeQuery extends

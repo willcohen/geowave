@@ -1,4 +1,4 @@
-package mil.nga.giat.geowave.datastore.dynamodb;
+package mil.nga.giat.geowave.datastore.dynamodb.operations;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,10 +22,11 @@ import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.operations.Writer;
 
 public class DynamoDBWriter implements
-		Writer<WriteRequest>
+		Writer
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DynamoDBWriter.class);
 	private static final int NUM_ITEMS = 25;
@@ -36,10 +37,10 @@ public class DynamoDBWriter implements
 	private final Map<AmazonWebServiceRequest, Future> futureMap = new Hashtable<>();
 
 	public DynamoDBWriter(
-			final String tableName,
-			final AmazonDynamoDBAsyncClient client ) {
-		this.tableName = tableName;
+			final AmazonDynamoDBAsyncClient client,
+			final String tableName ) {
 		this.client = client;
+		this.tableName = tableName;
 	}
 
 	@Override
@@ -48,7 +49,21 @@ public class DynamoDBWriter implements
 		flush();
 	}
 
+
 	@Override
+	public void write(
+			GeoWaveRow[] rows ) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void write(
+			GeoWaveRow row ) {
+		// TODO Auto-generated method stub
+		
+	}
+
 	public void write(
 			final Iterable<WriteRequest> items ) {
 		for (final WriteRequest item : items) {
@@ -56,7 +71,6 @@ public class DynamoDBWriter implements
 		}
 	}
 
-	@Override
 	public void write(
 			final WriteRequest item ) {
 		synchronized (batchedItems) {
@@ -249,5 +263,4 @@ public class DynamoDBWriter implements
 			}
 		}
 	}
-
 }

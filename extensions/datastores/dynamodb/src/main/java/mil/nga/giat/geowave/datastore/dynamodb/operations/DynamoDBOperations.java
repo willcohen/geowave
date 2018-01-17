@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -14,9 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsyncClient;
 import com.amazonaws.services.dynamodbv2.model.AmazonDynamoDBException;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
-import com.amazonaws.services.dynamodbv2.model.DeleteItemResult;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.model.KeyType;
@@ -30,14 +27,13 @@ import com.amazonaws.services.dynamodbv2.util.TableUtils;
 import com.amazonaws.services.dynamodbv2.util.TableUtils.TableNeverTransitionedToStateException;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Maps;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
-import mil.nga.giat.geowave.core.store.operations.DataStoreOperations;
+import mil.nga.giat.geowave.core.store.metadata.AbstractGeoWavePersistence;
 import mil.nga.giat.geowave.core.store.operations.Deleter;
 import mil.nga.giat.geowave.core.store.operations.MetadataDeleter;
 import mil.nga.giat.geowave.core.store.operations.MetadataReader;
@@ -59,6 +55,12 @@ public class DynamoDBOperations implements
 {
 	private final Logger LOGGER = LoggerFactory.getLogger(
 			DynamoDBOperations.class);
+
+	public static final String METADATA_PRIMARY_ID_KEY = "I";
+	public static final String METADATA_SECONDARY_ID_KEY = "S";
+	public static final String METADATA_TIMESTAMP_KEY = "T";
+	public static final String METADATA_VALUE_KEY = "V";
+
 	private final AmazonDynamoDBAsyncClient client;
 	private final String gwNamespace;
 	private final DynamoDBOptions options;
@@ -246,8 +248,64 @@ public class DynamoDBOperations implements
 	@Override
 	public MetadataWriter createMetadataWriter(
 			MetadataType metadataType ) {
-		// TODO Auto-generated method stub
-		return null;
+		final String tableName = getQualifiedTableName(
+				AbstractGeoWavePersistence.METADATA_TABLE);
+
+		if (options.getBaseOptions().isCreateTable()) {
+			synchronized (DynamoDBOperations.tableExistsCache) {
+				final Boolean tableExists = DynamoDBOperations.tableExistsCache.get(
+						tableName);
+				if ((tableExists == null) || !tableExists) {
+					final boolean tableCreated = TableUtils.createTableIfNotExists(
+							client,
+							new CreateTableRequest()
+									.withTableName(
+											tableName)
+									.withAttributeDefinitions(
+											new AttributeDefinition(
+													METADATA_PRIMARY_ID_KEY,
+													ScalarAttributeType.B))
+									.withKeySchema(
+											new KeySchemaElement(
+													METADATA_PRIMARY_ID_KEY,
+													KeyType.HASH))
+									.withAttributeDefinitions(
+											new AttributeDefinition(
+													METADATA_TIMESTAMP_KEY,
+													ScalarAttributeType.N))
+									.withKeySchema(
+											new KeySchemaElement(
+													METADATA_TIMESTAMP_KEY,
+													KeyType.RANGE))
+									.withProvisionedThroughput(
+											new ProvisionedThroughput(
+													Long.valueOf(
+															5),
+													Long.valueOf(
+															5))));
+					if (tableCreated) {
+						try {
+							TableUtils.waitUntilActive(
+									client,
+									tableName);
+						}
+						catch (TableNeverTransitionedToStateException | InterruptedException e) {
+							LOGGER.error(
+									"Unable to wait for active table '" + tableName + "'",
+									e);
+						}
+					}
+					DynamoDBOperations.tableExistsCache.put(
+							tableName,
+							true);
+				}
+			}
+		}
+
+		return new DynamoDBMetadataWriter(
+				this,
+				client,
+				tableName);
 	}
 
 	@Override

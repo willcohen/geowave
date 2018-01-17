@@ -1,19 +1,29 @@
 package mil.nga.giat.geowave.datastore.dynamodb.operations;
 
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsyncClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.PutRequest;
-import com.amazonaws.services.dynamodbv2.model.WriteRequest;
+import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 
 import mil.nga.giat.geowave.core.store.entities.GeoWaveMetadata;
 import mil.nga.giat.geowave.core.store.operations.MetadataWriter;
-import mil.nga.giat.geowave.datastore.dynamodb.DynamoDBRow;
 
 public class DynamoDBMetadataWriter implements
 		MetadataWriter
 {
+	private final AmazonDynamoDBAsyncClient client;
+	private final String tableName;
+
+	public DynamoDBMetadataWriter(
+			final DynamoDBOperations dynamoDBOperations,
+			final AmazonDynamoDBAsyncClient client,
+			final String tableName ) {
+		this.client = client;
+		this.tableName = tableName;
+	}
 
 	@Override
 	public void close()
@@ -25,31 +35,27 @@ public class DynamoDBMetadataWriter implements
 	@Override
 	public void write(
 			GeoWaveMetadata metadata ) {
-		final Map<String, AttributeValue> map = new HashMap<String, AttributeValue>();
-
+		final Map<String, AttributeValue> map = new HashMap<>();
 		map.put(
-				DynamoDBRow.GW_PARTITION_ID_KEY,
-				new AttributeValue().withN(
-						partitionId));
-
+				DynamoDBOperations.METADATA_PRIMARY_ID_KEY,
+				new AttributeValue().withB(ByteBuffer.wrap(metadata.getPrimaryId())));
+		
+		if (metadata.getSecondaryId() != null) {
+			map.put(
+					DynamoDBOperations.METADATA_SECONDARY_ID_KEY,
+					new AttributeValue().withB(ByteBuffer.wrap(metadata.getSecondaryId())));
+		}
+		
 		map.put(
-				DynamoDBRow.GW_RANGE_KEY,
-				new AttributeValue().withB(
-						rangeKeyBuffer));
-
+				DynamoDBOperations.METADATA_TIMESTAMP_KEY,
+				new AttributeValue().withN(Long.toString(System.currentTimeMillis())));
 		map.put(
-				DynamoDBRow.GW_FIELD_MASK_KEY,
-				new AttributeValue().withB(
-						fieldMaskBuffer));
-
-		map.put(
-				DynamoDBRow.GW_VALUE_KEY,
-				new AttributeValue().withB(
-						valueBuffer));
-
-		WriteRequest writeRequest = new WriteRequest(
-				new PutRequest(
-						map));
+				DynamoDBOperations.METADATA_VALUE_KEY,
+				new AttributeValue().withB(ByteBuffer.wrap(metadata.getValue())));
+		
+		client.putItem(new PutItemRequest(
+				tableName,
+				map));
 
 	}
 

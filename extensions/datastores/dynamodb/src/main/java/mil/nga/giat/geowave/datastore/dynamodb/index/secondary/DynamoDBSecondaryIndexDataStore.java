@@ -1,21 +1,22 @@
 package mil.nga.giat.geowave.datastore.dynamodb.index.secondary;
 
-import java.util.List;
+import java.io.IOException;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
-import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo.FieldInfo;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
+import mil.nga.giat.geowave.core.store.index.BaseSecondaryIndexDataStore;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.index.SecondaryIndex;
-import mil.nga.giat.geowave.core.store.index.SecondaryIndexDataStore;
+import mil.nga.giat.geowave.core.store.operations.Writer;
 import mil.nga.giat.geowave.core.store.query.DistributableQuery;
-import mil.nga.giat.geowave.datastore.dynamodb.DynamoDBOperations;
+import mil.nga.giat.geowave.datastore.dynamodb.operations.DynamoDBOperations;
 
 // TODO implement secondary indexing for DynamoDB
-public class DynamoDBSecondaryIndexDataStore implements
-		SecondaryIndexDataStore
+public class DynamoDBSecondaryIndexDataStore extends
+		BaseSecondaryIndexDataStore
 {
 	private final DynamoDBOperations operations;
 
@@ -26,83 +27,80 @@ public class DynamoDBSecondaryIndexDataStore implements
 
 	@Override
 	public void setDataStore(
-			final DataStore dataStore ) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void storeJoinEntry(
-			final ByteArrayId secondaryIndexId,
-			final ByteArrayId indexedAttributeValue,
-			final ByteArrayId adapterId,
-			final ByteArrayId indexedAttributeFieldId,
-			final ByteArrayId primaryIndexId,
-			final ByteArrayId primaryIndexRowId,
-			final ByteArrayId attributeVisibility ) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void storeEntry(
-			final ByteArrayId secondaryIndexId,
-			final ByteArrayId indexedAttributeValue,
-			final ByteArrayId adapterId,
-			final ByteArrayId indexedAttributeFieldId,
-			final ByteArrayId dataId,
-			final ByteArrayId attributeVisibility,
-			final List<FieldInfo<?>> attributes ) {
+			DataStore dataStore ) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public <T> CloseableIterator<T> query(
-			final SecondaryIndex<T> secondaryIndex,
-			final ByteArrayId indexedAttributeFieldId,
-			final DataAdapter<T> adapter,
-			final PrimaryIndex primaryIndex,
-			final DistributableQuery query,
-			final String... authorizations ) {
+			SecondaryIndex<T> secondaryIndex,
+			ByteArrayId indexedAttributeFieldId,
+			DataAdapter<T> adapter,
+			PrimaryIndex primaryIndex,
+			DistributableQuery query,
+			String... authorizations ) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void deleteJoinEntry(
-			final ByteArrayId secondaryIndexId,
-			final ByteArrayId indexedAttributeValue,
-			final ByteArrayId adapterId,
-			final ByteArrayId indexedAttributeFieldId,
-			final ByteArrayId primaryIndexId,
-			final ByteArrayId primaryIndexRowId ) {
+	protected GeoWaveRow buildJoinMutation(
+			byte[] secondaryIndexRowId,
+			byte[] adapterId,
+			byte[] indexedAttributeFieldId,
+			byte[] primaryIndexId,
+			byte[] primaryIndexPartitionKey,
+			byte[] primaryIndexSortKey,
+			byte[] attributeVisibility )
+			throws IOException {
 		// TODO Auto-generated method stub
-
+		return null;
 	}
 
 	@Override
-	public void deleteEntry(
-			final ByteArrayId secondaryIndexId,
-			final ByteArrayId indexedAttributeValue,
-			final ByteArrayId adapterId,
-			final ByteArrayId indexedAttributeFieldId,
-			final ByteArrayId dataId,
-			final List<FieldInfo<?>> attributes ) {
+	protected GeoWaveRow buildMutation(
+			byte[] secondaryIndexRowId,
+			byte[] adapterId,
+			byte[] indexedAttributeFieldId,
+			byte[] dataId,
+			byte[] fieldId,
+			byte[] fieldValue,
+			byte[] fieldVisibility )
+			throws IOException {
 		// TODO Auto-generated method stub
-
+		return null;
 	}
 
 	@Override
-	public void flush() {
+	protected GeoWaveRow buildJoinDeleteMutation(
+			byte[] secondaryIndexRowId,
+			byte[] adapterId,
+			byte[] indexedAttributeFieldId,
+			byte[] primaryIndexId,
+			byte[] primaryIndexRowId )
+			throws IOException {
 		// TODO Auto-generated method stub
-
+		return null;
 	}
 
 	@Override
-	public void removeAll() {
+	protected GeoWaveRow buildFullDeleteMutation(
+			byte[] secondaryIndexRowId,
+			byte[] adapterId,
+			byte[] indexedAttributeFieldId,
+			byte[] dataId,
+			byte[] fieldId )
+			throws IOException {
 		// TODO Auto-generated method stub
+		return null;
+	}
 
+	@Override
+	protected Writer getWriter(
+			ByteArrayId secondaryIndexId ) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

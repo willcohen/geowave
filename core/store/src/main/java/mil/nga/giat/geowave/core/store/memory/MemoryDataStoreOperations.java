@@ -850,4 +850,11 @@ public class MemoryDataStoreOperations implements
 		// implementation is unnecessary
 		return true;
 	}
+
+	@Override
+	public boolean metadataExists(
+			MetadataType type )
+			throws IOException {
+		return true;
+	}
 }

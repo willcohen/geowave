@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
@@ -397,4 +398,110 @@ public abstract class SplitsProvider
 		return bytes;
 	}
 
+	public static GeoWaveRowRange toRowRange(
+			final ByteArrayRange range,
+			final int partitionKeyLength ) {
+		byte[] startRow = range.getStart() == null ? null : range.getStart().getBytes();
+		byte[] stopRow = range.getEnd() == null ? null : range.getEnd().getBytes();
+
+		if (partitionKeyLength <= 0) {
+			return new GeoWaveRowRange(
+					null,
+					startRow,
+					stopRow,
+					true,
+					false);
+		}
+		else {
+			byte[] partitionKey;
+			boolean partitionKeyDiffers = false;
+			if ((startRow == null) && (stopRow == null)) {
+				return new GeoWaveRowRange(
+						null,
+						null,
+						null,
+						true,
+						true);
+			}
+			else if (startRow != null) {
+				partitionKey = ArrayUtils.subarray(
+						startRow,
+						0,
+						partitionKeyLength);
+				if (stopRow != null) {
+					partitionKeyDiffers = !Arrays.equals(
+							partitionKey,
+							ArrayUtils.subarray(
+									stopRow,
+									0,
+									partitionKeyLength));
+				}
+			}
+			else {
+				partitionKey = ArrayUtils.subarray(
+						stopRow,
+						0,
+						partitionKeyLength);
+			}
+			return new GeoWaveRowRange(
+					partitionKey,
+					startRow == null ? null : (partitionKeyLength == startRow.length ? null : ArrayUtils.subarray(
+							startRow,
+							partitionKeyLength,
+							startRow.length)),
+					partitionKeyDiffers ? null : (stopRow == null ? null : (partitionKeyLength == stopRow.length ? null
+							: ArrayUtils.subarray(
+									stopRow,
+									partitionKeyLength,
+									stopRow.length))),
+					true,
+					partitionKeyDiffers);
+
+		}
+	}
+
+	public static ByteArrayRange fromRowRange(
+			final GeoWaveRowRange range ) {
+
+		if ((range.getPartitionKey() == null) || (range.getPartitionKey().length == 0)) {
+			byte[] startKey = (range.getStartSortKey() == null) ? null : range.getStartSortKey();
+			byte[] endKey = (range.getEndSortKey() == null) ? null : range.getEndSortKey();
+
+			return new ByteArrayRange(
+					new ByteArrayId(
+							startKey),
+					new ByteArrayId(
+							endKey));
+		}
+		else {
+			byte[] startKey = (range.getStartSortKey() == null) ? range.getPartitionKey() : ArrayUtils.addAll(
+					range.getPartitionKey(),
+					range.getStartSortKey());
+
+			byte[] endKey = (range.getEndSortKey() == null) ? ByteArrayId.getNextPrefix(range.getPartitionKey())
+					: ArrayUtils.addAll(
+							range.getPartitionKey(),
+							range.getEndSortKey());
+
+			return new ByteArrayRange(
+					new ByteArrayId(
+							startKey),
+					new ByteArrayId(
+							endKey));
+		}
+	}
+
+	public static byte[] getInclusiveEndKey(
+			byte[] endKey ) {
+		byte[] inclusiveEndKey = new byte[endKey.length + 1];
+
+		System.arraycopy(
+				endKey,
+				0,
+				inclusiveEndKey,
+				0,
+				inclusiveEndKey.length - 1);
+
+		return inclusiveEndKey;
+	}
 }

@@ -139,4 +139,9 @@ public class DynamoDBOptions extends
 		return new DynamoDBStoreFactoryFamily();
 	}
 
+	@Override
+	public DataStoreOptions getStoreOptions() {
+		return baseOptions;
+	}
+
 }

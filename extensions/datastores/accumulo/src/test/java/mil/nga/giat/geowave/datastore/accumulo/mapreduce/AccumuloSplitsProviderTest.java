@@ -358,6 +358,14 @@ public class AccumuloSplitsProviderTest
 			// TODO Auto-generated method stub
 			return null;
 		}
+
+		@Override
+		public boolean metadataExists(
+				MetadataType type )
+				throws IOException {
+			// TODO Auto-generated method stub
+			return false;
+		}
 	}
 
 	@Test

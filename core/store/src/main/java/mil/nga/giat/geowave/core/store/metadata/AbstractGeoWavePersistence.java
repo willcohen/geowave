@@ -235,7 +235,7 @@ public abstract class AbstractGeoWavePersistence<T extends Persistable>
 			return (T) cacheResult;
 		}
 		try {
-			if (!operations.indexExists(METADATA_INDEX_ID)) {
+			if (!operations.metadataExists(getType())) {
 				if (warnIfNotExists) {
 					LOGGER.warn("Object '" + getCombinedId(
 							primaryId,
@@ -302,7 +302,7 @@ public abstract class AbstractGeoWavePersistence<T extends Persistable>
 	private CloseableIterator<T> internalGetObjects(
 			final MetadataQuery query ) {
 		try {
-			if (!operations.indexExists(METADATA_INDEX_ID)) {
+			if (!operations.metadataExists(getType())) {
 				return new CloseableIterator.Empty<>();
 			}
 		}
@@ -349,7 +349,7 @@ public abstract class AbstractGeoWavePersistence<T extends Persistable>
 			final ByteArrayId secondaryId,
 			final String... authorizations ) {
 		try {
-			if (!operations.indexExists(METADATA_INDEX_ID)) {
+			if (!operations.metadataExists(getType())) {
 				return false;
 			}
 		}

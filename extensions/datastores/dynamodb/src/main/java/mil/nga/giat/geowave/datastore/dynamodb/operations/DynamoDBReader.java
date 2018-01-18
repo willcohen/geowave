@@ -5,10 +5,14 @@ import java.util.Iterator;
 import org.apache.log4j.Logger;
 
 import com.amazonaws.services.dynamodbv2.model.ScanRequest;
+import com.amazonaws.services.dynamodbv2.model.ScanResult;
+import com.google.common.collect.Iterators;
 
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.operations.Reader;
 import mil.nga.giat.geowave.core.store.operations.ReaderParams;
+import mil.nga.giat.geowave.datastore.dynamodb.DynamoDBRow.GuavaRowTranslationHelper;
+import mil.nga.giat.geowave.datastore.dynamodb.util.LazyPaginatedScan;
 import mil.nga.giat.geowave.mapreduce.splits.RecordReaderParams;
 
 public class DynamoDBReader implements
@@ -61,12 +65,21 @@ public class DynamoDBReader implements
 
 		final ScanRequest request = new ScanRequest(
 				tableName);
-
-		iterator = operations.getScannedResults(
+		
+		ScanResult result = operations.getClient().scan(
 				request);
+
+		iterator = Iterators.transform(
+				new LazyPaginatedScan(
+						result,
+						request,
+						operations.getClient()),
+				new GuavaRowTranslationHelper());
 	}
 
-	protected void initRecordScanner() {}
+	protected void initRecordScanner() {
+		// TODO
+	}
 
 	@Override
 	public void close()

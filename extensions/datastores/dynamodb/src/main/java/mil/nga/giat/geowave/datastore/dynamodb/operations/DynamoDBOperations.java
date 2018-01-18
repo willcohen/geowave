@@ -304,15 +304,13 @@ public class DynamoDBOperations implements
 
 		return new DynamoDBMetadataWriter(
 				this,
-				client,
 				tableName);
 	}
 
 	@Override
 	public MetadataReader createMetadataReader(
 			MetadataType metadataType ) {
-		// TODO Auto-generated method stub
-		return null;
+		return new DynamoDBMetadataReader(this);
 	}
 
 	@Override
@@ -329,6 +327,15 @@ public class DynamoDBOperations implements
 				readerParams,
 				this);
 	}
+	
+
+	@Override
+	public Reader createReader(
+			RecordReaderParams recordReaderParams ) {
+		return new DynamoDBReader(
+				recordReaderParams,
+				this);
+	}
 
 	@Override
 	public Deleter createDeleter(
@@ -336,7 +343,7 @@ public class DynamoDBOperations implements
 			String... authorizations )
 			throws Exception {
 		return new DynamoDBDeleter(
-				client,
+				this,
 				getQualifiedTableName(
 						indexId.getString()));
 	}
@@ -348,27 +355,5 @@ public class DynamoDBOperations implements
 			AdapterIndexMappingStore adapterIndexMappingStore ) {
 		// TODO Auto-generated method stub
 		return false;
-	}
-
-	@Override
-	public Reader createReader(
-			RecordReaderParams readerParams ) {
-		return new DynamoDBReader(
-				readerParams,
-				this);
-	}
-
-	public Iterator<GeoWaveRow> getScannedResults(
-			ScanRequest request ) {
-		ScanResult result = client.scan(
-				request);
-
-		return Iterators.transform(
-				new LazyPaginatedScan(
-						result,
-						request,
-						client),
-				new GuavaRowTranslationHelper());
-
 	}
 }

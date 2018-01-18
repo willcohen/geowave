@@ -4,7 +4,6 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsyncClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 
@@ -14,14 +13,13 @@ import mil.nga.giat.geowave.core.store.operations.MetadataWriter;
 public class DynamoDBMetadataWriter implements
 		MetadataWriter
 {
-	private final AmazonDynamoDBAsyncClient client;
+	final DynamoDBOperations operations;
 	private final String tableName;
 
 	public DynamoDBMetadataWriter(
-			final DynamoDBOperations dynamoDBOperations,
-			final AmazonDynamoDBAsyncClient client,
+			final DynamoDBOperations operations,
 			final String tableName ) {
-		this.client = client;
+		this.operations = operations;
 		this.tableName = tableName;
 	}
 
@@ -38,24 +36,33 @@ public class DynamoDBMetadataWriter implements
 		final Map<String, AttributeValue> map = new HashMap<>();
 		map.put(
 				DynamoDBOperations.METADATA_PRIMARY_ID_KEY,
-				new AttributeValue().withB(ByteBuffer.wrap(metadata.getPrimaryId())));
-		
+				new AttributeValue().withB(
+						ByteBuffer.wrap(
+								metadata.getPrimaryId())));
+
 		if (metadata.getSecondaryId() != null) {
 			map.put(
 					DynamoDBOperations.METADATA_SECONDARY_ID_KEY,
-					new AttributeValue().withB(ByteBuffer.wrap(metadata.getSecondaryId())));
+					new AttributeValue().withB(
+							ByteBuffer.wrap(
+									metadata.getSecondaryId())));
 		}
-		
+
 		map.put(
 				DynamoDBOperations.METADATA_TIMESTAMP_KEY,
-				new AttributeValue().withN(Long.toString(System.currentTimeMillis())));
+				new AttributeValue().withN(
+						Long.toString(
+								System.currentTimeMillis())));
 		map.put(
 				DynamoDBOperations.METADATA_VALUE_KEY,
-				new AttributeValue().withB(ByteBuffer.wrap(metadata.getValue())));
-		
-		client.putItem(new PutItemRequest(
-				tableName,
-				map));
+				new AttributeValue().withB(
+						ByteBuffer.wrap(
+								metadata.getValue())));
+
+		operations.getClient().putItem(
+				new PutItemRequest(
+						tableName,
+						map));
 
 	}
 

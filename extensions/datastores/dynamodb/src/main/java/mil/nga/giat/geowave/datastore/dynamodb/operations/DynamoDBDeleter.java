@@ -20,13 +20,13 @@ public class DynamoDBDeleter implements Deleter
 {
 	private static Logger LOGGER = LoggerFactory.getLogger(DynamoDBDeleter.class);
 
-	private final AmazonDynamoDBAsyncClient client;
+	private final DynamoDBOperations operations;
 	private final String tableName;
 	
 	public DynamoDBDeleter(
-			final AmazonDynamoDBAsyncClient client,
+			final DynamoDBOperations operations,
 			final String qualifiedTableName) {
-		this.client = client;
+		this.operations = operations;
 		this.tableName = qualifiedTableName;
 	}
 
@@ -41,7 +41,7 @@ public class DynamoDBDeleter implements Deleter
 			DataAdapter<?> adapter ) {
 		DynamoDBRow dynRow = (DynamoDBRow)row;
 		
-		DeleteItemResult result = client.deleteItem(
+		DeleteItemResult result = operations.getClient().deleteItem(
 				tableName,
 				Maps.filterEntries(
 						dynRow.getAttributeMapping(),

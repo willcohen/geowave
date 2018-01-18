@@ -81,14 +81,6 @@ public class HBaseWriter implements
 					tableName);
 		}
 
-		String columnFamily = StringUtils.stringFromBinary(row.getAdapterId());
-
-		operations.verifyColumnFamily(
-				columnFamily,
-				operations.isServerSideLibraryEnabled(),
-				tableName,
-				true);
-
 		writeMutations(rowToMutation(row));
 	}
 

@@ -18,18 +18,13 @@ public class HBaseMetadataWriter implements
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(HBaseMetadataWriter.class);
 
-	private final HBaseOperations operations;
 	private final BufferedMutator writer;
-	private final MetadataType metadataType;
 	private final byte[] metadataTypeBytes;
 
 	public HBaseMetadataWriter(
-			final HBaseOperations operations,
 			final BufferedMutator writer,
 			final MetadataType metadataType ) {
-		this.operations = operations;
 		this.writer = writer;
-		this.metadataType = metadataType;
 		this.metadataTypeBytes = StringUtils.stringToBinary(metadataType.name());
 	}
 

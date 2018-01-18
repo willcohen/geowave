@@ -10,6 +10,7 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
@@ -98,17 +99,20 @@ public class HBaseDataStore extends
 			final PrimaryIndex index ) {
 		final String indexName = index.getId().getString();
 		final String columnFamily = adapter.getAdapterId().getString();
-		if (adapter instanceof RowMergingDataAdapter) {
+		boolean rowMerging = adapter instanceof RowMergingDataAdapter;
+		if (rowMerging) {
 			if (!DataAdapterAndIndexCache.getInstance(
 					RowMergingAdapterOptionProvider.ROW_MERGING_ADAPTER_CACHE_ID).add(
 					adapter.getAdapterId(),
 					indexName)) {
+				
 				if (baseOptions.isCreateTable()) {
 					((HBaseOperations) baseOperations).createTable(
 							index.getId(),
-							baseOptions.isServerSideLibraryEnabled(),
+							false,
 							adapter.getAdapterId());
 				}
+				
 				((HBaseOperations) baseOperations).ensureServerSideOperationsObserverAttached(index.getId());
 				ServerOpHelper.addServerSideRowMerging(
 						((RowMergingDataAdapter<?, ?>) adapter),
@@ -118,12 +122,14 @@ public class HBaseDataStore extends
 						indexName);
 			}
 		}
-
+	
+		
 		hbaseOperations.verifyColumnFamily(
 				columnFamily,
-				baseOptions.isServerSideLibraryEnabled(),
+				!rowMerging,
 				indexName,
 				true);
+	
 	}
 
 	@Override

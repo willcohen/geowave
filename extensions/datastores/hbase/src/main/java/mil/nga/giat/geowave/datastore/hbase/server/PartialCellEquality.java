@@ -27,7 +27,7 @@ public class PartialCellEquality
 				cell.getQualifierOffset(),
 				cell.getQualifierLength());
 
-		// combine the 6 sub-hashes
+		// combine the sub-hashes
 		final int hash = (31 * familyHash) + qualifierHash;
 		if (!includeTags) {
 			return hash;

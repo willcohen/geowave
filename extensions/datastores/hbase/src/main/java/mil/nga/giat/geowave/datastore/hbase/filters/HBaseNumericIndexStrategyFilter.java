@@ -115,8 +115,8 @@ public class HBaseNumericIndexStrategyFilter extends
 				cellKey.getPartitionKey());
 
 		final MultiDimensionalCoordinates coordinates = indexStrategy.getCoordinatesPerDimension(
-				sortKey,
-				partitionKey);
+				partitionKey,
+				sortKey);
 
 		return rangeCache.inBounds(coordinates);
 	}

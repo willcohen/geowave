@@ -6,6 +6,11 @@ import java.util.Map;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 
+import com.google.common.base.Function;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
+
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayUtils;
 import mil.nga.giat.geowave.core.index.Mergeable;
@@ -24,9 +29,11 @@ public class RowMergingServerOp extends
 			final byte[] bytes ) {
 		return rowTransform.getRowAsMergeableObject(
 				new ByteArrayId(
-						CellUtil.cloneFamily(cell)),
+						CellUtil.cloneFamily(
+								cell)),
 				new ByteArrayId(
-						CellUtil.cloneQualifier(cell)),
+						CellUtil.cloneQualifier(
+								cell)),
 				bytes);
 	}
 
@@ -34,26 +41,51 @@ public class RowMergingServerOp extends
 	protected String getColumnOptionValue(
 			final Map<String, String> options ) {
 		// if this is "row" merging than it is by adapter ID
-		return options.get(RowMergingAdapterOptionProvider.ADAPTER_IDS_OPTION);
+		return options.get(
+				RowMergingAdapterOptionProvider.ADAPTER_IDS_OPTION);
 	}
 
 	@Override
 	protected byte[] getBinary(
 			final Mergeable mergeable ) {
-		return rowTransform.getBinaryFromMergedObject(mergeable);
+		return rowTransform.getBinaryFromMergedObject(
+				mergeable);
 	}
 
 	@Override
 	public void init(
 			final Map<String, String> options )
 			throws IOException {
-		super.init(options);
-		final String rowTransformStr = options.get(RowMergingAdapterOptionProvider.ROW_TRANSFORM_KEY);
-		final byte[] rowTransformBytes = ByteArrayUtils.byteArrayFromString(rowTransformStr);
+		final String columnStr = options.get(
+				RowMergingAdapterOptionProvider.ADAPTER_IDS_OPTION);
+
+		if (columnStr.length() == 0) {
+			throw new IllegalArgumentException(
+					"The column must not be empty");
+		}
+		columnFamilyIds = Sets.newHashSet(
+				Iterables.transform(
+						Splitter.on(
+								",").split(
+										columnStr),
+						new Function<String, ByteArrayId>() {
+
+							@Override
+							public ByteArrayId apply(
+									final String input ) {
+								return new ByteArrayId(
+										input);
+							}
+						}));
+		final String rowTransformStr = options.get(
+				RowMergingAdapterOptionProvider.ROW_TRANSFORM_KEY);
+		final byte[] rowTransformBytes = ByteArrayUtils.byteArrayFromString(
+				rowTransformStr);
 		rowTransform = PersistenceUtils.fromBinary(
 				rowTransformBytes,
 				RowTransform.class);
-		rowTransform.initOptions(options);
+		rowTransform.initOptions(
+				options);
 	}
 
 }

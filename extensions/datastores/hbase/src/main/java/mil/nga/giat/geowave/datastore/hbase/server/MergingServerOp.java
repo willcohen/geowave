@@ -25,7 +25,6 @@ import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.Mergeable;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.store.operations.MetadataType;
-import mil.nga.giat.geowave.core.store.server.RowMergingAdapterOptionProvider;
 
 public class MergingServerOp implements
 		HBaseServerOp
@@ -213,7 +212,7 @@ public class MergingServerOp implements
 	public void init(
 			final Map<String, String> options )
 			throws IOException {
-		final String columnStr = options.get(RowMergingAdapterOptionProvider.ADAPTER_IDS_OPTION);
+		final String columnStr = getColumnOptionValue(options);
 
 		if (columnStr.length() == 0) {
 			throw new IllegalArgumentException(

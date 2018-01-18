@@ -6,6 +6,7 @@ import java.util.Map;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
+import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 
 import mil.nga.giat.geowave.core.store.entities.GeoWaveMetadata;
 import mil.nga.giat.geowave.core.store.operations.MetadataWriter;
@@ -59,11 +60,12 @@ public class DynamoDBMetadataWriter implements
 						ByteBuffer.wrap(
 								metadata.getValue())));
 
-		operations.getClient().putItem(
+		PutItemResult putResult = operations.getClient().putItem(
 				new PutItemRequest(
 						tableName,
 						map));
 
+		// TODO: report any errors here
 	}
 
 	@Override

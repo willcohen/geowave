@@ -79,7 +79,7 @@ public class DynamoDBDataStore extends
 				new DynamoDBSecondaryIndexDataStore(
 						operations),
 				operations,
-				operations.getOptions().getBaseOptions());
+				operations.getOptions().getStoreOptions());
 		dynamodbOperations = operations;
 	}
 

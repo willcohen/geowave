@@ -31,7 +31,6 @@ import com.google.common.collect.Iterators;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
-import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.metadata.AbstractGeoWavePersistence;
 import mil.nga.giat.geowave.core.store.operations.Deleter;
@@ -72,6 +71,13 @@ public class DynamoDBOperations implements
 		client = DynamoDBClientPool.getInstance().getClient(
 				options);
 		gwNamespace = options.getGeowaveNamespace();
+	}
+
+	public static DynamoDBOperations createOperations(
+			final DynamoDBOptions options )
+			throws IOException {
+		return new DynamoDBOperations(
+				(DynamoDBOptions) options.getStoreOptions());
 	}
 
 	public DynamoDBOptions getOptions() {
@@ -193,7 +199,7 @@ public class DynamoDBOperations implements
 				client,
 				qName);
 
-		if (options.getBaseOptions().isCreateTable()) {
+		if (options.getStoreOptions().isCreateTable()) {
 			synchronized (tableExistsCache) {
 				final Boolean tableExists = tableExistsCache.get(
 						qName);
@@ -251,7 +257,7 @@ public class DynamoDBOperations implements
 		final String tableName = getQualifiedTableName(
 				AbstractGeoWavePersistence.METADATA_TABLE);
 
-		if (options.getBaseOptions().isCreateTable()) {
+		if (options.getStoreOptions().isCreateTable()) {
 			synchronized (DynamoDBOperations.tableExistsCache) {
 				final Boolean tableExists = DynamoDBOperations.tableExistsCache.get(
 						tableName);
@@ -310,7 +316,8 @@ public class DynamoDBOperations implements
 	@Override
 	public MetadataReader createMetadataReader(
 			MetadataType metadataType ) {
-		return new DynamoDBMetadataReader(this);
+		return new DynamoDBMetadataReader(
+				this);
 	}
 
 	@Override
@@ -327,7 +334,6 @@ public class DynamoDBOperations implements
 				readerParams,
 				this);
 	}
-	
 
 	@Override
 	public Reader createReader(

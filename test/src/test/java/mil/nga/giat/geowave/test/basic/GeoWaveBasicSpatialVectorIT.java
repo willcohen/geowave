@@ -90,9 +90,6 @@ public class GeoWaveBasicSpatialVectorIT extends
 			final int nthreads ) {
 		long mark = System.currentTimeMillis();
 
-		// org.apache.log4j.Logger.getRootLogger().setLevel(
-		// org.apache.log4j.Level.DEBUG);
-
 		LOGGER.debug("Testing DataStore Type: " + dataStore.getType());
 
 		// Ensure empty datastore
@@ -107,9 +104,6 @@ public class GeoWaveBasicSpatialVectorIT extends
 
 		long dur = (System.currentTimeMillis() - mark);
 		LOGGER.debug("Ingest (points) duration = " + dur + " ms with " + nthreads + " thread(s).");
-
-		// org.apache.log4j.Logger.getRootLogger().setLevel(
-		// org.apache.log4j.Level.WARN);
 
 		if (!POINTS_ONLY) {
 			mark = System.currentTimeMillis();

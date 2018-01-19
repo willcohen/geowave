@@ -50,7 +50,7 @@ public class HBaseMetadataWriter implements
 		// retain multiple versions)
 		final Put put = new Put(
 				metadata.getPrimaryId(),
-				System.currentTimeMillis());
+				System.nanoTime());
 
 		byte[] secondaryBytes = metadata.getSecondaryId() != null ? metadata.getSecondaryId() : new byte[0];
 

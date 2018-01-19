@@ -7,6 +7,7 @@ import org.apache.hadoop.hbase.client.Delete;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveKey;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
@@ -45,7 +46,8 @@ public class HBaseDeleter implements
 			final GeoWaveRow row,
 			final DataAdapter<?> adapter ) {
 		final Delete delete = new Delete(
-				GeoWaveKey.getCompositeId(row));
+				GeoWaveKey.getCompositeId(row),
+				System.nanoTime());
 
 		try {
 			deleter.mutate(delete);

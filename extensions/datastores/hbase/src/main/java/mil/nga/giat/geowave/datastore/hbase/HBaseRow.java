@@ -52,7 +52,6 @@ public class HBaseRow implements
 		for (GeoWaveValue gwValue : fieldValueList) {
 			fieldValues[i++] = gwValue;
 		}
-
 	}
 
 	@Override

@@ -11,6 +11,7 @@ import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveKey;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
@@ -43,6 +44,7 @@ public class AccumuloDeleter implements
 	public void delete(
 			final GeoWaveRow row,
 			final DataAdapter<?> adapter ) {
+		System.err.println(new ByteArrayId(GeoWaveKey.getCompositeId(row)).getHexString());
 		final List<Range> rowRanges = new ArrayList<Range>();
 		if (isAltIndex) {
 			rowRanges.add(Range.exact(new Text(

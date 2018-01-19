@@ -105,14 +105,14 @@ public class HBaseDataStore extends
 					RowMergingAdapterOptionProvider.ROW_MERGING_ADAPTER_CACHE_ID).add(
 					adapter.getAdapterId(),
 					indexName)) {
-				
+
 				if (baseOptions.isCreateTable()) {
 					((HBaseOperations) baseOperations).createTable(
 							index.getId(),
 							false,
 							adapter.getAdapterId());
 				}
-				
+
 				((HBaseOperations) baseOperations).ensureServerSideOperationsObserverAttached(index.getId());
 				ServerOpHelper.addServerSideRowMerging(
 						((RowMergingDataAdapter<?, ?>) adapter),
@@ -122,14 +122,13 @@ public class HBaseDataStore extends
 						indexName);
 			}
 		}
-	
-		
+
 		hbaseOperations.verifyColumnFamily(
 				columnFamily,
 				!rowMerging,
 				indexName,
 				true);
-	
+
 	}
 
 	@Override

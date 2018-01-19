@@ -168,7 +168,7 @@ public class BaseConstraintsQuery extends
 			final Integer limit ) {
 		if (isAggregation()) {
 			if ((options == null) || !options.isServerSideLibraryEnabled()) {
-//					|| adapterStore instanceof MemoryAdapterStore) {
+				// || adapterStore instanceof MemoryAdapterStore) {
 				// Aggregate client-side
 				final CloseableIterator<Object> it = super.query(
 						datastoreOperations,

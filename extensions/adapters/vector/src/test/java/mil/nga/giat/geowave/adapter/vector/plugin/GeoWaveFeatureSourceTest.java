@@ -59,17 +59,17 @@ public class GeoWaveFeatureSourceTest extends
 	@Test
 	public void test()
 			throws Exception {
-//		testEmpty();
-//		testFull(
-//				new FWPopulater(),
-//				"fw");
+		testEmpty();
+		testFull(
+				new FWPopulater(),
+				"fw");
 		testPartial(
 				new FWPopulater(),
 				"fw");
 		// test different populate methods
-//		testFull(
-//				new SourcePopulater(),
-//				"s");
+		testFull(
+				new SourcePopulater(),
+				"s");
 		testPartial(
 				new SourcePopulater(),
 				"s");
@@ -215,6 +215,7 @@ public class GeoWaveFeatureSourceTest extends
 				CQL.toFilter("BBOX(geometry,42,28,44,30) and when during 2005-05-01T20:32:56Z/2005-05-29T21:32:56Z"),
 				new String[] {
 					"geometry",
+					"when",
 					"pid"
 				});
 		final ReferencedEnvelope env = source.getBounds(query);

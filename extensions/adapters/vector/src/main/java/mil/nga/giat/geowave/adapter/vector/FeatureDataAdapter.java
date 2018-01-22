@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -18,8 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.geotools.data.DataUtilities;
 import org.geotools.feature.SchemaException;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
@@ -29,6 +27,8 @@ import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeDescriptor;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.MathTransform;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -150,7 +150,7 @@ public class FeatureDataAdapter extends
 	/**
 	 * Constructor<br>
 	 * Creates a FeatureDataAdapter for the specified SimpleFeatureType
-	 * 
+	 *
 	 * @param featureType
 	 *            - feature type for this object
 	 */
@@ -170,7 +170,7 @@ public class FeatureDataAdapter extends
 	 * Constructor<br>
 	 * Creates a FeatureDataAdapter for the specified SimpleFeatureType with the
 	 * provided customIndexHandlers
-	 * 
+	 *
 	 * @param featureType
 	 *            - feature type for this object
 	 * @param customIndexHandlers
@@ -193,7 +193,7 @@ public class FeatureDataAdapter extends
 	 * Constructor<br>
 	 * Creates a FeatureDataAdapter for the specified SimpleFeatureType with the
 	 * provided visibilityManagement
-	 * 
+	 *
 	 * @param featureType
 	 *            - feature type for this object
 	 * @param visibilityManagement
@@ -215,7 +215,7 @@ public class FeatureDataAdapter extends
 	 * Constructor<br>
 	 * Creates a FeatureDataAdapter for the specified SimpleFeatureType with the
 	 * provided fieldVisiblityHandler
-	 * 
+	 *
 	 * @param featureType
 	 *            - feature type for this object
 	 * @param fieldVisiblityHandler
@@ -238,7 +238,7 @@ public class FeatureDataAdapter extends
 	 * Creates a FeatureDataAdapter for the specified SimpleFeatureType with the
 	 * provided customIndexHandlers, fieldVisibilityHandler and
 	 * defaultVisibilityManagement
-	 * 
+	 *
 	 * @param featureType
 	 *            - feature type for this object
 	 * @param customIndexHandlers
@@ -283,7 +283,7 @@ public class FeatureDataAdapter extends
 
 	/**
 	 * Set the FeatureType for this Data Adapter.
-	 * 
+	 *
 	 * @param featureType
 	 *            - new feature type
 	 */
@@ -333,10 +333,10 @@ public class FeatureDataAdapter extends
 	/**
 	 * Create List of NativeFieldHandlers based on the SimpleFeature type passed
 	 * as parameter.
-	 * 
+	 *
 	 * @param featureType
 	 *            - SFT to be used to determine handlers
-	 * 
+	 *
 	 * @return List of NativeFieldHandlers that correspond to attributes in
 	 *         featureType
 	 */
@@ -359,10 +359,10 @@ public class FeatureDataAdapter extends
 	/**
 	 * Attempts to find a time descriptor (range or timestamp) within provided
 	 * featureType and return index field handler for it.
-	 * 
+	 *
 	 * @param featureType
 	 *            - feature type to be scanned.
-	 * 
+	 *
 	 * @return Index Field Handler for the time descriptor found in featureType
 	 */
 	protected IndexFieldHandler<SimpleFeature, Time, Object> getTimeRangeHandler(
@@ -373,18 +373,18 @@ public class FeatureDataAdapter extends
 
 		if ((timeDescriptors.getStartRange() != null) && (timeDescriptors.getEndRange() != null)) {
 
-			FeatureAttributeHandler fah_startRange = new FeatureAttributeHandler(
+			final FeatureAttributeHandler fah_startRange = new FeatureAttributeHandler(
 					timeDescriptors.getStartRange());
-			FeatureAttributeHandler fah_endRange = new FeatureAttributeHandler(
+			final FeatureAttributeHandler fah_endRange = new FeatureAttributeHandler(
 					timeDescriptors.getEndRange());
-			FieldVisibilityHandler<SimpleFeature, Object> visibilityHandler = config
+			final FieldVisibilityHandler<SimpleFeature, Object> visibilityHandler = config
 					.getManager()
 					.createVisibilityHandler(
 							timeDescriptors.getStartRange().getLocalName(),
 							fieldVisiblityHandler,
 							config.getAttributeName());
 
-			FeatureTimeRangeHandler ftrh = new FeatureTimeRangeHandler(
+			final FeatureTimeRangeHandler ftrh = new FeatureTimeRangeHandler(
 					fah_startRange,
 					fah_endRange,
 					visibilityHandler);
@@ -396,14 +396,14 @@ public class FeatureDataAdapter extends
 			// if we didn't succeed in identifying a start and end time,
 			// just grab the first attribute and use it as a timestamp
 
-			FieldVisibilityHandler<SimpleFeature, Object> visibilityHandler = config
+			final FieldVisibilityHandler<SimpleFeature, Object> visibilityHandler = config
 					.getManager()
 					.createVisibilityHandler(
 							timeDescriptors.getTime().getLocalName(),
 							fieldVisiblityHandler,
 							config.getAttributeName());
 
-			FeatureTimestampHandler fth = new FeatureTimestampHandler(
+			final FeatureTimestampHandler fth = new FeatureTimestampHandler(
 					timeDescriptors.getTime(),
 					visibilityHandler);
 
@@ -419,7 +419,7 @@ public class FeatureDataAdapter extends
 	/**
 	 * Get a List<> of the default index field handlers from the Simple Feature
 	 * Type provided
-	 * 
+	 *
 	 * @param typeObj
 	 *            - Simple Feature Type object
 	 * @return - List of the default Index Field Handlers
@@ -464,7 +464,7 @@ public class FeatureDataAdapter extends
 	/**
 	 * Sets the namespace of the reprojected feature type associated with this
 	 * data adapter
-	 * 
+	 *
 	 * @param namespaceURI
 	 *            - new namespace URI
 	 */
@@ -484,7 +484,7 @@ public class FeatureDataAdapter extends
 
 	/**
 	 * {@inheritDoc}
-	 * 
+	 *
 	 * @return Field Reader for the given Field ID
 	 */
 	@Override
@@ -519,7 +519,7 @@ public class FeatureDataAdapter extends
 
 	/**
 	 * {@inheritDoc}
-	 * 
+	 *
 	 * @return Field Writer for the given Field ID
 	 */
 	@Override
@@ -582,7 +582,7 @@ public class FeatureDataAdapter extends
 	/**
 	 * Get feature type default data contained in the reprojected SFT and
 	 * serialize to a binary stream
-	 * 
+	 *
 	 * @return byte array with binary data
 	 */
 	@Override
@@ -656,7 +656,7 @@ public class FeatureDataAdapter extends
 	/**
 	 * Extract the feature type default data from the binary stream passed in
 	 * and place in the reprojected SFT for this feature data adapter
-	 * 
+	 *
 	 * @return if successful, the reprojected feature type created from the
 	 *         serialized stream
 	 */
@@ -816,8 +816,8 @@ public class FeatureDataAdapter extends
 
 	@Override
 	public EntryVisibilityHandler<SimpleFeature> getVisibilityHandler(
-			CommonIndexModel indexModel,
-			DataAdapter<SimpleFeature> adapter,
+			final CommonIndexModel indexModel,
+			final DataAdapter<SimpleFeature> adapter,
 			final ByteArrayId statisticsId ) {
 		return statsManager.getVisibilityHandler(
 				indexModel,
@@ -845,7 +845,7 @@ public class FeatureDataAdapter extends
 	/**
 	 * Determine if a time or range descriptor is set. If so, then use it,
 	 * otherwise infer.
-	 * 
+	 *
 	 * @param persistType
 	 *            - FeatureType that will be scanned for TimeAttributes
 	 * @return

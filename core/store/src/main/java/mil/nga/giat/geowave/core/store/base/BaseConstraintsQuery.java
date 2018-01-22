@@ -47,8 +47,7 @@ public class BaseConstraintsQuery extends
 		BaseFilteredIndexQuery
 {
 
-	private final static Logger LOGGER = Logger.getLogger(
-			BaseConstraintsQuery.class);
+	private final static Logger LOGGER = Logger.getLogger(BaseConstraintsQuery.class);
 	private boolean queryFiltersEnabled;
 
 	public final Pair<DataAdapter<?>, Aggregation<?, ?, ?>> aggregation;
@@ -73,10 +72,8 @@ public class BaseConstraintsQuery extends
 		this(
 				adapterIds,
 				index,
-				query != null ? query.getIndexConstraints(
-						index.getIndexStrategy()) : null,
-				query != null ? query.createFilters(
-						index.getIndexModel()) : null,
+				query != null ? query.getIndexConstraints(index.getIndexStrategy()) : null,
+				query != null ? query.createFilters(index.getIndexModel()) : null,
 				clientDedupeFilter,
 				scanCallback,
 				aggregation,
@@ -112,8 +109,7 @@ public class BaseConstraintsQuery extends
 		this.aggregation = aggregation;
 		this.indexMetaData = indexMetaData != null ? indexMetaData : new IndexMetaData[] {};
 		this.index = index;
-		final SplitFilterLists lists = splitList(
-				queryFilters);
+		final SplitFilterLists lists = splitList(queryFilters);
 		final List<QueryFilter> clientFilters = lists.clientFilters;
 		if ((duplicateCounts != null) && !duplicateCounts.isAnyEntryHaveDuplicates()) {
 			clientDedupeFilter = null;
@@ -148,8 +144,7 @@ public class BaseConstraintsQuery extends
 					distributableFilters);
 		}
 		else {
-			return distributableFilters.get(
-					0);
+			return distributableFilters.get(0);
 		}
 	}
 
@@ -207,17 +202,15 @@ public class BaseConstraintsQuery extends
 												Mergeable.class);
 									}
 									else {
-										mergedAggregationResult.merge(
-												PersistenceUtils.fromBinary(
-														value.getValue(),
-														Mergeable.class));
+										mergedAggregationResult.merge(PersistenceUtils.fromBinary(
+												value.getValue(),
+												Mergeable.class));
 									}
 								}
 							}
 						}
 						return new CloseableIterator.Wrapper<>(
-								Iterators.singletonIterator(
-										mergedAggregationResult));
+								Iterators.singletonIterator(mergedAggregationResult));
 					}
 				}
 				catch (final Exception e) {
@@ -246,26 +239,23 @@ public class BaseConstraintsQuery extends
 		}
 		// add a index filter to the front of the list if there isn't already a
 		// filter
-		if (distributableFilters.isEmpty() || ((distributableFilters.size() == 1) && (distributableFilters.get(
-				0) instanceof DedupeFilter))) {
+		if (distributableFilters.isEmpty()
+				|| ((distributableFilters.size() == 1) && (distributableFilters.get(0) instanceof DedupeFilter))) {
 			final List<MultiDimensionalCoordinateRangesArray> coords = getCoordinateRanges();
 			if (!coords.isEmpty()) {
 				clientFilters.add(
 						0,
 						new CoordinateRangeQueryFilter(
 								index.getIndexStrategy(),
-								coords.toArray(
-										new MultiDimensionalCoordinateRangesArray[] {})));
+								coords.toArray(new MultiDimensionalCoordinateRangesArray[] {})));
 			}
 		}
 		else {
 			// Without custom filters, we need all the filters on the client
 			// side
 			for (final QueryFilter distributable : distributableFilters) {
-				if (!clientFilters.contains(
-						distributable)) {
-					clientFilters.add(
-							distributable);
+				if (!clientFilters.contains(distributable)) {
+					clientFilters.add(distributable);
 				}
 			}
 		}
@@ -296,11 +286,10 @@ public class BaseConstraintsQuery extends
 			final NumericIndexStrategy indexStrategy = index.getIndexStrategy();
 			final List<MultiDimensionalCoordinateRangesArray> ranges = new ArrayList<MultiDimensionalCoordinateRangesArray>();
 			for (final MultiDimensionalNumericData nd : constraints) {
-				ranges.add(
-						new MultiDimensionalCoordinateRangesArray(
-								indexStrategy.getCoordinateRangesPerDimension(
-										nd,
-										indexMetaData)));
+				ranges.add(new MultiDimensionalCoordinateRangesArray(
+						indexStrategy.getCoordinateRangesPerDimension(
+								nd,
+								indexMetaData)));
 			}
 			return ranges;
 		}
@@ -341,12 +330,10 @@ public class BaseConstraintsQuery extends
 		}
 		for (final QueryFilter filter : allFilters) {
 			if (filter instanceof DistributableQueryFilter) {
-				distributableFilters.add(
-						(DistributableQueryFilter) filter);
+				distributableFilters.add((DistributableQueryFilter) filter);
 			}
 			else {
-				clientFilters.add(
-						filter);
+				clientFilters.add(filter);
 			}
 		}
 		return new SplitFilterLists(

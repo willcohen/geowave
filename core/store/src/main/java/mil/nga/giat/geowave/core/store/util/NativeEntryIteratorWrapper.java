@@ -17,7 +17,6 @@ import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 public class NativeEntryIteratorWrapper<T> extends
 		EntryIteratorWrapper<T>
 {
-	private final static Logger LOGGER = Logger.getLogger(NativeEntryIteratorWrapper.class);
 	private final byte[] fieldSubsetBitmask;
 	private final boolean decodePersistenceEncoding;
 	private Integer bitPosition = null;

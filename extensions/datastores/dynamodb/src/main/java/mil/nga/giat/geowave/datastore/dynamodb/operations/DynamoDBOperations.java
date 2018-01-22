@@ -362,4 +362,9 @@ public class DynamoDBOperations implements
 		// TODO Auto-generated method stub
 		return false;
 	}
+
+	public AdapterStore getAdapterStore() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

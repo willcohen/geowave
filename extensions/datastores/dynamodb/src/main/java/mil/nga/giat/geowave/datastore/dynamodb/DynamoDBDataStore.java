@@ -41,6 +41,7 @@ import mil.nga.giat.geowave.core.store.query.QueryOptions;
 import mil.nga.giat.geowave.core.store.util.DataStoreUtils;
 import mil.nga.giat.geowave.core.store.util.NativeEntryIteratorWrapper;
 import mil.nga.giat.geowave.datastore.dynamodb.index.secondary.DynamoDBSecondaryIndexDataStore;
+import mil.nga.giat.geowave.datastore.dynamodb.mapreduce.DynamoDBSplitsProvider;
 import mil.nga.giat.geowave.datastore.dynamodb.metadata.DynamoDBAdapterIndexMappingStore;
 import mil.nga.giat.geowave.datastore.dynamodb.metadata.DynamoDBAdapterStore;
 import mil.nga.giat.geowave.datastore.dynamodb.metadata.DynamoDBDataStatisticsStore;
@@ -49,7 +50,6 @@ import mil.nga.giat.geowave.datastore.dynamodb.operations.DynamoDBOperations;
 import mil.nga.giat.geowave.datastore.dynamodb.query.DynamoDBConstraintsQuery;
 import mil.nga.giat.geowave.datastore.dynamodb.query.DynamoDBRowIdsQuery;
 import mil.nga.giat.geowave.datastore.dynamodb.query.DynamoDBRowPrefixQuery;
-import mil.nga.giat.geowave.datastore.dynamodb.split.DynamoDBSplitsProvider;
 import mil.nga.giat.geowave.mapreduce.BaseMapReduceDataStore;
 
 public class DynamoDBDataStore extends

@@ -10,7 +10,6 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
@@ -39,10 +38,10 @@ import mil.nga.giat.geowave.mapreduce.BaseMapReduceDataStore;
 public class HBaseDataStore extends
 		BaseMapReduceDataStore
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(HBaseDataStore.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(
+			HBaseDataStore.class);
 
 	private final HBaseSplitsProvider splitsProvider;
-	private final HBaseOperations hbaseOperations;
 
 	public HBaseDataStore(
 			final HBaseSplitsProvider splitsProvider,
@@ -87,9 +86,9 @@ public class HBaseDataStore extends
 				operations,
 				options);
 
-		secondaryIndexDataStore.setDataStore(this);
+		secondaryIndexDataStore.setDataStore(
+				this);
 
-		hbaseOperations = operations;
 		this.splitsProvider = splitsProvider;
 	}
 
@@ -99,12 +98,12 @@ public class HBaseDataStore extends
 			final PrimaryIndex index ) {
 		final String indexName = index.getId().getString();
 		final String columnFamily = adapter.getAdapterId().getString();
-		boolean rowMerging = adapter instanceof RowMergingDataAdapter;
+		final boolean rowMerging = adapter instanceof RowMergingDataAdapter;
 		if (rowMerging) {
 			if (!DataAdapterAndIndexCache.getInstance(
 					RowMergingAdapterOptionProvider.ROW_MERGING_ADAPTER_CACHE_ID).add(
-					adapter.getAdapterId(),
-					indexName)) {
+							adapter.getAdapterId(),
+							indexName)) {
 
 				if (baseOptions.isCreateTable()) {
 					((HBaseOperations) baseOperations).createTable(
@@ -112,18 +111,20 @@ public class HBaseDataStore extends
 							false,
 							adapter.getAdapterId());
 				}
-
-				((HBaseOperations) baseOperations).ensureServerSideOperationsObserverAttached(index.getId());
-				ServerOpHelper.addServerSideRowMerging(
-						((RowMergingDataAdapter<?, ?>) adapter),
-						(ServerSideOperations) baseOperations,
-						RowMergingServerOp.class.getName(),
-						RowMergingVisibilityServerOp.class.getName(),
-						indexName);
+				if (baseOptions.isServerSideLibraryEnabled()) {
+					((HBaseOperations) baseOperations).ensureServerSideOperationsObserverAttached(
+							index.getId());
+					ServerOpHelper.addServerSideRowMerging(
+							((RowMergingDataAdapter<?, ?>) adapter),
+							(ServerSideOperations) baseOperations,
+							RowMergingServerOp.class.getName(),
+							RowMergingVisibilityServerOp.class.getName(),
+							indexName);
+				}
 			}
 		}
 
-		hbaseOperations.verifyColumnFamily(
+		((HBaseOperations) baseOperations).verifyColumnFamily(
 				columnFamily,
 				!rowMerging,
 				indexName,

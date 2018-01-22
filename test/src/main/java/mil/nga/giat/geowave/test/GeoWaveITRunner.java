@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -56,7 +56,8 @@ import mil.nga.giat.geowave.test.annotation.OptionsOverride;
 public class GeoWaveITRunner extends
 		Suite
 {
-	private static final Logger LOGGER = LoggerFactory.getLogger(GeoWaveITRunner.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(
+			GeoWaveITRunner.class);
 	public static final AtomicBoolean DEFER_CLEANUP = new AtomicBoolean(
 			false);
 	public static final Object MUTEX = new Object();
@@ -72,13 +73,17 @@ public class GeoWaveITRunner extends
 			final Statement statement ) {
 		// add test environment setup
 		try {
-			final Method setupMethod = GeoWaveITRunner.class.getDeclaredMethod("setup");
-			setupMethod.setAccessible(true);
-			return super.withBeforeClasses(new RunBefores(
-					statement,
-					Collections.singletonList(new FrameworkMethod(
-							setupMethod)),
-					this));
+			final Method setupMethod = GeoWaveITRunner.class.getDeclaredMethod(
+					"setup");
+			setupMethod.setAccessible(
+					true);
+			return super.withBeforeClasses(
+					new RunBefores(
+							statement,
+							Collections.singletonList(
+									new FrameworkMethod(
+											setupMethod)),
+							this));
 		}
 		catch (NoSuchMethodException | SecurityException e) {
 			LOGGER.warn(
@@ -86,7 +91,8 @@ public class GeoWaveITRunner extends
 					e);
 		}
 
-		return super.withBeforeClasses(statement);
+		return super.withBeforeClasses(
+				statement);
 	}
 
 	@Override
@@ -94,13 +100,17 @@ public class GeoWaveITRunner extends
 			final Statement statement ) {
 		// add test environment tear down
 		try {
-			final Statement newStatement = super.withAfterClasses(statement);
-			final Method tearDownMethod = GeoWaveITRunner.class.getDeclaredMethod("tearDown");
-			tearDownMethod.setAccessible(true);
+			final Statement newStatement = super.withAfterClasses(
+					statement);
+			final Method tearDownMethod = GeoWaveITRunner.class.getDeclaredMethod(
+					"tearDown");
+			tearDownMethod.setAccessible(
+					true);
 			return new RunAfters(
 					newStatement,
-					Collections.singletonList(new FrameworkMethod(
-							tearDownMethod)),
+					Collections.singletonList(
+							new FrameworkMethod(
+									tearDownMethod)),
 					this);
 		}
 		catch (NoSuchMethodException | SecurityException e) {
@@ -108,7 +118,8 @@ public class GeoWaveITRunner extends
 					"Unable to find tearDown method",
 					e);
 		}
-		return super.withAfterClasses(statement);
+		return super.withAfterClasses(
+				statement);
 	}
 
 	private class TestClassRunnerForStoreTypes extends
@@ -131,14 +142,25 @@ public class GeoWaveITRunner extends
 
 			final StringBuilder nameBldr = new StringBuilder();
 			for (final Entry<String, GeoWaveStoreType> e : fieldNameStoreTypePair.entrySet()) {
-				nameBldr.append(
-						" (").append(
-						e.getKey()).append(
-						"=").append(
-						e.getValue().toString()).append(
-						")");
+				nameBldr
+						.append(
+								" (")
+						.append(
+								e.getKey())
+						.append(
+								"=")
+						.append(
+								e.getValue().toString())
+						.append(
+								")");
 			}
-
+			if (profileOptions != null && profileOptions.length > 0) {
+				nameBldr.append(
+						"; options=").append(
+								"\"" + String.join(
+										",",
+										profileOptions) + "\"");
+			}
 			nameSuffix = nameBldr.toString();
 		}
 
@@ -163,17 +185,22 @@ public class GeoWaveITRunner extends
 							fieldName);
 					final GeoWaveTestStoreImpl storeWithOverrides = new GeoWaveTestStoreImpl(
 							store);
-					if (field.isAnnotationPresent(NamespaceOverride.class)) {
-						storeWithOverrides.setNamespace(field.getAnnotation(
-								NamespaceOverride.class).value());
+					if (field.isAnnotationPresent(
+							NamespaceOverride.class)) {
+						storeWithOverrides.setNamespace(
+								field.getAnnotation(
+										NamespaceOverride.class).value());
 					}
-					else if (field.isAnnotationPresent(OptionsOverride.class)) {
-						storeWithOverrides.setOptions(field.getAnnotation(
-								OptionsOverride.class).value());
+					else if (field.isAnnotationPresent(
+							OptionsOverride.class)) {
+						storeWithOverrides.setOptions(
+								field.getAnnotation(
+										OptionsOverride.class).value());
 					}
-					fieldsAndStorePairs.add(new ImmutablePair<Field, GeoWaveTestStore>(
-							field,
-							storeWithOverrides));
+					fieldsAndStorePairs.add(
+							new ImmutablePair<Field, GeoWaveTestStore>(
+									field,
+									storeWithOverrides));
 				}
 			}
 			else {
@@ -185,17 +212,19 @@ public class GeoWaveITRunner extends
 									+ ", available parameters: " + fieldNameStoreTypePair.size() + ".");
 				}
 				for (final FrameworkField field : annotatedFields) {
-					fieldsAndStorePairs.add(new ImmutablePair<Field, GeoWaveTestStore>(
-							field.getField(),
-							field.getField().getAnnotation(
-									GeoWaveTestStore.class)));
+					fieldsAndStorePairs.add(
+							new ImmutablePair<Field, GeoWaveTestStore>(
+									field.getField(),
+									field.getField().getAnnotation(
+											GeoWaveTestStore.class)));
 				}
 			}
 
 			final Object testClassInstance = getTestClass().getJavaClass().newInstance();
 
 			for (final Pair<Field, GeoWaveTestStore> field : fieldsAndStorePairs) {
-				final GeoWaveStoreType type = fieldNameStoreTypePair.get(field.getLeft().getName());
+				final GeoWaveStoreType type = fieldNameStoreTypePair.get(
+						field.getLeft().getName());
 				field.getLeft().setAccessible(
 						true);
 				final GeoWaveTestStore store = field.getRight();
@@ -223,17 +252,20 @@ public class GeoWaveITRunner extends
 		@Override
 		protected void validateFields(
 				final List<Throwable> errors ) {
-			super.validateFields(errors);
+			super.validateFields(
+					errors);
 			if (typeIsAnnotated()) {
 				if (fieldsAreAnnotated()) {
-					errors.add(new GeoWaveITException(
-							"Only type or fields can be annotated with @GeoWaveTestStore, not both"));
+					errors.add(
+							new GeoWaveITException(
+									"Only type or fields can be annotated with @GeoWaveTestStore, not both"));
 				}
 				try {
 					getDataStoreOptionFieldsForTypeAnnotation();
 				}
 				catch (final Exception e) {
-					errors.add(e);
+					errors.add(
+							e);
 				}
 			}
 			else if (fieldsAreAnnotated()) {
@@ -241,9 +273,10 @@ public class GeoWaveITRunner extends
 				for (final FrameworkField field : annotatedFields) {
 					if (!field.getType().isAssignableFrom(
 							DataStorePluginOptions.class)) {
-						errors.add(new GeoWaveITException(
-								"'" + field.getName() + "' must be of type '" + DataStorePluginOptions.class.getName()
-										+ "'"));
+						errors.add(
+								new GeoWaveITException(
+										"'" + field.getName() + "' must be of type '"
+												+ DataStorePluginOptions.class.getName() + "'"));
 					}
 				}
 			}
@@ -252,7 +285,8 @@ public class GeoWaveITRunner extends
 		@Override
 		protected Statement classBlock(
 				final RunNotifier notifier ) {
-			return childrenInvoker(notifier);
+			return childrenInvoker(
+					notifier);
 		}
 
 		@Override
@@ -294,22 +328,30 @@ public class GeoWaveITRunner extends
 		final GeoWaveStoreRunnerConfig emptyConfig = new GeoWaveStoreRunnerConfig();
 		List<GeoWaveStoreRunnerConfig> configs = new ArrayList<GeoWaveStoreRunnerConfig>();
 
-		String storeTypeProp = System.getenv(STORE_TYPE_ENVIRONMENT_VARIABLE_NAME);
-		if (!TestUtils.isSet(storeTypeProp)) {
-			storeTypeProp = System.getProperty(STORE_TYPE_PROPERTY_NAME);
+		String storeTypeProp = System.getenv(
+				STORE_TYPE_ENVIRONMENT_VARIABLE_NAME);
+		if (!TestUtils.isSet(
+				storeTypeProp)) {
+			storeTypeProp = System.getProperty(
+					STORE_TYPE_PROPERTY_NAME);
 		}
 		// See if user specified a single store type
-		if (TestUtils.isSet(storeTypeProp)) {
+		if (TestUtils.isSet(
+				storeTypeProp)) {
 			final Set<String> dataStoreOptionFields = getDataStoreOptionFieldsForTypeAnnotation();
-			final GeoWaveStoreType storeType = GeoWaveStoreType.valueOf(storeTypeProp);
+			final GeoWaveStoreType storeType = GeoWaveStoreType.valueOf(
+					storeTypeProp);
 
 			// If no match, the configs list will be empty and the IT will be a
 			// no-op
-			if (containsAnnotationForType(storeType)) {
-				configs.add(new GeoWaveStoreRunnerConfig(
-						storeType,
-						dataStoreOptionFields));
-				storeTypes.add(storeType);
+			if (containsAnnotationForType(
+					storeType)) {
+				configs.add(
+						new GeoWaveStoreRunnerConfig(
+								storeType,
+								dataStoreOptionFields));
+				storeTypes.add(
+						storeType);
 			}
 		}
 		else { // No user override - just use the IT's list of types
@@ -322,14 +364,17 @@ public class GeoWaveITRunner extends
 				final GeoWaveTestStore store = getTestClass().getJavaClass().getAnnotation(
 						GeoWaveTestStore.class);
 				for (final GeoWaveStoreType storeType : store.value()) {
-					configs.add(new GeoWaveStoreRunnerConfig(
-							storeType,
-							dataStoreOptionFields));
-					storeTypes.add(storeType);
+					configs.add(
+							new GeoWaveStoreRunnerConfig(
+									storeType,
+									dataStoreOptionFields));
+					storeTypes.add(
+							storeType);
 				}
 			}
 			else {
-				configs.add(emptyConfig);
+				configs.add(
+						emptyConfig);
 				final List<FrameworkField> storeFields = getStoreAnnotatedFields();
 				for (final FrameworkField field : storeFields) {
 					configs = addRunnerConfigsForField(
@@ -341,34 +386,41 @@ public class GeoWaveITRunner extends
 		}
 
 		// Get the set of profile options from the profile, if any
-		String[][] profileOptionSets = getProfileOptionSets();
+		final String[][] profileOptionSets = getProfileOptionSets();
 
 		// Iterate through option sets to create runners
-		for (String[] profileOptions : profileOptionSets) {
+		for (final String[] profileOptions : profileOptionSets) {
 			// Create a test runner for each store type / config
 			for (final GeoWaveStoreRunnerConfig config : configs) {
 				final TestClassRunnerForStoreTypes runner = new TestClassRunnerForStoreTypes(
 						getTestClass().getJavaClass(),
 						config.fieldNameStoreTypePair,
 						profileOptions);
-				runners.add(runner);
+				runners.add(
+						runner);
 			}
 		}
 	}
 
 	private String[][] getProfileOptionSets() {
-		String optionsStr = System.getenv(DATASTORE_OPTIONS_ENVIRONMENT_VARIABLE_NAME);
-		if (!TestUtils.isSet(optionsStr)) {
-			optionsStr = System.getProperty(DATASTORE_OPTIONS_PROPERTY_NAME);
+		String optionsStr = System.getenv(
+				DATASTORE_OPTIONS_ENVIRONMENT_VARIABLE_NAME);
+		if (!TestUtils.isSet(
+				optionsStr)) {
+			optionsStr = System.getProperty(
+					DATASTORE_OPTIONS_PROPERTY_NAME);
 		}
 
 		String[][] profileOptions = null;
-		if (TestUtils.isSet(optionsStr)) {
-			String[] optionSets = optionsStr.split("!");
+		if (TestUtils.isSet(
+				optionsStr)) {
+			final String[] optionSets = optionsStr.split(
+					"!");
 			profileOptions = new String[optionSets.length][];
 
 			for (int i = 0; i < optionSets.length; i++) {
-				profileOptions[i] = optionSets[i].split(",");
+				profileOptions[i] = optionSets[i].split(
+						",");
 			}
 		}
 
@@ -412,7 +464,8 @@ public class GeoWaveITRunner extends
 		for (final Field field : fields) {
 			if (field.getType().isAssignableFrom(
 					DataStorePluginOptions.class)) {
-				dataStoreOptionFields.add(field.getName());
+				dataStoreOptionFields.add(
+						field.getName());
 			}
 		}
 		if (dataStoreOptionFields.isEmpty()) {
@@ -439,12 +492,14 @@ public class GeoWaveITRunner extends
 		final List<GeoWaveStoreRunnerConfig> newConfigs = new ArrayList<GeoWaveStoreRunnerConfig>();
 		for (final GeoWaveStoreRunnerConfig config : currentConfigs) {
 			for (final GeoWaveStoreType type : types) {
-				newConfigs.add(new GeoWaveStoreRunnerConfig(
-						config,
-						field.getName(),
-						type));
+				newConfigs.add(
+						new GeoWaveStoreRunnerConfig(
+								config,
+								field.getName(),
+								type));
 
-				storeTypes.add(type);
+				storeTypes.add(
+						type);
 			}
 		}
 		return newConfigs;
@@ -468,7 +523,8 @@ public class GeoWaveITRunner extends
 		if (es != null) {
 			final Environment[] envs = es.value();
 			for (final Environment env : envs) {
-				environments.add(env);
+				environments.add(
+						env);
 			}
 		}
 		final List<FrameworkMethod> envMethods = getTestEnvAnnotatedMethods();
@@ -477,7 +533,8 @@ public class GeoWaveITRunner extends
 			final Environment[] envs = m.getMethod().getAnnotation(
 					Environments.class).value();
 			for (final Environment env : envs) {
-				environments.add(env);
+				environments.add(
+						env);
 			}
 		}
 		final TestEnvironment[] testEnvs = new TestEnvironment[environments.size() + storeTypes.size()];
@@ -489,14 +546,16 @@ public class GeoWaveITRunner extends
 			testEnvs[i++] = e.getTestEnvironment();
 		}
 
-		return processDependencies(testEnvs);
+		return processDependencies(
+				testEnvs);
 	}
 
 	private TestEnvironment[] processDependencies(
 			final TestEnvironment[] testEnvs ) {
 		final TestEnvironmentDependencyTree dependencyTree = new TestEnvironmentDependencyTree();
 		for (final TestEnvironment e : testEnvs) {
-			dependencyTree.processDependencies(e);
+			dependencyTree.processDependencies(
+					e);
 		}
 		return dependencyTree.getOrderedTestEnvironments();
 	}
@@ -513,7 +572,9 @@ public class GeoWaveITRunner extends
 	protected void setup()
 			throws Exception {
 		synchronized (MUTEX) {
-			TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
+			TimeZone.setDefault(
+					TimeZone.getTimeZone(
+							"GMT"));
 			for (final TestEnvironment e : testEnvs) {
 				e.setup();
 			}
@@ -525,8 +586,10 @@ public class GeoWaveITRunner extends
 		synchronized (MUTEX) {
 			if (!DEFER_CLEANUP.get()) {
 				// Tearodwn in reverse
-				final List<TestEnvironment> envs = Arrays.asList(testEnvs);
-				final ListIterator<TestEnvironment> it = envs.listIterator(envs.size());
+				final List<TestEnvironment> envs = Arrays.asList(
+						testEnvs);
+				final ListIterator<TestEnvironment> it = envs.listIterator(
+						envs.size());
 				while (it.hasPrevious()) {
 					it.previous().tearDown();
 				}
@@ -600,31 +663,39 @@ public class GeoWaveITRunner extends
 
 		private void processDependencies(
 				final TestEnvironment env ) {
-			if (!visitedEnvs.contains(env)) {
-				visitedEnvs.add(env);
+			if (!visitedEnvs.contains(
+					env)) {
+				visitedEnvs.add(
+						env);
 				if ((env.getDependentEnvironments() == null) || (env.getDependentEnvironments().length == 0)) {
-					independentEnvironments.add(env);
+					independentEnvironments.add(
+							env);
 				}
 				else {
 
 					for (final TestEnvironment requiredEnv : env.getDependentEnvironments()) {
-						Set<TestEnvironment> dependentSet = dependenciesMapping.get(requiredEnv);
+						Set<TestEnvironment> dependentSet = dependenciesMapping.get(
+								requiredEnv);
 						if (dependentSet == null) {
 							dependentSet = new HashSet<TestEnvironment>();
 							dependenciesMapping.put(
 									requiredEnv,
 									dependentSet);
 						}
-						dependentSet.add(env);
-						Set<TestEnvironment> requiredSet = requirementsMapping.get(env);
+						dependentSet.add(
+								env);
+						Set<TestEnvironment> requiredSet = requirementsMapping.get(
+								env);
 						if (requiredSet == null) {
 							requiredSet = new HashSet<TestEnvironment>();
 							requirementsMapping.put(
 									env,
 									requiredSet);
 						}
-						requiredSet.add(requiredEnv);
-						processDependencies(requiredEnv);
+						requiredSet.add(
+								requiredEnv);
+						processDependencies(
+								requiredEnv);
 					}
 
 				}
@@ -637,7 +708,8 @@ public class GeoWaveITRunner extends
 			final Set<TestEnvironment> testsAddedToArray = new HashSet<TestEnvironment>();
 			for (final TestEnvironment e : independentEnvironments) {
 				retVal[i++] = e;
-				testsAddedToArray.add(e);
+				testsAddedToArray.add(
+						e);
 			}
 			for (final TestEnvironment entry : requirementsMapping.keySet()) {
 				traverseRequirements(
@@ -655,9 +727,11 @@ public class GeoWaveITRunner extends
 				final int startIndex,
 				final Set<TestEnvironment> testsAddedToArray ) {
 			int count = 0;
-			final Set<TestEnvironment> requirements = requirementsMapping.get(env);
+			final Set<TestEnvironment> requirements = requirementsMapping.get(
+					env);
 			for (final TestEnvironment req : requirements) {
-				if (!testsAddedToArray.contains(req)) {
+				if (!testsAddedToArray.contains(
+						req)) {
 					count = traverseRequirements(
 							req,
 							currentOrderedArray,
@@ -666,7 +740,8 @@ public class GeoWaveITRunner extends
 				}
 			}
 			currentOrderedArray[startIndex + count++] = env;
-			testsAddedToArray.add(env);
+			testsAddedToArray.add(
+					env);
 			return count;
 		}
 	}

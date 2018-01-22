@@ -283,7 +283,7 @@ public class AccumuloOperations implements
 				authorization);
 	}
 
-	public void createTable(
+	public boolean createTable(
 			final String tableName,
 			final boolean enableVersioning,
 			final boolean enableBlockCache ) {
@@ -315,6 +315,7 @@ public class AccumuloOperations implements
 							tableName,
 							false);
 				}
+				return true;
 			}
 			catch (AccumuloException | AccumuloSecurityException | TableExistsException e) {
 				LOGGER.warn(
@@ -327,6 +328,7 @@ public class AccumuloOperations implements
 						e);
 			}
 		}
+		return false;
 	}
 
 	public long getRowCount(
@@ -1371,7 +1373,7 @@ public class AccumuloOperations implements
 			// this checks for existence prior to create
 			createTable(
 					AbstractGeoWavePersistence.METADATA_TABLE,
-					options.isServerSideLibraryEnabled(),
+					false,
 					options.isEnableBlockCache());
 		}
 		if (MetadataType.STATS.equals(metadataType) && options.isServerSideLibraryEnabled()) {

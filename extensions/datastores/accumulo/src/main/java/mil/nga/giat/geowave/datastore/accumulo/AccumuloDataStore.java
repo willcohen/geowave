@@ -135,10 +135,19 @@ public class AccumuloDataStore extends
 						adapter.getAdapterId(),
 						indexName)) {
 					if (baseOptions.isCreateTable()) {
-						((AccumuloOperations) baseOperations).createTable(
+						if (!((AccumuloOperations) baseOperations).createTable(
 								indexName,
-								true,
-								baseOptions.isEnableBlockCache());
+								false,
+								baseOptions.isEnableBlockCache())) {
+							((AccumuloOperations) baseOperations).enableVersioningIterator(
+									indexName,
+									false);
+						}
+					}
+					else {
+						((AccumuloOperations) baseOperations).enableVersioningIterator(
+								indexName,
+								false);
 					}
 					ServerOpHelper.addServerSideRowMerging(
 							((RowMergingDataAdapter<?, ?>) adapter),

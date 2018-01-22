@@ -44,8 +44,6 @@ public class AccumuloDeleter implements
 	public void delete(
 			final GeoWaveRow row,
 			final DataAdapter<?> adapter ) {
-		System.err.println(new ByteArrayId(
-				GeoWaveKey.getCompositeId(row)).getHexString());
 		final List<Range> rowRanges = new ArrayList<Range>();
 		if (isAltIndex) {
 			rowRanges.add(Range.exact(new Text(

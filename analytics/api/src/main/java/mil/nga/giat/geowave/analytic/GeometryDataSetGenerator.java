@@ -647,12 +647,14 @@ public class GeometryDataSetGenerator
 			i = 0;
 			for (final Coordinate coor : line.getCoordinates()) {
 				if (lastCoor != null) {
-					results.addAll(generatePoints(
-							line.getFactory(),
-							toVec(coor),
-							toVec(lastCoor),
-							distanceFactor,
-							(int) ((points) * (distancesBetweenCoords[i++] / distanceTotal))));
+					if (distanceTotal > 0) {
+						results.addAll(generatePoints(
+								line.getFactory(),
+								toVec(coor),
+								toVec(lastCoor),
+								distanceFactor,
+								(int) ((points) * (distancesBetweenCoords[i++] / distanceTotal))));
+					}
 				}
 				lastCoor = coor;
 			}

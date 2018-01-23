@@ -16,6 +16,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import mil.nga.giat.geowave.core.index.FloatCompareUtils;
+
 public class GaussianFilter
 {
 	private final static Logger LOGGER = LoggerFactory.getLogger(GaussianFilter.class);
@@ -278,8 +280,12 @@ public class GaussianFilter
 		for (final double element : kernel) {
 			total += element;
 		}
-		for (int i = 0; i < kernel.length; i++) {
-			retVal[i] = kernel[i] / total;
+		if (!FloatCompareUtils.checkDoublesEqual(
+				total,
+				0.0)) {
+			for (int i = 0; i < kernel.length; i++) {
+				retVal[i] = kernel[i] / total;
+			}
 		}
 		return retVal;
 	}

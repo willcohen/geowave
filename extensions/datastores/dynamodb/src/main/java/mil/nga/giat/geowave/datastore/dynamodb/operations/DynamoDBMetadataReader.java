@@ -25,8 +25,7 @@ import mil.nga.giat.geowave.core.store.operations.MetadataReader;
 public class DynamoDBMetadataReader implements
 		MetadataReader
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			DynamoDBMetadataReader.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(DynamoDBMetadataReader.class);
 	private final DynamoDBOperations operations;
 
 	public DynamoDBMetadataReader(
@@ -37,8 +36,7 @@ public class DynamoDBMetadataReader implements
 	@Override
 	public CloseableIterator<GeoWaveMetadata> query(
 			MetadataQuery query ) {
-		String tableName = operations.getQualifiedTableName(
-				AbstractGeoWavePersistence.METADATA_TABLE);
+		String tableName = operations.getQualifiedTableName(AbstractGeoWavePersistence.METADATA_TABLE);
 
 		if (query.hasPrimaryId()) {
 			final QueryRequest queryRequest = new QueryRequest(
@@ -49,21 +47,15 @@ public class DynamoDBMetadataReader implements
 						DynamoDBOperations.METADATA_SECONDARY_ID_KEY,
 						new Condition()
 								.withAttributeValueList(
-										new AttributeValue().withB(
-												ByteBuffer.wrap(
-														query.getSecondaryId())))
+										new AttributeValue().withB(ByteBuffer.wrap(query.getSecondaryId())))
 								.withComparisonOperator(
 										ComparisonOperator.EQ));
 			}
 			queryRequest.addKeyConditionsEntry(
 					DynamoDBOperations.METADATA_PRIMARY_ID_KEY,
-					new Condition()
-							.withAttributeValueList(
-									new AttributeValue().withB(
-											ByteBuffer.wrap(
-													query.getPrimaryId())))
-							.withComparisonOperator(
-									ComparisonOperator.EQ));
+					new Condition().withAttributeValueList(
+							new AttributeValue().withB(ByteBuffer.wrap(query.getPrimaryId()))).withComparisonOperator(
+							ComparisonOperator.EQ));
 
 			final QueryResult queryResult = operations.getClient().query(
 					queryRequest);
@@ -78,13 +70,10 @@ public class DynamoDBMetadataReader implements
 										final Map<String, AttributeValue> result ) {
 
 									return new GeoWaveMetadata(
-											getPrimaryId(
-													result),
-											getSecondaryId(
-													result),
+											getPrimaryId(result),
+											getSecondaryId(result),
 											null,
-											getValue(
-													result));
+											getValue(result));
 								}
 							}));
 
@@ -97,9 +86,7 @@ public class DynamoDBMetadataReader implements
 					DynamoDBOperations.METADATA_SECONDARY_ID_KEY,
 					new Condition()
 							.withAttributeValueList(
-									new AttributeValue().withB(
-											ByteBuffer.wrap(
-													query.getSecondaryId())))
+									new AttributeValue().withB(ByteBuffer.wrap(query.getSecondaryId())))
 							.withComparisonOperator(
 									ComparisonOperator.EQ));
 		}
@@ -116,21 +103,17 @@ public class DynamoDBMetadataReader implements
 									final Map<String, AttributeValue> result ) {
 
 								return new GeoWaveMetadata(
-										getPrimaryId(
-												result),
-										getSecondaryId(
-												result),
+										getPrimaryId(result),
+										getSecondaryId(result),
 										null,
-										getValue(
-												result));
+										getValue(result));
 							}
 						}));
 	}
 
 	protected byte[] getPrimaryId(
 			final Map<String, AttributeValue> map ) {
-		final AttributeValue v = map.get(
-				DynamoDBOperations.METADATA_PRIMARY_ID_KEY);
+		final AttributeValue v = map.get(DynamoDBOperations.METADATA_PRIMARY_ID_KEY);
 		if (v != null) {
 			return v.getB().array();
 		}
@@ -139,8 +122,7 @@ public class DynamoDBMetadataReader implements
 
 	protected byte[] getSecondaryId(
 			final Map<String, AttributeValue> map ) {
-		final AttributeValue v = map.get(
-				DynamoDBOperations.METADATA_SECONDARY_ID_KEY);
+		final AttributeValue v = map.get(DynamoDBOperations.METADATA_SECONDARY_ID_KEY);
 		if (v != null) {
 			return v.getB().array();
 		}
@@ -149,8 +131,7 @@ public class DynamoDBMetadataReader implements
 
 	protected byte[] getValue(
 			final Map<String, AttributeValue> map ) {
-		final AttributeValue v = map.get(
-				DynamoDBOperations.METADATA_VALUE_KEY);
+		final AttributeValue v = map.get(DynamoDBOperations.METADATA_VALUE_KEY);
 		if (v != null) {
 			return v.getB().array();
 		}

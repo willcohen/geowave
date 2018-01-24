@@ -31,8 +31,7 @@ import mil.nga.giat.geowave.mapreduce.splits.SplitsProvider;
 public class DynamoDBSplitsProvider extends
 		SplitsProvider
 {
-	private final static Logger LOGGER = Logger.getLogger(
-			DynamoDBSplitsProvider.class);
+	private final static Logger LOGGER = Logger.getLogger(DynamoDBSplitsProvider.class);
 
 	@Override
 	protected TreeSet<IntermediateSplitInfo> populateIntermediateSplits(
@@ -53,27 +52,23 @@ public class DynamoDBSplitsProvider extends
 			dynamoDBOperations = (DynamoDBOperations) operations;
 		}
 		else {
-			LOGGER.error(
-					"DynamoDBSplitsProvider requires DynamoDBOperations object.");
+			LOGGER.error("DynamoDBSplitsProvider requires DynamoDBOperations object.");
 			return splits;
 		}
 
-		if ((query != null) && !query.isSupported(
-				index)) {
+		if ((query != null) && !query.isSupported(index)) {
 			return splits;
 		}
 
 		final NumericIndexStrategy indexStrategy = index.getIndexStrategy();
 		final int partitionKeyLength = indexStrategy.getPartitionKeyLength();
 
-		final String tableName = dynamoDBOperations.getQualifiedTableName(
-				index.getId().getString());
+		final String tableName = dynamoDBOperations.getQualifiedTableName(index.getId().getString());
 
 		// Build list of row ranges from query
 		List<ByteArrayRange> ranges = null;
 		if (query != null) {
-			final List<MultiDimensionalNumericData> indexConstraints = query.getIndexConstraints(
-					indexStrategy);
+			final List<MultiDimensionalNumericData> indexConstraints = query.getIndexConstraints(indexStrategy);
 			if ((maxSplits != null) && (maxSplits > 0)) {
 				ranges = DataStoreUtils.constraintsToQueryRanges(
 						indexConstraints,
@@ -88,10 +83,14 @@ public class DynamoDBSplitsProvider extends
 			}
 		}
 
+		if (ranges == null) {
+			return splits;
+		}
+
 		final Map<ByteArrayId, SplitInfo> splitInfo = new HashMap<ByteArrayId, SplitInfo>();
 		final List<RangeLocationPair> rangeList = new ArrayList<RangeLocationPair>();
 		for (final ByteArrayRange range : ranges) {
-			GeoWaveRowRange gwRange = toRowRange(
+			GeoWaveRowRange gwRange = SplitsProvider.toRowRange(
 					range,
 					partitionKeyLength);
 
@@ -106,11 +105,10 @@ public class DynamoDBSplitsProvider extends
 					gwRange,
 					index.getIndexStrategy().getPartitionKeyLength());
 
-			rangeList.add(
-					new RangeLocationPair(
-							gwRange,
-							tableName,
-							cardinality < 1 ? 1.0 : cardinality));
+			rangeList.add(new RangeLocationPair(
+					gwRange,
+					tableName,
+					cardinality < 1 ? 1.0 : cardinality));
 		}
 
 		if (!rangeList.isEmpty()) {
@@ -119,10 +117,9 @@ public class DynamoDBSplitsProvider extends
 					new SplitInfo(
 							index,
 							rangeList));
-			splits.add(
-					new IntermediateSplitInfo(
-							splitInfo,
-							this));
+			splits.add(new IntermediateSplitInfo(
+					splitInfo,
+					this));
 		}
 
 		return splits;

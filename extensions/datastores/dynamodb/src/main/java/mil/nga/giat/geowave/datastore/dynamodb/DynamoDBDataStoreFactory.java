@@ -1,6 +1,5 @@
 package mil.nga.giat.geowave.datastore.dynamodb;
 
-
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.DataStoreFactory;
 import mil.nga.giat.geowave.core.store.StoreFactoryHelper;

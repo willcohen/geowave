@@ -459,4 +459,49 @@ public abstract class SplitsProvider
 
 		}
 	}
+
+	public static ByteArrayRange fromRowRange(
+			final GeoWaveRowRange range ) {
+
+		if ((range.getPartitionKey() == null) || (range.getPartitionKey().length == 0)) {
+			byte[] startKey = (range.getStartSortKey() == null) ? null : range.getStartSortKey();
+			byte[] endKey = (range.getEndSortKey() == null) ? null : range.getEndSortKey();
+
+			return new ByteArrayRange(
+					new ByteArrayId(
+							startKey),
+					new ByteArrayId(
+							endKey));
+		}
+		else {
+			byte[] startKey = (range.getStartSortKey() == null) ? range.getPartitionKey() : ArrayUtils.addAll(
+					range.getPartitionKey(),
+					range.getStartSortKey());
+
+			byte[] endKey = (range.getEndSortKey() == null) ? ByteArrayId.getNextPrefix(range.getPartitionKey())
+					: ArrayUtils.addAll(
+							range.getPartitionKey(),
+							range.getEndSortKey());
+
+			return new ByteArrayRange(
+					new ByteArrayId(
+							startKey),
+					new ByteArrayId(
+							endKey));
+		}
+	}
+
+	public static byte[] getInclusiveEndKey(
+			byte[] endKey ) {
+		byte[] inclusiveEndKey = new byte[endKey.length + 1];
+
+		System.arraycopy(
+				endKey,
+				0,
+				inclusiveEndKey,
+				0,
+				inclusiveEndKey.length - 1);
+
+		return inclusiveEndKey;
+	}
 }

@@ -13,8 +13,7 @@ import mil.nga.giat.geowave.datastore.dynamodb.operations.DynamoDBOperations;
 public class DynamoDBFactoryHelper implements
 		StoreFactoryHelper
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			DynamoDBFactoryHelper.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(DynamoDBFactoryHelper.class);
 
 	@Override
 	public StoreFactoryOptions createOptionsInstance() {
@@ -25,8 +24,7 @@ public class DynamoDBFactoryHelper implements
 	public DataStoreOperations createOperations(
 			final StoreFactoryOptions options ) {
 		try {
-			return DynamoDBOperations.createOperations(
-					(DynamoDBOptions) options);
+			return DynamoDBOperations.createOperations((DynamoDBOptions) options);
 		}
 		catch (IOException e) {
 			LOGGER.error(

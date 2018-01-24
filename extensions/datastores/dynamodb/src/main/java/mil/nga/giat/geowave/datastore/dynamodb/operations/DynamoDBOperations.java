@@ -52,8 +52,7 @@ import mil.nga.giat.geowave.mapreduce.splits.RecordReaderParams;
 public class DynamoDBOperations implements
 		MapReduceDataStoreOperations
 {
-	private final Logger LOGGER = LoggerFactory.getLogger(
-			DynamoDBOperations.class);
+	private final Logger LOGGER = LoggerFactory.getLogger(DynamoDBOperations.class);
 
 	public static final String METADATA_PRIMARY_ID_KEY = "I";
 	public static final String METADATA_SECONDARY_ID_KEY = "S";
@@ -98,21 +97,18 @@ public class DynamoDBOperations implements
 			final byte[][] dataIds,
 			final byte[] adapterId,
 			final String... additionalAuthorizations ) {
-		final String qName = getQualifiedTableName(
-				tableName);
+		final String qName = getQualifiedTableName(tableName);
 		final ByteArrayId adapterIdObj = new ByteArrayId(
 				adapterId);
 		final Set<ByteArrayId> dataIdsSet = new HashSet<ByteArrayId>(
 				dataIds.length);
 		for (int i = 0; i < dataIds.length; i++) {
-			dataIdsSet.add(
-					new ByteArrayId(
-							dataIds[i]));
+			dataIdsSet.add(new ByteArrayId(
+					dataIds[i]));
 		}
 		final ScanRequest request = new ScanRequest(
 				qName);
-		final ScanResult scanResult = client.scan(
-				request);
+		final ScanResult scanResult = client.scan(request);
 		final Iterator<DynamoDBRow> everything = Iterators.transform(
 				new LazyPaginatedScan(
 						scanResult,
@@ -126,12 +122,9 @@ public class DynamoDBOperations implements
 					@Override
 					public boolean apply(
 							final DynamoDBRow input ) {
-						return dataIdsSet.contains(
-								new ByteArrayId(
-										input.getDataId()))
-								&& new ByteArrayId(
-										input.getAdapterId()).equals(
-												adapterIdObj);
+						return dataIdsSet.contains(new ByteArrayId(
+								input.getDataId())) && new ByteArrayId(
+								input.getAdapterId()).equals(adapterIdObj);
 					}
 				});
 	}
@@ -141,11 +134,9 @@ public class DynamoDBOperations implements
 			throws Exception {
 		final ListTablesResult tables = client.listTables();
 		for (final String tableName : tables.getTableNames()) {
-			if ((gwNamespace == null) || tableName.startsWith(
-					gwNamespace)) {
-				client.deleteTable(
-						new DeleteTableRequest(
-								tableName));
+			if ((gwNamespace == null) || tableName.startsWith(gwNamespace)) {
+				client.deleteTable(new DeleteTableRequest(
+						tableName));
 			}
 		}
 		tableExistsCache.clear();
@@ -157,12 +148,8 @@ public class DynamoDBOperations implements
 			throws IOException {
 		try {
 			return TableStatus.ACTIVE.name().equals(
-					client
-							.describeTable(
-									getQualifiedTableName(
-											indexId.getString()))
-							.getTable()
-							.getTableStatus());
+					client.describeTable(
+							getQualifiedTableName(indexId.getString())).getTable().getTableStatus());
 		}
 		catch (final AmazonDynamoDBException e) {
 			LOGGER.info(
@@ -192,8 +179,7 @@ public class DynamoDBOperations implements
 	public Writer createWriter(
 			ByteArrayId indexId,
 			ByteArrayId adapterId ) {
-		final String qName = getQualifiedTableName(
-				indexId.getString());
+		final String qName = getQualifiedTableName(indexId.getString());
 
 		final DynamoDBWriter writer = new DynamoDBWriter(
 				client,
@@ -201,34 +187,27 @@ public class DynamoDBOperations implements
 
 		if (options.getStoreOptions().isCreateTable()) {
 			synchronized (tableExistsCache) {
-				final Boolean tableExists = tableExistsCache.get(
-						qName);
+				final Boolean tableExists = tableExistsCache.get(qName);
 				if ((tableExists == null) || !tableExists) {
 					final boolean tableCreated = TableUtils.createTableIfNotExists(
 							client,
-							new CreateTableRequest()
-									.withTableName(
-											qName)
-									.withAttributeDefinitions(
-											new AttributeDefinition(
-													DynamoDBRow.GW_PARTITION_ID_KEY,
-													ScalarAttributeType.N),
-											new AttributeDefinition(
-													DynamoDBRow.GW_RANGE_KEY,
-													ScalarAttributeType.B))
-									.withKeySchema(
-											new KeySchemaElement(
-													DynamoDBRow.GW_PARTITION_ID_KEY,
-													KeyType.HASH),
-											new KeySchemaElement(
-													DynamoDBRow.GW_RANGE_KEY,
-													KeyType.RANGE))
-									.withProvisionedThroughput(
-											new ProvisionedThroughput(
-													Long.valueOf(
-															options.getReadCapacity()),
-													Long.valueOf(
-															options.getWriteCapacity()))));
+							new CreateTableRequest().withTableName(
+									qName).withAttributeDefinitions(
+									new AttributeDefinition(
+											DynamoDBRow.GW_PARTITION_ID_KEY,
+											ScalarAttributeType.N),
+									new AttributeDefinition(
+											DynamoDBRow.GW_RANGE_KEY,
+											ScalarAttributeType.B)).withKeySchema(
+									new KeySchemaElement(
+											DynamoDBRow.GW_PARTITION_ID_KEY,
+											KeyType.HASH),
+									new KeySchemaElement(
+											DynamoDBRow.GW_RANGE_KEY,
+											KeyType.RANGE)).withProvisionedThroughput(
+									new ProvisionedThroughput(
+											Long.valueOf(options.getReadCapacity()),
+											Long.valueOf(options.getWriteCapacity()))));
 					if (tableCreated) {
 						try {
 							TableUtils.waitUntilActive(
@@ -254,41 +233,31 @@ public class DynamoDBOperations implements
 	@Override
 	public MetadataWriter createMetadataWriter(
 			MetadataType metadataType ) {
-		final String tableName = getQualifiedTableName(
-				AbstractGeoWavePersistence.METADATA_TABLE);
+		final String tableName = getQualifiedTableName(AbstractGeoWavePersistence.METADATA_TABLE);
 
 		if (options.getStoreOptions().isCreateTable()) {
 			synchronized (DynamoDBOperations.tableExistsCache) {
-				final Boolean tableExists = DynamoDBOperations.tableExistsCache.get(
-						tableName);
+				final Boolean tableExists = DynamoDBOperations.tableExistsCache.get(tableName);
 				if ((tableExists == null) || !tableExists) {
 					final boolean tableCreated = TableUtils.createTableIfNotExists(
 							client,
-							new CreateTableRequest()
-									.withTableName(
-											tableName)
-									.withAttributeDefinitions(
-											new AttributeDefinition(
-													METADATA_PRIMARY_ID_KEY,
-													ScalarAttributeType.B))
-									.withKeySchema(
-											new KeySchemaElement(
-													METADATA_PRIMARY_ID_KEY,
-													KeyType.HASH))
-									.withAttributeDefinitions(
-											new AttributeDefinition(
-													METADATA_TIMESTAMP_KEY,
-													ScalarAttributeType.N))
-									.withKeySchema(
-											new KeySchemaElement(
-													METADATA_TIMESTAMP_KEY,
-													KeyType.RANGE))
-									.withProvisionedThroughput(
-											new ProvisionedThroughput(
-													Long.valueOf(
-															5),
-													Long.valueOf(
-															5))));
+							new CreateTableRequest().withTableName(
+									tableName).withAttributeDefinitions(
+									new AttributeDefinition(
+											METADATA_PRIMARY_ID_KEY,
+											ScalarAttributeType.B)).withKeySchema(
+									new KeySchemaElement(
+											METADATA_PRIMARY_ID_KEY,
+											KeyType.HASH)).withAttributeDefinitions(
+									new AttributeDefinition(
+											METADATA_TIMESTAMP_KEY,
+											ScalarAttributeType.N)).withKeySchema(
+									new KeySchemaElement(
+											METADATA_TIMESTAMP_KEY,
+											KeyType.RANGE)).withProvisionedThroughput(
+									new ProvisionedThroughput(
+											Long.valueOf(5),
+											Long.valueOf(5))));
 					if (tableCreated) {
 						try {
 							TableUtils.waitUntilActive(
@@ -350,8 +319,7 @@ public class DynamoDBOperations implements
 			throws Exception {
 		return new DynamoDBDeleter(
 				this,
-				getQualifiedTableName(
-						indexId.getString()));
+				getQualifiedTableName(indexId.getString()));
 	}
 
 	@Override

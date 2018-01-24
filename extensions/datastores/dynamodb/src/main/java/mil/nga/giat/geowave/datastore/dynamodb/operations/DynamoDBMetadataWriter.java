@@ -4,6 +4,9 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
@@ -14,6 +17,8 @@ import mil.nga.giat.geowave.core.store.operations.MetadataWriter;
 public class DynamoDBMetadataWriter implements
 		MetadataWriter
 {
+	private final static Logger LOGGER = LoggerFactory.getLogger(DynamoDBMetadataWriter.class);
+
 	final DynamoDBOperations operations;
 	private final String tableName;
 
@@ -37,35 +42,30 @@ public class DynamoDBMetadataWriter implements
 		final Map<String, AttributeValue> map = new HashMap<>();
 		map.put(
 				DynamoDBOperations.METADATA_PRIMARY_ID_KEY,
-				new AttributeValue().withB(
-						ByteBuffer.wrap(
-								metadata.getPrimaryId())));
+				new AttributeValue().withB(ByteBuffer.wrap(metadata.getPrimaryId())));
 
 		if (metadata.getSecondaryId() != null) {
 			map.put(
 					DynamoDBOperations.METADATA_SECONDARY_ID_KEY,
-					new AttributeValue().withB(
-							ByteBuffer.wrap(
-									metadata.getSecondaryId())));
+					new AttributeValue().withB(ByteBuffer.wrap(metadata.getSecondaryId())));
 		}
 
 		map.put(
 				DynamoDBOperations.METADATA_TIMESTAMP_KEY,
-				new AttributeValue().withN(
-						Long.toString(
-								System.currentTimeMillis())));
+				new AttributeValue().withN(Long.toString(System.currentTimeMillis())));
 		map.put(
 				DynamoDBOperations.METADATA_VALUE_KEY,
-				new AttributeValue().withB(
-						ByteBuffer.wrap(
-								metadata.getValue())));
+				new AttributeValue().withB(ByteBuffer.wrap(metadata.getValue())));
 
 		PutItemResult putResult = operations.getClient().putItem(
 				new PutItemRequest(
 						tableName,
 						map));
 
-		// TODO: report any errors here
+		// report any errors here
+		if (putResult == null || putResult.getAttributes() == null || putResult.getAttributes().isEmpty()) {
+			LOGGER.error("Error writing metadata");
+		}
 	}
 
 	@Override

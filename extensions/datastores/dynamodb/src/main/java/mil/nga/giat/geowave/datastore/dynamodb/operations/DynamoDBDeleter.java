@@ -16,31 +16,31 @@ import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.operations.Deleter;
 import mil.nga.giat.geowave.datastore.dynamodb.DynamoDBRow;
 
-public class DynamoDBDeleter implements Deleter
+public class DynamoDBDeleter implements
+		Deleter
 {
 	private static Logger LOGGER = LoggerFactory.getLogger(DynamoDBDeleter.class);
 
 	private final DynamoDBOperations operations;
 	private final String tableName;
-	
+
 	public DynamoDBDeleter(
 			final DynamoDBOperations operations,
-			final String qualifiedTableName) {
+			final String qualifiedTableName ) {
 		this.operations = operations;
 		this.tableName = qualifiedTableName;
 	}
 
 	@Override
 	public void close()
-			throws Exception {
-	}
+			throws Exception {}
 
 	@Override
 	public void delete(
 			GeoWaveRow row,
 			DataAdapter<?> adapter ) {
-		DynamoDBRow dynRow = (DynamoDBRow)row;
-		
+		DynamoDBRow dynRow = (DynamoDBRow) row;
+
 		DeleteItemResult result = operations.getClient().deleteItem(
 				tableName,
 				Maps.filterEntries(
@@ -49,13 +49,11 @@ public class DynamoDBDeleter implements Deleter
 							@Override
 							public boolean apply(
 									final Entry<String, AttributeValue> input ) {
-								return DynamoDBRow.GW_PARTITION_ID_KEY.equals(
-										input.getKey())
-										|| DynamoDBRow.GW_RANGE_KEY.equals(
-												input.getKey());
+								return DynamoDBRow.GW_PARTITION_ID_KEY.equals(input.getKey())
+										|| DynamoDBRow.GW_RANGE_KEY.equals(input.getKey());
 							}
 						}));
-		
+
 		if (result == null || result.getAttributes() == null || result.getAttributes().isEmpty()) {
 			LOGGER.error("Failed to delete row");
 		}

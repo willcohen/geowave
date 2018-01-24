@@ -19,8 +19,7 @@ import mil.nga.giat.geowave.core.store.operations.MetadataType;
 public class DynamoDBMetadataDeleter implements
 		MetadataDeleter
 {
-	private final static Logger LOGGER = Logger.getLogger(
-			DynamoDBMetadataDeleter.class);
+	private final static Logger LOGGER = Logger.getLogger(DynamoDBMetadataDeleter.class);
 
 	private final DynamoDBOperations operations;
 	private final String metadataTypeName;
@@ -42,22 +41,17 @@ public class DynamoDBMetadataDeleter implements
 			final MetadataQuery metadata ) {
 		// the nature of metadata deleter is that primary ID is always
 		// well-defined and it is deleting a single entry at a time
-		String tableName = operations.getQualifiedTableName(
-				AbstractGeoWavePersistence.METADATA_TABLE);
+		String tableName = operations.getQualifiedTableName(AbstractGeoWavePersistence.METADATA_TABLE);
 
 		final Map<String, AttributeValue> key = new HashMap<>();
 		key.put(
 				DynamoDBOperations.METADATA_PRIMARY_ID_KEY,
-				new AttributeValue().withB(
-						ByteBuffer.wrap(
-								metadata.getPrimaryId())));
+				new AttributeValue().withB(ByteBuffer.wrap(metadata.getPrimaryId())));
 
 		if (metadata.getSecondaryId() != null) {
 			key.put(
 					DynamoDBOperations.METADATA_SECONDARY_ID_KEY,
-					new AttributeValue().withB(
-							ByteBuffer.wrap(
-									metadata.getSecondaryId())));
+					new AttributeValue().withB(ByteBuffer.wrap(metadata.getSecondaryId())));
 		}
 
 		DeleteItemResult deleteResult = operations.getClient().deleteItem(
@@ -68,7 +62,7 @@ public class DynamoDBMetadataDeleter implements
 			LOGGER.error("Failed to delete metadata");
 			return false;
 		}
-		
+
 		return true;
 	}
 

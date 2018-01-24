@@ -37,8 +37,7 @@ public class DynamoDBRow implements
 			final int numberOfDuplicates ) {
 		this.partitionId = partitionId;
 		this.objMap = null; // not needed for ingest
-		byte[] partitionKey = StringUtils.stringToBinary(
-				this.partitionId);
+		byte[] partitionKey = StringUtils.stringToBinary(this.partitionId);
 
 		this.key = new GeoWaveKeyImpl(
 				dataId,
@@ -77,20 +76,16 @@ public class DynamoDBRow implements
 		final byte[] adapterId = new byte[adapterIdLength];
 		final byte[] dataId = new byte[dataIdLength];
 		// get adapterId first
-		buf.get(
-				adapterId);
-		buf.get(
-				sortKey);
-		buf.get(
-				dataId);
+		buf.get(adapterId);
+		buf.get(sortKey);
+		buf.get(dataId);
 
 		this.objMap = objMap;
 
 		this.partitionId = objMap.get(
 				GW_PARTITION_ID_KEY).getN();
 
-		byte[] partitionKey = StringUtils.stringToBinary(
-				this.partitionId);
+		byte[] partitionKey = StringUtils.stringToBinary(this.partitionId);
 
 		this.key = new GeoWaveKeyImpl(
 				dataId,

@@ -81,11 +81,14 @@ import mil.nga.giat.geowave.core.store.operations.Writer;
 import mil.nga.giat.geowave.core.store.query.aggregate.Aggregation;
 import mil.nga.giat.geowave.core.store.query.aggregate.CommonIndexAggregation;
 import mil.nga.giat.geowave.core.store.server.BasicOptionProvider;
+import mil.nga.giat.geowave.core.store.server.RowMergingAdapterOptionProvider;
 import mil.nga.giat.geowave.core.store.server.ServerOpConfig.ServerOpScope;
 import mil.nga.giat.geowave.core.store.server.ServerOpHelper;
 import mil.nga.giat.geowave.core.store.server.ServerSideOperations;
+import mil.nga.giat.geowave.core.store.util.DataAdapterAndIndexCache;
 import mil.nga.giat.geowave.core.store.util.DataStoreUtils;
 import mil.nga.giat.geowave.datastore.hbase.HBaseRow;
+import mil.nga.giat.geowave.datastore.hbase.HBaseStoreFactoryFamily;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseOptions;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseRequiredOptions;
 import mil.nga.giat.geowave.datastore.hbase.coprocessors.AggregationEndpoint;
@@ -455,7 +458,35 @@ public class HBaseOperations implements
 					}
 				}
 			}
+			iteratorsAttached = false;
+			cfCache.clear();
+			partitionCache.clear();
+			coprocessorCache.clear();
+			DataAdapterAndIndexCache.getInstance(
+					RowMergingAdapterOptionProvider.ROW_MERGING_ADAPTER_CACHE_ID,
+					tableNamespace,
+					HBaseStoreFactoryFamily.TYPE).deleteAll();
 		}
+	}
+
+	protected String getIndexId(
+			final TableName tableName ) {
+		final String name = tableName.getNameAsString();
+		if ((tableNamespace == null) || tableNamespace.isEmpty()) {
+			return name;
+		}
+		return name.substring(tableNamespace.length() + 1);
+	}
+
+	public boolean isRowMergingEnabled(
+			final ByteArrayId adapterId,
+			final String indexId ) {
+		return DataAdapterAndIndexCache.getInstance(
+				RowMergingAdapterOptionProvider.ROW_MERGING_ADAPTER_CACHE_ID,
+				tableNamespace,
+				HBaseStoreFactoryFamily.TYPE).add(
+				adapterId,
+				indexId);
 	}
 
 	@Override

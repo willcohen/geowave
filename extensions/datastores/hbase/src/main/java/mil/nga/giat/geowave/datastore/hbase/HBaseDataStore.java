@@ -23,10 +23,8 @@ import mil.nga.giat.geowave.core.store.metadata.DataStatisticsStoreImpl;
 import mil.nga.giat.geowave.core.store.metadata.IndexStoreImpl;
 import mil.nga.giat.geowave.core.store.query.DistributableQuery;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
-import mil.nga.giat.geowave.core.store.server.RowMergingAdapterOptionProvider;
 import mil.nga.giat.geowave.core.store.server.ServerOpHelper;
 import mil.nga.giat.geowave.core.store.server.ServerSideOperations;
-import mil.nga.giat.geowave.core.store.util.DataAdapterAndIndexCache;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseOptions;
 import mil.nga.giat.geowave.datastore.hbase.index.secondary.HBaseSecondaryIndexDataStore;
 import mil.nga.giat.geowave.datastore.hbase.mapreduce.HBaseSplitsProvider;
@@ -38,8 +36,7 @@ import mil.nga.giat.geowave.mapreduce.BaseMapReduceDataStore;
 public class HBaseDataStore extends
 		BaseMapReduceDataStore
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			HBaseDataStore.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(HBaseDataStore.class);
 
 	private final HBaseSplitsProvider splitsProvider;
 
@@ -86,8 +83,7 @@ public class HBaseDataStore extends
 				operations,
 				options);
 
-		secondaryIndexDataStore.setDataStore(
-				this);
+		secondaryIndexDataStore.setDataStore(this);
 
 		this.splitsProvider = splitsProvider;
 	}
@@ -100,11 +96,9 @@ public class HBaseDataStore extends
 		final String columnFamily = adapter.getAdapterId().getString();
 		final boolean rowMerging = adapter instanceof RowMergingDataAdapter;
 		if (rowMerging) {
-			if (!DataAdapterAndIndexCache.getInstance(
-					RowMergingAdapterOptionProvider.ROW_MERGING_ADAPTER_CACHE_ID).add(
-							adapter.getAdapterId(),
-							indexName)) {
-
+			if (!((HBaseOperations) baseOperations).isRowMergingEnabled(
+					adapter.getAdapterId(),
+					indexName)) {
 				if (baseOptions.isCreateTable()) {
 					((HBaseOperations) baseOperations).createTable(
 							index.getId(),
@@ -112,8 +106,7 @@ public class HBaseDataStore extends
 							adapter.getAdapterId());
 				}
 				if (baseOptions.isServerSideLibraryEnabled()) {
-					((HBaseOperations) baseOperations).ensureServerSideOperationsObserverAttached(
-							index.getId());
+					((HBaseOperations) baseOperations).ensureServerSideOperationsObserverAttached(index.getId());
 					ServerOpHelper.addServerSideRowMerging(
 							((RowMergingDataAdapter<?, ?>) adapter),
 							(ServerSideOperations) baseOperations,

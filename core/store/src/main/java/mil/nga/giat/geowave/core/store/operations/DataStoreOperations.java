@@ -1,7 +1,6 @@
 package mil.nga.giat.geowave.core.store.operations;
 
 import java.io.IOException;
-import java.util.Set;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;

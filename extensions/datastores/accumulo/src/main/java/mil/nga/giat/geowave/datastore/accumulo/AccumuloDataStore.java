@@ -33,10 +33,8 @@ import mil.nga.giat.geowave.core.store.metadata.DataStatisticsStoreImpl;
 import mil.nga.giat.geowave.core.store.metadata.IndexStoreImpl;
 import mil.nga.giat.geowave.core.store.query.DistributableQuery;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
-import mil.nga.giat.geowave.core.store.server.RowMergingAdapterOptionProvider;
 import mil.nga.giat.geowave.core.store.server.ServerOpHelper;
 import mil.nga.giat.geowave.core.store.server.ServerSideOperations;
-import mil.nga.giat.geowave.core.store.util.DataAdapterAndIndexCache;
 import mil.nga.giat.geowave.datastore.accumulo.cli.config.AccumuloOptions;
 import mil.nga.giat.geowave.datastore.accumulo.index.secondary.AccumuloSecondaryIndexDataStore;
 import mil.nga.giat.geowave.datastore.accumulo.mapreduce.AccumuloSplitsProvider;
@@ -57,8 +55,7 @@ import mil.nga.giat.geowave.mapreduce.BaseMapReduceDataStore;
 public class AccumuloDataStore extends
 		BaseMapReduceDataStore
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			AccumuloDataStore.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(AccumuloDataStore.class);
 
 	private final AccumuloSplitsProvider splitsProvider = new AccumuloSplitsProvider();
 
@@ -119,8 +116,7 @@ public class AccumuloDataStore extends
 				accumuloOperations,
 				accumuloOptions);
 
-		secondaryIndexDataStore.setDataStore(
-				this);
+		secondaryIndexDataStore.setDataStore(this);
 	}
 
 	@Override
@@ -132,10 +128,9 @@ public class AccumuloDataStore extends
 
 		try {
 			if (adapter instanceof RowMergingDataAdapter) {
-				if (!DataAdapterAndIndexCache.getInstance(
-						RowMergingAdapterOptionProvider.ROW_MERGING_ADAPTER_CACHE_ID).add(
-								adapter.getAdapterId(),
-								indexName)) {
+				if (!((AccumuloOperations) baseOperations).isRowMergingEnabled(
+						adapter.getAdapterId(),
+						indexName)) {
 					if (baseOptions.isCreateTable()) {
 						if (!((AccumuloOperations) baseOperations).createTable(
 								indexName,

@@ -83,9 +83,12 @@ import mil.nga.giat.geowave.core.store.operations.Writer;
 import mil.nga.giat.geowave.core.store.query.aggregate.Aggregation;
 import mil.nga.giat.geowave.core.store.query.aggregate.CommonIndexAggregation;
 import mil.nga.giat.geowave.core.store.server.BasicOptionProvider;
+import mil.nga.giat.geowave.core.store.server.RowMergingAdapterOptionProvider;
 import mil.nga.giat.geowave.core.store.server.ServerOpConfig.ServerOpScope;
 import mil.nga.giat.geowave.core.store.server.ServerOpHelper;
 import mil.nga.giat.geowave.core.store.server.ServerSideOperations;
+import mil.nga.giat.geowave.core.store.util.DataAdapterAndIndexCache;
+import mil.nga.giat.geowave.datastore.accumulo.AccumuloStoreFactoryFamily;
 import mil.nga.giat.geowave.datastore.accumulo.IteratorConfig;
 import mil.nga.giat.geowave.datastore.accumulo.MergingCombiner;
 import mil.nga.giat.geowave.datastore.accumulo.MergingVisibilityCombiner;
@@ -407,6 +410,13 @@ public class AccumuloOperations implements
 			connector.tableOperations().delete(
 					tableName);
 		}
+		DataAdapterAndIndexCache.getInstance(
+				RowMergingAdapterOptionProvider.ROW_MERGING_ADAPTER_CACHE_ID,
+				tableNamespace,
+				AccumuloStoreFactoryFamily.TYPE).deleteAll();
+		locGrpCache.clear();
+		insuredAuthorizationCache.clear();
+		insuredPartitionCache.clear();
 	}
 
 	public boolean delete(
@@ -1433,7 +1443,7 @@ public class AccumuloOperations implements
 	}
 
 	public boolean compactTable(
-			String unqualifiedTableName ) {
+			final String unqualifiedTableName ) {
 		final String tableName = getQualifiedTableName(unqualifiedTableName);
 		try {
 			LOGGER.info("Compacting table '" + tableName + "'");
@@ -1672,5 +1682,16 @@ public class AccumuloOperations implements
 				operationClass,
 				properties,
 				newScopes);
+	}
+
+	public boolean isRowMergingEnabled(
+			final ByteArrayId adapterId,
+			final String indexId ) {
+		return DataAdapterAndIndexCache.getInstance(
+				RowMergingAdapterOptionProvider.ROW_MERGING_ADAPTER_CACHE_ID,
+				tableNamespace,
+				AccumuloStoreFactoryFamily.TYPE).add(
+				adapterId,
+				indexId);
 	}
 }

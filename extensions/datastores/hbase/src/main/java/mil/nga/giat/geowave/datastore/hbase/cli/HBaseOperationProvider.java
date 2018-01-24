@@ -17,7 +17,6 @@ public class HBaseOperationProvider implements
 {
 	private static final Class<?>[] OPERATIONS = new Class<?>[] {
 		HBaseSection.class,
-		CombineStatisticsCommand.class,
 	};
 
 	@Override

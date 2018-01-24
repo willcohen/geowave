@@ -34,30 +34,28 @@ import mil.nga.giat.geowave.test.query.SpatialTemporalQueryIT;
 import mil.nga.giat.geowave.test.service.GeoServerIT;
 import mil.nga.giat.geowave.test.service.GeoWaveIngestGeoserverIT;
 import mil.nga.giat.geowave.test.service.GeoWaveServicesIT;
-import mil.nga.giat.geowave.test.store.DataStatisticsStoreIT;
 
 @RunWith(GeoWaveITSuiteRunner.class)
 @SuiteClasses({
-	GeoWaveVisibilityIT.class,
-	GeoWaveBasicSpatialVectorIT.class,
-	GeoWaveBasicSpatialTemporalVectorIT.class,
+	// GeoWaveVisibilityIT.class,
+	// GeoWaveBasicSpatialVectorIT.class,
+	// GeoWaveBasicSpatialTemporalVectorIT.class,
 	GeoWaveBasicRasterIT.class,
-	GeoWaveVectorSerializationIT.class,
-	BasicKafkaIT.class,
-	BasicMapReduceIT.class,
-	LandsatIT.class,
-	BulkIngestInputGenerationIT.class,
+	// GeoWaveVectorSerializationIT.class,
+	// BasicKafkaIT.class,
+	// BasicMapReduceIT.class,
+	// LandsatIT.class,
+	// BulkIngestInputGenerationIT.class,
 	KDERasterResizeIT.class,
-	GeoWaveNNIT.class,
-	GeoServerIT.class,
-	GeoWaveServicesIT.class,
-	GeoWaveIngestGeoserverIT.class,
-	AttributesSubsetQueryIT.class,
-	DBScanIT.class,
-	SpatialTemporalQueryIT.class,
-	PolygonDataIdQueryIT.class,
-	ConfigCacheIT.class,
-	DataStatisticsStoreIT.class,
+// GeoWaveNNIT.class,
+// GeoServerIT.class,
+// GeoWaveServicesIT.class,
+// GeoWaveIngestGeoserverIT.class,
+// AttributesSubsetQueryIT.class,
+// DBScanIT.class,
+// SpatialTemporalQueryIT.class,
+// PolygonDataIdQueryIT.class,
+// ConfigCacheIT.class,
 })
 public class GeoWaveITSuite
 {

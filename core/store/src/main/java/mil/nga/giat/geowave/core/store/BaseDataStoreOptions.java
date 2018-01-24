@@ -36,7 +36,7 @@ public class BaseDataStoreOptions implements
 	protected boolean enableBlockCache = true;
 
 	@Parameter(names = "--enableServerSideLibrary", hidden = true, arity = 1)
-	protected boolean enableServerSideLibrary = true;
+	protected boolean enableServerSideLibrary = false;
 
 	@Override
 	public boolean isPersistDataStatistics() {

@@ -10,7 +10,7 @@ public class DynamoDBStoreFactoryFamily extends
 		BaseDataStoreFamily
 {
 	public final static String TYPE = "dynamodb";
-	private static final String DESCRIPTION = "A GeoWave store backed by tables in Apache HBase";
+	private static final String DESCRIPTION = "A GeoWave store backed by tables in DynamoDB";
 
 	public DynamoDBStoreFactoryFamily() {
 		super(

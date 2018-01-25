@@ -17,26 +17,35 @@ import com.google.common.collect.Iterators;
 
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
+import mil.nga.giat.geowave.core.store.DataStoreOptions;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveMetadata;
 import mil.nga.giat.geowave.core.store.metadata.AbstractGeoWavePersistence;
 import mil.nga.giat.geowave.core.store.operations.MetadataQuery;
 import mil.nga.giat.geowave.core.store.operations.MetadataReader;
+import mil.nga.giat.geowave.core.store.operations.MetadataType;
+import mil.nga.giat.geowave.datastore.dynamodb.util.DynamoDBUtils.NoopClosableIteratorWrapper;
 
 public class DynamoDBMetadataReader implements
 		MetadataReader
 {
 	private final static Logger LOGGER = LoggerFactory.getLogger(DynamoDBMetadataReader.class);
 	private final DynamoDBOperations operations;
+	private final DataStoreOptions options;
+	private final MetadataType metadataType;
 
 	public DynamoDBMetadataReader(
-			final DynamoDBOperations operations ) {
+			final DynamoDBOperations operations,
+			final DataStoreOptions options,
+			MetadataType metadataType) {
 		this.operations = operations;
+		this.options = options;
+		this.metadataType = metadataType;
 	}
-
+	
 	@Override
 	public CloseableIterator<GeoWaveMetadata> query(
 			MetadataQuery query ) {
-		String tableName = operations.getQualifiedTableName(AbstractGeoWavePersistence.METADATA_TABLE);
+		String tableName = operations.getMetadataTableName(metadataType);
 
 		if (query.hasPrimaryId()) {
 			final QueryRequest queryRequest = new QueryRequest(
@@ -61,7 +70,7 @@ public class DynamoDBMetadataReader implements
 					queryRequest);
 
 			return new CloseableIteratorWrapper<>(
-					null,
+					new NoopClosableIteratorWrapper(),
 					Iterators.transform(
 							queryResult.getItems().iterator(),
 							new com.google.common.base.Function<Map<String, AttributeValue>, GeoWaveMetadata>() {
@@ -94,7 +103,7 @@ public class DynamoDBMetadataReader implements
 				scan);
 
 		return new CloseableIteratorWrapper<>(
-				null,
+				new NoopClosableIteratorWrapper(),
 				Iterators.transform(
 						scanResult.getItems().iterator(),
 						new com.google.common.base.Function<Map<String, AttributeValue>, GeoWaveMetadata>() {

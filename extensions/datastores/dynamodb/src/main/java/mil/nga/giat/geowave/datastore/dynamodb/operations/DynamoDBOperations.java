@@ -75,8 +75,7 @@ public class DynamoDBOperations implements
 	public static DynamoDBOperations createOperations(
 			final DynamoDBOptions options )
 			throws IOException {
-		return new DynamoDBOperations(
-				(DynamoDBOptions) options.getStoreOptions());
+		return new DynamoDBOperations(options);
 	}
 
 	public DynamoDBOptions getOptions() {
@@ -90,6 +89,11 @@ public class DynamoDBOperations implements
 	public String getQualifiedTableName(
 			final String tableName ) {
 		return gwNamespace == null ? tableName : gwNamespace + "_" + tableName;
+	}
+	
+	public String getMetadataTableName(MetadataType metadataType) {
+		String tableName = metadataType.name() + "_" + AbstractGeoWavePersistence.METADATA_TABLE;
+		return getQualifiedTableName(tableName);
 	}
 
 	protected Iterator<DynamoDBRow> getRows(
@@ -233,7 +237,7 @@ public class DynamoDBOperations implements
 	@Override
 	public MetadataWriter createMetadataWriter(
 			MetadataType metadataType ) {
-		final String tableName = getQualifiedTableName(AbstractGeoWavePersistence.METADATA_TABLE);
+		final String tableName = getMetadataTableName(metadataType);
 
 		if (options.getStoreOptions().isCreateTable()) {
 			synchronized (DynamoDBOperations.tableExistsCache) {
@@ -286,7 +290,9 @@ public class DynamoDBOperations implements
 	public MetadataReader createMetadataReader(
 			MetadataType metadataType ) {
 		return new DynamoDBMetadataReader(
-				this);
+				this,
+				options.getBaseOptions(),
+				metadataType);
 	}
 
 	@Override

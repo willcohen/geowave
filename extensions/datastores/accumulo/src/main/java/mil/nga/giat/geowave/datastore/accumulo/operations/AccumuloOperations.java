@@ -1671,4 +1671,13 @@ public class AccumuloOperations implements
 				properties,
 				newScopes);
 	}
+
+	@Override
+	public boolean metadataExists(
+			MetadataType type )
+			throws IOException {
+		final String qName = getQualifiedTableName(AbstractGeoWavePersistence.METADATA_TABLE);
+		return connector.tableOperations().exists(
+				qName);
+	}
 }

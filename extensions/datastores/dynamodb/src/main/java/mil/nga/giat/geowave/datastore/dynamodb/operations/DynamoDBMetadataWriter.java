@@ -32,8 +32,6 @@ public class DynamoDBMetadataWriter implements
 	@Override
 	public void close()
 			throws Exception {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
@@ -57,14 +55,14 @@ public class DynamoDBMetadataWriter implements
 				DynamoDBOperations.METADATA_VALUE_KEY,
 				new AttributeValue().withB(ByteBuffer.wrap(metadata.getValue())));
 
-		PutItemResult putResult = operations.getClient().putItem(
-				new PutItemRequest(
-						tableName,
-						map));
-
-		// report any errors here
-		if (putResult == null || putResult.getAttributes() == null || putResult.getAttributes().isEmpty()) {
-			LOGGER.error("Error writing metadata");
+		try {
+			operations.getClient().putItem(
+					new PutItemRequest(
+							tableName,
+							map));			
+		}
+		catch (Exception e) {
+			LOGGER.error("Error writing metadata", e);
 		}
 	}
 

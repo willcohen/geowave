@@ -6,7 +6,6 @@ import java.util.Map;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.google.common.base.Function;
 
-import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveKey;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveKeyImpl;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
@@ -25,38 +24,40 @@ public class DynamoDBRow implements
 	private final GeoWaveValue[] fieldValues;
 
 	private final Map<String, AttributeValue> objMap;
-	private String partitionId;
 
-	public DynamoDBRow(
-			final String partitionId,
-			final byte[] dataId,
-			final byte[] adapterId,
-			final byte[] sortKey,
-			final byte[] fieldMask,
-			final byte[] value,
-			final int numberOfDuplicates ) {
-		this.partitionId = partitionId;
-		this.objMap = null; // not needed for ingest
-		byte[] partitionKey = StringUtils.stringToBinary(this.partitionId);
-
-		this.key = new GeoWaveKeyImpl(
-				dataId,
-				adapterId,
-				partitionKey,
-				sortKey,
-				numberOfDuplicates);
-
-		this.fieldValues = new GeoWaveValueImpl[1];
-		this.fieldValues[0] = new GeoWaveValueImpl(
-				fieldMask,
-				null,
-				value);
-	}
-
+	// public DynamoDBRow(
+	// final String partitionId,
+	// final byte[] dataId,
+	// final byte[] adapterId,
+	// final byte[] sortKey,
+	// final byte[] fieldMask,
+	// final byte[] value,
+	// final int numberOfDuplicates ) {
+	// this.partitionId = partitionId;
+	// this.objMap = null; // not needed for ingest
+	// byte[] partitionKey = partitionKeyFromString(this.partitionId);
+	//
+	// this.key = new GeoWaveKeyImpl(
+	// dataId,
+	// adapterId,
+	// partitionKey,
+	// sortKey,
+	// numberOfDuplicates);
+	//
+	// this.fieldValues = new GeoWaveValueImpl[1];
+	// this.fieldValues[0] = new GeoWaveValueImpl(
+	// fieldMask,
+	// null,
+	// value);
+	// }
+	//
 	public DynamoDBRow(
 			final Map<String, AttributeValue> objMap ) {
-		final byte[] rowId = objMap.get(
-				GW_RANGE_KEY).getB().array();
+		final byte[] rowId = objMap
+				.get(
+						GW_RANGE_KEY)
+				.getB()
+				.array();
 		final int length = rowId.length;
 		final int offset = 0;
 
@@ -76,16 +77,20 @@ public class DynamoDBRow implements
 		final byte[] adapterId = new byte[adapterIdLength];
 		final byte[] dataId = new byte[dataIdLength];
 		// get adapterId first
-		buf.get(adapterId);
-		buf.get(sortKey);
-		buf.get(dataId);
+		buf.get(
+				adapterId);
+		buf.get(
+				sortKey);
+		buf.get(
+				dataId);
 
 		this.objMap = objMap;
 
-		this.partitionId = objMap.get(
-				GW_PARTITION_ID_KEY).getN();
-
-		byte[] partitionKey = StringUtils.stringToBinary(this.partitionId);
+		byte[] partitionKey = objMap
+				.get(
+						GW_PARTITION_ID_KEY)
+				.getB()
+				.array();
 
 		this.key = new GeoWaveKeyImpl(
 				dataId,
@@ -94,11 +99,17 @@ public class DynamoDBRow implements
 				sortKey,
 				numberOfDuplicates);
 
-		byte[] fieldMask = objMap.get(
-				GW_FIELD_MASK_KEY).getB().array();
+		byte[] fieldMask = objMap
+				.get(
+						GW_FIELD_MASK_KEY)
+				.getB()
+				.array();
 
-		byte[] value = objMap.get(
-				GW_VALUE_KEY).getB().array();
+		byte[] value = objMap
+				.get(
+						GW_VALUE_KEY)
+				.getB()
+				.array();
 
 		this.fieldValues = new GeoWaveValueImpl[1];
 		this.fieldValues[0] = new GeoWaveValueImpl(
@@ -112,10 +123,6 @@ public class DynamoDBRow implements
 		return objMap;
 	}
 
-	public String getPartitionId() {
-		return partitionId;
-	}
-
 	public static class GuavaRowTranslationHelper implements
 			Function<Map<String, AttributeValue>, DynamoDBRow>
 	{
@@ -125,7 +132,6 @@ public class DynamoDBRow implements
 			return new DynamoDBRow(
 					input);
 		}
-
 	}
 
 	@Override

@@ -314,19 +314,21 @@ public class DynamoDBReader implements
 		final List<QueryRequest> allQueries = new ArrayList<>();
 
 		for (final ByteArrayId adapterId : adapterIds) {
-			final List<QueryRequest> singleAdapterQueries = getPartitionRequests(tableName);
+			final QueryRequest singleAdapterQuery = new QueryRequest(
+					tableName);
+			
 			final byte[] start = adapterId.getBytes();
 			final byte[] end = adapterId.getNextPrefix();
-			for (final QueryRequest queryRequest : singleAdapterQueries) {
-				queryRequest.addKeyConditionsEntry(
+				singleAdapterQuery.addKeyConditionsEntry(
 						DynamoDBRow.GW_RANGE_KEY,
 						new Condition().withComparisonOperator(
 								ComparisonOperator.BETWEEN).withAttributeValueList(
 								new AttributeValue().withB(ByteBuffer.wrap(start)),
 								new AttributeValue().withB(ByteBuffer.wrap(end))));
-			}
-			allQueries.addAll(singleAdapterQueries);
+
+			allQueries.add(singleAdapterQuery);
 		}
+		
 		return allQueries;
 	}
 

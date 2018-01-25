@@ -153,7 +153,7 @@ public class DynamoDBOperations implements
 		try {
 			return TableStatus.ACTIVE.name().equals(
 					client.describeTable(
-							getQualifiedTableName(indexId.getString())).getTable().getTableStatus());
+							indexId.getString()).getTable().getTableStatus());
 		}
 		catch (final AmazonDynamoDBException e) {
 			LOGGER.info(
@@ -199,7 +199,7 @@ public class DynamoDBOperations implements
 									qName).withAttributeDefinitions(
 									new AttributeDefinition(
 											DynamoDBRow.GW_PARTITION_ID_KEY,
-											ScalarAttributeType.N),
+											ScalarAttributeType.B),
 									new AttributeDefinition(
 											DynamoDBRow.GW_RANGE_KEY,
 											ScalarAttributeType.B)).withKeySchema(
@@ -340,5 +340,22 @@ public class DynamoDBOperations implements
 	public AdapterStore getAdapterStore() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public boolean metadataExists(
+			MetadataType type )
+			throws IOException {
+		try {
+			return TableStatus.ACTIVE.name().equals(
+					client.describeTable(
+							getMetadataTableName(type)).getTable().getTableStatus());
+		}
+		catch (final AmazonDynamoDBException e) {
+			LOGGER.info(
+					"Unable to check existence of table",
+					e);
+		}
+		return false;
 	}
 }

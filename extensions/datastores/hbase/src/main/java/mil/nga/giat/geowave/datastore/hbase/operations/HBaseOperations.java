@@ -1347,4 +1347,15 @@ public class HBaseOperations implements
 					e);
 		}
 	}
+
+	@Override
+	public boolean metadataExists(
+			MetadataType type )
+			throws IOException {
+		synchronized (ADMIN_MUTEX) {
+			try (Admin admin = conn.getAdmin()) {
+				return admin.isTableAvailable(getTableName(AbstractGeoWavePersistence.METADATA_TABLE));
+			}
+		}
+	}
 }

@@ -386,11 +386,11 @@ public class HBaseReader implements
 			Scan scanner,
 			BaseReaderParams readerParams ) {
 		// TODO: Fix this once we have row merging working
-		if (clientSideRowMerging) {
+//		if (clientSideRowMerging) {
 			scanner.setMaxVersions(HBaseOperations.MERGING_MAX_VERSIONS);
-		}
-		else {
-			scanner.setMaxVersions(HBaseOperations.DEFAULT_MAX_VERSIONS);
-		}
+//		}
+//		else {
+//			scanner.setMaxVersions(HBaseOperations.DEFAULT_MAX_VERSIONS);
+//		}
 	}
 }

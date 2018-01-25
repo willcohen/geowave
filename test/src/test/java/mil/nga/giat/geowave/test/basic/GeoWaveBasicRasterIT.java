@@ -212,9 +212,9 @@ public class GeoWaveBasicRasterIT extends
 				eastLon,
 				southLat,
 				northLat);
-		queryNoDataMergeStrategy(
-				coverageName,
-				tileSize);
+//		queryNoDataMergeStrategy(
+//				coverageName,
+//				tileSize);
 	}
 
 	private void queryNoDataMergeStrategy(
@@ -323,7 +323,7 @@ public class GeoWaveBasicRasterIT extends
 			final double southLat,
 			final double northLat )
 			throws IOException {
-		final int numBands = 8;
+		final int numBands = 2;
 		final DataStore dataStore = dataStoreOptions.createDataStore();
 		final RasterDataAdapter adapter = RasterUtils.createDataAdapterTypeDouble(
 				coverageName,
@@ -333,13 +333,13 @@ public class GeoWaveBasicRasterIT extends
 		final WritableRaster raster1 = RasterUtils.createRasterTypeDouble(
 				numBands,
 				tileSize);
-		final WritableRaster raster2 = RasterUtils.createRasterTypeDouble(
-				numBands,
-				tileSize);
+//		final WritableRaster raster2 = RasterUtils.createRasterTypeDouble(
+//				numBands,
+//				tileSize);
 
 		TestUtils.fillTestRasters(
 				raster1,
-				raster2,
+				null,
 				tileSize);
 
 		try (IndexWriter writer = dataStore.createWriter(
@@ -352,13 +352,13 @@ public class GeoWaveBasicRasterIT extends
 					southLat,
 					northLat,
 					raster1));
-			writer.write(RasterUtils.createCoverageTypeDouble(
-					coverageName,
-					westLon,
-					eastLon,
-					southLat,
-					northLat,
-					raster2));
+//			writer.write(RasterUtils.createCoverageTypeDouble(
+//					coverageName,
+//					westLon,
+//					eastLon,
+//					southLat,
+//					northLat,
+//					raster2));
 		}
 	}
 

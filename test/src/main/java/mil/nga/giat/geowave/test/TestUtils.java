@@ -492,138 +492,138 @@ public class TestUtils
 						x,
 						y,
 						tileSize) * 3) + 1;
-				if ((x < 2) && (y < 2)) {
-					raster1.setSample(
-							x,
-							y,
-							5,
-							getTileValue(
-									x,
-									y,
-									5,
-									tileSize));
-					raster1.setSample(
-							x,
-							y,
-							7,
-							wrongValue);
-					raster2.setSample(
-							x,
-							y,
-							7,
-							getTileValue(
-									x,
-									y,
-									7,
-									tileSize));
-				}
-				else {
-					raster2.setSample(
-							x,
-							y,
-							5,
-							getTileValue(
-									x,
-									y,
-									5,
-									tileSize));
-				}
-				if ((x > ((tileSize * 3) / 4)) && (y > ((tileSize * 3) / 4))) {
-					raster1.setSample(
-							x,
-							y,
-							6,
-							getTileValue(
-									x,
-									y,
-									6,
-									tileSize));
-				}
-				else {
-					raster2.setSample(
-							x,
-							y,
-							6,
-							getTileValue(
-									x,
-									y,
-									6,
-									tileSize));
-					raster2.setSample(
-							x,
-							y,
-							7,
-							getTileValue(
-									x,
-									y,
-									7,
-									tileSize));
-				}
-				if ((y % 2) == 0) {
-					raster1.setSample(
-							x,
-							y,
-							0,
-							getTileValue(
-									x,
-									y,
-									0,
-									tileSize));
-					raster1.setSample(
-							x,
-							y,
-							1,
-							getTileValue(
-									x,
-									y,
-									1,
-									tileSize));
-				}
+//				if ((x < 2) && (y < 2)) {
+//					raster1.setSample(
+//							x,
+//							y,
+//							5,
+//							getTileValue(
+//									x,
+//									y,
+//									5,
+//									tileSize));
+//					raster1.setSample(
+//							x,
+//							y,
+//							7,
+//							wrongValue);
+////					raster2.setSample(
+////							x,
+////							y,
+////							7,
+////							getTileValue(
+////									x,
+////									y,
+////									7,
+////									tileSize));
+//				}
+//				else {
+////					raster2.setSample(
+////							x,
+////							y,
+////							5,
+////							getTileValue(
+////									x,
+////									y,
+////									5,
+////									tileSize));
+//				}
+//				if ((x > ((tileSize * 3) / 4)) && (y > ((tileSize * 3) / 4))) {
+//					raster1.setSample(
+//							x,
+//							y,
+//							6,
+//							getTileValue(
+//									x,
+//									y,
+//									6,
+//									tileSize));
+//				}
+//				else {
+////					raster2.setSample(
+////							x,
+////							y,
+////							6,
+////							getTileValue(
+////									x,
+////									y,
+////									6,
+////									tileSize));
+////					raster2.setSample(
+////							x,
+////							y,
+////							7,
+////							getTileValue(
+////									x,
+////									y,
+////									7,
+////									tileSize));
+//				}
+//				if ((y % 2) == 0) {
+//					raster1.setSample(
+//							x,
+//							y,
+//							0,
+//							getTileValue(
+//									x,
+//									y,
+//									0,
+//									tileSize));
+//					raster1.setSample(
+//							x,
+//							y,
+//							1,
+//							getTileValue(
+//									x,
+//									y,
+//									1,
+//									tileSize));
+//				}
 				raster1.setSample(
 						x,
 						y,
-						2,
+						0,
 						wrongValue);
 
 				raster1.setSample(
 						x,
 						y,
-						4,
+						1,
 						getTileValue(
 								x,
 								y,
 								4,
 								tileSize));
 				if ((y % 2) != 0) {
-					raster2.setSample(
-							x,
-							y,
-							1,
-							getTileValue(
-									x,
-									y,
-									1,
-									tileSize));
+//					raster2.setSample(
+//							x,
+//							y,
+//							1,
+//							getTileValue(
+//									x,
+//									y,
+//									1,
+//									tileSize));
 				}
-				raster2.setSample(
-						x,
-						y,
-						2,
-						TestUtils.getTileValue(
-								x,
-								y,
-								2,
-								tileSize));
-
-				raster2.setSample(
-						x,
-						y,
-						3,
-						getTileValue(
-								x,
-								y,
-								3,
-								tileSize));
+//				raster2.setSample(
+//						x,
+//						y,
+//						2,
+//						TestUtils.getTileValue(
+//								x,
+//								y,
+//								2,
+//								tileSize));
+//
+//				raster2.setSample(
+//						x,
+//						y,
+//						3,
+//						getTileValue(
+//								x,
+//								y,
+//								3,
+//								tileSize));
 			}
 		}
 	}

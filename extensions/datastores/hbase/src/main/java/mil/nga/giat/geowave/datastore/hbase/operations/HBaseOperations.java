@@ -271,9 +271,9 @@ public class HBaseOperations implements
 					for (final Pair<String, Boolean> columnFamilyAndVersioning : columnFamiliesAndVersioningPairs) {
 						final HColumnDescriptor column = new HColumnDescriptor(
 								columnFamilyAndVersioning.getLeft());
-						if (!columnFamilyAndVersioning.getRight()) {
+//						if (!columnFamilyAndVersioning.getRight()) {
 							column.setMaxVersions(Integer.MAX_VALUE);
-						}
+//						}
 						desc.addFamily(column);
 
 						cfSet.add(columnFamilyAndVersioning.getLeft());
@@ -393,9 +393,9 @@ public class HBaseOperations implements
 						for (final String newColumnFamily : newColumnFamilies) {
 							final HColumnDescriptor column = new HColumnDescriptor(
 									newColumnFamily);
-							if (!enableVersioning) {
+//							if (!enableVersioning) {
 								column.setMaxVersions(Integer.MAX_VALUE);
-							}
+//							}
 							admin.addColumn(
 									tableName,
 									column);

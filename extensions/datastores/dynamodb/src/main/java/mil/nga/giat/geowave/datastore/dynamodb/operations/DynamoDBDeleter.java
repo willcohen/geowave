@@ -41,7 +41,7 @@ public class DynamoDBDeleter implements
 			DataAdapter<?> adapter ) {
 		DynamoDBRow dynRow = (DynamoDBRow) row;
 
-		DeleteItemResult result = operations.getClient().deleteItem(
+		operations.getClient().deleteItem(
 				tableName,
 				Maps.filterEntries(
 						dynRow.getAttributeMapping(),
@@ -53,10 +53,6 @@ public class DynamoDBDeleter implements
 										|| DynamoDBRow.GW_RANGE_KEY.equals(input.getKey());
 							}
 						}));
-
-		if (result == null || result.getAttributes() == null || result.getAttributes().isEmpty()) {
-			LOGGER.error("Failed to delete row");
-		}
 	}
 
 }

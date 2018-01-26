@@ -299,7 +299,7 @@ public class DynamoDBWriter implements
 			final GeoWaveRow row ) {
 		ArrayList<WriteRequest> mutations = new ArrayList<>();
 
-		final byte[] rowId = GeoWaveKey.getCompositeId(
+		final byte[] rowId = DynamoDBRow.getCompositeId(
 				row);
 
 		final Map<String, AttributeValue> map = new HashMap<String, AttributeValue>();

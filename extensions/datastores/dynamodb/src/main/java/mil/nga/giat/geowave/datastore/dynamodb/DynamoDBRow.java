@@ -25,39 +25,9 @@ public class DynamoDBRow implements
 
 	private final Map<String, AttributeValue> objMap;
 
-	// public DynamoDBRow(
-	// final String partitionId,
-	// final byte[] dataId,
-	// final byte[] adapterId,
-	// final byte[] sortKey,
-	// final byte[] fieldMask,
-	// final byte[] value,
-	// final int numberOfDuplicates ) {
-	// this.partitionId = partitionId;
-	// this.objMap = null; // not needed for ingest
-	// byte[] partitionKey = partitionKeyFromString(this.partitionId);
-	//
-	// this.key = new GeoWaveKeyImpl(
-	// dataId,
-	// adapterId,
-	// partitionKey,
-	// sortKey,
-	// numberOfDuplicates);
-	//
-	// this.fieldValues = new GeoWaveValueImpl[1];
-	// this.fieldValues[0] = new GeoWaveValueImpl(
-	// fieldMask,
-	// null,
-	// value);
-	// }
-	//
 	public DynamoDBRow(
 			final Map<String, AttributeValue> objMap ) {
-		final byte[] rowId = objMap
-				.get(
-						GW_RANGE_KEY)
-				.getB()
-				.array();
+		final byte[] rowId = objMap.get(GW_RANGE_KEY).getB().array();
 		final int length = rowId.length;
 		final int offset = 0;
 
@@ -86,11 +56,7 @@ public class DynamoDBRow implements
 
 		this.objMap = objMap;
 
-		byte[] partitionKey = objMap
-				.get(
-						GW_PARTITION_ID_KEY)
-				.getB()
-				.array();
+		byte[] partitionKey = objMap.get(GW_PARTITION_ID_KEY).getB().array();
 
 		this.key = new GeoWaveKeyImpl(
 				dataId,
@@ -99,17 +65,9 @@ public class DynamoDBRow implements
 				sortKey,
 				numberOfDuplicates);
 
-		byte[] fieldMask = objMap
-				.get(
-						GW_FIELD_MASK_KEY)
-				.getB()
-				.array();
+		byte[] fieldMask = objMap.get(GW_FIELD_MASK_KEY).getB().array();
 
-		byte[] value = objMap
-				.get(
-						GW_VALUE_KEY)
-				.getB()
-				.array();
+		byte[] value = objMap.get(GW_VALUE_KEY).getB().array();
 
 		this.fieldValues = new GeoWaveValueImpl[1];
 		this.fieldValues[0] = new GeoWaveValueImpl(
@@ -163,4 +121,24 @@ public class DynamoDBRow implements
 	public GeoWaveValue[] getFieldValues() {
 		return fieldValues;
 	}
+	
+	public static byte[] getCompositeId(GeoWaveKey key){
+		final ByteBuffer buffer = ByteBuffer.allocate(
+				key.getSortKey().length + key.getAdapterId().length + key.getDataId().length + 12);
+		buffer.put(
+				key.getAdapterId());
+		buffer.put(
+				key.getSortKey());
+		buffer.put(
+				key.getDataId());
+		buffer.putInt(
+				key.getAdapterId().length);
+		buffer.putInt(
+				key.getDataId().length);
+		buffer.putInt(
+				key.getNumberOfDuplicates());
+		buffer.rewind();
+		return buffer.array();
+	}
+
 }

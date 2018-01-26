@@ -153,7 +153,7 @@ public class DynamoDBOperations implements
 		try {
 			return TableStatus.ACTIVE.name().equals(
 					client.describeTable(
-							indexId.getString()).getTable().getTableStatus());
+							getQualifiedTableName(indexId.getString())).getTable().getTableStatus());
 		}
 		catch (final AmazonDynamoDBException e) {
 			LOGGER.info(

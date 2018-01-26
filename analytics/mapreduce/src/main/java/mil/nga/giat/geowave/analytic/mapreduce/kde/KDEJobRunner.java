@@ -208,10 +208,16 @@ public class KDEJobRunner extends
 
 		if (kdeCommandLineOptions.getHdfsHostPort() == null) {
 
+<<<<<<< HEAD
 			final Properties configProperties = ConfigOptions.loadProperties(
 					configFile,
 					null);
 			final String hdfsFSUrl = ConfigHDFSCommand.getHdfsUrl(configProperties);
+=======
+			Properties configProperties = ConfigOptions.loadProperties(
+					configFile);
+			String hdfsFSUrl = ConfigHDFSCommand.getHdfsUrl(configProperties);
+>>>>>>> Refactoring change: Updated loading configuration properties function interface to accept a single parameter, as majority use case throughout project passed null for second param.
 			kdeCommandLineOptions.setHdfsHostPort(hdfsFSUrl);
 		}
 

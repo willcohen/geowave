@@ -83,18 +83,8 @@ public class SparkIngestDriver implements
 			SparkCommandLineOptions sparkOptions,
 			String basePath )
 			throws IOException {
-		return runOperation(
-				configFile,
-				ConfigOptions.loadProperties(
-						configFile,
-						null),
-				localInput,
-				inputStoreName,
-				indexList,
-				ingestOptions,
-				sparkOptions,
-				basePath);
-	}
+
+		final Properties configProperties = ConfigOptions.loadProperties(configFile);
 
 	public boolean runOperation(
 			File configFile,
@@ -496,7 +486,6 @@ public class SparkIngestDriver implements
 
 		if (urlStreamHandlerFactory == null) {
 			URL.setURLStreamHandlerFactory(new FsUrlStreamHandlerFactory());
-
 		}
 		else {
 			try {

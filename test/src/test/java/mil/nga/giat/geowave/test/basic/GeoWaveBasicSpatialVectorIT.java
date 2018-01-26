@@ -56,8 +56,8 @@ public class GeoWaveBasicSpatialVectorIT extends
 	protected DataStorePluginOptions dataStore;
 
 	private static long startMillis;
-	private static final boolean POINTS_ONLY = true;
-	private static final int NUM_THREADS = 1;
+	private static final boolean POINTS_ONLY = false;
+	private static final int NUM_THREADS = 2;
 
 	@BeforeClass
 	public static void reportTestStart() {

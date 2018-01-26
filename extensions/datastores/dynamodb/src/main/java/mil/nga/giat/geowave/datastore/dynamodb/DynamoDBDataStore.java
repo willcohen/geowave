@@ -28,11 +28,9 @@ public class DynamoDBDataStore extends
 		BaseMapReduceDataStore
 {
 	public final static String TYPE = "dynamodb";
-	public static final Integer PARTITIONS = 1;
 
 	private final static Logger LOGGER = Logger.getLogger(DynamoDBDataStore.class);
 	private final DynamoDBOperations dynamodbOperations;
-	private static int counter = 0;
 
 	private final DynamoDBSplitsProvider splitsProvider = new DynamoDBSplitsProvider();
 

@@ -16,7 +16,7 @@ public class DynamoDBTestEnvironment extends
 {
 	private static final GenericStoreFactory<DataStore> STORE_FACTORY = new DynamoDBStoreFactoryFamily()
 			.getDataStoreFactory();
-	
+
 	private static DynamoDBTestEnvironment singletonInstance = null;
 
 	public static synchronized DynamoDBTestEnvironment getInstance() {

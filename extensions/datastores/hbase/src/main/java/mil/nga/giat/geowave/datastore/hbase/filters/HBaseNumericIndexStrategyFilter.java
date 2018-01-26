@@ -42,31 +42,26 @@ public class HBaseNumericIndexStrategyFilter extends
 		super();
 		this.indexStrategy = indexStrategy;
 		this.coordinateRanges = coordinateRanges;
-		rangeCache = RangeLookupFactory.createMultiRangeLookup(
-				coordinateRanges);
+		rangeCache = RangeLookupFactory.createMultiRangeLookup(coordinateRanges);
 	}
 
 	public static HBaseNumericIndexStrategyFilter parseFrom(
 			final byte[] pbBytes )
 			throws DeserializationException {
-		final ByteBuffer buf = ByteBuffer.wrap(
-				pbBytes);
+		final ByteBuffer buf = ByteBuffer.wrap(pbBytes);
 		NumericIndexStrategy indexStrategy;
 		MultiDimensionalCoordinateRangesArray[] coordinateRanges;
 		try {
 			final int indexStrategyLength = buf.getInt();
 			final byte[] indexStrategyBytes = new byte[indexStrategyLength];
-			buf.get(
-					indexStrategyBytes);
+			buf.get(indexStrategyBytes);
 			indexStrategy = PersistenceUtils.fromBinary(
 					indexStrategyBytes,
 					NumericIndexStrategy.class);
 			final byte[] coordRangeBytes = new byte[pbBytes.length - indexStrategyLength - 4];
-			buf.get(
-					coordRangeBytes);
+			buf.get(coordRangeBytes);
 			final ArrayOfArrays arrays = new ArrayOfArrays();
-			arrays.fromBinary(
-					coordRangeBytes);
+			arrays.fromBinary(coordRangeBytes);
 			coordinateRanges = arrays.getCoordinateArrays();
 		}
 		catch (final Exception e) {
@@ -83,20 +78,15 @@ public class HBaseNumericIndexStrategyFilter extends
 	@Override
 	public byte[] toByteArray()
 			throws IOException {
-		final byte[] indexStrategyBytes = PersistenceUtils.toBinary(
-				indexStrategy);
+		final byte[] indexStrategyBytes = PersistenceUtils.toBinary(indexStrategy);
 		final byte[] coordinateRangesBinary = new ArrayOfArrays(
 				coordinateRanges).toBinary();
 
-		final ByteBuffer buf = ByteBuffer.allocate(
-				coordinateRangesBinary.length + indexStrategyBytes.length + 4);
+		final ByteBuffer buf = ByteBuffer.allocate(coordinateRangesBinary.length + indexStrategyBytes.length + 4);
 
-		buf.putInt(
-				indexStrategyBytes.length);
-		buf.put(
-				indexStrategyBytes);
-		buf.put(
-				coordinateRangesBinary);
+		buf.putInt(indexStrategyBytes.length);
+		buf.put(indexStrategyBytes);
+		buf.put(coordinateRangesBinary);
 
 		return buf.array();
 	}
@@ -105,8 +95,7 @@ public class HBaseNumericIndexStrategyFilter extends
 	public ReturnCode filterKeyValue(
 			final Cell cell )
 			throws IOException {
-		if (inBounds(
-				cell)) {
+		if (inBounds(cell)) {
 			return ReturnCode.INCLUDE;
 		}
 		return ReturnCode.SKIP;
@@ -129,7 +118,6 @@ public class HBaseNumericIndexStrategyFilter extends
 				partitionKey,
 				sortKey);
 
-		return rangeCache.inBounds(
-				coordinates);
+		return rangeCache.inBounds(coordinates);
 	}
 }

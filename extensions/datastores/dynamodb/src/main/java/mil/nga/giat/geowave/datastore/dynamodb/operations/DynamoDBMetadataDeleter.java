@@ -54,14 +54,9 @@ public class DynamoDBMetadataDeleter implements
 					new AttributeValue().withB(ByteBuffer.wrap(metadata.getSecondaryId())));
 		}
 
-		DeleteItemResult deleteResult = operations.getClient().deleteItem(
+		operations.getClient().deleteItem(
 				tableName,
 				key);
-
-		if (deleteResult == null || deleteResult.getAttributes() == null || deleteResult.getAttributes().isEmpty()) {
-			LOGGER.error("Failed to delete metadata");
-			return false;
-		}
 
 		return true;
 	}

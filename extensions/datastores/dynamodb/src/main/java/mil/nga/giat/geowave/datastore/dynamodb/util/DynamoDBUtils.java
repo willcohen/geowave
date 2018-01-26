@@ -10,7 +10,6 @@ public class DynamoDBUtils
 		public NoopClosableIteratorWrapper() {}
 
 		@Override
-		public void close() {
-		}
+		public void close() {}
 	}
 }

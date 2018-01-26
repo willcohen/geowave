@@ -75,7 +75,8 @@ public class DynamoDBOperations implements
 	public static DynamoDBOperations createOperations(
 			final DynamoDBOptions options )
 			throws IOException {
-		return new DynamoDBOperations(options);
+		return new DynamoDBOperations(
+				options);
 	}
 
 	public DynamoDBOptions getOptions() {
@@ -90,8 +91,9 @@ public class DynamoDBOperations implements
 			final String tableName ) {
 		return gwNamespace == null ? tableName : gwNamespace + "_" + tableName;
 	}
-	
-	public String getMetadataTableName(MetadataType metadataType) {
+
+	public String getMetadataTableName(
+			MetadataType metadataType ) {
 		String tableName = metadataType.name() + "_" + AbstractGeoWavePersistence.METADATA_TABLE;
 		return getQualifiedTableName(tableName);
 	}
@@ -298,8 +300,9 @@ public class DynamoDBOperations implements
 	@Override
 	public MetadataDeleter createMetadataDeleter(
 			MetadataType metadataType ) {
-		// TODO Auto-generated method stub
-		return null;
+		return new DynamoDBMetadataDeleter(
+				this,
+				metadataType);
 	}
 
 	@Override

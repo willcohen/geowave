@@ -108,7 +108,8 @@ public class DynamoDBReader implements
 		if ((ranges != null) && !ranges.isEmpty()) {
 			if ((ranges.size() == 1) && (adapterIds.size() == 1)) {
 				final List<QueryRequest> queries = getPartitionRequests(
-						tableName);
+						tableName,
+						null);
 				final ByteArrayRange range = ranges.get(
 						0);
 				if (range.isSingleValue()) {
@@ -214,7 +215,8 @@ public class DynamoDBReader implements
 		if ((ranges != null) && !ranges.isEmpty()) {
 			if ((ranges.size() == 1) && (adapterIds.size() == 1)) {
 				final List<QueryRequest> queries = getPartitionRequests(
-						tableName);
+						tableName,
+						null);
 				final ByteArrayRange rowRange = ranges.get(
 						0);
 				if (rowRange.isSingleValue()) {
@@ -294,17 +296,28 @@ public class DynamoDBReader implements
 	}
 
 	private static List<QueryRequest> getPartitionRequests(
-			final String tableName ) {
-		final List<QueryRequest> requests = new ArrayList<>(
-				DynamoDBDataStore.PARTITIONS);
-		for (long p = 0; p < (DynamoDBDataStore.PARTITIONS); p++) {
+			final String tableName,
+			final List<ByteArrayId> partitionIds ) {
+		final List<QueryRequest> requests = new ArrayList<>();
+
+		if (partitionIds == null) {
 			requests.add(new QueryRequest(
-					tableName).addKeyConditionsEntry(
-					DynamoDBRow.GW_PARTITION_ID_KEY,
-					new Condition().withComparisonOperator(
-							ComparisonOperator.EQ).withAttributeValueList(
-							new AttributeValue().withN(Long.toString(p)))));
+					tableName));
 		}
+		else {
+			for (ByteArrayId partitionId : partitionIds) {
+				final ByteBuffer buffer = ByteBuffer.allocate(partitionId.getBytes().length);
+				buffer.put(partitionId.getBytes());
+
+				requests.add(new QueryRequest(
+						tableName).addKeyConditionsEntry(
+						DynamoDBRow.GW_PARTITION_ID_KEY,
+						new Condition().withComparisonOperator(
+								ComparisonOperator.EQ).withAttributeValueList(
+								new AttributeValue().withB(buffer))));
+			}
+		}
+
 		return requests;
 	}
 
@@ -316,19 +329,19 @@ public class DynamoDBReader implements
 		for (final ByteArrayId adapterId : adapterIds) {
 			final QueryRequest singleAdapterQuery = new QueryRequest(
 					tableName);
-			
+
 			final byte[] start = adapterId.getBytes();
 			final byte[] end = adapterId.getNextPrefix();
-				singleAdapterQuery.addKeyConditionsEntry(
-						DynamoDBRow.GW_RANGE_KEY,
-						new Condition().withComparisonOperator(
-								ComparisonOperator.BETWEEN).withAttributeValueList(
-								new AttributeValue().withB(ByteBuffer.wrap(start)),
-								new AttributeValue().withB(ByteBuffer.wrap(end))));
+			singleAdapterQuery.addKeyConditionsEntry(
+					DynamoDBRow.GW_RANGE_KEY,
+					new Condition().withComparisonOperator(
+							ComparisonOperator.BETWEEN).withAttributeValueList(
+							new AttributeValue().withB(ByteBuffer.wrap(start)),
+							new AttributeValue().withB(ByteBuffer.wrap(end))));
 
 			allQueries.add(singleAdapterQuery);
 		}
-		
+
 		return allQueries;
 	}
 
@@ -370,7 +383,9 @@ public class DynamoDBReader implements
 		}
 
 		for (final ByteArrayId adapterId : adapterIds) {
-			final List<QueryRequest> internalRequests = getPartitionRequests(tableName);
+			final List<QueryRequest> internalRequests = getPartitionRequests(
+					tableName,
+					null);
 			for (final QueryRequest queryRequest : internalRequests) {
 				addQueryRange(
 						r,
@@ -406,7 +421,8 @@ public class DynamoDBReader implements
 			final List<QueryRequest> requests = new ArrayList<>();
 			if ((ranges.size() == 1) && (adapterIds.size() == 1)) {
 				final List<QueryRequest> queries = getPartitionRequests(
-						tableName);
+						tableName,
+						null);
 				final ByteArrayRange r = ranges.get(
 						0);
 				if (r.isSingleValue()) {
@@ -494,7 +510,9 @@ public class DynamoDBReader implements
 		final List<QueryRequest> allQueries = new ArrayList<>();
 
 		for (final ByteArrayId adapterId : adapterIds) {
-			final List<QueryRequest> singleAdapterQueries = getPartitionRequests(tableName);
+			final List<QueryRequest> singleAdapterQueries = getPartitionRequests(
+					tableName,
+					null);
 			final byte[] start = adapterId.getBytes();
 			final byte[] end = adapterId.getNextPrefix();
 			for (final QueryRequest queryRequest : singleAdapterQueries) {

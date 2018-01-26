@@ -31,8 +31,7 @@ public class DynamoDBMetadataWriter implements
 
 	@Override
 	public void close()
-			throws Exception {
-	}
+			throws Exception {}
 
 	@Override
 	public void write(
@@ -59,10 +58,12 @@ public class DynamoDBMetadataWriter implements
 			operations.getClient().putItem(
 					new PutItemRequest(
 							tableName,
-							map));			
+							map));
 		}
 		catch (Exception e) {
-			LOGGER.error("Error writing metadata", e);
+			LOGGER.error(
+					"Error writing metadata",
+					e);
 		}
 	}
 

@@ -27,12 +27,34 @@ public class DynamoDBRow implements
 
 	public DynamoDBRow(
 			final Map<String, AttributeValue> objMap ) {
-		final byte[] rowId = objMap.get(GW_RANGE_KEY).getB().array();
-		final int length = rowId.length;
+		this.objMap = objMap;
+
+		this.key = initKey(objMap);
+
+		byte[] fieldMask = objMap.get(
+				GW_FIELD_MASK_KEY).getB().array();
+		byte[] value = objMap.get(
+				GW_VALUE_KEY).getB().array();
+
+		this.fieldValues = new GeoWaveValueImpl[1];
+		this.fieldValues[0] = new GeoWaveValueImpl(
+				fieldMask,
+				null,
+				value);
+	}
+
+	private GeoWaveKey initKey(
+			final Map<String, AttributeValue> objMap ) {
+		byte[] partitionKey = objMap.get(
+				GW_PARTITION_ID_KEY).getB().array();
+
+		final byte[] rangeKey = objMap.get(
+				GW_RANGE_KEY).getB().array();
+		final int length = rangeKey.length;
 		final int offset = 0;
 
 		final ByteBuffer metadataBuf = ByteBuffer.wrap(
-				rowId,
+				rangeKey,
 				length + offset - 12,
 				12);
 		final int adapterIdLength = metadataBuf.getInt();
@@ -40,41 +62,24 @@ public class DynamoDBRow implements
 		final int numberOfDuplicates = metadataBuf.getInt();
 
 		final ByteBuffer buf = ByteBuffer.wrap(
-				rowId,
+				rangeKey,
 				offset,
 				length - 12);
 		final byte[] sortKey = new byte[length - 12 - adapterIdLength - dataIdLength];
 		final byte[] adapterId = new byte[adapterIdLength];
 		final byte[] dataId = new byte[dataIdLength];
-		// get adapterId first
-		buf.get(
-				adapterId);
-		buf.get(
-				sortKey);
-		buf.get(
-				dataId);
 
-		this.objMap = objMap;
+		// Range key (row ID) = adapterId + sortKey + dataId
+		buf.get(adapterId);
+		buf.get(sortKey);
+		buf.get(dataId);
 
-		byte[] partitionKey = objMap.get(GW_PARTITION_ID_KEY).getB().array();
-
-		this.key = new GeoWaveKeyImpl(
+		return new GeoWaveKeyImpl(
 				dataId,
 				adapterId,
 				partitionKey,
 				sortKey,
 				numberOfDuplicates);
-
-		byte[] fieldMask = objMap.get(GW_FIELD_MASK_KEY).getB().array();
-
-		byte[] value = objMap.get(GW_VALUE_KEY).getB().array();
-
-		this.fieldValues = new GeoWaveValueImpl[1];
-		this.fieldValues[0] = new GeoWaveValueImpl(
-				fieldMask,
-				null,
-				value);
-
 	}
 
 	public Map<String, AttributeValue> getAttributeMapping() {
@@ -121,23 +126,19 @@ public class DynamoDBRow implements
 	public GeoWaveValue[] getFieldValues() {
 		return fieldValues;
 	}
-	
-	public static byte[] getCompositeId(GeoWaveKey key){
-		final ByteBuffer buffer = ByteBuffer.allocate(
-				key.getSortKey().length + key.getAdapterId().length + key.getDataId().length + 12);
-		buffer.put(
-				key.getAdapterId());
-		buffer.put(
-				key.getSortKey());
-		buffer.put(
-				key.getDataId());
-		buffer.putInt(
-				key.getAdapterId().length);
-		buffer.putInt(
-				key.getDataId().length);
-		buffer.putInt(
-				key.getNumberOfDuplicates());
+
+	public static byte[] getRangeKey(
+			GeoWaveKey key ) {
+		final ByteBuffer buffer = ByteBuffer.allocate(key.getSortKey().length + key.getAdapterId().length
+				+ key.getDataId().length + 12);
+		buffer.put(key.getAdapterId());
+		buffer.put(key.getSortKey());
+		buffer.put(key.getDataId());
+		buffer.putInt(key.getAdapterId().length);
+		buffer.putInt(key.getDataId().length);
+		buffer.putInt(key.getNumberOfDuplicates());
 		buffer.rewind();
+
 		return buffer.array();
 	}
 

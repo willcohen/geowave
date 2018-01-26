@@ -15,11 +15,12 @@ import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.google.common.collect.Iterators;
 
+import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.DataStoreOptions;
+import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveMetadata;
-import mil.nga.giat.geowave.core.store.metadata.AbstractGeoWavePersistence;
 import mil.nga.giat.geowave.core.store.operations.MetadataQuery;
 import mil.nga.giat.geowave.core.store.operations.MetadataReader;
 import mil.nga.giat.geowave.core.store.operations.MetadataType;
@@ -36,12 +37,12 @@ public class DynamoDBMetadataReader implements
 	public DynamoDBMetadataReader(
 			final DynamoDBOperations operations,
 			final DataStoreOptions options,
-			MetadataType metadataType) {
+			MetadataType metadataType ) {
 		this.operations = operations;
 		this.options = options;
 		this.metadataType = metadataType;
 	}
-	
+
 	@Override
 	public CloseableIterator<GeoWaveMetadata> query(
 			MetadataQuery query ) {

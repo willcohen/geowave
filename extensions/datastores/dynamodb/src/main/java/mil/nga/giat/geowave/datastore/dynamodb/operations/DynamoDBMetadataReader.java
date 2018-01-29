@@ -15,6 +15,7 @@ import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.google.common.collect.Iterators;
 
+import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
@@ -24,6 +25,8 @@ import mil.nga.giat.geowave.core.store.entities.GeoWaveMetadata;
 import mil.nga.giat.geowave.core.store.operations.MetadataQuery;
 import mil.nga.giat.geowave.core.store.operations.MetadataReader;
 import mil.nga.giat.geowave.core.store.operations.MetadataType;
+import mil.nga.giat.geowave.datastore.dynamodb.util.DynamoDBStatisticsIterator;
+import mil.nga.giat.geowave.datastore.dynamodb.util.DynamoDBUtils;
 import mil.nga.giat.geowave.datastore.dynamodb.util.DynamoDBUtils.NoopClosableIteratorWrapper;
 
 public class DynamoDBMetadataReader implements
@@ -70,6 +73,11 @@ public class DynamoDBMetadataReader implements
 			final QueryResult queryResult = operations.getClient().query(
 					queryRequest);
 
+			if (metadataType == MetadataType.STATS) {
+				return new DynamoDBStatisticsIterator(
+						queryResult.getItems().iterator());
+			}
+
 			return new CloseableIteratorWrapper<>(
 					new NoopClosableIteratorWrapper(),
 					Iterators.transform(
@@ -80,10 +88,10 @@ public class DynamoDBMetadataReader implements
 										final Map<String, AttributeValue> result ) {
 
 									return new GeoWaveMetadata(
-											getPrimaryId(result),
-											getSecondaryId(result),
+											DynamoDBUtils.getPrimaryId(result),
+											DynamoDBUtils.getSecondaryId(result),
 											null,
-											getValue(result));
+											DynamoDBUtils.getValue(result));
 								}
 							}));
 
@@ -103,6 +111,11 @@ public class DynamoDBMetadataReader implements
 		final ScanResult scanResult = operations.getClient().scan(
 				scan);
 
+		if (metadataType == MetadataType.STATS) {
+			return new DynamoDBStatisticsIterator(
+					scanResult.getItems().iterator());
+		}
+
 		return new CloseableIteratorWrapper<>(
 				new NoopClosableIteratorWrapper(),
 				Iterators.transform(
@@ -113,38 +126,12 @@ public class DynamoDBMetadataReader implements
 									final Map<String, AttributeValue> result ) {
 
 								return new GeoWaveMetadata(
-										getPrimaryId(result),
-										getSecondaryId(result),
+										DynamoDBUtils.getPrimaryId(result),
+										DynamoDBUtils.getSecondaryId(result),
 										null,
-										getValue(result));
+										DynamoDBUtils.getValue(result));
 							}
 						}));
 	}
 
-	protected byte[] getPrimaryId(
-			final Map<String, AttributeValue> map ) {
-		final AttributeValue v = map.get(DynamoDBOperations.METADATA_PRIMARY_ID_KEY);
-		if (v != null) {
-			return v.getB().array();
-		}
-		return null;
-	}
-
-	protected byte[] getSecondaryId(
-			final Map<String, AttributeValue> map ) {
-		final AttributeValue v = map.get(DynamoDBOperations.METADATA_SECONDARY_ID_KEY);
-		if (v != null) {
-			return v.getB().array();
-		}
-		return null;
-	}
-
-	protected byte[] getValue(
-			final Map<String, AttributeValue> map ) {
-		final AttributeValue v = map.get(DynamoDBOperations.METADATA_VALUE_KEY);
-		if (v != null) {
-			return v.getB().array();
-		}
-		return null;
-	}
 }

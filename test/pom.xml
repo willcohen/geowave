@@ -385,11 +385,11 @@
 
 	<profiles>
 		<profile>
-			<id>accumulo-it</id>
+			<id>accumulo-it-server</id>
 			<properties>
 				<skipITs>false</skipITs>
 				<testStoreType>ACCUMULO</testStoreType>
-				<!-- testing default server-side = true -->
+				<testStoreOptions>enableServerSideLibrary=true</testStoreOptions>
 			</properties>
 		</profile>
 		<profile>
@@ -397,15 +397,23 @@
 			<properties>
 				<skipITs>false</skipITs>
 				<testStoreType>ACCUMULO</testStoreType>
-				<testServerEnabled>false</testServerEnabled>
+				<testStoreOptions>enableServerSideLibrary=false</testStoreOptions>
 			</properties>
 		</profile>
 		<profile>
-			<id>hbase-it</id>
+			<id>accumulo-it-all</id>
+			<properties>
+				<skipITs>false</skipITs>
+				<testStoreType>ACCUMULO</testStoreType>
+				<testStoreOptions>enableServerSideLibrary=true!enableServerSideLibrary=false</testStoreOptions>
+			</properties>
+		</profile>
+		<profile>
+			<id>hbase-it-server</id>
 			<properties>
 				<skipITs>false</skipITs>
 				<testStoreType>HBASE</testStoreType>
-				<testServerEnabled>true</testServerEnabled>
+				<testStoreOptions>enableServerSideLibrary=true</testStoreOptions>
 			</properties>
 		</profile>
 		<profile>
@@ -413,7 +421,15 @@
 			<properties>
 				<skipITs>false</skipITs>
 				<testStoreType>HBASE</testStoreType>
-				<testServerEnabled>false</testServerEnabled>
+				<testStoreOptions>enableServerSideLibrary=false</testStoreOptions>
+			</properties>
+		</profile>
+		<profile>
+			<id>hbase-it-all</id>
+			<properties>
+				<skipITs>false</skipITs>
+				<testStoreType>HBASE</testStoreType>
+				<testStoreOptions>enableServerSideLibrary=true!enableServerSideLibrary=false</testStoreOptions>
 			</properties>
 		</profile>
 		<profile>

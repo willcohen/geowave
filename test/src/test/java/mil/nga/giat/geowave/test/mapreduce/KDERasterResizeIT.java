@@ -79,9 +79,8 @@ public class KDERasterResizeIT
 	private static final int BASE_MIN_LEVEL = 15;
 	private static final int BASE_MAX_LEVEL = 17;
 
-	@NamespaceOverride("bogusnamespace1")
+	@NamespaceOverride(TEST_COVERAGE_NAMESPACE)
 	protected DataStorePluginOptions outputDataStorePluginOptions;
-	@NamespaceOverride("bogusnamespace2")
 	protected DataStorePluginOptions inputDataStorePluginOptions;
 
 	private final static Logger LOGGER = LoggerFactory.getLogger(KDERasterResizeIT.class);

@@ -226,10 +226,22 @@
 					</arguments>
 				</configuration>
 			</plugin>
-			<!-- <plugin> <groupId>com.google.cloud.bigtable</groupId> <artifactId>bigtable-emulator-maven-plugin</artifactId> 
-				<version>1.0.0</version> <executions> <execution> <goals> <goal>start</goal> 
-				<goal>stop</goal> </goals> <configuration> <propertyName>bigtable.emulator.endpoint</propertyName> 
-				</configuration> </execution> </executions> </plugin> -->
+			<!-- <plugin>
+				<groupId>com.google.cloud.bigtable</groupId>
+				<artifactId>bigtable-emulator-maven-plugin</artifactId>
+				<version>1.0.0</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>start</goal>
+							<goal>stop</goal>
+						</goals>
+						<configuration>
+							<propertyName>bigtable.emulator.endpoint</propertyName>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin> -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
@@ -373,11 +385,11 @@
 
 	<profiles>
 		<profile>
-			<id>accumulo-it-server</id>
+			<id>accumulo-it</id>
 			<properties>
 				<skipITs>false</skipITs>
 				<testStoreType>ACCUMULO</testStoreType>
-				<testStoreOptions>enableServerSideLibrary=true</testStoreOptions>
+				<!-- testing default server-side = true -->
 			</properties>
 		</profile>
 		<profile>
@@ -385,23 +397,15 @@
 			<properties>
 				<skipITs>false</skipITs>
 				<testStoreType>ACCUMULO</testStoreType>
-				<testStoreOptions>enableServerSideLibrary=false</testStoreOptions>
+				<testServerEnabled>false</testServerEnabled>
 			</properties>
 		</profile>
 		<profile>
-			<id>accumulo-it-all</id>
-			<properties>
-				<skipITs>false</skipITs>
-				<testStoreType>ACCUMULO</testStoreType>
-				<testStoreOptions>enableServerSideLibrary=true!enableServerSideLibrary=false</testStoreOptions>
-			</properties>
-		</profile>
-		<profile>
-			<id>hbase-it-server</id>
+			<id>hbase-it</id>
 			<properties>
 				<skipITs>false</skipITs>
 				<testStoreType>HBASE</testStoreType>
-				<testStoreOptions>enableServerSideLibrary=true</testStoreOptions>
+				<testServerEnabled>true</testServerEnabled>
 			</properties>
 		</profile>
 		<profile>
@@ -409,15 +413,7 @@
 			<properties>
 				<skipITs>false</skipITs>
 				<testStoreType>HBASE</testStoreType>
-				<testStoreOptions>enableServerSideLibrary=false</testStoreOptions>
-			</properties>
-		</profile>
-		<profile>
-			<id>hbase-it-all</id>
-			<properties>
-				<skipITs>false</skipITs>
-				<testStoreType>HBASE</testStoreType>
-				<testStoreOptions>enableServerSideLibrary=true!enableServerSideLibrary=false</testStoreOptions>
+				<testServerEnabled>false</testServerEnabled>
 			</properties>
 		</profile>
 		<profile>

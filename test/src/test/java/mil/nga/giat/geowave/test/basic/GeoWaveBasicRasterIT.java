@@ -65,7 +65,6 @@ public class GeoWaveBasicRasterIT extends
 		GeoWaveStoreType.DYNAMODB,
 		GeoWaveStoreType.HBASE
 	})
-	@NamespaceOverride("random")
 	protected DataStorePluginOptions dataStoreOptions;
 
 	private final static Logger LOGGER = LoggerFactory.getLogger(GeoWaveBasicRasterIT.class);
@@ -119,7 +118,7 @@ public class GeoWaveBasicRasterIT extends
 		TestUtils.deleteAll(dataStoreOptions);
 	}
 
-//	@Test
+	@Test
 	public void testMultipleMergeStrategies()
 			throws IOException {
 		final String noDataCoverageName = "testMultipleMergeStrategies_NoDataMergeStrategy";
@@ -212,9 +211,9 @@ public class GeoWaveBasicRasterIT extends
 				eastLon,
 				southLat,
 				northLat);
-//		queryNoDataMergeStrategy(
-//				coverageName,
-//				tileSize);
+		queryNoDataMergeStrategy(
+				coverageName,
+				tileSize);
 	}
 
 	private void queryNoDataMergeStrategy(
@@ -312,9 +311,6 @@ public class GeoWaveBasicRasterIT extends
 			Assert.assertFalse(it.hasNext());
 		}
 	}
-	public static final PrimaryIndex DEFAULT_SPATIAL_INDEX2 = new CustomIdIndex(new SpatialDimensionalityTypeProvider()
-			.createPrimaryIndex().getIndexStrategy(), new SpatialDimensionalityTypeProvider()
-			.createPrimaryIndex().getIndexModel(), new ByteArrayId("crap"));
 	private void ingestNoDataMergeStrategy(
 			final String coverageName,
 			final int tileSize,
@@ -333,9 +329,9 @@ public class GeoWaveBasicRasterIT extends
 		final WritableRaster raster1 = RasterUtils.createRasterTypeDouble(
 				numBands,
 				tileSize);
-//		final WritableRaster raster2 = RasterUtils.createRasterTypeDouble(
-//				numBands,
-//				tileSize);
+		final WritableRaster raster2 = RasterUtils.createRasterTypeDouble(
+				numBands,
+				tileSize);
 
 		TestUtils.fillTestRasters(
 				raster1,
@@ -344,7 +340,7 @@ public class GeoWaveBasicRasterIT extends
 
 		try (IndexWriter writer = dataStore.createWriter(
 				adapter,
-				DEFAULT_SPATIAL_INDEX2)) {
+				TestUtils.DEFAULT_SPATIAL_INDEX)) {
 			writer.write(RasterUtils.createCoverageTypeDouble(
 					coverageName,
 					westLon,
@@ -352,13 +348,13 @@ public class GeoWaveBasicRasterIT extends
 					southLat,
 					northLat,
 					raster1));
-//			writer.write(RasterUtils.createCoverageTypeDouble(
-//					coverageName,
-//					westLon,
-//					eastLon,
-//					southLat,
-//					northLat,
-//					raster2));
+			writer.write(RasterUtils.createCoverageTypeDouble(
+					coverageName,
+					westLon,
+					eastLon,
+					southLat,
+					northLat,
+					raster2));
 		}
 	}
 

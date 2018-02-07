@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -37,25 +37,25 @@ import mil.nga.giat.geowave.test.service.GeoWaveServicesIT;
 
 @RunWith(GeoWaveITSuiteRunner.class)
 @SuiteClasses({
-	// GeoWaveVisibilityIT.class,
-	// GeoWaveBasicSpatialVectorIT.class,
-	// GeoWaveBasicSpatialTemporalVectorIT.class,
-	GeoWaveBasicRasterIT.class,
-	// GeoWaveVectorSerializationIT.class,
-	// BasicKafkaIT.class,
-	// BasicMapReduceIT.class,
-	// LandsatIT.class,
-	// BulkIngestInputGenerationIT.class,
+	 GeoWaveVisibilityIT.class,
+	 GeoWaveBasicSpatialVectorIT.class,
+	 GeoWaveBasicSpatialTemporalVectorIT.class,
+	 GeoWaveVectorSerializationIT.class,
+	 BasicKafkaIT.class,
+	 BasicMapReduceIT.class,
+	 LandsatIT.class,
 	KDERasterResizeIT.class,
-// GeoWaveNNIT.class,
-// GeoServerIT.class,
-// GeoWaveServicesIT.class,
-// GeoWaveIngestGeoserverIT.class,
-// AttributesSubsetQueryIT.class,
-// DBScanIT.class,
-// SpatialTemporalQueryIT.class,
-// PolygonDataIdQueryIT.class,
-// ConfigCacheIT.class,
+	GeoWaveBasicRasterIT.class,
+	BulkIngestInputGenerationIT.class,
+	GeoWaveNNIT.class,
+	GeoServerIT.class,
+	GeoWaveServicesIT.class,
+	GeoWaveIngestGeoserverIT.class,
+	AttributesSubsetQueryIT.class,
+	DBScanIT.class,
+	SpatialTemporalQueryIT.class,
+	PolygonDataIdQueryIT.class,
+	ConfigCacheIT.class,
 })
 public class GeoWaveITSuite
 {

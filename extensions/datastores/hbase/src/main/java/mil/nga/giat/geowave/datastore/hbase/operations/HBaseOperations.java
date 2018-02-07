@@ -271,9 +271,9 @@ public class HBaseOperations implements
 					for (final Pair<String, Boolean> columnFamilyAndVersioning : columnFamiliesAndVersioningPairs) {
 						final HColumnDescriptor column = new HColumnDescriptor(
 								columnFamilyAndVersioning.getLeft());
-//						if (!columnFamilyAndVersioning.getRight()) {
-							column.setMaxVersions(Integer.MAX_VALUE);
-//						}
+						// if (!columnFamilyAndVersioning.getRight()) {
+						column.setMaxVersions(Integer.MAX_VALUE);
+						// }
 						desc.addFamily(column);
 
 						cfSet.add(columnFamilyAndVersioning.getLeft());
@@ -393,9 +393,9 @@ public class HBaseOperations implements
 						for (final String newColumnFamily : newColumnFamilies) {
 							final HColumnDescriptor column = new HColumnDescriptor(
 									newColumnFamily);
-//							if (!enableVersioning) {
-								column.setMaxVersions(Integer.MAX_VALUE);
-//							}
+							// if (!enableVersioning) {
+							column.setMaxVersions(Integer.MAX_VALUE);
+							// }
 							admin.addColumn(
 									tableName,
 									column);
@@ -458,7 +458,9 @@ public class HBaseOperations implements
 					}
 				}
 			}
-			iteratorsAttached = false;
+			synchronized (this) {
+				iteratorsAttached = false;
+			}
 			cfCache.clear();
 			partitionCache.clear();
 			coprocessorCache.clear();

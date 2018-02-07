@@ -97,7 +97,7 @@ public class GeoWaveBasicRasterIT extends
 		LOGGER.warn("-----------------------------------------");
 	}
 
-    @Test
+	@Test
 	public void testNoDataMergeStrategy()
 			throws IOException {
 		final String coverageName = "testNoDataMergeStrategy";
@@ -311,6 +311,7 @@ public class GeoWaveBasicRasterIT extends
 			Assert.assertFalse(it.hasNext());
 		}
 	}
+
 	private void ingestNoDataMergeStrategy(
 			final String coverageName,
 			final int tileSize,

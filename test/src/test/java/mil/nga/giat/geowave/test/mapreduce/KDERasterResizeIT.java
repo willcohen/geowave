@@ -79,12 +79,10 @@ public class KDERasterResizeIT
 	private static final int BASE_MIN_LEVEL = 15;
 	private static final int BASE_MAX_LEVEL = 17;
 
-
 	@NamespaceOverride("bogusnamespace1")
 	protected DataStorePluginOptions outputDataStorePluginOptions;
 	@NamespaceOverride("bogusnamespace2")
 	protected DataStorePluginOptions inputDataStorePluginOptions;
-
 
 	private final static Logger LOGGER = LoggerFactory.getLogger(KDERasterResizeIT.class);
 	private static long startMillis;
@@ -282,7 +280,7 @@ public class KDERasterResizeIT
 		final StringBuilder str = new StringBuilder(
 				StoreFactoryOptions.GEOWAVE_NAMESPACE_OPTION).append(
 				"=").append(
-						"bogusnamespace1").append(
+				"bogusnamespace1").append(
 				";equalizeHistogramOverride=false;scaleTo8Bit=false;interpolationOverride=").append(
 				Interpolation.INTERP_NEAREST);
 

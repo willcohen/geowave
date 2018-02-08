@@ -79,8 +79,7 @@ abstract class BaseQuery
 				getFieldSubsets(),
 				isMixedVisibilityRows(),
 				isServerSideAggregation(options),
-				isClientsideRowMerging(
-						options,
+				isRowMerging(
 						adapterStore),
 				getRanges(),
 				getServerFilter(options),
@@ -88,12 +87,6 @@ abstract class BaseQuery
 				getCoordinateRanges(),
 				getConstraints(),
 				getAdditionalAuthorizations()));
-	}
-
-	public boolean isClientsideRowMerging(
-			final DataStoreOptions options,
-			AdapterStore adapterStore ) {
-		return ((options != null) && !options.isServerSideLibraryEnabled() && isRowMerging(adapterStore));
 	}
 
 	public boolean isRowMerging(

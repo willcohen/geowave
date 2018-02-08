@@ -316,7 +316,7 @@ public class GeoWaveBasicRasterIT extends
 			final double southLat,
 			final double northLat )
 			throws IOException {
-		final int numBands = 2;
+		final int numBands = 8;
 		final DataStore dataStore = dataStoreOptions.createDataStore();
 		final RasterDataAdapter adapter = RasterUtils.createDataAdapterTypeDouble(
 				coverageName,
@@ -332,7 +332,7 @@ public class GeoWaveBasicRasterIT extends
 
 		TestUtils.fillTestRasters(
 				raster1,
-				null,
+				raster2,
 				tileSize);
 
 		try (IndexWriter writer = dataStore.createWriter(

@@ -14,12 +14,12 @@ env:
     - NAME='HBase Client IT on Latest ASF Versions' MAVEN_PROFILES='hbase-it-client' BUILD_DOCS=false  IT_ONLY=true
     #- NAME='Cassandra IT on Latest ASF Versions' MAVEN_PROFILES='cassandra-it' BUILD_DOCS=false  IT_ONLY=true
     #- NAME='DynamoDB IT on Latest ASF Versions' MAVEN_PROFILES='dynamodb-it' BUILD_DOCS=false  IT_ONLY=true
-    #- NAME='Bigtable IT on Latest ASF Versions' MAVEN_PROFILES='bigtable-it' BUILD_DOCS=false  IT_ONLY=true
-    #- NAME='Accumulo IT on Latest CDH Versions' MAVEN_PROFILES='accumulo-it,cloudera' BUILD_DOCS=false  IT_ONLY=true
-    #- NAME='Accumulo IT on Latest HDP Versions' MAVEN_PROFILES='accumulo-it,hortonworks' BUILD_DOCS=false  IT_ONLY=true
-    #- NAME='Accumulo IT on Older ASF and GeoTools Versions' MAVEN_PROFILES='accumulo-it,compatibility' BUILD_DOCS=false  IT_ONLY=true	 
-    #- NAME='HBase IT on Latest CDH Versions'  MAVEN_PROFILES='hbase-it,cloudera' BUILD_DOCS=false  IT_ONLY=true
-    #- NAME='HBase IT on Latest HDP Versions'  MAVEN_PROFILES='hbase-it,hortonworks' BUILD_DOCS=false  IT_ONLY=true
+    - NAME='Bigtable IT on Latest ASF Versions' MAVEN_PROFILES='bigtable-it' BUILD_DOCS=false  IT_ONLY=true
+    - NAME='Accumulo Server IT on Latest CDH Versions' MAVEN_PROFILES='accumulo-it-server,cloudera' BUILD_DOCS=false  IT_ONLY=true
+    - NAME='Accumulo Server IT on Latest HDP Versions' MAVEN_PROFILES='accumulo-it-server,hortonworks' BUILD_DOCS=false  IT_ONLY=true
+    - NAME='Accumulo Server IT on Older ASF and GeoTools Versions' MAVEN_PROFILES='accumulo-it-server,compatibility' BUILD_DOCS=false  IT_ONLY=true	 
+    - NAME='HBase Server IT on Latest CDH Versions'  MAVEN_PROFILES='hbase-it-server,cloudera' BUILD_DOCS=false  IT_ONLY=true
+    - NAME='HBase Server IT on Latest HDP Versions'  MAVEN_PROFILES='hbase-it-server,hortonworks' BUILD_DOCS=false  IT_ONLY=true
   global:
     - secure: C3gdJmFavZxvsRVqCLpRUAaisNV3MhWbSYf4Wjs2SBLC/AIEwN0vDWHOuYiUExuXR1kApBVdNffuCX7bt/5siewHgmiVUGyY1xytxDdv+PAKZihlfYZRGattyg3XUbEFwyjr7c74639Y1w45NPUoBMUT4SKHZkfqD+FDU47OHIM=
 

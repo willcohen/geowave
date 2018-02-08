@@ -37,7 +37,6 @@ import mil.nga.giat.geowave.test.service.GeoWaveServicesIT;
 
 @RunWith(GeoWaveITSuiteRunner.class)
 @SuiteClasses({
-	GeoWaveVisibilityIT.class,
 	GeoWaveBasicSpatialVectorIT.class,
 	GeoWaveBasicSpatialTemporalVectorIT.class,
 	GeoWaveVectorSerializationIT.class,
@@ -45,6 +44,7 @@ import mil.nga.giat.geowave.test.service.GeoWaveServicesIT;
 	BasicMapReduceIT.class,
 	LandsatIT.class,
 	KDERasterResizeIT.class,
+	GeoWaveVisibilityIT.class,
 	GeoWaveBasicRasterIT.class,
 	BulkIngestInputGenerationIT.class,
 	GeoWaveNNIT.class,

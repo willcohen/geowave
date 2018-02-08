@@ -325,7 +325,7 @@ public class GeoWaveVisibilityIT extends
 		}
 	}
 
-//	@Test
+	// @Test
 	public void testIngestAndQueryMixedVisibilityFields()
 			throws MismatchedIndexToAdapterMapping,
 			IOException {

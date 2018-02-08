@@ -61,8 +61,7 @@ import mil.nga.giat.geowave.core.store.query.QueryOptions;
 
 public class TestUtils
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			TestUtils.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(TestUtils.class);
 
 	public static enum DimensionalityType {
 		SPATIAL(
@@ -153,8 +152,7 @@ public class TestUtils
 
 		// Ingest Formats
 		final IngestFormatPluginOptions ingestFormatOptions = new IngestFormatPluginOptions();
-		ingestFormatOptions.selectPlugin(
-				format);
+		ingestFormatOptions.selectPlugin(format);
 
 		// Indexes
 		final String[] indexTypes = dimensionalityType.getDimensionalityArg().split(
@@ -163,45 +161,35 @@ public class TestUtils
 				indexTypes.length);
 		for (final String indexType : indexTypes) {
 			final IndexPluginOptions indexOption = new IndexPluginOptions();
-			indexOption.selectPlugin(
-					indexType);
-			indexOptions.add(
-					indexOption);
+			indexOption.selectPlugin(indexType);
+			indexOptions.add(indexOption);
 		}
 
 		// Create the command and execute.
 		final LocalToGeowaveCommand localIngester = new LocalToGeowaveCommand();
-		localIngester.setPluginFormats(
-				ingestFormatOptions);
-		localIngester.setInputIndexOptions(
-				indexOptions);
-		localIngester.setInputStoreOptions(
-				dataStore);
+		localIngester.setPluginFormats(ingestFormatOptions);
+		localIngester.setInputIndexOptions(indexOptions);
+		localIngester.setInputStoreOptions(dataStore);
 		localIngester.setParameters(
 				ingestFilePath,
 				null,
 				null);
-		localIngester.setThreads(
-				nthreads);
-		localIngester.execute(
-				new ManualOperationParams());
+		localIngester.setThreads(nthreads);
+		localIngester.execute(new ManualOperationParams());
 
-		verifyStats(
-				dataStore);
+		verifyStats(dataStore);
 
 	}
 
 	private static void verifyStats(
 			final DataStorePluginOptions dataStore ) {
 		final ListStatsCommand listStats = new ListStatsCommand();
-		listStats.setInputStoreOptions(
-				dataStore);
+		listStats.setInputStoreOptions(dataStore);
 		listStats.setParameters(
 				null,
 				null);
 		try {
-			listStats.execute(
-					new ManualOperationParams());
+			listStats.execute(new ManualOperationParams());
 		}
 		catch (final ParameterException e) {
 			throw new RuntimeException(
@@ -212,10 +200,7 @@ public class TestUtils
 	public static long hashCentroid(
 			final Geometry geometry ) {
 		final Point centroid = geometry.getCentroid();
-		return Double.doubleToLongBits(
-				centroid.getX())
-				+ Double.doubleToLongBits(
-						centroid.getY() * 31);
+		return Double.doubleToLongBits(centroid.getX()) + Double.doubleToLongBits(centroid.getY() * 31);
 	}
 
 	public static class ExpectedResults
@@ -245,9 +230,7 @@ public class TestUtils
 				if (obj instanceof SimpleFeature) {
 					expectedResultCount++;
 					final SimpleFeature feature = (SimpleFeature) obj;
-					hashedCentroids.add(
-							hashCentroid(
-									(Geometry) feature.getDefaultGeometry()));
+					hashedCentroids.add(hashCentroid((Geometry) feature.getDefaultGeometry()));
 				}
 			}
 		}
@@ -272,19 +255,15 @@ public class TestUtils
 					expectedResultsResource);
 			SimpleFeatureIterator featureIterator = null;
 			try {
-				dataStore = DataStoreFinder.getDataStore(
-						map);
+				dataStore = DataStoreFinder.getDataStore(map);
 				if (dataStore == null) {
-					LOGGER.error(
-							"Could not get dataStore instance, getDataStore returned null");
+					LOGGER.error("Could not get dataStore instance, getDataStore returned null");
 					throw new IOException(
 							"Could not get dataStore instance, getDataStore returned null");
 				}
-				final SimpleFeatureCollection expectedResults = dataStore
-						.getFeatureSource(
-								dataStore.getNames().get(
-										0))
-						.getFeatures();
+				final SimpleFeatureCollection expectedResults = dataStore.getFeatureSource(
+						dataStore.getNames().get(
+								0)).getFeatures();
 
 				expectedResultCount += expectedResults.size();
 				// unwrap the expected results into a set of features IDs so its
@@ -292,15 +271,12 @@ public class TestUtils
 				featureIterator = expectedResults.features();
 				while (featureIterator.hasNext()) {
 					final SimpleFeature feature = featureIterator.next();
-					final long centroid = hashCentroid(
-							(Geometry) feature.getDefaultGeometry());
-					hashedCentroids.add(
-							centroid);
+					final long centroid = hashCentroid((Geometry) feature.getDefaultGeometry());
+					hashedCentroids.add(centroid);
 				}
 			}
 			finally {
-				IOUtils.closeQuietly(
-						featureIterator);
+				IOUtils.closeQuietly(featureIterator);
 				if (dataStore != null) {
 					dataStore.dispose();
 				}
@@ -314,9 +290,7 @@ public class TestUtils
 	public static DistributableQuery resourceToQuery(
 			final URL filterResource )
 			throws IOException {
-		return featureToQuery(
-				resourceToFeature(
-						filterResource));
+		return featureToQuery(resourceToFeature(filterResource));
 	}
 
 	public static SimpleFeature resourceToFeature(
@@ -330,21 +304,16 @@ public class TestUtils
 		final SimpleFeature savedFilter;
 		SimpleFeatureIterator sfi = null;
 		try {
-			dataStore = DataStoreFinder.getDataStore(
-					map);
+			dataStore = DataStoreFinder.getDataStore(map);
 			if (dataStore == null) {
-				LOGGER.error(
-						"Could not get dataStore instance, getDataStore returned null");
+				LOGGER.error("Could not get dataStore instance, getDataStore returned null");
 				throw new IOException(
 						"Could not get dataStore instance, getDataStore returned null");
 			}
 			// just grab the first feature and use it as a filter
-			sfi = dataStore
-					.getFeatureSource(
-							dataStore.getNames().get(
-									0))
-					.getFeatures()
-					.features();
+			sfi = dataStore.getFeatureSource(
+					dataStore.getNames().get(
+							0)).getFeatures().features();
 			savedFilter = sfi.next();
 
 		}
@@ -362,10 +331,8 @@ public class TestUtils
 	protected static DistributableQuery featureToQuery(
 			final SimpleFeature savedFilter ) {
 		final Geometry filterGeometry = (Geometry) savedFilter.getDefaultGeometry();
-		final Object startObj = savedFilter.getAttribute(
-				TEST_FILTER_START_TIME_ATTRIBUTE_NAME);
-		final Object endObj = savedFilter.getAttribute(
-				TEST_FILTER_END_TIME_ATTRIBUTE_NAME);
+		final Object startObj = savedFilter.getAttribute(TEST_FILTER_START_TIME_ATTRIBUTE_NAME);
+		final Object endObj = savedFilter.getAttribute(TEST_FILTER_END_TIME_ATTRIBUTE_NAME);
 
 		if ((startObj != null) && (endObj != null)) {
 			// if we can resolve start and end times, make it a spatial temporal
@@ -400,15 +367,13 @@ public class TestUtils
 			final File file )
 			throws IOException {
 		{
-			String str = FileUtils.readFileToString(
-					file);
+			String str = FileUtils.readFileToString(file);
 			for (final Entry<String, String> entry : values.entrySet()) {
 				str = str.replaceAll(
 						entry.getKey(),
 						entry.getValue());
 			}
-			FileUtils.deleteQuietly(
-					file);
+			FileUtils.deleteQuietly(file);
 			FileUtils.write(
 					file,
 					str);
@@ -441,10 +406,8 @@ public class TestUtils
 				expected.getHeight(),
 				actual.getHeight());
 		final int totalPixels = expected.getWidth() * expected.getHeight();
-		final int minErrorPixels = (int) Math.round(
-				minPctError * totalPixels);
-		final int maxErrorPixels = (int) Math.round(
-				maxPctError * totalPixels);
+		final int minErrorPixels = (int) Math.round(minPctError * totalPixels);
+		final int maxErrorPixels = (int) Math.round(maxPctError * totalPixels);
 		int errorPixels = 0;
 		// test under default style
 		for (int x = 0; x < expected.getWidth(); x++) {
@@ -452,36 +415,35 @@ public class TestUtils
 				if (actual.getRGB(
 						x,
 						y) != expected.getRGB(
-								x,
-								y)) {
+						x,
+						y)) {
 					errorPixels++;
 					if (errorPixels > maxErrorPixels) {
-						Assert.fail(
-								String.format(
-										"[%d,%d] failed to match ref=%d gen=%d",
+						Assert.fail(String.format(
+								"[%d,%d] failed to match ref=%d gen=%d",
+								x,
+								y,
+								expected.getRGB(
 										x,
-										y,
-										expected.getRGB(
-												x,
-												y),
-										actual.getRGB(
-												x,
-												y)));
+										y),
+								actual.getRGB(
+										x,
+										y)));
 					}
 				}
 			}
 		}
 		if (errorPixels < minErrorPixels) {
-			Assert.fail(
-					String.format(
-							"Subsampling did not work as expected; error pixels (%d) did not exceed the minimum threshold (%d)",
-							errorPixels,
-							minErrorPixels));
+			Assert
+					.fail(String
+							.format(
+									"Subsampling did not work as expected; error pixels (%d) did not exceed the minimum threshold (%d)",
+									errorPixels,
+									minErrorPixels));
 		}
 
 		if (errorPixels > 0) {
-			System.out.println(
-					((float) errorPixels / (float) totalPixels) + "% pixels differed from expected");
+			System.out.println(((float) errorPixels / (float) totalPixels) + "% pixels differed from expected");
 		}
 	}
 
@@ -691,8 +653,7 @@ public class TestUtils
 						(long) resultOfFunction);
 			}
 			else {
-				rng.setSeed(
-						(long) resultOfFunction);
+				rng.setSeed((long) resultOfFunction);
 			}
 
 			return rng.nextDouble() * resultOfFunction;

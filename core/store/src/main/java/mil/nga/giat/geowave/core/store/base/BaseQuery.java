@@ -79,8 +79,7 @@ abstract class BaseQuery
 				getFieldSubsets(),
 				isMixedVisibilityRows(),
 				isServerSideAggregation(options),
-				isRowMerging(
-						adapterStore),
+				isRowMerging(adapterStore),
 				getRanges(),
 				getServerFilter(options),
 				limit,

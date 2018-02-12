@@ -279,7 +279,7 @@ public class KDERasterResizeIT
 		final StringBuilder str = new StringBuilder(
 				StoreFactoryOptions.GEOWAVE_NAMESPACE_OPTION).append(
 				"=").append(
-						TEST_COVERAGE_NAMESPACE).append(
+				TEST_COVERAGE_NAMESPACE).append(
 				";equalizeHistogramOverride=false;scaleTo8Bit=false;interpolationOverride=").append(
 				Interpolation.INTERP_NEAREST);
 

@@ -240,13 +240,13 @@ public class HBaseOperations implements
 		if (createTable) {
 			createTable(
 					columnFamilies,
-					options.isServerSideLibraryEnabled(),
+					true,
 					tableName);
 		}
 
 		verifyColumnFamilies(
 				columnFamilies,
-				options.isServerSideLibraryEnabled(),
+				true,
 				tableName,
 				true);
 
@@ -363,7 +363,6 @@ public class HBaseOperations implements
 				newCFs.add(columnFamily);
 			}
 		}
-
 		// Nothing to add
 		if (newCFs.isEmpty()) {
 			return true;
@@ -393,9 +392,7 @@ public class HBaseOperations implements
 						for (final String newColumnFamily : newColumnFamilies) {
 							final HColumnDescriptor column = new HColumnDescriptor(
 									newColumnFamily);
-							// if (!enableVersioning) {
 							column.setMaxVersions(Integer.MAX_VALUE);
-							// }
 							admin.addColumn(
 									tableName,
 									column);
@@ -826,7 +823,7 @@ public class HBaseOperations implements
 
 			verifyColumnFamilies(
 					columnFamilies,
-					options.isServerSideLibraryEnabled(),
+					true,
 					tableName,
 					true);
 

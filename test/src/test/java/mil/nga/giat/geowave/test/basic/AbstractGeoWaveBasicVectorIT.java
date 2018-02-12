@@ -111,7 +111,6 @@ abstract public class AbstractGeoWaveBasicVectorIT extends
 			final String queryDescription )
 			throws Exception {
 		LOGGER.info("querying " + queryDescription);
-		System.out.println("querying " + queryDescription);
 		final mil.nga.giat.geowave.core.store.DataStore geowaveStore = getDataStorePluginOptions().createDataStore();
 		// this file is the filtered dataset (using the previous file as a
 		// filter) so use it to ensure the query worked

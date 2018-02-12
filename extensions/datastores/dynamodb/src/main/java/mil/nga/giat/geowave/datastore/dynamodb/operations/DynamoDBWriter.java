@@ -25,7 +25,6 @@ import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.PutRequest;
 import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 
-import mil.nga.giat.geowave.core.store.entities.GeoWaveKey;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveValue;
 import mil.nga.giat.geowave.core.store.operations.Writer;
@@ -34,10 +33,15 @@ import mil.nga.giat.geowave.datastore.dynamodb.DynamoDBRow;
 public class DynamoDBWriter implements
 		Writer
 {
-	private static final Logger LOGGER = LoggerFactory.getLogger(DynamoDBWriter.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(
+			DynamoDBWriter.class);
 	private static final int NUM_ITEMS = 25;
 	private static final boolean ASYNC_WRITE = false;
-
+	// because DynamoDB requires a hash key, if the geowave partition key is
+	// empty, we need a non-empty constant alternative
+	protected static final byte[] EMPTY_PARTITION_KEY = new byte[] {
+		0
+	};
 	private final List<WriteRequest> batchedItems = new ArrayList<>();
 	private final String tableName;
 	private final AmazonDynamoDBAsyncClient client;
@@ -58,36 +62,44 @@ public class DynamoDBWriter implements
 
 	@Override
 	public void write(
-			GeoWaveRow[] rows ) {
+			final GeoWaveRow[] rows ) {
 		final List<WriteRequest> mutations = new ArrayList<WriteRequest>();
 
-		for (GeoWaveRow row : rows) {
-			mutations.addAll(rowToMutations(row));
+		for (final GeoWaveRow row : rows) {
+			mutations.addAll(
+					rowToMutations(
+							row));
 		}
 
-		write(mutations);
+		write(
+				mutations);
 	}
 
 	@Override
 	public void write(
-			GeoWaveRow row ) {
-		write(rowToMutations(row));
+			final GeoWaveRow row ) {
+		write(
+				rowToMutations(
+						row));
 	}
 
 	public void write(
 			final Iterable<WriteRequest> items ) {
 		for (final WriteRequest item : items) {
-			write(item);
+			write(
+					item);
 		}
 	}
 
 	public void write(
 			final WriteRequest item ) {
 		synchronized (batchedItems) {
-			batchedItems.add(item);
+			batchedItems.add(
+					item);
 			if (batchedItems.size() >= NUM_ITEMS) {
 				do {
-					writeBatch(ASYNC_WRITE);
+					writeBatch(
+							ASYNC_WRITE);
 				}
 				while (batchedItems.size() >= NUM_ITEMS);
 			}
@@ -155,8 +167,10 @@ public class DynamoDBWriter implements
 						@Override
 						public void onError(
 								final Exception exception ) {
-							LOGGER.warn("Unable to get response from Dynamo-Async Write " + exception.toString());
-							futureMap.remove(batchRequest);
+							LOGGER.warn(
+									"Unable to get response from Dynamo-Async Write " + exception.toString());
+							futureMap.remove(
+									batchRequest);
 							return;
 						}
 
@@ -164,9 +178,12 @@ public class DynamoDBWriter implements
 						public void onSuccess(
 								final BatchWriteItemRequest request,
 								final BatchWriteItemResult result ) {
-							retryAsync(result.getUnprocessedItems());
-							if (futureMap.remove(request) == null) {
-								LOGGER.warn(" Unable to delete BatchWriteRequest from futuresMap ");
+							retryAsync(
+									result.getUnprocessedItems());
+							if (futureMap.remove(
+									request) == null) {
+								LOGGER.warn(
+										" Unable to delete BatchWriteRequest from futuresMap ");
 							}
 						}
 
@@ -177,9 +194,11 @@ public class DynamoDBWriter implements
 					future);
 		}
 		else {
-			final BatchWriteItemResult response = client.batchWriteItem(new BatchWriteItemRequest(
-					writes));
-			retry(response.getUnprocessedItems());
+			final BatchWriteItemResult response = client.batchWriteItem(
+					new BatchWriteItemRequest(
+							writes));
+			retry(
+					response.getUnprocessedItems());
 		}
 
 		batch.clear();
@@ -218,16 +237,20 @@ public class DynamoDBWriter implements
 								@Override
 								public void onError(
 										final Exception exception ) {
-									LOGGER.warn("Putitem Async failed in Dynamo");
-									futureMap.remove(putRequest);
+									LOGGER.warn(
+											"Putitem Async failed in Dynamo");
+									futureMap.remove(
+											putRequest);
 								}
 
 								@Override
 								public void onSuccess(
 										final PutItemRequest request,
 										final PutItemResult result ) {
-									if (futureMap.remove(request) == null) {
-										LOGGER.warn("Unable to delete PutItemRequest from futuresMap ");
+									if (futureMap.remove(
+											request) == null) {
+										LOGGER.warn(
+												"Unable to delete PutItemRequest from futuresMap ");
 									}
 
 									return;
@@ -247,7 +270,8 @@ public class DynamoDBWriter implements
 	public void flush() {
 		synchronized (batchedItems) {
 			while (!batchedItems.isEmpty()) {
-				writeBatch(ASYNC_WRITE);
+				writeBatch(
+						ASYNC_WRITE);
 			}
 
 			/**
@@ -276,48 +300,65 @@ public class DynamoDBWriter implements
 
 	private static List<WriteRequest> rowToMutations(
 			final GeoWaveRow row ) {
-		ArrayList<WriteRequest> mutations = new ArrayList<>();
+		final ArrayList<WriteRequest> mutations = new ArrayList<>();
 
-		final byte[] rowId = DynamoDBRow.getRangeKey(row);
+		final byte[] rowId = DynamoDBRow.getRangeKey(
+				row);
 
 		final Map<String, AttributeValue> map = new HashMap<String, AttributeValue>();
 
-		final ByteBuffer rangeKeyBuffer = ByteBuffer.allocate(rowId.length);
-		rangeKeyBuffer.put(rowId);
+		final ByteBuffer rangeKeyBuffer = ByteBuffer.allocate(
+				rowId.length);
+		rangeKeyBuffer.put(
+				rowId);
 		rangeKeyBuffer.rewind();
-
-		final ByteBuffer partitionKeyBuffer = ByteBuffer.allocate(row.getPartitionKey().length);
-		partitionKeyBuffer.put(row.getPartitionKey());
+		byte[] partitionKey = row.getPartitionKey();
+		if ((partitionKey == null) || (partitionKey.length == 0)) {
+			partitionKey = EMPTY_PARTITION_KEY;
+		}
+		final ByteBuffer partitionKeyBuffer = ByteBuffer.allocate(
+				partitionKey.length);
+		partitionKeyBuffer.put(
+				partitionKey);
 		partitionKeyBuffer.rewind();
 
 		for (final GeoWaveValue value : row.getFieldValues()) {
-			final ByteBuffer fieldMaskBuffer = ByteBuffer.allocate(value.getFieldMask().length);
-			fieldMaskBuffer.put(value.getFieldMask());
+			final ByteBuffer fieldMaskBuffer = ByteBuffer.allocate(
+					value.getFieldMask().length);
+			fieldMaskBuffer.put(
+					value.getFieldMask());
 			fieldMaskBuffer.rewind();
 
-			final ByteBuffer valueBuffer = ByteBuffer.allocate(value.getValue().length);
-			valueBuffer.put(value.getValue());
+			final ByteBuffer valueBuffer = ByteBuffer.allocate(
+					value.getValue().length);
+			valueBuffer.put(
+					value.getValue());
 			valueBuffer.rewind();
 
 			map.put(
 					DynamoDBRow.GW_PARTITION_ID_KEY,
-					new AttributeValue().withB(partitionKeyBuffer));
+					new AttributeValue().withB(
+							partitionKeyBuffer));
 
 			map.put(
 					DynamoDBRow.GW_RANGE_KEY,
-					new AttributeValue().withB(rangeKeyBuffer));
+					new AttributeValue().withB(
+							rangeKeyBuffer));
 
 			map.put(
 					DynamoDBRow.GW_FIELD_MASK_KEY,
-					new AttributeValue().withB(fieldMaskBuffer));
+					new AttributeValue().withB(
+							fieldMaskBuffer));
 
 			map.put(
 					DynamoDBRow.GW_VALUE_KEY,
-					new AttributeValue().withB(valueBuffer));
+					new AttributeValue().withB(
+							valueBuffer));
 
-			mutations.add(new WriteRequest(
-					new PutRequest(
-							map)));
+			mutations.add(
+					new WriteRequest(
+							new PutRequest(
+									map)));
 
 		}
 

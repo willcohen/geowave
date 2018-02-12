@@ -106,9 +106,6 @@ public class SpatialTemporalQueryIT extends
 
 	protected DataStorePluginOptions dataStoreOptions;
 
-	@NamespaceOverride(TEST_DAY_RANGE_NAMESPACE)
-	protected DataStorePluginOptions dayRangeDataStoreOptions;
-
 	@Override
 	protected DataStorePluginOptions getDataStorePluginOptions() {
 		return dataStoreOptions;
@@ -120,7 +117,6 @@ public class SpatialTemporalQueryIT extends
 	@BeforeClass
 	public static void startTimer() {
 		CQL_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
-		;
 		startMillis = System.currentTimeMillis();
 		LOGGER.warn("-----------------------------------------");
 		LOGGER.warn("*                                       *");
@@ -139,11 +135,6 @@ public class SpatialTemporalQueryIT extends
 						+ "s elapsed.                 *");
 		LOGGER.warn("*                                       *");
 		LOGGER.warn("-----------------------------------------");
-	}
-
-	@After
-	public void clearDayRangeDataStore() {
-		TestUtils.deleteAll(dayRangeDataStoreOptions);
 	}
 
 	@Before

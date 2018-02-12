@@ -114,14 +114,14 @@ public class HBaseDataStore extends
 							RowMergingVisibilityServerOp.class.getName(),
 							indexName);
 				}
+
+				((HBaseOperations) baseOperations).verifyColumnFamily(
+						columnFamily,
+						false,
+						indexName,
+						true);
 			}
 		}
-
-		((HBaseOperations) baseOperations).verifyColumnFamily(
-				columnFamily,
-				!rowMerging,
-				indexName,
-				true);
 
 	}
 

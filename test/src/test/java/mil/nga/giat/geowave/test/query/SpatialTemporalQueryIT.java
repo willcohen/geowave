@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -67,8 +67,6 @@ import mil.nga.giat.geowave.test.GeoWaveITRunner;
 import mil.nga.giat.geowave.test.TestUtils;
 import mil.nga.giat.geowave.test.annotation.GeoWaveTestStore;
 import mil.nga.giat.geowave.test.annotation.GeoWaveTestStore.GeoWaveStoreType;
-import mil.nga.giat.geowave.test.annotation.NamespaceOverride;
-import mil.nga.giat.geowave.test.basic.AbstractGeoWaveIT;
 
 @RunWith(GeoWaveITRunner.class)
 @GeoWaveTestStore(value = {
@@ -136,7 +134,7 @@ public class SpatialTemporalQueryIT
 			throws IOException,
 			GeoWavePluginException {
 		dataStore = dataStoreOptions.createDataStore();
-		
+
 		SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
 		builder.setName("simpletimestamp");
 		builder.add(
@@ -576,7 +574,7 @@ public class SpatialTemporalQueryIT
 		}
 	}
 
-	 @Test
+	@Test
 	public void testQueryMultipleBinsDay()
 			throws IOException,
 			CQLException {
@@ -593,7 +591,7 @@ public class SpatialTemporalQueryIT
 				"day");
 	}
 
-	 @Test
+	@Test
 	public void testQueryMultipleBinsMonth()
 			throws IOException,
 			CQLException {
@@ -611,7 +609,7 @@ public class SpatialTemporalQueryIT
 
 	}
 
-	 @Test
+	@Test
 	public void testQueryMultipleBinsYear()
 			throws IOException,
 			CQLException {

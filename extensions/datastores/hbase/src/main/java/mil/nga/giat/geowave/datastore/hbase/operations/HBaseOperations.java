@@ -271,9 +271,9 @@ public class HBaseOperations implements
 					for (final Pair<String, Boolean> columnFamilyAndVersioning : columnFamiliesAndVersioningPairs) {
 						final HColumnDescriptor column = new HColumnDescriptor(
 								columnFamilyAndVersioning.getLeft());
-						// if (!columnFamilyAndVersioning.getRight()) {
-						column.setMaxVersions(Integer.MAX_VALUE);
-						// }
+						if (!columnFamilyAndVersioning.getRight()) {
+							column.setMaxVersions(Integer.MAX_VALUE);
+						}
 						desc.addFamily(column);
 
 						cfSet.add(columnFamilyAndVersioning.getLeft());
@@ -388,18 +388,20 @@ public class HBaseOperations implements
 						if (!addIfNotExist) {
 							return false;
 						}
-
+						admin.disableTable(tableName);
 						for (final String newColumnFamily : newColumnFamilies) {
 							final HColumnDescriptor column = new HColumnDescriptor(
 									newColumnFamily);
-							column.setMaxVersions(Integer.MAX_VALUE);
+							if (!enableVersioning) {
+								column.setMaxVersions(Integer.MAX_VALUE);
+							}
 							admin.addColumn(
 									tableName,
 									column);
-
 							cfCacheSet.add(newColumnFamily);
 						}
 
+						admin.enableTable(tableName);
 						waitForUpdate(
 								admin,
 								tableName,
@@ -422,6 +424,7 @@ public class HBaseOperations implements
 		try {
 			while (admin.getAlterStatus(
 					tableName).getFirst() > 0) {
+
 				Thread.sleep(sleepTimeMs);
 			}
 		}
@@ -653,12 +656,12 @@ public class HBaseOperations implements
 
 						LOGGER.debug("- enable table...");
 						admin.enableTable(tableName);
-					}
 
-					waitForUpdate(
-							admin,
-							tableName,
-							SLEEP_INTERVAL);
+						waitForUpdate(
+								admin,
+								tableName,
+								SLEEP_INTERVAL);
+					}
 
 					LOGGER.debug("Successfully added coprocessor");
 

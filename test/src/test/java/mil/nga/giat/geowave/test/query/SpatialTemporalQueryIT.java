@@ -75,8 +75,7 @@ import mil.nga.giat.geowave.test.basic.AbstractGeoWaveIT;
 	GeoWaveStoreType.ACCUMULO,
 	GeoWaveStoreType.HBASE
 })
-public class SpatialTemporalQueryIT extends
-		AbstractGeoWaveIT
+public class SpatialTemporalQueryIT
 {
 	private static final SimpleDateFormat CQL_DATE_FORMAT = new SimpleDateFormat(
 			"yyyy-MM-dd'T'hh:mm:ss'Z'");
@@ -105,11 +104,6 @@ public class SpatialTemporalQueryIT extends
 	private PrimaryIndex currentGeotoolsIndex;
 
 	protected DataStorePluginOptions dataStoreOptions;
-
-	@Override
-	protected DataStorePluginOptions getDataStorePluginOptions() {
-		return dataStoreOptions;
-	}
 
 	private final static Logger LOGGER = LoggerFactory.getLogger(SpatialTemporalQueryIT.class);
 	private static long startMillis;
@@ -142,6 +136,7 @@ public class SpatialTemporalQueryIT extends
 			throws IOException,
 			GeoWavePluginException {
 		dataStore = dataStoreOptions.createDataStore();
+		
 		SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
 		builder.setName("simpletimestamp");
 		builder.add(
@@ -581,7 +576,7 @@ public class SpatialTemporalQueryIT extends
 		}
 	}
 
-	// @Test
+	 @Test
 	public void testQueryMultipleBinsDay()
 			throws IOException,
 			CQLException {
@@ -598,7 +593,7 @@ public class SpatialTemporalQueryIT extends
 				"day");
 	}
 
-	// @Test
+	 @Test
 	public void testQueryMultipleBinsMonth()
 			throws IOException,
 			CQLException {
@@ -616,7 +611,7 @@ public class SpatialTemporalQueryIT extends
 
 	}
 
-	// @Test
+	 @Test
 	public void testQueryMultipleBinsYear()
 			throws IOException,
 			CQLException {

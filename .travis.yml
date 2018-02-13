@@ -17,7 +17,7 @@ env:
     - NAME='Bigtable IT on Latest ASF Versions' MAVEN_PROFILES='bigtable-it' BUILD_DOCS=false  IT_ONLY=true
     - NAME='Accumulo Server IT on Latest CDH Versions' MAVEN_PROFILES='accumulo-it-server,cloudera' BUILD_DOCS=false  IT_ONLY=true
     - NAME='Accumulo Server IT on Latest HDP Versions' MAVEN_PROFILES='accumulo-it-server,hortonworks' BUILD_DOCS=false  IT_ONLY=true
-    - NAME='Accumulo Server IT on Older ASF and GeoTools Versions' MAVEN_PROFILES='accumulo-it-server,compatibility' BUILD_DOCS=false  IT_ONLY=true	 
+    # - NAME='Accumulo Server IT on Older ASF and GeoTools Versions' MAVEN_PROFILES='accumulo-it-server,compatibility' BUILD_DOCS=false  IT_ONLY=true	 
     - NAME='HBase Server IT on Latest CDH Versions'  MAVEN_PROFILES='hbase-it-server,cloudera' BUILD_DOCS=false  IT_ONLY=true
     - NAME='HBase Server IT on Latest HDP Versions'  MAVEN_PROFILES='hbase-it-server,hortonworks' BUILD_DOCS=false  IT_ONLY=true
   global:
@@ -34,7 +34,7 @@ install:
   - travis_wait 30 .utility/build-docs.sh
 script:
   # This script uses the IT_ONLY flag to determine whether to run unit tests using verify, or ITs only using failsafe
-  - travis_wait 50 .utility/run-tests.sh
+  - .utility/run-tests.sh
 before_install:
   # This must match the dev-resources version from the parent pom:
   - export DEV_RESOURCES_VERSION=1.2

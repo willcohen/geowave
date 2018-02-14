@@ -151,8 +151,6 @@ public class GeoWaveSparkSpatialJoinIT extends
 		
 		long tornadoIndexedCount = 0;
 		long hailIndexedCount = 0;
-		Dataset<Row> tornadoIndexedFrame = null;
-		Dataset<Row> hailIndexedFrame = null;
 
 		LOGGER.warn("------------ Running indexed spatial join. ----------");
 		mark = System.currentTimeMillis();

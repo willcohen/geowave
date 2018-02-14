@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.SparkSession;
@@ -15,22 +14,15 @@ import org.opengis.geometry.BoundingBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.KryoSerializable;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 
-import mil.nga.giat.geowave.analytic.kryo.PersistableSerializer;
 import mil.nga.giat.geowave.analytic.spark.sparksql.udf.GeomFunction;
 import mil.nga.giat.geowave.analytic.spark.sparksql.util.GeomReader;
 import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
-import mil.nga.giat.geowave.core.index.HierarchicalNumericIndexStrategy;
 import mil.nga.giat.geowave.core.index.HierarchicalNumericIndexStrategy.SubStrategy;
 import mil.nga.giat.geowave.core.index.NumericIndexStrategy;
-import mil.nga.giat.geowave.core.index.persist.Persistable;
 import mil.nga.giat.geowave.core.index.sfc.data.BasicNumericDataset;
 import mil.nga.giat.geowave.core.index.sfc.data.NumericData;
 import mil.nga.giat.geowave.core.index.sfc.data.NumericRange;
@@ -55,10 +47,7 @@ public class TieredSpatialJoin implements SpatialJoin {
 	public JavaPairRDD<GeoWaveInputKey, SimpleFeature> leftJoined = null;
 	public JavaPairRDD<GeoWaveInputKey, SimpleFeature> rightJoined = null;
 
-	
 	public TieredSpatialJoin() {}
-	
-
 	
 	@Override
 	public void join(
@@ -85,7 +74,6 @@ public class TieredSpatialJoin implements SpatialJoin {
 		this.collectDataTiers(leftIndex, rightIndex, tieredStrategy);
 		
 		LOGGER.warn("------------ Beginning Reproject and Join ---------------");
-		
 		//Iterate through tiers and join each tier containing data from each set.
 		for(Tuple2<Byte, JavaPairRDD<ByteArrayId, Tuple2<GeoWaveInputKey, String>>> t : this.leftDataTiers) {
 			Byte leftTierId = t._1();
@@ -98,6 +86,7 @@ public class TieredSpatialJoin implements SpatialJoin {
 				//Filter the tier from right dataset
 				Byte rightTierId = t2._1();
 				JavaPairRDD<ByteArrayId, Tuple2<GeoWaveInputKey, String>> rightTier = t2._2();
+				rightTier.cache();
 				
 				//We found a tier on the right with geometry to test against.
 				//Reproject one of the data sets to the coarser tier

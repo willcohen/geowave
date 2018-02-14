@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.operations.remote.options.DataStorePluginOptions;
 import mil.nga.giat.geowave.test.GeoWaveITRunner;
 import mil.nga.giat.geowave.test.TestUtils;
@@ -31,10 +32,13 @@ import mil.nga.giat.geowave.core.store.query.QueryOptions;
 import mil.nga.giat.geowave.analytic.spark.sparksql.SimpleFeatureDataFrame;
 import mil.nga.giat.geowave.analytic.spark.sparksql.udf.GeomFunctionRegistry;
 import mil.nga.giat.geowave.analytic.spark.sparksql.udf.GeomIntersects;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.index.sfc.tiered.TieredSFCIndexStrategy;
 import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputKey;
 
 import mil.nga.giat.geowave.analytic.spark.spatial.SpatialJoin;
+import mil.nga.giat.geowave.analytic.spark.spatial.TieredSpatialJoin;
 
 @RunWith(GeoWaveITRunner.class)
 public class GeoWaveSparkSpatialJoinIT extends
@@ -56,7 +60,7 @@ public class GeoWaveSparkSpatialJoinIT extends
 		session = SparkSession
 				.builder()
 				.appName("SpatialJoinTest")
-				.master("local")
+				.master("local[*]")
 				.config("spark.serializer","org.apache.spark.serializer.KryoSerializer")
 				.config("spark.kryo.registrator", "mil.nga.giat.geowave.analytic.spark.GeoWaveRegistrator")
 				.getOrCreate();
@@ -84,10 +88,6 @@ public class GeoWaveSparkSpatialJoinIT extends
 
 	@Test
 	public void testHailTornadoIntersection() {
-		
-		JavaSparkContext sc = JavaSparkContext.fromSparkContext(session.sparkContext());
-		
-
 		LOGGER.debug("Testing DataStore Type: " + dataStore.getType());
 		long mark = System.currentTimeMillis();
 		
@@ -112,10 +112,42 @@ public class GeoWaveSparkSpatialJoinIT extends
 		dur = (System.currentTimeMillis() - mark);
 		LOGGER.debug("Ingest (lines) duration = " + dur + " ms with " + 1 + " thread(s).");
 		
-		SpatialJoin join = new SpatialJoin();
+
+
+		SpatialDimensionalityTypeProvider provider = new SpatialDimensionalityTypeProvider();
+		PrimaryIndex index = provider.createPrimaryIndex();
+		TieredSFCIndexStrategy strategy = (TieredSFCIndexStrategy) index.getIndexStrategy();
+		
+		TieredSpatialJoin tieredJoin = new TieredSpatialJoin();
 		ByteArrayId hail_adapter = new ByteArrayId("hail");
 		ByteArrayId tornado_adapter = new ByteArrayId("tornado_tracks");
-		GeomIntersects predicate = new GeomIntersects();
+		GeomIntersects intersectsPredicate = new GeomIntersects();
+		
+		DataAdapter<?> hailAdapter = dataStore.createAdapterStore().getAdapter(hail_adapter);
+		DataAdapter<?> tornadoAdapter = dataStore.createAdapterStore().getAdapter(tornado_adapter);
+
+		JavaPairRDD<GeoWaveInputKey, SimpleFeature> hailRDD = null;
+		JavaPairRDD<GeoWaveInputKey, SimpleFeature> tornadoRDD = null;
+		try {
+			hailRDD = GeoWaveRDD.rddForSimpleFeatures(
+					session.sparkContext(), 
+					dataStore, 
+					null, 
+					new QueryOptions(hailAdapter)).reduceByKey((f1,f2) -> f1);
+
+			tornadoRDD = GeoWaveRDD.rddForSimpleFeatures(
+					session.sparkContext(), 
+					dataStore, 
+					null, 
+					new QueryOptions(tornadoAdapter)).reduceByKey((f1,f2) -> f1);
+		}
+		catch (IOException e) {
+			LOGGER.error("Could not perform join");
+			e.printStackTrace();
+			TestUtils.deleteAll(dataStore);
+			session.close();
+			Assert.fail();
+		}
 		
 		long tornadoIndexedCount = 0;
 		long hailIndexedCount = 0;
@@ -124,79 +156,40 @@ public class GeoWaveSparkSpatialJoinIT extends
 
 		LOGGER.warn("------------ Running indexed spatial join. ----------");
 		mark = System.currentTimeMillis();
-		try {
-			join.performJoin(sc.sc(), dataStore, hail_adapter, dataStore, tornado_adapter, predicate);
-
-			hailIndexedCount = join.leftJoined.count();
-			tornadoIndexedCount = join.rightJoined.count();
-			
-			SimpleFeatureDataFrame joinFrame = new SimpleFeatureDataFrame(session);
-			
-			joinFrame.init(dataStore, tornado_adapter);
-			tornadoIndexedFrame = joinFrame.getDataFrame(join.rightJoined);
-			
-
-			joinFrame.init(dataStore, hail_adapter);
-			hailIndexedFrame = joinFrame.getDataFrame(join.leftJoined);
-		}
-		catch (IOException e) {
-			LOGGER.error("Could not perform join");
-			e.printStackTrace();
-			TestUtils.deleteAll(dataStore);
-			sc.close();
-			Assert.fail();
-		}
+		tieredJoin.join(session, hailRDD, tornadoRDD, intersectsPredicate, strategy);
+		hailIndexedCount = tieredJoin.leftJoined.count();
+		tornadoIndexedCount = tieredJoin.rightJoined.count();
 		long indexJoinDur = (System.currentTimeMillis() - mark);
 
+		
 		long tornadoBruteCount = 0;
 		long hailBruteCount = 0;
 		Dataset<Row> hailBruteResults = null;
 		Dataset<Row> tornadoBruteResults = null;
+		
 		LOGGER.warn("------------ Running Brute force spatial join. ----------");
 		mark = System.currentTimeMillis();
-		try {
-			SimpleFeatureDataFrame hailFrame = new SimpleFeatureDataFrame(session);
-			SimpleFeatureDataFrame tornadoFrame = new SimpleFeatureDataFrame(session);
-			DataAdapter<?> hailAdapter = dataStore.createAdapterStore().getAdapter(hail_adapter);
-			DataAdapter<?> tornadoAdapter = dataStore.createAdapterStore().getAdapter(tornado_adapter);
+		SimpleFeatureDataFrame hailFrame = new SimpleFeatureDataFrame(session);
+		SimpleFeatureDataFrame tornadoFrame = new SimpleFeatureDataFrame(session);
 
-			JavaPairRDD<GeoWaveInputKey, SimpleFeature> hailRDD = GeoWaveRDD.rddForSimpleFeatures(
-					sc.sc(), 
-					dataStore, 
-					null, 
-					new QueryOptions(hailAdapter));
-			hailFrame.init(dataStore, hail_adapter);
-			hailFrame.getDataFrame(hailRDD).createOrReplaceTempView("hail");
-			
-			
-			JavaPairRDD<GeoWaveInputKey, SimpleFeature> tornadoRDD = GeoWaveRDD.rddForSimpleFeatures(
-					sc.sc(), 
-					dataStore, 
-					null, 
-					new QueryOptions(tornadoAdapter));
-			tornadoFrame.init(dataStore, tornado_adapter);
-			tornadoFrame.getDataFrame(tornadoRDD).createOrReplaceTempView("tornado");
-			
-			tornadoBruteResults = session.sql("select tornado.* from hail, tornado where geomIntersects(hail.geom,tornado.geom)");
-			tornadoBruteResults = tornadoBruteResults.dropDuplicates();
-			tornadoBruteCount = tornadoBruteResults.count();
-			
-			hailBruteResults = session.sql("select hail.* from hail, tornado where geomIntersects(hail.geom,tornado.geom)");
-			hailBruteResults = hailBruteResults.dropDuplicates();
-			hailBruteCount = hailBruteResults.count();
-			
-		}
-		catch (IOException e) {
-			LOGGER.error("Could not load hail dataset into RDD");
-			e.printStackTrace();
-			TestUtils.deleteAll(dataStore);
-			sc.close();
-			Assert.fail();
-		}
+		tornadoFrame.init(dataStore, tornado_adapter);
+		tornadoFrame.getDataFrame(tornadoRDD).createOrReplaceTempView("tornado");
+		
+
+		hailFrame.init(dataStore, hail_adapter);
+		hailFrame.getDataFrame(hailRDD).createOrReplaceTempView("hail");
+		
+		hailBruteResults = session.sql("select hail.* from hail, tornado where geomIntersects(hail.geom,tornado.geom)");
+		hailBruteResults = hailBruteResults.dropDuplicates();
+		hailBruteCount = hailBruteResults.count();
+		
+		tornadoBruteResults = session.sql("select tornado.* from hail, tornado where geomIntersects(hail.geom,tornado.geom)");
+		tornadoBruteResults = tornadoBruteResults.dropDuplicates();
+		tornadoBruteCount = tornadoBruteResults.count();
 		dur = (System.currentTimeMillis() - mark);
 		
-		LOGGER.warn("Indexed Tornado join count= " + tornadoIndexedCount);
-		LOGGER.warn("Indexed Hail join count= " + hailIndexedCount);
+		LOGGER.warn("Indexed tornado join count= " + tornadoIndexedCount );
+		LOGGER.warn("Indexed hail join count= " + hailIndexedCount );
 		LOGGER.warn("Indexed join duration = " + indexJoinDur + " ms.");
 		
 		LOGGER.warn("Brute tornado join count= " + tornadoBruteCount);
@@ -206,7 +199,7 @@ public class GeoWaveSparkSpatialJoinIT extends
 
 	
 		TestUtils.deleteAll(dataStore);
-		sc.close();
+		session.close();
 	}
 
 	@Override

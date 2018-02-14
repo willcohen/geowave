@@ -10,6 +10,7 @@
  ******************************************************************************/
 package mil.nga.giat.geowave.core.index.sfc.hilbert;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -27,6 +28,7 @@ import mil.nga.giat.geowave.core.index.sfc.RangeDecomposition;
 import mil.nga.giat.geowave.core.index.sfc.SFCDimensionDefinition;
 import mil.nga.giat.geowave.core.index.sfc.SpaceFillingCurve;
 import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
+
 
 /***
  * Implementation of a Compact Hilbert space filling curve

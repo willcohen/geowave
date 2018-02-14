@@ -10,12 +10,16 @@
  ******************************************************************************/
 package mil.nga.giat.geowave.core.index.persist;
 
+import com.esotericsoftware.kryo.DefaultSerializer;
+import mil.nga.giat.geowave.analytic.kryo.PersistableSerializer;
+
 /**
  * 
  * A simple interface for persisting objects, PersistenceUtils provides
  * convenience methods for serializing and de-serializing these objects
  * 
  */
+@DefaultSerializer(PersistableSerializer.class)
 public interface Persistable
 {
 	/**
@@ -33,4 +37,5 @@ public interface Persistable
 	 */
 	public void fromBinary(
 			byte[] bytes );
+	
 }

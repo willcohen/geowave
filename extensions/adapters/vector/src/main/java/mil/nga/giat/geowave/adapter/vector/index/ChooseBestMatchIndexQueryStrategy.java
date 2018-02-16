@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -16,6 +16,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.opengis.feature.simple.SimpleFeature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.IndexUtils;
@@ -29,10 +31,6 @@ import mil.nga.giat.geowave.core.store.index.Index;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.query.BasicQuery;
 import mil.nga.giat.geowave.core.store.util.DataStoreUtils;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.opengis.feature.simple.SimpleFeature;
 
 public class ChooseBestMatchIndexQueryStrategy implements
 		IndexQueryStrategySPI
@@ -65,8 +63,7 @@ public class ChooseBestMatchIndexQueryStrategy implements
 					if (nextIdx.getIndexStrategy().getOrderedDimensionDefinitions().length == 0) {
 						continue;
 					}
-					final List<MultiDimensionalNumericData> constraints = query.getIndexConstraints(nextIdx
-							.getIndexStrategy());
+					final List<MultiDimensionalNumericData> constraints = query.getIndexConstraints(nextIdx);
 					if (!stats.containsKey(RowRangeHistogramStatistics.composeId(nextIdx.getId()))) {
 						LOGGER
 								.warn("Best Match Heuristic requires statistic RowRangeHistogramStatistics for each index to properly choose an index.");

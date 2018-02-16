@@ -145,6 +145,10 @@ public class SpatialTemporalQueryIT
 				Date.class);
 		timeStampAdapter = new FeatureDataAdapter(
 				builder.buildFeatureType());
+		timeStampAdapter.init(
+				YEAR_INDEX,
+				MONTH_INDEX,
+				DAY_INDEX);
 
 		builder = new SimpleFeatureTypeBuilder();
 		builder.setName("simpletimerange");
@@ -159,6 +163,10 @@ public class SpatialTemporalQueryIT
 				Date.class);
 		timeRangeAdapter = new FeatureDataAdapter(
 				builder.buildFeatureType());
+		timeRangeAdapter.init(
+				YEAR_INDEX,
+				MONTH_INDEX,
+				DAY_INDEX);
 
 		Calendar cal = getInitialDayCalendar();
 		final GeometryFactory geomFactory = new GeometryFactory();

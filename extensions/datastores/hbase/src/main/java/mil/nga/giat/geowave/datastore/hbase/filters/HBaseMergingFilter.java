@@ -10,7 +10,7 @@ import org.apache.hadoop.hbase.exceptions.DeserializationException;
 import org.apache.hadoop.hbase.filter.FilterBase;
 
 import mil.nga.giat.geowave.core.index.Mergeable;
-import mil.nga.giat.geowave.core.index.PersistenceUtils;
+import mil.nga.giat.geowave.core.index.persist.PersistenceUtils;
 
 public class HBaseMergingFilter extends
 		FilterBase
@@ -51,8 +51,7 @@ public class HBaseMergingFilter extends
 				for (Cell cell : rowCells) {
 					byte[] byteValue = CellUtil.cloneValue(cell);
 					Mergeable value = (Mergeable) PersistenceUtils.fromBinary(
-							byteValue,
-							Mergeable.class);
+							byteValue);
 
 					if (mergedValue != null) {
 						mergedValue.merge(value);

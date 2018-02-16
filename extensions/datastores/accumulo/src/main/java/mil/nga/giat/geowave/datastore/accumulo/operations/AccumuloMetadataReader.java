@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterators;
 
-import mil.nga.giat.geowave.core.index.PersistenceUtils;
+import mil.nga.giat.geowave.core.index.persist.PersistenceUtils;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.DataStoreOptions;
@@ -93,9 +93,8 @@ public class AccumuloMetadataReader implements
 				while (it.hasNext()) {
 					final Entry<Key, Value> row = it.next();
 
-					final DataStatistics stats = PersistenceUtils.fromBinary(
-							row.getValue().get(),
-							DataStatistics.class);
+					final DataStatistics stats = (DataStatistics) PersistenceUtils.fromBinary(
+							row.getValue().get());
 
 					if (keyMap.containsKey(row.getKey().getRow())) {
 						final DataStatistics mergedStats = mergedDataMap.get(row.getKey().getRow());

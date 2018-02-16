@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import mil.nga.giat.geowave.core.index.dimension.NumericDimensionDefinition;
+import mil.nga.giat.geowave.core.index.persist.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
 
 public class PartitionIndexStrategyWrapper implements
@@ -74,9 +75,8 @@ public class PartitionIndexStrategyWrapper implements
 	@Override
 	public void fromBinary(
 			final byte[] bytes ) {
-		partitionIndexStrategy = PersistenceUtils.fromBinary(
-				bytes,
-				PartitionIndexStrategy.class);
+		partitionIndexStrategy = (PartitionIndexStrategy<MultiDimensionalNumericData, MultiDimensionalNumericData>) PersistenceUtils
+				.fromBinary(bytes);
 	}
 
 	@Override

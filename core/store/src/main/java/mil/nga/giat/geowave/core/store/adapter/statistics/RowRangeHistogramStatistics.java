@@ -42,7 +42,7 @@ public class RowRangeHistogramStatistics<T> extends
 	private static final NumericHistogramFactory HistFactory = new MinimalBinDistanceHistogramFactory();
 	private Map<ByteArrayId, NumericHistogram> histogramPerPartition = new HashMap<ByteArrayId, NumericHistogram>();
 
-	protected RowRangeHistogramStatistics() {
+	public RowRangeHistogramStatistics() {
 		super();
 	}
 
@@ -393,5 +393,4 @@ public class RowRangeHistogramStatistics<T> extends
 				histogramsArray);
 		return jo;
 	}
-
 }

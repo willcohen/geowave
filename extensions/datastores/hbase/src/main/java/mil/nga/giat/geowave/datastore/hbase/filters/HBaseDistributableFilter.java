@@ -24,8 +24,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
-import mil.nga.giat.geowave.core.index.Persistable;
-import mil.nga.giat.geowave.core.index.PersistenceUtils;
+import mil.nga.giat.geowave.core.index.persist.Persistable;
+import mil.nga.giat.geowave.core.index.persist.PersistenceUtils;
 import mil.nga.giat.geowave.core.store.adapter.AbstractAdapterPersistenceEncoding;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.IndexedAdapterPersistenceEncoding;
@@ -120,7 +120,7 @@ public class HBaseDistributableFilter extends
 			final byte[] modelBytes ) {
 		filterList.clear();
 		if ((filterBytes != null) && (filterBytes.length > 0)) {
-			final List<Persistable> decodedFilterList = PersistenceUtils.fromBinary(filterBytes);
+			final List<Persistable> decodedFilterList = PersistenceUtils.fromBinaryAsList(filterBytes);
 
 			if (decodedFilterList == null) {
 				LOGGER.error("Failed to decode filter list");
@@ -137,9 +137,7 @@ public class HBaseDistributableFilter extends
 			}
 		}
 
-		model = PersistenceUtils.fromBinary(
-				modelBytes,
-				CommonIndexModel.class);
+		model = (CommonIndexModel) PersistenceUtils.fromBinary(modelBytes);
 
 		if (model == null) {
 			LOGGER.error("Failed to decode index model");

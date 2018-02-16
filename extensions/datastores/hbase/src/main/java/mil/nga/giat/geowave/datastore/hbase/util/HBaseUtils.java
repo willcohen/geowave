@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -32,8 +32,8 @@ import com.google.common.collect.Sets;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.index.NumericIndexStrategy;
-import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.QueryRanges;
+import mil.nga.giat.geowave.core.index.persist.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.server.ServerOpConfig.ServerOpScope;
@@ -41,7 +41,8 @@ import mil.nga.giat.geowave.core.store.server.ServerOpConfig.ServerOpScope;
 @SuppressWarnings("rawtypes")
 public class HBaseUtils
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(HBaseUtils.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(
+			HBaseUtils.class);
 
 	public static String getQualifiedTableName(
 			final String tableNamespace,
@@ -50,7 +51,8 @@ public class HBaseUtils
 			return unqualifiedTableName;
 		}
 
-		if (unqualifiedTableName.contains(tableNamespace)) {
+		if (unqualifiedTableName.contains(
+				tableNamespace)) {
 			return unqualifiedTableName;
 		}
 
@@ -85,7 +87,8 @@ public class HBaseUtils
 		d.addColumns(
 				columnFamily,
 				columnQualifier);
-		m.add(d);
+		m.add(
+				d);
 		return m;
 	}
 
@@ -125,34 +128,36 @@ public class HBaseUtils
 	}
 
 	public static boolean rangesIntersect(
-			RowRange range1,
-			RowRange range2 ) {
-		ByteArrayRange thisRange = new ByteArrayRange(
+			final RowRange range1,
+			final RowRange range2 ) {
+		final ByteArrayRange thisRange = new ByteArrayRange(
 				new ByteArrayId(
 						range1.getStartRow()),
 				new ByteArrayId(
 						range1.getStopRow()));
 
-		ByteArrayRange otherRange = new ByteArrayRange(
+		final ByteArrayRange otherRange = new ByteArrayRange(
 				new ByteArrayId(
 						range2.getStartRow()),
 				new ByteArrayId(
 						range2.getStopRow()));
 
-		return thisRange.intersects(otherRange);
+		return thisRange.intersects(
+				otherRange);
 	}
 
 	public static DataStatistics getMergedStats(
-			List<Cell> rowCells ) {
+			final List<Cell> rowCells ) {
 		DataStatistics mergedStats = null;
-		for (Cell cell : rowCells) {
-			byte[] byteValue = CellUtil.cloneValue(cell);
-			DataStatistics stats = (DataStatistics) PersistenceUtils.fromBinary(
-					byteValue,
-					DataStatistics.class);
+		for (final Cell cell : rowCells) {
+			final byte[] byteValue = CellUtil.cloneValue(
+					cell);
+			final DataStatistics stats = (DataStatistics) PersistenceUtils.fromBinary(
+					byteValue);
 
 			if (mergedStats != null) {
-				mergedStats.merge(stats);
+				mergedStats.merge(
+						stats);
 			}
 			else {
 				mergedStats = stats;
@@ -164,29 +169,33 @@ public class HBaseUtils
 
 	public static ImmutableSet<ServerOpScope> stringToScopes(
 			final String value ) {
-		final String[] scopes = value.split(",");
-		return Sets.immutableEnumSet(Iterables.transform(
-				Arrays.asList(scopes),
-				new Function<String, ServerOpScope>() {
+		final String[] scopes = value.split(
+				",");
+		return Sets.immutableEnumSet(
+				Iterables.transform(
+						Arrays.asList(
+								scopes),
+						new Function<String, ServerOpScope>() {
 
-					@Override
-					public ServerOpScope apply(
-							final String input ) {
-						return ServerOpScope.valueOf(input);
-					}
-				}));
+							@Override
+							public ServerOpScope apply(
+									final String input ) {
+								return ServerOpScope.valueOf(
+										input);
+							}
+						}));
 	}
 
 	/**
 	 * Since HBase's end keys are always exclusive, just add a trailing zero if
 	 * you want an inclusive row range
-	 * 
+	 *
 	 * @param endKey
 	 * @return
 	 */
 	public static byte[] getInclusiveEndKey(
-			byte[] endKey ) {
-		byte[] inclusiveEndKey = new byte[endKey.length + 1];
+			final byte[] endKey ) {
+		final byte[] inclusiveEndKey = new byte[endKey.length + 1];
 
 		System.arraycopy(
 				endKey,

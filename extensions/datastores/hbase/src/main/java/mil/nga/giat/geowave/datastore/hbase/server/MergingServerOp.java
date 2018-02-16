@@ -23,7 +23,7 @@ import com.google.common.collect.Sets;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.Mergeable;
-import mil.nga.giat.geowave.core.index.PersistenceUtils;
+import mil.nga.giat.geowave.core.index.persist.PersistenceUtils;
 import mil.nga.giat.geowave.core.store.operations.MetadataType;
 
 public class MergingServerOp implements
@@ -36,9 +36,8 @@ public class MergingServerOp implements
 	protected Mergeable getMergeable(
 			final Cell cell,
 			final byte[] bytes ) {
-		return PersistenceUtils.fromBinary(
-				bytes,
-				Mergeable.class);
+		return (Mergeable) PersistenceUtils.fromBinary(
+				bytes);
 	}
 
 	protected byte[] getBinary(

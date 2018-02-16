@@ -36,11 +36,13 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 
 import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialOptions;
 import mil.nga.giat.geowave.core.geotime.store.dimension.GeometryWrapper;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
 import mil.nga.giat.geowave.core.geotime.store.statistics.BoundingBoxDataStatistics;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.StringUtils;
+import mil.nga.giat.geowave.core.index.persist.Persistable;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.EntryVisibilityHandler;
 import mil.nga.giat.geowave.core.store.IndexWriter;
@@ -212,7 +214,7 @@ public class AccumuloDataStoreStatsTest
 	private void runtest()
 			throws IOException {
 
-		final PrimaryIndex index = new SpatialDimensionalityTypeProvider().createPrimaryIndex();
+		final PrimaryIndex index = new SpatialDimensionalityTypeProvider().createPrimaryIndex(new SpatialOptions());
 		final WritableDataAdapter<TestGeometry> adapter = new TestGeometryAdapter();
 
 		final Geometry testGeoFilter = factory.createPolygon(new Coordinate[] {
@@ -801,6 +803,12 @@ public class AccumuloDataStoreStatsTest
 		}
 
 		@Override
+		public void init(
+				PrimaryIndex... indices ) {
+			// TODO Auto-generated method stub
+
+		}
+		@Override
 		public EntryVisibilityHandler<TestGeometry> getVisibilityHandler(
 				final CommonIndexModel indexModel,
 				final DataAdapter<TestGeometry> adapter,
@@ -814,11 +822,9 @@ public class AccumuloDataStoreStatsTest
 		CountDataStatistics.STATS_TYPE
 	};
 
-	private static class GeoBoundingBoxStatistics extends
+	protected static class GeoBoundingBoxStatistics extends
 			BoundingBoxDataStatistics<TestGeometry>
 	{
-
-		@SuppressWarnings("unused")
 		protected GeoBoundingBoxStatistics() {
 			super();
 		}
@@ -839,7 +845,5 @@ public class AccumuloDataStoreStatsTest
 			}
 			return null;
 		}
-
 	}
-
 }

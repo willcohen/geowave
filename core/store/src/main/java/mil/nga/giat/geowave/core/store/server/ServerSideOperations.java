@@ -107,4 +107,10 @@ public interface ServerSideOperations extends
 			Map<String, String> properties,
 			ImmutableSet<ServerOpScope> currentScopes,
 			ImmutableSet<ServerOpScope> newScopes );
+	
+
+	/**
+	 * Method to lookup the version of a remote datastore
+	 */
+	public String getVersion();
 }

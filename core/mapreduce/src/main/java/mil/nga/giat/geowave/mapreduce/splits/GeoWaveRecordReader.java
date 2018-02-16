@@ -139,7 +139,7 @@ public class GeoWaveRecordReader<T> extends
 			final SplitInfo splitInfo = split.getInfo(i);
 			List<QueryFilter> queryFilters = null;
 			if (query != null) {
-				queryFilters = query.createFilters(splitInfo.getIndex().getIndexModel());
+				queryFilters = query.createFilters(splitInfo.getIndex());
 			}
 			for (final RangeLocationPair r : splitInfo.getRangeLocationPairs()) {
 				final QueryOptions rangeQueryOptions = new QueryOptions(

@@ -43,7 +43,7 @@ public class FeatureCountMinSketchStatistics extends
 			"ATT_SKETCH");
 	private CountMinSketch sketch = null;
 
-	protected FeatureCountMinSketchStatistics() {
+	public FeatureCountMinSketchStatistics() {
 		super();
 		sketch = new CountMinSketch(
 				0.001,

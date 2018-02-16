@@ -45,7 +45,7 @@ public class KafkaTestEnvironment implements
 
 		FileUtils.deleteDirectory(KafkaTestUtils.DEFAULT_LOG_DIR);
 
-		boolean success = KafkaTestUtils.DEFAULT_LOG_DIR.mkdir();
+		final boolean success = KafkaTestUtils.DEFAULT_LOG_DIR.mkdir();
 		if (!success) {
 			LOGGER.warn("Unable to create Kafka log dir [" + KafkaTestUtils.DEFAULT_LOG_DIR.getAbsolutePath() + "]");
 		}

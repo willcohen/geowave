@@ -28,12 +28,13 @@ import mil.nga.giat.geowave.core.index.InsertionIds;
 import mil.nga.giat.geowave.core.index.MultiDimensionalCoordinateRanges;
 import mil.nga.giat.geowave.core.index.MultiDimensionalCoordinates;
 import mil.nga.giat.geowave.core.index.NumericIndexStrategy;
-import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.QueryRanges;
 import mil.nga.giat.geowave.core.index.SinglePartitionInsertionIds;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.index.dimension.NumericDimensionDefinition;
 import mil.nga.giat.geowave.core.index.dimension.bin.BinRange;
+import mil.nga.giat.geowave.core.index.persist.Persistable;
+import mil.nga.giat.geowave.core.index.persist.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.sfc.SpaceFillingCurve;
 import mil.nga.giat.geowave.core.index.sfc.binned.BinnedSFCUtils;
 import mil.nga.giat.geowave.core.index.sfc.data.BinnedNumericDataset;
@@ -53,7 +54,7 @@ public class SingleTierSubStrategy implements
 	private NumericDimensionDefinition[] baseDefinitions;
 	public byte tier;
 
-	protected SingleTierSubStrategy() {}
+	public SingleTierSubStrategy() {}
 
 	public SingleTierSubStrategy(
 			final SpaceFillingCurve sfc,
@@ -244,15 +245,11 @@ public class SingleTierSubStrategy implements
 		baseDefinitions = new NumericDimensionDefinition[numDimensions];
 		final byte[] sfcBinary = new byte[buf.getInt()];
 		buf.get(sfcBinary);
-		sfc = PersistenceUtils.fromBinary(
-				sfcBinary,
-				SpaceFillingCurve.class);
+		sfc = (SpaceFillingCurve) PersistenceUtils.fromBinary(sfcBinary);
 		for (int i = 0; i < numDimensions; i++) {
 			final byte[] dim = new byte[buf.getInt()];
 			buf.get(dim);
-			baseDefinitions[i] = PersistenceUtils.fromBinary(
-					dim,
-					NumericDimensionDefinition.class);
+			baseDefinitions[i] = (NumericDimensionDefinition) PersistenceUtils.fromBinary(dim);
 		}
 	}
 

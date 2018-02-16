@@ -10,8 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
-import mil.nga.giat.geowave.core.index.Persistable;
-import mil.nga.giat.geowave.core.index.PersistenceUtils;
+import mil.nga.giat.geowave.core.index.persist.Persistable;
+import mil.nga.giat.geowave.core.index.persist.PersistenceUtils;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStoreOptions;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveMetadata;
@@ -44,7 +44,7 @@ public abstract class AbstractGeoWavePersistence<T extends Persistable>
 	// notifications?
 	protected static final int MAX_ENTRIES = 100;
 	public final static String METADATA_TABLE = "GEOWAVE_METADATA";
-	private final static ByteArrayId METADATA_INDEX_ID = new ByteArrayId(
+	public final static ByteArrayId METADATA_INDEX_ID = new ByteArrayId(
 			METADATA_TABLE);
 	protected final DataStoreOperations operations;
 	protected final DataStoreOptions options;
@@ -321,9 +321,7 @@ public abstract class AbstractGeoWavePersistence<T extends Persistable>
 	@SuppressWarnings("unchecked")
 	protected T entryToValue(
 			final GeoWaveMetadata entry ) {
-		final T result = (T) PersistenceUtils.fromBinary(
-				entry.getValue(),
-				Persistable.class);
+		final T result = (T) PersistenceUtils.fromBinary(entry.getValue());
 		if (result != null) {
 			addObjectToCache(
 					new ByteArrayId(

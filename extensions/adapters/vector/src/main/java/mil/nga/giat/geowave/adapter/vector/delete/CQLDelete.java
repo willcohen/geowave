@@ -84,8 +84,7 @@ public class CQLDelete extends
 		final String storeName = parameters.get(0);
 
 		// Config file
-		final File configFile = (File) params.getContext().get(
-				ConfigOptions.PROPERTIES_FILE_CONTEXT);
+		File configFile = getGeoWaveConfigFile(params);
 
 		// Attempt to load store.
 		final StoreLoader storeOptions = new StoreLoader(
@@ -206,5 +205,4 @@ public class CQLDelete extends
 					value);
 		}
 	}
-
 }

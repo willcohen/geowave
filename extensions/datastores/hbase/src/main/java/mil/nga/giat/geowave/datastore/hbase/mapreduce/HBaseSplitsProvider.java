@@ -88,7 +88,7 @@ public class HBaseSplitsProvider extends
 		// Build list of row ranges from query
 		List<ByteArrayRange> ranges = null;
 		if (query != null) {
-			final List<MultiDimensionalNumericData> indexConstraints = query.getIndexConstraints(indexStrategy);
+			final List<MultiDimensionalNumericData> indexConstraints = query.getIndexConstraints(index);
 			if ((maxSplits != null) && (maxSplits > 0)) {
 				ranges = DataStoreUtils.constraintsToQueryRanges(
 						indexConstraints,
@@ -268,7 +268,8 @@ public class HBaseSplitsProvider extends
 				i.add(new ByteArrayRange(
 						new ByteArrayId(
 								regionInfo.getEndKey()),
-						range.getEnd()));
+						new ByteArrayId(
+								endKey)));
 			}
 		}
 		// the underlying assumption is that by the end of this any input range

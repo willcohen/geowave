@@ -113,10 +113,10 @@ import mil.nga.giat.geowave.core.index.ByteArrayUtils;
 import mil.nga.giat.geowave.core.index.CompoundIndexStrategy;
 import mil.nga.giat.geowave.core.index.HierarchicalNumericIndexStrategy;
 import mil.nga.giat.geowave.core.index.HierarchicalNumericIndexStrategy.SubStrategy;
-import mil.nga.giat.geowave.core.index.Persistable;
-import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.index.dimension.NumericDimensionDefinition;
+import mil.nga.giat.geowave.core.index.persist.Persistable;
+import mil.nga.giat.geowave.core.index.persist.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.sfc.data.BasicNumericDataset;
 import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
 import mil.nga.giat.geowave.core.index.sfc.data.NumericRange;
@@ -150,13 +150,10 @@ public class RasterDataAdapter implements
 		HadoopDataAdapter<GridCoverage, GridCoverageWritable>,
 		RowMergingDataAdapter<GridCoverage, RasterTile<?>>
 {
-	static {
-		SourceThresholdFixMosaicDescriptor.register(false);
-		WarpRIF.register(false);
-		MapProjection.SKIP_SANITY_CHECKS = true;
-	}
+	// Moved static initialization to constructor (staticInit)
 
 	public final static String TILE_METADATA_PROPERTY_KEY = "TILE_METADATA";
+	private static boolean classInit = false;
 
 	private final static Logger LOGGER = LoggerFactory.getLogger(RasterDataAdapter.class);
 	private final static ByteArrayId DATA_FIELD_ID = new ByteArrayId(
@@ -191,7 +188,7 @@ public class RasterDataAdapter implements
 	private boolean equalizeHistogram;
 	private Interpolation interpolation;
 
-	protected RasterDataAdapter() {}
+	public RasterDataAdapter() {}
 
 	public RasterDataAdapter(
 			final String coverageName,
@@ -253,6 +250,8 @@ public class RasterDataAdapter implements
 			final boolean buildHistogram,
 			final double[][] noDataValuesPerBand,
 			final RasterTileMergeStrategy<?> mergeStrategy ) {
+		staticInit();
+
 		final RenderedImage img = originalGridCoverage.getRenderedImage();
 		sampleModel = img.getSampleModel();
 		colorModel = img.getColorModel();
@@ -427,6 +426,8 @@ public class RasterDataAdapter implements
 			final int interpolationType,
 			final boolean buildPyramid,
 			final RasterTileMergeStrategy<?> mergeStrategy ) {
+		staticInit();
+
 		this.coverageName = coverageName;
 		this.tileSize = tileSize;
 		this.sampleModel = sampleModel;
@@ -455,6 +456,22 @@ public class RasterDataAdapter implements
 			this.mergeStrategy = null;
 		}
 		init();
+	}
+
+	private synchronized void staticInit() {
+		if (!classInit) {
+			try {
+				SourceThresholdFixMosaicDescriptor.register(false);
+				WarpRIF.register(false);
+				MapProjection.SKIP_SANITY_CHECKS = true;
+				classInit = true;
+			}
+			catch (Exception e) {
+				LOGGER.error(
+						"Error in static init",
+						e);
+			}
+		}
 	}
 
 	private void init() {
@@ -1501,6 +1518,8 @@ public class RasterDataAdapter implements
 	@Override
 	public void fromBinary(
 			final byte[] bytes ) {
+		staticInit();
+
 		final ByteBuffer buf = ByteBuffer.wrap(bytes);
 		tileSize = buf.getInt();
 		final int coverageNameLength = buf.getInt();
@@ -1568,9 +1587,7 @@ public class RasterDataAdapter implements
 		else {
 			final byte[] histogramConfigBinary = new byte[histogramConfigLength];
 			buf.get(histogramConfigBinary);
-			histogramConfig = PersistenceUtils.fromBinary(
-					histogramConfigBinary,
-					HistogramConfig.class);
+			histogramConfig = (HistogramConfig) PersistenceUtils.fromBinary(histogramConfigBinary);
 		}
 		final int noDataBinaryLength = buf.getInt();
 		if (noDataBinaryLength == 0) {
@@ -1639,9 +1656,7 @@ public class RasterDataAdapter implements
 		}
 		else {
 			buf.get(mergeStrategyBinary);
-			mergeStrategy = PersistenceUtils.fromBinary(
-					mergeStrategyBinary,
-					RootMergeStrategy.class);
+			mergeStrategy = (RootMergeStrategy<?>) PersistenceUtils.fromBinary(mergeStrategyBinary);
 		}
 		buildPyramid = (buf.get() != 0);
 		equalizeHistogram = (buf.get() != 0);
@@ -2030,12 +2045,9 @@ public class RasterDataAdapter implements
 		if (RasterTileRowTransform.MERGE_STRATEGY_KEY.equals(optionKey)) {
 			final byte[] currentStrategyBytes = ByteArrayUtils.byteArrayFromString(currentValue);
 			final byte[] nextStrategyBytes = ByteArrayUtils.byteArrayFromString(nextValue);
-			final RootMergeStrategy currentStrategy = PersistenceUtils.fromBinary(
-					currentStrategyBytes,
-					RootMergeStrategy.class);
-			final RootMergeStrategy nextStrategy = PersistenceUtils.fromBinary(
-					nextStrategyBytes,
-					RootMergeStrategy.class);
+			final RootMergeStrategy currentStrategy = (RootMergeStrategy) PersistenceUtils
+					.fromBinary(currentStrategyBytes);
+			final RootMergeStrategy nextStrategy = (RootMergeStrategy) PersistenceUtils.fromBinary(nextStrategyBytes);
 			currentStrategy.merge(nextStrategy);
 			return ByteArrayUtils.byteArrayToString(PersistenceUtils.toBinary(currentStrategy));
 		}
@@ -2090,7 +2102,12 @@ public class RasterDataAdapter implements
 		}
 		return null;
 	}
+	@Override
+	public void init(
+			PrimaryIndex... indices ) {
+		// TODO Auto-generated method stub
 
+	}
 	@Override
 	public EntryVisibilityHandler<GridCoverage> getVisibilityHandler(
 			final CommonIndexModel indexModel,

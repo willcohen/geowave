@@ -4,7 +4,7 @@
 		<artifactId>geowave-parent</artifactId>
 		<groupId>mil.nga.giat</groupId>
 		<relativePath>../</relativePath>
-		<version>0.9.5-SNAPSHOT</version>
+		<version>0.9.7-SNAPSHOT</version>
 	</parent>
 	<artifactId>geowave-deploy</artifactId>
 	<name>GeoWave Deployment Configurations</name>
@@ -39,6 +39,7 @@
 				<includes>
 					<include>build.properties</include>
 					<include>GeoWaveLabels.properties</include>
+					<include>log4j.properties</include>
 				</includes>
 			</resource>
 		</resources>
@@ -81,6 +82,11 @@
 		<profile>
 			<id>geowave-tools-singlejar</id>
 			<dependencies>
+				<dependency>
+					<groupId>mil.nga.giat</groupId>
+					<artifactId>geowave-analytic-spark</artifactId>
+					<version>${project.version}</version>
+				</dependency>
 				<dependency>
 					<groupId>mil.nga.giat</groupId>
 					<artifactId>geowave-analytic-mapreduce</artifactId>
@@ -203,7 +209,7 @@
 												<exclude>META-INF/*.SF</exclude>
 												<exclude>META-INF/*.DSA</exclude>
 												<exclude>META-INF/*.RSA</exclude>
-											</excludes>
+												</excludes>
 										</filter>
 									</filters>
 									<transformers>
@@ -248,7 +254,6 @@
 			<properties>
 				<geotools.scope>provided</geotools.scope>
 				<container.extension>-geotools-container</container.extension>
-				<hbase.version>1.3.0</hbase.version>
 			</properties>
 			<dependencies>
 				<dependency>
@@ -331,7 +336,6 @@
 										</excludes>
 									</artifactSet>
 
-
 									<filters>
 										<filter>
 											<artifact>*:*</artifact>
@@ -339,6 +343,7 @@
 												<exclude>META-INF/*.SF</exclude>
 												<exclude>META-INF/*.DSA</exclude>
 												<exclude>META-INF/*.RSA</exclude>
+												<exclude>log4j.properties</exclude>
 											</excludes>
 										</filter>
 									</filters>
@@ -416,6 +421,7 @@
 												<exclude>META-INF/*.SF</exclude>
 												<exclude>META-INF/*.DSA</exclude>
 												<exclude>META-INF/*.RSA</exclude>
+												<exclude>log4j.properties</exclude>
 											</excludes>
 										</filter>
 									</filters>
@@ -485,6 +491,7 @@
 									<artifactSet>
 										<excludes>
 											<exclude>org.slf4j:*</exclude>
+											<exclude>com.google.protobuf:*</exclude>
 										</excludes>
 									</artifactSet>
 									<filters>
@@ -494,6 +501,7 @@
 												<exclude>META-INF/*.SF</exclude>
 												<exclude>META-INF/*.DSA</exclude>
 												<exclude>META-INF/*.RSA</exclude>
+												<exclude>log4j.properties</exclude>
 											</excludes>
 										</filter>
 									</filters>

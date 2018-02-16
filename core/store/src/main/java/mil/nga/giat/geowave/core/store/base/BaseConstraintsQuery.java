@@ -13,8 +13,8 @@ import mil.nga.giat.geowave.core.index.IndexMetaData;
 import mil.nga.giat.geowave.core.index.Mergeable;
 import mil.nga.giat.geowave.core.index.MultiDimensionalCoordinateRangesArray;
 import mil.nga.giat.geowave.core.index.NumericIndexStrategy;
-import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.QueryRanges;
+import mil.nga.giat.geowave.core.index.persist.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStoreOptions;
@@ -72,8 +72,8 @@ public class BaseConstraintsQuery extends
 		this(
 				adapterIds,
 				index,
-				query != null ? query.getIndexConstraints(index.getIndexStrategy()) : null,
-				query != null ? query.createFilters(index.getIndexModel()) : null,
+				query != null ? query.getIndexConstraints(index) : null,
+				query != null ? query.createFilters(index) : null,
 				clientDedupeFilter,
 				scanCallback,
 				aggregation,
@@ -197,14 +197,12 @@ public class BaseConstraintsQuery extends
 							for (final GeoWaveValue value : row.getFieldValues()) {
 								if ((value.getValue() != null) && (value.getValue().length > 0)) {
 									if (mergedAggregationResult == null) {
-										mergedAggregationResult = PersistenceUtils.fromBinary(
-												value.getValue(),
-												Mergeable.class);
+										mergedAggregationResult = (Mergeable) PersistenceUtils.fromBinary(value
+												.getValue());
 									}
 									else {
-										mergedAggregationResult.merge(PersistenceUtils.fromBinary(
-												value.getValue(),
-												Mergeable.class));
+										mergedAggregationResult.merge((Mergeable) PersistenceUtils.fromBinary(value
+												.getValue()));
 									}
 								}
 							}

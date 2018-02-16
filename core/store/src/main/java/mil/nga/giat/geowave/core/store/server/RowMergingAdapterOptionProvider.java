@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Set;
 
 import mil.nga.giat.geowave.core.index.ByteArrayUtils;
-import mil.nga.giat.geowave.core.index.PersistenceUtils;
+import mil.nga.giat.geowave.core.index.persist.PersistenceUtils;
 import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
 import mil.nga.giat.geowave.core.store.server.ServerOpConfig.OptionProvider;
 

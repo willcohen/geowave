@@ -191,19 +191,19 @@ public class GeoWaveBasicSpatialVectorIT extends
 
 		if ((nthreads > 0)) {
 			try {
-				File[] statsInputs;
+				URL[] statsInputs;
 				if (POINTS_ONLY) {
-					statsInputs = new File[] {
+					statsInputs = new URL[] {
 						new File(
-								HAIL_SHAPEFILE_FILE)
+								HAIL_SHAPEFILE_FILE).toURI().toURL()
 					};
 				}
 				else {
-					statsInputs = new File[] {
+					statsInputs = new URL[] {
 						new File(
-								HAIL_SHAPEFILE_FILE),
+								HAIL_SHAPEFILE_FILE).toURI().toURL(),
 						new File(
-								TORNADO_TRACKS_SHAPEFILE_FILE)
+								TORNADO_TRACKS_SHAPEFILE_FILE).toURI().toURL()
 					};
 				}
 

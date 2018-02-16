@@ -54,6 +54,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import mil.nga.giat.geowave.adapter.raster.util.ZipUtils;
 import mil.nga.giat.geowave.adapter.vector.export.VectorMRExportCommand;
 import mil.nga.giat.geowave.adapter.vector.export.VectorMRExportOptions;
+import mil.nga.giat.geowave.core.cli.operations.config.options.ConfigOptions;
 import mil.nga.giat.geowave.core.cli.parser.ManualOperationParams;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayUtils;
@@ -70,6 +71,7 @@ import mil.nga.giat.geowave.mapreduce.GeoWaveWritableInputMapper;
 import mil.nga.giat.geowave.mapreduce.dedupe.GeoWaveDedupeJobRunner;
 import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputFormat;
 import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputKey;
+import mil.nga.giat.geowave.mapreduce.operations.ConfigHDFSCommand;
 import mil.nga.giat.geowave.test.GeoWaveITRunner;
 import mil.nga.giat.geowave.test.TestUtils;
 import mil.nga.giat.geowave.test.TestUtils.DimensionalityType;
@@ -229,6 +231,10 @@ public class BasicMapReduceIT extends
 				OSM_GPX_INPUT_DIR);
 		final WritableDataAdapter<SimpleFeature>[] adapters = new GpxIngestPlugin().getDataAdapters(null);
 
+		for (WritableDataAdapter<SimpleFeature> adapter : adapters) {
+			adapter.init(TestUtils.DEFAULT_SPATIAL_INDEX);
+		}
+
 		final mil.nga.giat.geowave.core.store.DataStore geowaveStore = dataStorePluginOptions.createDataStore();
 		final Map<ByteArrayId, ExpectedResults> adapterIdToResultsMap = new HashMap<ByteArrayId, ExpectedResults>();
 		for (final WritableDataAdapter<SimpleFeature> adapter : adapters) {
@@ -337,8 +343,21 @@ public class BasicMapReduceIT extends
 			}
 		}
 
+		// create temporary config file and use it for hdfs FS URL config
+
+		File configFile = File.createTempFile(
+				"test_mr",
+				null);
+		ManualOperationParams operationParams = new ManualOperationParams();
+		operationParams.getContext().put(
+				ConfigOptions.PROPERTIES_FILE_CONTEXT,
+				configFile);
+
+		final ConfigHDFSCommand configHdfs = new ConfigHDFSCommand();
+		configHdfs.setHdfsUrlParameter(env.getHdfs());
+		configHdfs.execute(operationParams);
+
 		exportCommand.setParameters(
-				env.getHdfs(),
 				exportPath,
 				null);
 		options.setBatchSize(10000);
@@ -350,7 +369,7 @@ public class BasicMapReduceIT extends
 		MapReduceTestUtils.filterConfiguration(conf);
 		final int res = ToolRunner.run(
 				conf,
-				exportCommand.createRunner(new ManualOperationParams()),
+				exportCommand.createRunner(operationParams),
 				new String[] {});
 		Assert.assertTrue(
 				"Export Vector Data map reduce job failed",

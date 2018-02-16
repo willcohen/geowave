@@ -16,6 +16,7 @@ import java.awt.image.WritableRaster;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import org.apache.commons.math.util.MathUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -27,7 +28,7 @@ import org.slf4j.LoggerFactory;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.GeometryFactory;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 import mil.nga.giat.geowave.adapter.raster.RasterUtils;
 import mil.nga.giat.geowave.adapter.raster.adapter.MergeableRasterTile;
 import mil.nga.giat.geowave.adapter.raster.adapter.RasterDataAdapter;
@@ -37,7 +38,7 @@ import mil.nga.giat.geowave.adapter.raster.adapter.merge.SimpleAbstractMergeStra
 import mil.nga.giat.geowave.adapter.raster.adapter.merge.nodata.NoDataMergeStrategy;
 import mil.nga.giat.geowave.core.geotime.store.query.IndexOnlySpatialQuery;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
-import mil.nga.giat.geowave.core.index.Persistable;
+import mil.nga.giat.geowave.core.index.persist.Persistable;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.IndexWriter;
@@ -64,6 +65,7 @@ public class GeoWaveBasicRasterIT extends
 	protected DataStorePluginOptions dataStoreOptions;
 
 	private final static Logger LOGGER = LoggerFactory.getLogger(GeoWaveBasicRasterIT.class);
+	private static final double DELTA = MathUtils.EPSILON;
 	private static long startMillis;
 
 	@Override
@@ -234,10 +236,12 @@ public class GeoWaveBasicRasterIT extends
 
 			Assert.assertEquals(
 					tileSize,
-					raster.getWidth());
+					raster.getWidth(),
+					DELTA);
 			Assert.assertEquals(
 					tileSize,
-					raster.getHeight());
+					raster.getHeight(),
+					DELTA);
 			for (int x = 0; x < tileSize; x++) {
 				for (int y = 0; y < tileSize; y++) {
 
@@ -252,7 +256,8 @@ public class GeoWaveBasicRasterIT extends
 								raster.getSampleDouble(
 										x,
 										y,
-										b));
+										b),
+								DELTA);
 
 					}
 					if ((y % 2) == 0) {
@@ -266,7 +271,8 @@ public class GeoWaveBasicRasterIT extends
 								raster.getSampleDouble(
 										x,
 										y,
-										0));
+										0),
+								DELTA);
 					}
 					else {
 						Assert.assertEquals(
@@ -275,7 +281,8 @@ public class GeoWaveBasicRasterIT extends
 								raster.getSampleDouble(
 										x,
 										y,
-										0));
+										0),
+								DELTA);
 					}
 					if ((x > ((tileSize * 3) / 4)) && (y > ((tileSize * 3) / 4))) {
 						Assert.assertEquals(
@@ -284,7 +291,8 @@ public class GeoWaveBasicRasterIT extends
 								raster.getSampleDouble(
 										x,
 										y,
-										7));
+										7),
+								DELTA);
 					}
 					else {
 						Assert.assertEquals(
@@ -297,7 +305,8 @@ public class GeoWaveBasicRasterIT extends
 								raster.getSampleDouble(
 										x,
 										y,
-										7));
+										7),
+								DELTA);
 
 					}
 				}
@@ -548,7 +557,7 @@ public class GeoWaveBasicRasterIT extends
 			SimpleAbstractMergeStrategy<Persistable>
 	{
 
-		protected SummingMergeStrategy() {
+		public SummingMergeStrategy() {
 			super();
 		}
 
@@ -561,7 +570,6 @@ public class GeoWaveBasicRasterIT extends
 				final double nextSample ) {
 			return thisSample + nextSample;
 		}
-
 	}
 
 	/**
@@ -572,7 +580,7 @@ public class GeoWaveBasicRasterIT extends
 			RasterTileMergeStrategy<MergeCounter>
 	{
 
-		protected SumAndAveragingMergeStrategy() {
+		public SumAndAveragingMergeStrategy() {
 			super();
 		}
 
@@ -647,7 +655,6 @@ public class GeoWaveBasicRasterIT extends
 		@Override
 		public void fromBinary(
 				final byte[] bytes ) {}
-
 	}
 
 	public static class MergeCounter implements
@@ -655,7 +662,7 @@ public class GeoWaveBasicRasterIT extends
 	{
 		private int mergeCounter = 0;
 
-		protected MergeCounter() {}
+		public MergeCounter() {}
 
 		protected MergeCounter(
 				final int mergeCounter ) {

@@ -29,12 +29,12 @@ import mil.nga.giat.geowave.core.index.InsertionIds;
 import mil.nga.giat.geowave.core.index.Mergeable;
 import mil.nga.giat.geowave.core.index.MultiDimensionalCoordinateRanges;
 import mil.nga.giat.geowave.core.index.MultiDimensionalCoordinates;
-import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.QueryRanges;
 import mil.nga.giat.geowave.core.index.SinglePartitionInsertionIds;
 import mil.nga.giat.geowave.core.index.SinglePartitionQueryRanges;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.index.dimension.NumericDimensionDefinition;
+import mil.nga.giat.geowave.core.index.persist.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.sfc.SFCDimensionDefinition;
 import mil.nga.giat.geowave.core.index.sfc.SFCFactory;
 import mil.nga.giat.geowave.core.index.sfc.SFCFactory.SFCType;
@@ -66,7 +66,7 @@ public class XZHierarchicalIndexStrategy implements
 
 	private int byteOffsetFromDimensionIndex;
 
-	protected XZHierarchicalIndexStrategy() {}
+	public XZHierarchicalIndexStrategy() {}
 
 	/**
 	 * Constructor used to create a XZ Hierarchical Index Strategy.
@@ -347,17 +347,13 @@ public class XZHierarchicalIndexStrategy implements
 		for (int i = 0; i < numDimensions; i++) {
 			final byte[] dim = new byte[buf.getInt()];
 			buf.get(dim);
-			baseDefinitions[i] = PersistenceUtils.fromBinary(
-					dim,
-					NumericDimensionDefinition.class);
+			baseDefinitions[i] = (NumericDimensionDefinition) PersistenceUtils.fromBinary(dim);
 		}
 
 		final int rasterStrategySize = buf.getInt();
 		final byte[] rasterStrategyBinary = new byte[rasterStrategySize];
 		buf.get(rasterStrategyBinary);
-		rasterStrategy = PersistenceUtils.fromBinary(
-				rasterStrategyBinary,
-				TieredSFCIndexStrategy.class);
+		rasterStrategy = (TieredSFCIndexStrategy) PersistenceUtils.fromBinary(rasterStrategyBinary);
 
 		final int bitsPerDimensionLength = buf.getInt();
 		maxBitsPerDimension = new int[bitsPerDimensionLength];
@@ -479,7 +475,7 @@ public class XZHierarchicalIndexStrategy implements
 		return metaData;
 	}
 
-	private static class XZHierarchicalIndexMetaData implements
+	public static class XZHierarchicalIndexMetaData implements
 			IndexMetaData
 	{
 

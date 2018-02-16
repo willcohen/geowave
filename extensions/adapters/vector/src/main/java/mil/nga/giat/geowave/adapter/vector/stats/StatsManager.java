@@ -131,12 +131,10 @@ public class StatsManager
 			}
 
 			else if (Geometry.class.isAssignableFrom(descriptor.getType().getBinding())) {
-
 				addStats(
 						new FeatureBoundingBoxStatistics(
 								dataAdapter.getAdapterId(),
 								descriptor.getLocalName(),
-								persistedType,
 								reprojectedType,
 								transform),
 						new ByteArrayId(

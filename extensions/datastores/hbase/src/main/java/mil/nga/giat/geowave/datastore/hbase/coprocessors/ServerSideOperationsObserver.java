@@ -25,6 +25,7 @@ import org.apache.log4j.Logger;
 
 import com.google.common.collect.ImmutableSet;
 
+import mil.nga.giat.geowave.core.index.ByteArrayUtils;
 import mil.nga.giat.geowave.core.store.server.ServerOpConfig.ServerOpScope;
 import mil.nga.giat.geowave.datastore.hbase.server.HBaseServerOp;
 import mil.nga.giat.geowave.datastore.hbase.server.ServerOpInternalScannerWrapper;
@@ -263,8 +264,8 @@ public class ServerSideOperationsObserver extends
 				continue;
 			}
 			final ImmutableSet<ServerOpScope> scopes = HBaseUtils.stringToScopes(commaDelimitedScopes);
-			final String className = config.get(uniqueOp + SERVER_OP_CLASS_KEY);
-			if ((className == null) || className.isEmpty()) {
+			final String classIdStr = config.get(uniqueOp + SERVER_OP_CLASS_KEY);
+			if ((classIdStr == null) || classIdStr.isEmpty()) {
 				LOGGER.warn("Skipping server op - unable to find priority for '" + uniqueOp + "'");
 				continue;
 			}
@@ -283,7 +284,7 @@ public class ServerSideOperationsObserver extends
 					uniqueOpSplit[3],
 					priority,
 					scopes,
-					className,
+					ByteArrayUtils.byteArrayFromString(classIdStr),
 					optionsMap);
 		}
 		super.start(e);

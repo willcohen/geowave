@@ -46,6 +46,7 @@ import mil.nga.giat.geowave.test.basic.AbstractGeoWaveIT;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.commons.lang.SystemUtils;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.geometry.GeneralEnvelope;
 import org.geotools.referencing.operation.projection.MapProjection;
@@ -155,6 +156,10 @@ public class LandsatIT extends
 	@Test
 	public void testMosaic()
 			throws Exception {
+
+		// Skip this test if we're on a Mac
+		org.junit.Assume.assumeTrue(isNotMac());
+
 		JAIExt.initJAIEXT();
 		MapProjection.SKIP_SANITY_CHECKS = true;
 		// just use the QA band as QA is the smallest, get the best cloud cover,
@@ -257,4 +262,9 @@ public class LandsatIT extends
 				0.005);
 		MapProjection.SKIP_SANITY_CHECKS = false;
 	}
+
+	private static boolean isNotMac() {
+		return !SystemUtils.IS_OS_MAC;
+	}
+
 }

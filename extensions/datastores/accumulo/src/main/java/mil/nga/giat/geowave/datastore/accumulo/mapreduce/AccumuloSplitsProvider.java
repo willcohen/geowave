@@ -21,31 +21,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeSet;
 
-import org.apache.accumulo.core.client.AccumuloException;
-import org.apache.accumulo.core.client.AccumuloSecurityException;
-import org.apache.accumulo.core.client.ClientConfiguration;
-import org.apache.accumulo.core.client.Instance;
-import org.apache.accumulo.core.client.TableDeletedException;
-import org.apache.accumulo.core.client.TableNotFoundException;
-import org.apache.accumulo.core.client.TableOfflineException;
-import org.apache.accumulo.core.client.impl.Tables;
-import org.apache.accumulo.core.client.impl.TabletLocator;
-//@formatter:off
-/*if[accumulo.api=1.6]
-import org.apache.accumulo.core.security.Credentials;
-import org.apache.accumulo.core.data.KeyExtent;
-else[accumulo.api=1.6]*/
-import org.apache.accumulo.core.client.impl.ClientContext;
-import org.apache.accumulo.core.client.impl.Credentials;
-import org.apache.accumulo.core.data.impl.KeyExtent;
-/*end[accumulo.api=1.6]*/
-//@formatter:on
-import org.apache.accumulo.core.client.mock.MockInstance;
-import org.apache.accumulo.core.client.security.tokens.NullToken;
-import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.Range;
-import org.apache.accumulo.core.master.state.tables.TableState;
-import org.apache.accumulo.core.util.UtilWaitThread;
+import org.apache.accumulo.core.data.impl.KeyExtent;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
@@ -69,7 +46,30 @@ import mil.nga.giat.geowave.mapreduce.splits.IntermediateSplitInfo;
 import mil.nga.giat.geowave.mapreduce.splits.RangeLocationPair;
 import mil.nga.giat.geowave.mapreduce.splits.SplitInfo;
 import mil.nga.giat.geowave.mapreduce.splits.SplitsProvider;
-
+//@formatter:off
+/*if[accumulo.api=1.7]
+import org.apache.accumulo.core.client.impl.ClientContext;
+import org.apache.accumulo.core.client.impl.Credentials;
+import org.apache.accumulo.core.master.state.tables.TableState;
+import org.apache.accumulo.core.util.UtilWaitThread;
+import org.apache.accumulo.core.client.AccumuloException;
+import org.apache.accumulo.core.client.AccumuloSecurityException;
+import org.apache.accumulo.core.client.ClientConfiguration;
+import org.apache.accumulo.core.client.Instance;
+import org.apache.accumulo.core.client.TableDeletedException;
+import org.apache.accumulo.core.client.TableNotFoundException;
+import org.apache.accumulo.core.client.TableOfflineException;
+import org.apache.accumulo.core.client.impl.Tables;
+import org.apache.accumulo.core.client.impl.TabletLocator;
+import org.apache.accumulo.core.client.mock.MockInstance;
+import org.apache.accumulo.core.client.security.tokens.NullToken;
+import org.apache.accumulo.core.client.security.tokens.PasswordToken;
+else[accumulo.api=1.7]*/
+import org.apache.accumulo.core.data.TabletId;
+import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.admin.Locations;
+/*end[accumulo.api=1.7]*/
+//@formatter:on
 public class AccumuloSplitsProvider extends
 		SplitsProvider
 {
@@ -127,7 +127,7 @@ public class AccumuloSplitsProvider extends
 
 		final TreeSet<Range> ranges;
 		if (query != null) {
-			final List<MultiDimensionalNumericData> indexConstraints = query.getIndexConstraints(indexStrategy);
+			final List<MultiDimensionalNumericData> indexConstraints = query.getIndexConstraints(index);
 			if ((maxSplits != null) && (maxSplits > 0)) {
 				ranges = AccumuloUtils.byteArrayRangesToAccumuloRanges(DataStoreUtils.constraintsToQueryRanges(
 						indexConstraints,
@@ -156,96 +156,9 @@ public class AccumuloSplitsProvider extends
 			}
 		}
 		// get the metadata information for these ranges
-		final Map<String, Map<KeyExtent, List<Range>>> tserverBinnedRanges = getBinnedRangesStructure(
-				accumuloOperations,
-				tableName,
-				ranges);
-
-		final HashMap<String, String> hostNameCache = new HashMap<String, String>();
-		;
-		for (final Entry<String, Map<KeyExtent, List<Range>>> tserverBin : tserverBinnedRanges.entrySet()) {
-			final String tabletServer = tserverBin.getKey();
-			final String ipAddress = tabletServer.split(
-					":",
-					2)[0];
-
-			String location = hostNameCache.get(ipAddress);
-			if (location == null) {
-				location = getHostName(ipAddress);
-				hostNameCache.put(
-						ipAddress,
-						location);
-			}
-			for (final Entry<KeyExtent, List<Range>> extentRanges : tserverBin.getValue().entrySet()) {
-				final Range keyExtent = extentRanges.getKey().toDataRange();
-				final Map<ByteArrayId, SplitInfo> splitInfo = new HashMap<ByteArrayId, SplitInfo>();
-				final List<RangeLocationPair> rangeList = new ArrayList<RangeLocationPair>();
-				for (final Range range : extentRanges.getValue()) {
-					final Range clippedRange = keyExtent.clip(range);
-					if (!(fullrange.beforeStartKey(clippedRange.getEndKey()) || fullrange.afterEndKey(clippedRange
-							.getStartKey()))) {
-						final GeoWaveRowRange rowRange = fromAccumuloRange(
-								clippedRange,
-								partitionKeyLength);
-						final double cardinality = getCardinality(
-								getHistStats(
-										index,
-										adapters,
-										adapterStore,
-										statsStore,
-										statsCache,
-										authorizations),
-								rowRange,
-								index.getIndexStrategy().getPartitionKeyLength());
-						rangeList.add(new RangeLocationPair(
-								rowRange,
-								location,
-								cardinality < 1 ? 1.0 : cardinality));
-					}
-					else {
-						LOGGER.info("Query split outside of range");
-					}
-					if (LOGGER.isTraceEnabled()) {
-						LOGGER.warn("Clipped range: " + rangeList.get(
-								rangeList.size() - 1).getRange());
-					}
-				}
-				if (!rangeList.isEmpty()) {
-					splitInfo.put(
-							index.getId(),
-							new SplitInfo(
-									index,
-									rangeList));
-					splits.add(new IntermediateSplitInfo(
-							splitInfo,
-							this));
-				}
-			}
-		}
-
-		return splits;
-	}
-
-	protected String getHostName(
-			final String ipAddress )
-			throws UnknownHostException {
-		// HP Fortify "Often Misused: Authentication"
-		// These methods are not being used for
-		// authentication
-		final InetAddress inetAddress = InetAddress.getByName(ipAddress);
-		return inetAddress.getHostName();
-	}
-
-	/**
-	 * Returns binnedRanges. Extracted out as its own method to facilitate
-	 * testing
-	 */
-	protected Map<String, Map<KeyExtent, List<Range>>> getBinnedRangesStructure(
-			final AccumuloOperations accumuloOperations,
-			final String tableName,
-			final TreeSet<Range> ranges )
-			throws IOException {
-		final Map<String, Map<KeyExtent, List<Range>>> tserverBinnedRanges = new HashMap<String, Map<KeyExtent, List<Range>>>();
+		// @formatter:off
+		/*if[accumulo.api=1.7]	
+		final Map<String, Map<KeyExtent, List<Range>>> tserverBinnedRanges = getBinnedRangesStructure();
 		TabletLocator tl;
 		try {
 			final Instance instance = accumuloOperations.getInstance();
@@ -267,14 +180,6 @@ public class AccumuloSplitsProvider extends
 						new PasswordToken(
 								accumuloOperations.getPassword()));
 			}
-
-			// @formatter:off
-			/*if[accumulo.api=1.6]
-			tl = getTabletLocator(
-					instance,
-					tableId);
-			Object clientContextOrCredentials = credentials;
-			else[accumulo.api=1.6]*/
 			final ClientContext clientContext = new ClientContext(
 					instance,credentials,
 					new ClientConfiguration());
@@ -282,9 +187,6 @@ public class AccumuloSplitsProvider extends
 					clientContext,
 					tableId);
 
-			final Object clientContextOrCredentials = clientContext;
-			/*end[accumulo.api=1.6]*/
-			// @formatter:on
 			// its possible that the cache could contain complete, but
 			// old information about a tables tablets... so clear it
 			tl.invalidateCache();
@@ -292,7 +194,7 @@ public class AccumuloSplitsProvider extends
 					ranges);
 			while (!binRanges(
 					rangeList,
-					clientContextOrCredentials,
+					clientContext,
 					tserverBinnedRanges,
 					tl)) {
 				if (!(instance instanceof MockInstance)) {
@@ -402,41 +304,197 @@ public class AccumuloSplitsProvider extends
 					range.isStartKeyInclusive(),
 					partitionKeyDiffers ? true : range.isEndKeyInclusive());
 
+		else[accumulo.api=1.7]*/
+		// @formatter:on
+		final HashMap<String, String> hostNameCache = getHostNameCache();
+		Locations locations;
+		try {
+			final Connector conn = accumuloOperations.getConnector();
+			locations = conn.tableOperations().locate(
+					tableName,
+					ranges);
 		}
+		catch (final Exception e) {
+			throw new IOException(
+					e);
+		}
+		for (final Entry<TabletId, List<Range>> tabletIdRanges : locations.groupByTablet().entrySet()) {
+			final TabletId tabletId = tabletIdRanges.getKey();
+			final String tabletServer = locations.getTabletLocation(tabletId);
+			final String ipAddress = tabletServer.split(
+					":",
+					2)[0];
+
+			String location = hostNameCache.get(ipAddress);
+			// HP Fortify "Often Misused: Authentication"
+			// These methods are not being used for
+			// authentication
+			if (location == null) {
+				final InetAddress inetAddress = InetAddress.getByName(ipAddress);
+				location = inetAddress.getHostName();
+				hostNameCache.put(
+						ipAddress,
+						location);
+			}
+
+			final Range tabletRange = tabletId.toRange();
+			final Map<ByteArrayId, SplitInfo> splitInfo = new HashMap<ByteArrayId, SplitInfo>();
+			final List<RangeLocationPair> rangeList = new ArrayList<RangeLocationPair>();
+
+			for (final Range range : tabletIdRanges.getValue()) {
+				final Range clippedRange = tabletRange.clip(range);
+				if (!(fullrange.beforeStartKey(clippedRange.getEndKey()) || fullrange.afterEndKey(clippedRange
+						.getStartKey()))) {
+					final GeoWaveRowRange rowRange = fromAccumuloRange(
+							clippedRange,
+							partitionKeyLength);
+					final double cardinality = getCardinality(
+							getHistStats(
+									index,
+									adapters,
+									adapterStore,
+									statsStore,
+									statsCache,
+									authorizations),
+							rowRange,
+							indexStrategy.getPartitionKeyLength());
+					rangeList.add(new RangeLocationPair(
+							rowRange,
+							location,
+							cardinality < 1 ? 1.0 : cardinality));
+				}
+				else {
+					LOGGER.info("Query split outside of range");
+				}
+				if (LOGGER.isTraceEnabled()) {
+					LOGGER.warn("Clipped range: " + rangeList.get(
+							rangeList.size() - 1).getRange());
+				}
+			}
+			if (!rangeList.isEmpty()) {
+				splitInfo.put(
+						index.getId(),
+						new SplitInfo(index, rangeList));
+				splits.add(new IntermediateSplitInfo(
+						splitInfo,
+						this));
+			}
+		}
+		/* end[accumulo.api=1.6] */
+		return splits;
 	}
 
 	/**
-	 * Initializes an Accumulo {@link TabletLocator} based on the configuration.
-	 *
-	 * @param instance
-	 *            the accumulo instance
-	 * @param tableName
-	 *            the accumulo table name
-	 * @return an Accumulo tablet locator
-	 * @throws TableNotFoundException
-	 *             if the table name set on the configuration doesn't exist
-	 *
+	 * Returns data structure to be filled by binnedRanges Extracted out to
+	 * facilitate testing
 	 */
+	public Map<String, Map<KeyExtent, List<Range>>> getBinnedRangesStructure() {
+		final Map<String, Map<KeyExtent, List<Range>>> tserverBinnedRanges = new HashMap<String, Map<KeyExtent, List<Range>>>();
+		return tserverBinnedRanges;
+	}
+
+	/**
+	 * Returns host name cache data structure Extracted out to facilitate
+	 * testing
+	 */
+	public HashMap<String, String> getHostNameCache() {
+		final HashMap<String, String> hostNameCache = new HashMap<String, String>();
+		return hostNameCache;
+	}
+
+	public static Range toAccumuloRange(
+			final GeoWaveRowRange range,
+			final int partitionKeyLength ) {
+		if ((range.getPartitionKey() == null) || (range.getPartitionKey().length == 0)) {
+			return new Range(
+					(range.getStartSortKey() == null) ? null : new Text(
+							range.getStartSortKey()),
+					range.isStartSortKeyInclusive(),
+					(range.getEndSortKey() == null) ? null : new Text(
+							range.getEndSortKey()),
+					range.isEndSortKeyInclusive());
+		}
+		else {
+			return new Range(
+					(range.getStartSortKey() == null) ? null : new Text(
+							ArrayUtils.addAll(
+									range.getPartitionKey(),
+									range.getStartSortKey())),
+					range.isStartSortKeyInclusive(),
+					(range.getEndSortKey() == null) ? new Text(
+							new ByteArrayId(
+									range.getPartitionKey()).getNextPrefix()) : new Text(
+							ArrayUtils.addAll(
+									range.getPartitionKey(),
+									range.getEndSortKey())),
+					(range.getEndSortKey() != null) && range.isEndSortKeyInclusive());
+		}
+	}
+
+	public static GeoWaveRowRange fromAccumuloRange(
+			final Range range,
+			final int partitionKeyLength ) {
+		if (partitionKeyLength <= 0) {
+			return new GeoWaveRowRange(
+					null,
+					range.getStartKey() == null ? null : range.getStartKey().getRowData().getBackingArray(),
+					range.getEndKey() == null ? null : range.getEndKey().getRowData().getBackingArray(),
+					range.isStartKeyInclusive(),
+					range.isEndKeyInclusive());
+		}
+		else {
+			byte[] partitionKey;
+			boolean partitionKeyDiffers = false;
+			if ((range.getStartKey() == null) && (range.getEndKey() == null)) {
+				return null;
+			}
+			else if (range.getStartKey() != null) {
+				partitionKey = ArrayUtils.subarray(
+						range.getStartKey().getRowData().getBackingArray(),
+						0,
+						partitionKeyLength);
+				if (range.getEndKey() != null) {
+					partitionKeyDiffers = !Arrays.equals(
+							partitionKey,
+							ArrayUtils.subarray(
+									range.getEndKey().getRowData().getBackingArray(),
+									0,
+									partitionKeyLength));
+				}
+			}
+			else {
+				partitionKey = ArrayUtils.subarray(
+						range.getEndKey().getRowData().getBackingArray(),
+						0,
+						partitionKeyLength);
+			}
+			return new GeoWaveRowRange(
+					partitionKey,
+					range.getStartKey() == null ? null : ArrayUtils.subarray(
+							range.getStartKey().getRowData().getBackingArray(),
+							partitionKeyLength,
+							range.getStartKey().getRowData().getBackingArray().length),
+					partitionKeyDiffers ? null : range.getEndKey() == null ? null : ArrayUtils.subarray(
+							range.getEndKey().getRowData().getBackingArray(),
+							partitionKeyLength,
+							range.getEndKey().getRowData().getBackingArray().length),
+					range.isStartKeyInclusive(),
+					partitionKeyDiffers ? true : range.isEndKeyInclusive());
+
+		}
+	}
+	// @formatter:off
+	/*if[accumulo.api=1.7]
 	protected TabletLocator getTabletLocator(
 			final Object clientContextOrInstance,
 			final String tableId )
 			throws TableNotFoundException {
 		TabletLocator tabletLocator = null;
-		// @formatter:off
-		/*if[accumulo.api=1.6]
-		tabletLocator = TabletLocator.getLocator(
-				(Instance) clientContextOrInstance,
-				new Text(
-						tableId));
-		else[accumulo.api=1.6]*/
 
 		tabletLocator = TabletLocator.getLocator(
 				(ClientContext) clientContextOrInstance,
 				new Text(
 						tableId));
-
-		/*end[accumulo.api=1.6]*/
-		// @formatter:on
 		return tabletLocator;
 	}
 
@@ -449,21 +507,11 @@ public class AccumuloSplitsProvider extends
 			AccumuloSecurityException,
 			TableNotFoundException,
 			IOException {
-		// @formatter:off
-		/*if[accumulo.api=1.6]
-		return tabletLocator.binRanges(
-				(Credentials) clientContextOrCredentials,
-				rangeList,
-				tserverBinnedRanges).isEmpty();
-  		else[accumulo.api=1.6]*/
-
 		return tabletLocator.binRanges(
 				(ClientContext) clientContextOrCredentials,
 				rangeList,
 				tserverBinnedRanges).isEmpty();
-
-  		/*end[accumulo.api=1.6]*/
-		// @formatter:on
 	}
-
+	end[accumulo.api=1.7]*/
+	// @formatter:on
 }

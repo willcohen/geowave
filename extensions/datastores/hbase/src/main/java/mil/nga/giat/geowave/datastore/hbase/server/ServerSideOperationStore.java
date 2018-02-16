@@ -16,7 +16,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableSet;
 
-import mil.nga.giat.geowave.core.index.PersistenceUtils;
+import mil.nga.giat.geowave.core.index.persist.PersistenceUtils;
 import mil.nga.giat.geowave.core.store.server.ServerOpConfig.ServerOpScope;
 
 public class ServerSideOperationStore
@@ -34,7 +34,7 @@ public class ServerSideOperationStore
 			final String opName,
 			final int priority,
 			final ImmutableSet<ServerOpScope> scopes,
-			final String className,
+			final byte[] classId,
 			final Map<String, String> options ) {
 		final TableKey key = new TableKey(
 				namespace,
@@ -50,7 +50,7 @@ public class ServerSideOperationStore
 				opName,
 				priority,
 				scopes,
-				className,
+				classId,
 				options);
 	}
 
@@ -75,7 +75,7 @@ public class ServerSideOperationStore
 				final String opName,
 				final int priority,
 				final ImmutableSet<ServerOpScope> scopes,
-				final String className,
+				final byte[] classId,
 				final Map<String, String> options ) {
 			map.put(
 					new ServerSideOperationKey(
@@ -83,7 +83,7 @@ public class ServerSideOperationStore
 							priority),
 					new ServerSideOperationValue(
 							scopes,
-							className,
+							classId,
 							options));
 		}
 
@@ -106,17 +106,17 @@ public class ServerSideOperationStore
 	private static class ServerSideOperationValue
 	{
 		private final ImmutableSet<ServerOpScope> scopes;
-		private String className;
+		private byte[] classId;
 		private Map<String, String> options;
 		private HBaseServerOp operation;
 
 		public ServerSideOperationValue(
 				final ImmutableSet<ServerOpScope> scopes,
-				final String className,
+				final byte[] classId,
 				final Map<String, String> options ) {
 			super();
 			this.scopes = scopes;
-			this.className = className;
+			this.classId = classId;
 			this.options = options;
 		}
 
@@ -133,9 +133,8 @@ public class ServerSideOperationStore
 		}
 
 		private HBaseServerOp createOperation() {
-			final HBaseServerOp op = PersistenceUtils.classFactory(
-					className,
-					HBaseServerOp.class);
+			final HBaseServerOp op = (HBaseServerOp) PersistenceUtils.fromClassId(
+					classId);
 			if (op != null) {
 				try {
 					op.init(options);

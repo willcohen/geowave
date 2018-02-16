@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterators;
 
+import mil.nga.giat.geowave.core.cli.VersionUtils;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.InsertionIds;
 import mil.nga.giat.geowave.core.store.AdapterToIndexMapping;
@@ -33,6 +34,7 @@ import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.DataStoreOptions;
 import mil.nga.giat.geowave.core.store.IndexWriter;
+import mil.nga.giat.geowave.core.store.StoreFactoryOptions;
 import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
@@ -114,6 +116,7 @@ public class BaseDataStore implements
 			final WritableDataAdapter<T> adapter,
 			final PrimaryIndex... indices )
 			throws MismatchedIndexToAdapterMapping {
+		adapter.init(indices);
 		store(adapter);
 
 		indexMappingStore.addAdapterIndexMapping(new AdapterToIndexMapping(
@@ -628,7 +631,6 @@ public class BaseDataStore implements
 				filter,
 				visibilityCounts,
 				sanitizedQueryOptions.getAuthorizations());
-
 		return q.query(
 				baseOperations,
 				baseOptions,

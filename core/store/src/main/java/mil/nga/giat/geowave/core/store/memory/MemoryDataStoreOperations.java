@@ -27,9 +27,10 @@ import com.google.common.primitives.UnsignedBytes;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
-import mil.nga.giat.geowave.core.index.PersistenceUtils;
+import mil.nga.giat.geowave.core.index.Mergeable;
 import mil.nga.giat.geowave.core.index.SinglePartitionQueryRanges;
 import mil.nga.giat.geowave.core.index.StringUtils;
+import mil.nga.giat.geowave.core.index.persist.PersistenceUtils;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
@@ -600,13 +601,10 @@ public class MemoryDataStoreOperations implements
 											currentMetadata.getSecondaryId(),
 											next.getSecondaryId())) {
 										if (currentStat == null) {
-											currentStat = PersistenceUtils.fromBinary(
-													currentMetadata.getValue(),
-													DataStatistics.class);
+											currentStat = (DataStatistics) PersistenceUtils.fromBinary(currentMetadata
+													.getValue());
 										}
-										currentStat.merge(PersistenceUtils.fromBinary(
-												next.getValue(),
-												DataStatistics.class));
+										currentStat.merge((Mergeable) PersistenceUtils.fromBinary(next.getValue()));
 										vis = combineVisibilities(
 												vis,
 												next.getVisibility());

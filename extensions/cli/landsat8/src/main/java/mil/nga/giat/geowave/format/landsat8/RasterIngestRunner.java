@@ -62,6 +62,7 @@ import mil.nga.giat.geowave.adapter.vector.plugin.ExtractGeometryFilterVisitorRe
 import mil.nga.giat.geowave.adapter.vector.plugin.GeoWaveGTDataStore;
 import mil.nga.giat.geowave.core.cli.api.OperationParams;
 import mil.nga.giat.geowave.core.cli.operations.config.options.ConfigOptions;
+import mil.nga.giat.geowave.core.geotime.GeometryUtils;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.IndexWriter;
 import mil.nga.giat.geowave.core.store.adapter.exceptions.MismatchedIndexToAdapterMapping;
@@ -116,6 +117,7 @@ public class RasterIngestRunner extends
 		// Config file
 		final File configFile = (File) params.getContext().get(
 				ConfigOptions.PROPERTIES_FILE_CONTEXT);
+
 		// Attempt to load input store.
 		final StoreLoader inputStoreLoader = new StoreLoader(
 				inputStoreName);
@@ -246,7 +248,7 @@ public class RasterIngestRunner extends
 								coverage);
 						try {
 							final MathTransform transform = CRS.findMathTransform(
-									GeoWaveGTDataStore.DEFAULT_CRS,
+									GeometryUtils.DEFAULT_CRS,
 									coverage.getCoordinateReferenceSystem(),
 									true);
 							params.parameter(

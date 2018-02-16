@@ -165,9 +165,9 @@ public class SchemaConverter
 			dataTypeOut = DataTypes.TimestampType;
 		}
 
-		// Custom geometry types get WKT encoding
+		// Custom geometry types get WKB encoding
 		else if (Geometry.class.isAssignableFrom(attrDesc.getType().getBinding())) {
-			dataTypeOut = DataTypes.StringType;
+			dataTypeOut = DataTypes.BinaryType;
 			isGeom = true;
 		}
 

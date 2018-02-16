@@ -91,7 +91,7 @@ public class SqlResultsWriter
 						if (field.name().equals(
 								"geom")) {
 							try {
-								Geometry geom = geomReader.read((String) rowObj);
+								Geometry geom = geomReader.read((byte[]) rowObj);
 
 								sfBuilder.set(
 										"geom",

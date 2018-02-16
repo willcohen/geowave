@@ -7,8 +7,8 @@ public class GeomIntersects extends
 {
 	@Override
 	public Boolean call(
-			String geomStr1,
-			String geomStr2 )
+			byte[] geomStr1,
+			byte[] geomStr2 )
 			throws Exception {
 		Geometry geom1 = parseGeom(geomStr1);
 		Geometry geom2 = parseGeom(geomStr2);

@@ -9,11 +9,11 @@ public class CommonIndexType implements Serializable {
 	private byte[] insertionId;
 	private byte[] adapterId;
 	private byte[] dataId;
-	private String geom;
+	private byte[] geom;
 	
 	public CommonIndexType() {}
 	
-	public CommonIndexType(byte[] indexId, GeoWaveInputKey inputKey, String geom) {
+	public CommonIndexType(byte[] indexId, GeoWaveInputKey inputKey, byte[] geom) {
 		this.setInsertionId(
 				indexId);
 		this.setDataId(
@@ -24,7 +24,7 @@ public class CommonIndexType implements Serializable {
 				geom);
 	}
 	
-	public CommonIndexType(byte[] indexId, byte[] adapterId, byte[] dataId , String geom) {
+	public CommonIndexType(byte[] indexId, byte[] adapterId, byte[] dataId , byte[] geom) {
 		this.setInsertionId(
 				indexId);
 		this.setDataId(
@@ -49,12 +49,12 @@ public class CommonIndexType implements Serializable {
 		this.dataId = inputKey.getDataId().getBytes();
 	}
 
-	public String getGeom() {
+	public byte[] getGeom() {
 		return geom;
 	}
 
 	public void setGeom(
-			String geom ) {
+			byte[] geom ) {
 		this.geom = geom;
 	}
 

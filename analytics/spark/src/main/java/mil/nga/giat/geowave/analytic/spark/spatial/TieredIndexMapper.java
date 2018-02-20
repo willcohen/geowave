@@ -20,6 +20,7 @@ import org.opengis.geometry.BoundingBox;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 
+import mil.nga.giat.geowave.analytic.spark.sparksql.util.GeomWriter;
 import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.sfc.data.BasicNumericDataset;
@@ -65,7 +66,8 @@ public class TieredIndexMapper extends IndexMapper
 		if(geom == null) {
 			return result.iterator();
 		}
-		String geomString = geom.toText();
+		GeomWriter wkbWriter = new GeomWriter();
+		byte[] geomString = wkbWriter.write(geom);
 		//Extract bounding box from input feature
 		BoundingBox bounds = inputFeature.getBounds();
 		NumericRange xRange = new NumericRange(bounds.getMinX(), bounds.getMaxX());

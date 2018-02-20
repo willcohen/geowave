@@ -4,12 +4,15 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.mail.Session;
+
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.RelationalGroupedDataset;
 import org.apache.spark.sql.SparkSession;
 import org.opengis.feature.simple.SimpleFeature;
 import org.slf4j.Logger;
@@ -72,8 +75,9 @@ public class TieredSpatialJoinTyped implements SpatialJoin {
 		Dataset<CommonIndexType> leftFrame = leftData.getDataFrame(leftRDD);
 		Dataset<CommonIndexType> rightFrame = rightData.getDataFrame(rightRDD);
 		
-		leftFrame.cache();
-		rightFrame.cache();
+		//leftFrame.cache();
+		//rightFrame.cache();
+		
 		//This function creates a list of tiers that actually contain data for each set.
 		this.collectDataTiersTyped(leftFrame, rightFrame, strategy);
 		
@@ -133,6 +137,8 @@ public class TieredSpatialJoinTyped implements SpatialJoin {
 		int tierCount = tierStrategies.length;
 		byte minTierId = (byte) 0;
 		byte maxTierId = (byte)(tierCount - 1);
+		
+		leftFrame.select(leftFrame.col("insertionId"));
 		
 		for(int iTier = maxTierId; iTier >= minTierId; iTier--) {
 			SingleTierSubStrategy tierStrategy = (SingleTierSubStrategy) tierStrategies[iTier].getIndexStrategy();
@@ -195,7 +201,7 @@ public class TieredSpatialJoinTyped implements SpatialJoin {
 				
 				//Parse geom from string
 				GeomReader reader = new GeomReader();
-				String geomString = t.getGeom();
+				byte[] geomString = t.getGeom();
 				Geometry geom = reader.read(geomString);
 				
 				NumericRange xRange = new NumericRange(geom.getEnvelopeInternal().getMinX(), geom.getEnvelopeInternal().getMaxX());
@@ -254,8 +260,8 @@ public class TieredSpatialJoinTyped implements SpatialJoin {
 					return resultPairs.iterator();
 				}
 				
-				String leftGeom = leftFeature.getGeom();
-				String rightGeom = rightFeature.getGeom();
+				byte[] leftGeom = leftFeature.getGeom();
+				byte[] rightGeom = rightFeature.getGeom();
 				if(predicate.call(leftGeom, rightGeom)) {
 					resultPairs.add(leftFeature);
 					resultPairs.add(rightFeature);

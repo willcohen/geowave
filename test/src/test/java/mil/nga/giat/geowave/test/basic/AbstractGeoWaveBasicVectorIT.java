@@ -459,11 +459,11 @@ abstract public class AbstractGeoWaveBasicVectorIT extends
 									cachedValues);
 						}
 						cachedValues.entryIngested(mathTransform != null ? FeatureDataUtils.crsTransform(
-										data.getValue(),
-										SimpleFeatureTypeBuilder.retype(
-												data.getValue().getFeatureType(),
-												crs),
-										mathTransform) : data.getValue());
+								data.getValue(),
+								SimpleFeatureTypeBuilder.retype(
+										data.getValue().getFeatureType(),
+										crs),
+								mathTransform) : data.getValue());
 					}
 				}
 			}

@@ -808,6 +808,7 @@ public class AccumuloDataStoreStatsTest
 			// TODO Auto-generated method stub
 
 		}
+
 		@Override
 		public EntryVisibilityHandler<TestGeometry> getVisibilityHandler(
 				final CommonIndexModel indexModel,

@@ -6,8 +6,7 @@ import java.util.Map;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
-import mil.nga.giat.geowave.core.index.Persistable;
-import mil.nga.giat.geowave.core.index.PersistenceUtils;
+import mil.nga.giat.geowave.core.index.persist.PersistenceUtils;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveMetadata;
@@ -64,9 +63,7 @@ public class DynamoDBStatisticsIterator implements
 
 	protected DataStatistics<?> entryToValue(
 			final Map<String, AttributeValue> entry ) {
-		final DataStatistics<?> stats = (DataStatistics<?>) PersistenceUtils.fromBinary(
-				DynamoDBUtils.getValue(entry),
-				Persistable.class);
+		final DataStatistics<?> stats = (DataStatistics<?>) PersistenceUtils.fromBinary(DynamoDBUtils.getValue(entry));
 
 		if (stats != null) {
 			stats.setDataAdapterId(new ByteArrayId(

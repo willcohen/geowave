@@ -12,6 +12,8 @@ public class PartitionIndexStrategyWrapper implements
 {
 	private PartitionIndexStrategy<MultiDimensionalNumericData, MultiDimensionalNumericData> partitionIndexStrategy;
 
+	public PartitionIndexStrategyWrapper() {}
+
 	public PartitionIndexStrategyWrapper(
 			final PartitionIndexStrategy<MultiDimensionalNumericData, MultiDimensionalNumericData> partitionIndexStrategy ) {
 		this.partitionIndexStrategy = partitionIndexStrategy;

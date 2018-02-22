@@ -80,10 +80,13 @@ public class PersistenceUtils
 			}
 		}
 		catch (ClassNotFoundException e) {
-			LOGGER.warn("Unable to find class", e);
+			LOGGER.warn(
+					"Unable to find class",
+					e);
 		}
 		return new byte[0];
 	}
+
 	public static Persistable fromClassId(
 			final byte[] bytes ) {
 		final ByteBuffer buf = ByteBuffer.wrap(bytes);

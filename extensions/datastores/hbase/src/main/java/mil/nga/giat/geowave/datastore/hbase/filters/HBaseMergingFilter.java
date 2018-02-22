@@ -50,8 +50,7 @@ public class HBaseMergingFilter extends
 				Mergeable mergedValue = null;
 				for (Cell cell : rowCells) {
 					byte[] byteValue = CellUtil.cloneValue(cell);
-					Mergeable value = (Mergeable) PersistenceUtils.fromBinary(
-							byteValue);
+					Mergeable value = (Mergeable) PersistenceUtils.fromBinary(byteValue);
 
 					if (mergedValue != null) {
 						mergedValue.merge(value);

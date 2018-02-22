@@ -36,8 +36,7 @@ public class MergingServerOp implements
 	protected Mergeable getMergeable(
 			final Cell cell,
 			final byte[] bytes ) {
-		return (Mergeable) PersistenceUtils.fromBinary(
-				bytes);
+		return (Mergeable) PersistenceUtils.fromBinary(bytes);
 	}
 
 	protected byte[] getBinary(

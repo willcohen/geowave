@@ -44,8 +44,7 @@ public class VersionCommand extends
 	public void execute(
 			final OperationParams params )
 			throws Exception {
-		computeResults(
-				params);
+		computeResults(params);
 	}
 
 	@Override
@@ -57,16 +56,13 @@ public class VersionCommand extends
 					"Must specify store name");
 		}
 
-		final String inputStoreName = parameters.get(
-				0);
+		final String inputStoreName = parameters.get(0);
 
-		final File configFile = getGeoWaveConfigFile(
-				params);
+		final File configFile = getGeoWaveConfigFile(params);
 
 		final StoreLoader inputStoreLoader = new StoreLoader(
 				inputStoreName);
-		if (!inputStoreLoader.loadFromConfig(
-				configFile)) {
+		if (!inputStoreLoader.loadFromConfig(configFile)) {
 			JCommander.getConsole().println(
 					"Cannot find store name: " + inputStoreLoader.getStoreName());
 			return null;

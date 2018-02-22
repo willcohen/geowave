@@ -133,8 +133,7 @@ public class ServerSideOperationStore
 		}
 
 		private HBaseServerOp createOperation() {
-			final HBaseServerOp op = (HBaseServerOp) PersistenceUtils.fromClassId(
-					classId);
+			final HBaseServerOp op = (HBaseServerOp) PersistenceUtils.fromClassId(classId);
 			if (op != null) {
 				try {
 					op.init(options);

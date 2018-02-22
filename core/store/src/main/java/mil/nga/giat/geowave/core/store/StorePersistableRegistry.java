@@ -22,6 +22,7 @@ import mil.nga.giat.geowave.core.store.filter.BasicQueryFilter;
 import mil.nga.giat.geowave.core.store.filter.DataIdQueryFilter;
 import mil.nga.giat.geowave.core.store.filter.DedupeFilter;
 import mil.nga.giat.geowave.core.store.filter.DistributableFilterList;
+import mil.nga.giat.geowave.core.store.filter.InsertionIdQueryFilter;
 import mil.nga.giat.geowave.core.store.filter.PrefixIdQueryFilter;
 import mil.nga.giat.geowave.core.store.index.BasicIndexModel;
 import mil.nga.giat.geowave.core.store.index.CustomIdIndex;
@@ -145,7 +146,10 @@ public class StorePersistableRegistry implements
 					CountAggregation::new),
 			new PersistableIdAndConstructor(
 					(short) 234,
-					DataStatisticsAggregation::new)
+					DataStatisticsAggregation::new),
+			new PersistableIdAndConstructor(
+					(short) 235,
+					InsertionIdQueryFilter::new)
 		};
 	}
 }

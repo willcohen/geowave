@@ -31,8 +31,7 @@ import mil.nga.giat.geowave.datastore.hbase.query.protobuf.VersionProtos.Version
 
 public class HBaseVersionQuery
 {
-	private static final Logger LOGGER = LoggerFactory.getLogger(
-			HBaseVersionQuery.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(HBaseVersionQuery.class);
 	private final HBaseOperations operations;
 
 	public HBaseVersionQuery(

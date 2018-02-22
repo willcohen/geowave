@@ -73,8 +73,7 @@ public class RowMergingServerOp extends
 				}));
 		final String rowTransformStr = options.get(RowMergingAdapterOptionProvider.ROW_TRANSFORM_KEY);
 		final byte[] rowTransformBytes = ByteArrayUtils.byteArrayFromString(rowTransformStr);
-		rowTransform = (RowTransform<Mergeable>) PersistenceUtils.fromBinary(
-				rowTransformBytes);
+		rowTransform = (RowTransform<Mergeable>) PersistenceUtils.fromBinary(rowTransformBytes);
 		rowTransform.initOptions(options);
 	}
 

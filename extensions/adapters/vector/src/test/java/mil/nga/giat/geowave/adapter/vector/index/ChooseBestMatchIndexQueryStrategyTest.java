@@ -156,7 +156,7 @@ public class ChooseBestMatchIndexQueryStrategyTest
 		}
 		PrimaryIndex index = new SpatialIndexBuilder().createIndex();
 		final NumericIndexStrategy indexStrategy = index.getIndexStrategy();
-	
+
 		for (int i = 0; i < ROWS; i++) {
 			final double x = r.nextDouble();
 			final double y = r.nextDouble();

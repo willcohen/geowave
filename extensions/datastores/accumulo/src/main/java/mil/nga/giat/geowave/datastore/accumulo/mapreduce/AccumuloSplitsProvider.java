@@ -374,7 +374,9 @@ public class AccumuloSplitsProvider extends
 			if (!rangeList.isEmpty()) {
 				splitInfo.put(
 						index.getId(),
-						new SplitInfo(index, rangeList));
+						new SplitInfo(
+								index,
+								rangeList));
 				splits.add(new IntermediateSplitInfo(
 						splitInfo,
 						this));

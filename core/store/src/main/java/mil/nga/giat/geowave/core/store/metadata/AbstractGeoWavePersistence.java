@@ -199,6 +199,7 @@ public abstract class AbstractGeoWavePersistence<T extends Persistable>
 			LOGGER.warn(
 					"Unable to close metadata writer",
 					e);
+			e.printStackTrace();
 		}
 	}
 

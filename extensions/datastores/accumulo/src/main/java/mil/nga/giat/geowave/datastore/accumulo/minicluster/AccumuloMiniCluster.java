@@ -1,4 +1,4 @@
-package mil.nga.giat.geowave.datastore.accumulo.app;
+package mil.nga.giat.geowave.datastore.accumulo.minicluster;
 
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
@@ -23,8 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Files;
-
-import mil.nga.giat.geowave.datastore.accumulo.minicluster.MiniAccumuloClusterFactory;
 
 public class AccumuloMiniCluster
 {

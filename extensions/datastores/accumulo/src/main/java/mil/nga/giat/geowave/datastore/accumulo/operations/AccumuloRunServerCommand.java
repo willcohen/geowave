@@ -9,8 +9,8 @@ import mil.nga.giat.geowave.core.cli.annotations.GeowaveOperation;
 import mil.nga.giat.geowave.core.cli.api.Command;
 import mil.nga.giat.geowave.core.cli.api.DefaultOperation;
 import mil.nga.giat.geowave.core.cli.api.OperationParams;
-import mil.nga.giat.geowave.datastore.accumulo.app.AccumuloMiniCluster;
 import mil.nga.giat.geowave.datastore.accumulo.cli.AccumuloSection;
+import mil.nga.giat.geowave.datastore.accumulo.minicluster.AccumuloMiniCluster;
 
 @GeowaveOperation(name = "runserver", parentOperation = AccumuloSection.class)
 @Parameters(commandDescription = "Runs a standalone mini Accumulo server for test and debug with GeoWave")

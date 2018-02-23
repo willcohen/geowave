@@ -47,7 +47,7 @@ import mil.nga.giat.geowave.test.query.SpatialTemporalQueryIT;
 	BulkIngestInputGenerationIT.class,
 	GeoWaveNNIT.class,
 	AttributesSubsetQueryIT.class,
-//	SpatialTemporalQueryIT.class,
+	SpatialTemporalQueryIT.class,
 	PolygonDataIdQueryIT.class,
 	ConfigCacheIT.class,
 })

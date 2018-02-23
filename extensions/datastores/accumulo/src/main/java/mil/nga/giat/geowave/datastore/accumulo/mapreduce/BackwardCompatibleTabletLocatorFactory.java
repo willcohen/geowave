@@ -14,26 +14,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /*if[accumulo.api=1.7]
-import org.apache.accumulo.core.util.UtilWaitThread;
-import org.apache.accumulo.core.client.mock.MockInstance;
-import org.apache.accumulo.core.data.impl.KeyExtent;
-import org.apache.accumulo.core.data.impl.TabletIdImpl;
-import org.apache.accumulo.core.master.state.tables.TableState;
-import org.apache.accumulo.core.client.TableOfflineException;
-import org.apache.accumulo.core.client.impl.ClientContext;
-import org.apache.accumulo.core.client.impl.Credentials;
-import org.apache.accumulo.core.client.impl.Tables;
-import org.apache.accumulo.core.client.impl.TabletLocator;
-import org.apache.accumulo.core.client.security.tokens.NullToken;
-import org.apache.accumulo.core.client.security.tokens.PasswordToken;
-import org.apache.accumulo.core.client.ClientConfiguration;
-import org.apache.accumulo.core.client.Instance;
-import org.apache.accumulo.core.client.TableDeletedException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map.Entry;
-import org.apache.hadoop.io.Text;
-else[accumulo.api=1.7]*/
+ import org.apache.accumulo.core.util.UtilWaitThread;
+ import org.apache.accumulo.core.client.mock.MockInstance;
+ import org.apache.accumulo.core.data.impl.KeyExtent;
+ import org.apache.accumulo.core.data.impl.TabletIdImpl;
+ import org.apache.accumulo.core.master.state.tables.TableState;
+ import org.apache.accumulo.core.client.TableOfflineException;
+ import org.apache.accumulo.core.client.impl.ClientContext;
+ import org.apache.accumulo.core.client.impl.Credentials;
+ import org.apache.accumulo.core.client.impl.Tables;
+ import org.apache.accumulo.core.client.impl.TabletLocator;
+ import org.apache.accumulo.core.client.security.tokens.NullToken;
+ import org.apache.accumulo.core.client.security.tokens.PasswordToken;
+ import org.apache.accumulo.core.client.ClientConfiguration;
+ import org.apache.accumulo.core.client.Instance;
+ import org.apache.accumulo.core.client.TableDeletedException;
+ import java.util.ArrayList;
+ import java.util.HashMap;
+ import java.util.Map.Entry;
+ import org.apache.hadoop.io.Text;
+ else[accumulo.api=1.7]*/
 import org.apache.accumulo.core.client.admin.Locations;
 import org.apache.accumulo.core.client.Connector;
 /* end[accumulo.api=1.7] */
@@ -42,8 +42,7 @@ import mil.nga.giat.geowave.datastore.accumulo.operations.AccumuloOperations;
 
 class BackwardCompatibleTabletLocatorFactory
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			BackwardCompatibleTabletLocatorFactory.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(BackwardCompatibleTabletLocatorFactory.class);
 
 	protected static interface BackwardCompatibleTabletLocator
 	{
@@ -59,7 +58,8 @@ class BackwardCompatibleTabletLocatorFactory
 	public static BackwardCompatibleTabletLocator createTabletLocator(
 			final AccumuloOperations operations,
 			final String tableName,
-			final TreeSet<Range> ranges ) throws IOException{
+			final TreeSet<Range> ranges )
+			throws IOException {
 		// @formatter:off
 		/*if[accumulo.api=1.7]
 		return new Accumulo_1_7_Locator(
@@ -71,12 +71,18 @@ class BackwardCompatibleTabletLocatorFactory
 		else[accumulo.api=1.7]*/
 		// @formatter:on
 		try {
-			return new Accumulo_1_8_Locator(getLocations(operations, tableName, ranges));
+			return new Accumulo_1_8_Locator(
+					getLocations(
+							operations,
+							tableName,
+							ranges));
 		}
 		catch (AccumuloException | AccumuloSecurityException | TableNotFoundException e) {
-			throw new IOException("Unable to get Tablet Locations", e);
+			throw new IOException(
+					"Unable to get Tablet Locations",
+					e);
 		}
-		/*end[accumulo.api=1.7]*/
+		/* end[accumulo.api=1.7] */
 	}
 
 	// @formatter:off
@@ -239,7 +245,8 @@ class BackwardCompatibleTabletLocatorFactory
 	}
 	else[accumulo.api=1.7]*/
 	// @formatter:on
-	protected static class Accumulo_1_8_Locator implements BackwardCompatibleTabletLocator
+	protected static class Accumulo_1_8_Locator implements
+			BackwardCompatibleTabletLocator
 	{
 		private Locations locations;
 
@@ -265,15 +272,18 @@ class BackwardCompatibleTabletLocatorFactory
 			return tabletId.toRange();
 		}
 	}
-	
+
 	private static Locations getLocations(
 			final AccumuloOperations operations,
 			final String tableName,
-			final TreeSet<Range> ranges) throws AccumuloException, AccumuloSecurityException, TableNotFoundException{
+			final TreeSet<Range> ranges )
+			throws AccumuloException,
+			AccumuloSecurityException,
+			TableNotFoundException {
 		final Connector conn = operations.getConnector();
 		return conn.tableOperations().locate(
 				tableName,
 				ranges);
 	}
-	/*end[accumulo.api=1.7]*/
+	/* end[accumulo.api=1.7] */
 }

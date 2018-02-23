@@ -1,12 +1,9 @@
 package mil.nga.giat.geowave.test.basic;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 
-import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.cli.remote.options.DataStorePluginOptions;
-import mil.nga.giat.geowave.core.store.index.Index;
 import mil.nga.giat.geowave.test.GeoWaveITRunner;
 import mil.nga.giat.geowave.test.TestUtils;
 import mil.nga.giat.geowave.test.TestUtils.DimensionalityType;

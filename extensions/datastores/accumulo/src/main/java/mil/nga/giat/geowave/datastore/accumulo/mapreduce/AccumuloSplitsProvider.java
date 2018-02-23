@@ -136,8 +136,11 @@ public class AccumuloSplitsProvider extends
 		}
 		// get the metadata information for these ranges
 		final HashMap<String, String> hostNameCache = getHostNameCache();
-		BackwardCompatibleTabletLocator locator = BackwardCompatibleTabletLocatorFactory.createTabletLocator(accumuloOperations, tableName, ranges);
-	
+		BackwardCompatibleTabletLocator locator = BackwardCompatibleTabletLocatorFactory.createTabletLocator(
+				accumuloOperations,
+				tableName,
+				ranges);
+
 		for (final Entry<TabletId, List<Range>> tabletIdRanges : locator.getLocationsGroupedByTablet().entrySet()) {
 			final TabletId tabletId = tabletIdRanges.getKey();
 			final String tabletServer = locator.getTabletLocation(tabletId);
@@ -194,13 +197,15 @@ public class AccumuloSplitsProvider extends
 			if (!rangeList.isEmpty()) {
 				splitInfo.put(
 						index.getId(),
-						new SplitInfo(index, rangeList));
+						new SplitInfo(
+								index,
+								rangeList));
 				splits.add(new IntermediateSplitInfo(
 						splitInfo,
 						this));
 			}
 		}
-		
+
 		return splits;
 	}
 

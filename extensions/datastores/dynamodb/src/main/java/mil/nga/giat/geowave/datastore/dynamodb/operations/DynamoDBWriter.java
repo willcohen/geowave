@@ -114,32 +114,6 @@ public class DynamoDBWriter implements
 				tableName,
 				new ArrayList<>(
 						batch));
-		// if (async) {
-		// final Future<BatchWriteItemResult> response =
-		// client.batchWriteItemAsync(
-		// new BatchWriteItemRequest(
-		// writes));
-		//
-		// DynamoDBClientPool.DYNAMO_RETRY_POOL.execute(
-		// new Runnable() {
-		// @Override
-		// public void run() {
-		// try {
-		// final Map<String, List<WriteRequest>> map =
-		// response.get().getUnprocessedItems();
-		// retry(
-		// map);
-		// }
-		// catch (InterruptedException | ExecutionException e) {
-		// LOGGER.warn(
-		// "Unable to get response from Async Write",
-		// e);
-		// }
-		// }
-		// });
-		// }
-		// else {
-
 		if (async) {
 
 			/**
@@ -285,41 +259,28 @@ public class DynamoDBWriter implements
 
 		final Map<String, AttributeValue> map = new HashMap<String, AttributeValue>();
 
-		final ByteBuffer rangeKeyBuffer = ByteBuffer.allocate(rowId.length);
-		rangeKeyBuffer.put(rowId);
-		rangeKeyBuffer.rewind();
 		byte[] partitionKey = row.getPartitionKey();
 		if ((partitionKey == null) || (partitionKey.length == 0)) {
 			partitionKey = EMPTY_PARTITION_KEY;
 		}
-		final ByteBuffer partitionKeyBuffer = ByteBuffer.allocate(partitionKey.length);
-		partitionKeyBuffer.put(partitionKey);
-		partitionKeyBuffer.rewind();
 
 		for (final GeoWaveValue value : row.getFieldValues()) {
-			final ByteBuffer fieldMaskBuffer = ByteBuffer.allocate(value.getFieldMask().length);
-			fieldMaskBuffer.put(value.getFieldMask());
-			fieldMaskBuffer.rewind();
-
-			final ByteBuffer valueBuffer = ByteBuffer.allocate(value.getValue().length);
-			valueBuffer.put(value.getValue());
-			valueBuffer.rewind();
 
 			map.put(
 					DynamoDBRow.GW_PARTITION_ID_KEY,
-					new AttributeValue().withB(partitionKeyBuffer));
+					new AttributeValue().withB(ByteBuffer.wrap(partitionKey)));
 
 			map.put(
 					DynamoDBRow.GW_RANGE_KEY,
-					new AttributeValue().withB(rangeKeyBuffer));
+					new AttributeValue().withB(ByteBuffer.wrap(rowId)));
 
 			map.put(
 					DynamoDBRow.GW_FIELD_MASK_KEY,
-					new AttributeValue().withB(fieldMaskBuffer));
+					new AttributeValue().withB(ByteBuffer.wrap(value.getFieldMask())));
 
 			map.put(
 					DynamoDBRow.GW_VALUE_KEY,
-					new AttributeValue().withB(valueBuffer));
+					new AttributeValue().withB(ByteBuffer.wrap(value.getValue())));
 
 			mutations.add(new WriteRequest(
 					new PutRequest(

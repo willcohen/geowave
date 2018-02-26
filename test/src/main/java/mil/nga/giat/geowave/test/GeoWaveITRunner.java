@@ -350,8 +350,12 @@ public class GeoWaveITRunner extends
 		final String[][] profileOptionSets = getProfileOptionSets();
 
 		// Iterate through option sets to create runners
+		int i = 0;
 		for (final String[] profileOptions : profileOptionSets) {
 			// Create a test runner for each store type / config
+
+			LOGGER.error("KAM runner["+(i++)+"]: " + Arrays.toString(profileOptions));
+
 			for (final GeoWaveStoreRunnerConfig config : configs) {
 				final TestClassRunnerForStoreTypes runner = new TestClassRunnerForStoreTypes(
 						getTestClass().getJavaClass(),
@@ -381,7 +385,9 @@ public class GeoWaveITRunner extends
 		if (profileOptions == null) {
 			profileOptions = new String[1][];
 		}
-
+		for (int i = 0; i < profileOptions.length; i++ ){
+		LOGGER.error("KAM profile option["+i+"]: " + Arrays.toString(profileOptions[i]));
+		}
 		return profileOptions;
 	}
 

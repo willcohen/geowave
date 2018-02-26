@@ -46,8 +46,7 @@ import mil.nga.giat.geowave.mapreduce.splits.SplitsProvider;
 public class DynamoDBReader implements
 		Reader
 {
-	private final static Logger LOGGER = Logger.getLogger(
-			DynamoDBReader.class);
+	private final static Logger LOGGER = Logger.getLogger(DynamoDBReader.class);
 	private static final boolean ASYNC = false;
 	private final ReaderParams readerParams;
 	private final RecordReaderParams recordReaderParams;
@@ -116,13 +115,13 @@ public class DynamoDBReader implements
 									operations.getAdapterStore()))));
 
 		}
-		else if ((adapterIds != null) && !adapterIds.isEmpty()) {
-			//TODO this isn't going to work because there aren't partition keys being passed along
-			requests.addAll(
-					getAdapterOnlyQueryRequests(
-							tableName,
-							adapterIds));
-		}
+//		else if ((adapterIds != null) && !adapterIds.isEmpty()) {
+//			//TODO this isn't going to work because there aren't partition keys being passed along
+//			requests.addAll(
+//					getAdapterOnlyQueryRequests(
+//							tableName,
+//							adapterIds));
+//		}
 
 		startRead(
 				requests,
@@ -130,26 +129,26 @@ public class DynamoDBReader implements
 	}
 
 	protected void initRecordScanner() {
-		final String tableName = operations.getQualifiedTableName(
-				recordReaderParams.getIndex().getId().getString());
-
-		final ArrayList<ByteArrayId> adapterIds = new ArrayList();
-		if ((recordReaderParams.getAdapterIds() != null) && !recordReaderParams.getAdapterIds().isEmpty()) {
-			for (final ByteArrayId adapterId : recordReaderParams.getAdapterIds()) {
-				adapterIds.add(
-						adapterId);
-			}
-		}
-
-		final List<QueryRequest> requests = new ArrayList<>();
-
-		final List<ByteArrayRange> ranges = new ArrayList<>();
-		GeoWaveRowRange range =
-				recordReaderParams.getRowRange();
-		//TODO implement record reader
-		startRead(
-				requests,
-				tableName);
+		// final String tableName =
+		// operations.getQualifiedTableName(recordReaderParams.getIndex().getId().getString());
+		//
+		// final ArrayList<ByteArrayId> adapterIds = new ArrayList();
+		// if ((recordReaderParams.getAdapterIds() != null) &&
+		// !recordReaderParams.getAdapterIds().isEmpty()) {
+		// for (final ByteArrayId adapterId :
+		// recordReaderParams.getAdapterIds()) {
+		// adapterIds.add(adapterId);
+		// }
+		// }
+		//
+		// final List<QueryRequest> requests = new ArrayList<>();
+		//
+		// final List<ByteArrayRange> ranges = new ArrayList<>();
+		// GeoWaveRowRange range = recordReaderParams.getRowRange();
+		// // TODO implement record reader
+		// startRead(
+		// requests,
+		// tableName);
 	}
 
 	private void startRead(
@@ -224,15 +223,10 @@ public class DynamoDBReader implements
 					DynamoDBRow.GW_RANGE_KEY,
 					new Condition().withComparisonOperator(
 							ComparisonOperator.BETWEEN).withAttributeValueList(
-									new AttributeValue().withB(
-											ByteBuffer.wrap(
-													start)),
-									new AttributeValue().withB(
-											ByteBuffer.wrap(
-													end))));
+							new AttributeValue().withB(ByteBuffer.wrap(start)),
+							new AttributeValue().withB(ByteBuffer.wrap(end))));
 
-			allQueries.add(
-					singleAdapterQuery);
+			allQueries.add(singleAdapterQuery);
 		}
 
 		return allQueries;
@@ -247,12 +241,10 @@ public class DynamoDBReader implements
 		final byte[] end;
 		final QueryRequest query = new QueryRequest(
 				tableName).addKeyConditionsEntry(
-						DynamoDBRow.GW_PARTITION_ID_KEY,
-						new Condition().withComparisonOperator(
-								ComparisonOperator.EQ).withAttributeValueList(
-										new AttributeValue().withB(
-												ByteBuffer.wrap(
-														partitionId))));
+				DynamoDBRow.GW_PARTITION_ID_KEY,
+				new Condition().withComparisonOperator(
+						ComparisonOperator.EQ).withAttributeValueList(
+						new AttributeValue().withB(ByteBuffer.wrap(partitionId))));
 		if (sortRange == null) {
 			start = adapterID.getBytes();
 			end = adapterID.getNextPrefix();
@@ -277,12 +269,8 @@ public class DynamoDBReader implements
 				DynamoDBRow.GW_RANGE_KEY,
 				new Condition().withComparisonOperator(
 						ComparisonOperator.BETWEEN).withAttributeValueList(
-								new AttributeValue().withB(
-										ByteBuffer.wrap(
-												start)),
-								new AttributeValue().withB(
-										ByteBuffer.wrap(
-												end))));
+						new AttributeValue().withB(ByteBuffer.wrap(start)),
+						new AttributeValue().withB(ByteBuffer.wrap(end))));
 		return query;
 	}
 

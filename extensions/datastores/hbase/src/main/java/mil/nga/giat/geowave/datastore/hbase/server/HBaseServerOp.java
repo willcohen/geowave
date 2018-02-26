@@ -5,7 +5,9 @@ import java.util.Map;
 
 import org.apache.hadoop.hbase.client.Scan;
 
-public interface HBaseServerOp
+import mil.nga.giat.geowave.core.index.persist.Persistable;
+
+public interface HBaseServerOp extends Persistable
 {
 	/**
 	 *

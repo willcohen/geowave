@@ -367,7 +367,7 @@
 			<properties>
 				<skipITs>false</skipITs>
 				<testStoreType>ACCUMULO</testStoreType>
-				<testStoreOptions>enableServerSideLibrary=true</testStoreOptions>
+				<testStoreOptions>"enableServerSideLibrary=true"</testStoreOptions>
 			</properties>
 		</profile>
 		<profile>
@@ -375,7 +375,7 @@
 			<properties>
 				<skipITs>false</skipITs>
 				<testStoreType>ACCUMULO</testStoreType>
-				<testStoreOptions>enableServerSideLibrary=false</testStoreOptions>
+				<testStoreOptions>"enableServerSideLibrary=false"</testStoreOptions>
 			</properties>
 		</profile>
 		<profile>
@@ -383,7 +383,7 @@
 			<properties>
 				<skipITs>false</skipITs>
 				<testStoreType>ACCUMULO</testStoreType>
-				<testStoreOptions>enableServerSideLibrary=true!enableServerSideLibrary=false</testStoreOptions>
+				<testStoreOptions>"enableServerSideLibrary=true!enableServerSideLibrary=false"</testStoreOptions>
 			</properties>
 		</profile>
 		<profile>
@@ -391,7 +391,7 @@
 			<properties>
 				<skipITs>false</skipITs>
 				<testStoreType>HBASE</testStoreType>
-				<testStoreOptions>enableServerSideLibrary=true</testStoreOptions>
+				<testStoreOptions>"enableServerSideLibrary=true"</testStoreOptions>
 			</properties>
 		</profile>
 		<profile>
@@ -399,7 +399,7 @@
 			<properties>
 				<skipITs>false</skipITs>
 				<testStoreType>HBASE</testStoreType>
-				<testStoreOptions>enableServerSideLibrary=false</testStoreOptions>
+				<testStoreOptions>"enableServerSideLibrary=false"</testStoreOptions>
 			</properties>
 		</profile>
 		<profile>
@@ -407,7 +407,7 @@
 			<properties>
 				<skipITs>false</skipITs>
 				<testStoreType>HBASE</testStoreType>
-				<testStoreOptions>enableServerSideLibrary=true!enableServerSideLibrary=false</testStoreOptions>
+				<testStoreOptions>"enableServerSideLibrary=true!enableServerSideLibrary=false"</testStoreOptions>
 			</properties>
 		</profile>
 		<profile>

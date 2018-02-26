@@ -266,7 +266,7 @@ public class ServerSideOperationsObserver extends
 			final ImmutableSet<ServerOpScope> scopes = HBaseUtils.stringToScopes(commaDelimitedScopes);
 			final String classIdStr = config.get(uniqueOp + SERVER_OP_CLASS_KEY);
 			if ((classIdStr == null) || classIdStr.isEmpty()) {
-				LOGGER.warn("Skipping server op - unable to find priority for '" + uniqueOp + "'");
+				LOGGER.warn("Skipping server op - unable to find class ID for '" + uniqueOp + "'");
 				continue;
 			}
 			final List<String> optionKeys = uniqueOpAndOptions.getValue();

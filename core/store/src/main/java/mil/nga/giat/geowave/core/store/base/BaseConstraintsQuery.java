@@ -97,7 +97,6 @@ public class BaseConstraintsQuery extends
 			final DuplicateEntryCount duplicateCounts,
 			final DifferingFieldVisibilityEntryCount visibilityCounts,
 			final String[] authorizations ) {
-
 		super(
 				adapterIds,
 				index,

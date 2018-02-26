@@ -83,7 +83,12 @@ public class DynamoDBOptions extends
 	// End of client configuration parameters
 
 	@ParametersDelegate
-	protected BaseDataStoreOptions baseOptions = new BaseDataStoreOptions();
+	protected BaseDataStoreOptions baseOptions = new BaseDataStoreOptions(){
+		@Override
+		public boolean isServerSideLibraryEnabled() {
+			return false;
+		}	
+	};
 
 	private ClientConfiguration clientConfig = new ClientConfiguration();
 

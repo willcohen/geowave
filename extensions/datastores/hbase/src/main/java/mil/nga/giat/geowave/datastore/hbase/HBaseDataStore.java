@@ -90,8 +90,8 @@ public class HBaseDataStore extends
 	}
 
 	@Override
-	protected void initOnIndexWriterCreate(
-			final DataAdapter adapter,
+	protected <T> void initOnIndexWriterCreate(
+			final DataAdapter<T> adapter,
 			final PrimaryIndex index ) {
 		final String indexName = index.getId().getString();
 		final String columnFamily = adapter.getAdapterId().getString();

@@ -51,11 +51,10 @@ public class DynamoDBRow implements
 		final byte[] rangeKey = objMap.get(
 				GW_RANGE_KEY).getB().array();
 		final int length = rangeKey.length;
-		final int offset = 0;
 
 		final ByteBuffer metadataBuf = ByteBuffer.wrap(
 				rangeKey,
-				length + offset - 12,
+				length - 12,
 				12);
 		final int adapterIdLength = metadataBuf.getInt();
 		final int dataIdLength = metadataBuf.getInt();
@@ -63,9 +62,9 @@ public class DynamoDBRow implements
 
 		final ByteBuffer buf = ByteBuffer.wrap(
 				rangeKey,
-				offset,
-				length - 12);
-		final byte[] sortKey = new byte[length - 12 - adapterIdLength - dataIdLength];
+				0,
+				length - 20);
+		final byte[] sortKey = new byte[length - 20 - adapterIdLength - dataIdLength];
 		final byte[] adapterId = new byte[adapterIdLength];
 		final byte[] dataId = new byte[dataIdLength];
 
@@ -130,10 +129,11 @@ public class DynamoDBRow implements
 	public static byte[] getRangeKey(
 			GeoWaveKey key ) {
 		final ByteBuffer buffer = ByteBuffer.allocate(key.getSortKey().length + key.getAdapterId().length
-				+ key.getDataId().length + 12);
+				+ key.getDataId().length + 20);
 		buffer.put(key.getAdapterId());
 		buffer.put(key.getSortKey());
 		buffer.put(key.getDataId());
+		buffer.putLong(System.nanoTime());
 		buffer.putInt(key.getAdapterId().length);
 		buffer.putInt(key.getDataId().length);
 		buffer.putInt(key.getNumberOfDuplicates());

@@ -80,7 +80,7 @@ public class HBaseStoreTestEnvironment extends
 	protected void initOptions(
 			final StoreFactoryOptions options ) {
 		HBaseRequiredOptions hbaseRequiredOptions = (HBaseRequiredOptions) options;
-		hbaseRequiredOptions.setZookeeper("localhost:2181");
+		hbaseRequiredOptions.setZookeeper(zookeeper);
 	}
 
 	@Override

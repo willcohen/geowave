@@ -24,16 +24,16 @@ public class HBasePersistableRegistry implements
 	public PersistableIdAndConstructor[] getSupportedPersistables() {
 		return new PersistableIdAndConstructor[] {
 			new PersistableIdAndConstructor(
-					(short) 1500,
+					(short) 1600,
 					MergingServerOp::new),
 			new PersistableIdAndConstructor(
-					(short) 1501,
+					(short) 1601,
 					MergingVisibilityServerOp::new),
 			new PersistableIdAndConstructor(
-					(short) 1502,
+					(short) 1602,
 					RowMergingServerOp::new),
 			new PersistableIdAndConstructor(
-					(short) 1503,
+					(short) 1603,
 					RowMergingVisibilityServerOp::new),
 		};
 	}

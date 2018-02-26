@@ -433,7 +433,7 @@
 				<bigtable.emulator.endpoint>127.0.0.1:8128</bigtable.emulator.endpoint>
 				<bigtable.emulator.internal>true</bigtable.emulator.internal>
 				<bigtable.sdk.url>https://dl.google.com/dl/cloudsdk/channels/rapid/downloads</bigtable.sdk.url>
-				<bigtable.sdk.file>google-cloud-sdk-183.0.0-linux-x86_64.tar.gz</bigtable.sdk.file>
+				<bigtable.sdk.file>google-cloud-sdk-190.0.1-linux-x86_64.tar.gz</bigtable.sdk.file>
 			</properties>
 		</profile>
 	</profiles>

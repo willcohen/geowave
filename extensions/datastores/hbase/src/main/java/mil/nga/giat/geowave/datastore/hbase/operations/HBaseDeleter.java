@@ -1,6 +1,8 @@
 package mil.nga.giat.geowave.datastore.hbase.operations;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.hadoop.hbase.client.BufferedMutator;
 import org.apache.hadoop.hbase.client.Delete;
@@ -16,15 +18,14 @@ import mil.nga.giat.geowave.core.store.operations.Deleter;
 public class HBaseDeleter implements
 		Deleter
 {
-	private static Logger LOGGER = LoggerFactory.getLogger(HBaseDeleter.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(
+			HBaseDeleter.class);
 	private final BufferedMutator deleter;
-	private final boolean isAltIndex;
+	protected Set<ByteArrayId> duplicateRowTracker = new HashSet<>();
 
 	public HBaseDeleter(
-			final BufferedMutator deleter,
-			final boolean isAltIndex ) {
+			final BufferedMutator deleter ) {
 		this.deleter = deleter;
-		this.isAltIndex = isAltIndex;
 	}
 
 	@Override
@@ -45,12 +46,29 @@ public class HBaseDeleter implements
 	public void delete(
 			final GeoWaveRow row,
 			final DataAdapter<?> adapter ) {
-		final Delete delete = new Delete(
-				GeoWaveKey.getCompositeId(row),
-				System.nanoTime());
 
+		byte[] rowBytes = GeoWaveKey.getCompositeId(
+				row);
+		final Delete delete = new Delete(
+				rowBytes);
+		// we use a hashset of row IDs so that we can retain multiple versions
+		// (otherwise timestamps will be applied on the server side in
+		// batches and if the same row exists within a batch we will not
+		// retain multiple versions)
 		try {
-			deleter.mutate(delete);
+			synchronized (duplicateRowTracker) {
+				final ByteArrayId rowId = new ByteArrayId(
+						rowBytes);
+				if (!duplicateRowTracker.add(
+						rowId)) {
+					deleter.flush();
+					duplicateRowTracker.clear();
+					duplicateRowTracker.add(
+							rowId);
+				}
+			}
+			deleter.mutate(
+					delete);
 		}
 		catch (IOException e) {
 			LOGGER.warn(

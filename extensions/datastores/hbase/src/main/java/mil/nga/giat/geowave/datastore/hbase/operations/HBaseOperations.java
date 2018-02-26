@@ -937,8 +937,7 @@ public class HBaseOperations implements
 		final TableName tableName = getTableName(indexId.getString());
 
 		return new HBaseDeleter(
-				getBufferedMutator(tableName),
-				false);
+				getBufferedMutator(tableName));
 	}
 
 	public BufferedMutator getBufferedMutator(

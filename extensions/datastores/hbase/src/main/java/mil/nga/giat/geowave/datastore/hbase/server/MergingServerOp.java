@@ -54,6 +54,7 @@ public class MergingServerOp implements
 			do {
 				// a reference variable to all the current cells
 				final List<Cell> rowCells = rowScanner.currentCellsInRow();
+
 				if (rowCells.size() > 1) {
 					Integer maxVersions = null;
 					if (rowScanner.getScan() != null) {

@@ -1,6 +1,8 @@
 package mil.nga.giat.geowave.datastore.hbase.operations;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.hadoop.hbase.client.BufferedMutator;
 import org.apache.hadoop.hbase.client.Put;
@@ -8,6 +10,7 @@ import org.apache.hadoop.hbase.security.visibility.CellVisibility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveMetadata;
 import mil.nga.giat.geowave.core.store.operations.MetadataType;
@@ -16,16 +19,19 @@ import mil.nga.giat.geowave.core.store.operations.MetadataWriter;
 public class HBaseMetadataWriter implements
 		MetadataWriter
 {
-	private static final Logger LOGGER = LoggerFactory.getLogger(HBaseMetadataWriter.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(
+			HBaseMetadataWriter.class);
 
 	private final BufferedMutator writer;
+	protected Set<ByteArrayId> duplicateRowTracker = new HashSet<>();
 	private final byte[] metadataTypeBytes;
 
 	public HBaseMetadataWriter(
 			final BufferedMutator writer,
 			final MetadataType metadataType ) {
 		this.writer = writer;
-		this.metadataTypeBytes = StringUtils.stringToBinary(metadataType.name());
+		metadataTypeBytes = StringUtils.stringToBinary(
+				metadataType.name());
 	}
 
 	@Override
@@ -44,15 +50,15 @@ public class HBaseMetadataWriter implements
 	@Override
 	public void write(
 			final GeoWaveMetadata metadata ) {
-		// we use our own timestamp so that we can retain multiple versions
+
+		// we use a hashset of row IDs so that we can retain multiple versions
 		// (otherwise timestamps will be applied on the server side in
 		// batches and if the same row exists within a batch we will not
 		// retain multiple versions)
 		final Put put = new Put(
-				metadata.getPrimaryId(),
-				System.nanoTime());
+				metadata.getPrimaryId());
 
-		byte[] secondaryBytes = metadata.getSecondaryId() != null ? metadata.getSecondaryId() : new byte[0];
+		final byte[] secondaryBytes = metadata.getSecondaryId() != null ? metadata.getSecondaryId() : new byte[0];
 
 		put.addColumn(
 				metadataTypeBytes,
@@ -60,12 +66,26 @@ public class HBaseMetadataWriter implements
 				metadata.getValue());
 
 		if (metadata.getVisibility() != null) {
-			put.setCellVisibility(new CellVisibility(
-					StringUtils.stringFromBinary(metadata.getVisibility())));
+			put.setCellVisibility(
+					new CellVisibility(
+							StringUtils.stringFromBinary(
+									metadata.getVisibility())));
 		}
 
 		try {
-			writer.mutate(put);
+			synchronized (duplicateRowTracker) {
+				final ByteArrayId primaryId = new ByteArrayId(
+						metadata.getPrimaryId());
+				if (!duplicateRowTracker.add(
+						primaryId)) {
+					writer.flush();
+					duplicateRowTracker.clear();
+					duplicateRowTracker.add(
+							primaryId);
+				}
+			}
+			writer.mutate(
+					put);
 		}
 		catch (final IOException e) {
 			LOGGER.error(
@@ -78,7 +98,10 @@ public class HBaseMetadataWriter implements
 	@Override
 	public void flush() {
 		try {
-			writer.flush();
+			synchronized (duplicateRowTracker) {
+				writer.flush();
+				duplicateRowTracker.clear();
+			}
 		}
 		catch (final IOException e) {
 			LOGGER.warn(

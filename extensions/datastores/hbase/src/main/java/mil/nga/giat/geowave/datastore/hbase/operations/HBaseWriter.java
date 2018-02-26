@@ -1,6 +1,8 @@
 package mil.nga.giat.geowave.datastore.hbase.operations;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.hadoop.hbase.client.BufferedMutator;
 import org.apache.hadoop.hbase.client.Put;
@@ -24,7 +26,10 @@ import mil.nga.giat.geowave.core.store.operations.Writer;
 public class HBaseWriter implements
 		Writer
 {
-	private final static Logger LOGGER = Logger.getLogger(HBaseWriter.class);
+	private final static Logger LOGGER = Logger.getLogger(
+			HBaseWriter.class);
+
+	protected Set<ByteArrayId> duplicateRowTracker = new HashSet<>();
 	private final BufferedMutator mutator;
 	private final HBaseOperations operations;
 	private final String tableName;
@@ -53,7 +58,10 @@ public class HBaseWriter implements
 	@Override
 	public void flush() {
 		try {
-			mutator.flush();
+			synchronized (duplicateRowTracker) {
+				mutator.flush();
+				duplicateRowTracker.clear();
+			}
 		}
 		catch (final IOException e) {
 			LOGGER.warn(
@@ -66,7 +74,8 @@ public class HBaseWriter implements
 	public void write(
 			final GeoWaveRow[] rows ) {
 		for (final GeoWaveRow row : rows) {
-			write(row);
+			write(
+					row);
 		}
 	}
 
@@ -81,13 +90,16 @@ public class HBaseWriter implements
 					tableName);
 		}
 
-		writeMutations(rowToMutation(row));
+		writeMutations(
+				rowToMutation(
+						row));
 	}
 
 	private void writeMutations(
 			final RowMutations rowMutation ) {
 		try {
-			mutator.mutate(rowMutation.getMutations());
+			mutator.mutate(
+					rowMutation.getMutations());
 		}
 		catch (final IOException e) {
 			LOGGER.error(
@@ -96,20 +108,39 @@ public class HBaseWriter implements
 		}
 	}
 
-	private static RowMutations rowToMutation(
+	private RowMutations rowToMutation(
 			final GeoWaveRow row ) {
-		final byte[] rowBytes = GeoWaveKey.getCompositeId(row);
+		final byte[] rowBytes = GeoWaveKey.getCompositeId(
+				row);
+
+		// we use a hashset of row IDs so that we can retain multiple versions
+		// (otherwise timestamps will be applied on the server side in
+		// batches and if the same row exists within a batch we will not
+		// retain multiple versions)
+		synchronized (duplicateRowTracker) {
+			final ByteArrayId rowId = new ByteArrayId(
+					rowBytes);
+			if (!duplicateRowTracker.add(
+					rowId)) {
+				try {
+					mutator.flush();
+					duplicateRowTracker.clear();
+					duplicateRowTracker.add(
+							rowId);
+				}
+				catch (final IOException e) {
+					LOGGER.error(
+							"Unable to write mutation.",
+							e);
+				}
+			}
+		}
 
 		final RowMutations mutation = new RowMutations(
 				rowBytes);
 		for (final GeoWaveValue value : row.getFieldValues()) {
-			// we use our own timestamp so that we can retain multiple versions
-			// (otherwise timestamps will be applied on the server side in
-			// batches and if the same row exists within a batch we will not
-			// retain multiple versions)
 			final Put put = new Put(
-					rowBytes,
-					System.nanoTime());
+					rowBytes);
 
 			put.addColumn(
 					row.getAdapterId(),
@@ -117,15 +148,19 @@ public class HBaseWriter implements
 					value.getValue());
 
 			if ((value.getVisibility() != null) && (value.getVisibility().length > 0)) {
-				put.setCellVisibility(new CellVisibility(
-						StringUtils.stringFromBinary(value.getVisibility())));
+				put.setCellVisibility(
+						new CellVisibility(
+								StringUtils.stringFromBinary(
+										value.getVisibility())));
 			}
 
 			try {
-				mutation.add(put);
+				mutation.add(
+						put);
 			}
 			catch (final IOException e) {
-				LOGGER.error("Error creating HBase row mutation: " + e.getMessage());
+				LOGGER.error(
+						"Error creating HBase row mutation: " + e.getMessage());
 			}
 		}
 

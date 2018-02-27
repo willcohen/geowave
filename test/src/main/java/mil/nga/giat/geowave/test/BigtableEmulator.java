@@ -14,6 +14,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
@@ -24,6 +26,7 @@ import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecuteResultHandler;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.ExecuteException;
+import org.apache.commons.exec.ExecuteStreamHandler;
 import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.exec.Executor;
 import org.apache.commons.io.IOUtils;
@@ -36,8 +39,7 @@ import mil.nga.giat.geowave.adapter.raster.util.ZipUtils;
 
 public class BigtableEmulator
 {
-	private final static org.slf4j.Logger LOGGER = LoggerFactory.getLogger(
-			BigtableEmulator.class);
+	private final static org.slf4j.Logger LOGGER = LoggerFactory.getLogger(BigtableEmulator.class);
 
 	// Property names
 	public static final String HOST_PORT_PROPERTY = "bigtable.emulator.endpoint";
@@ -60,8 +62,7 @@ public class BigtableEmulator
 			String sdkDir,
 			String sdkDownloadUrl,
 			String sdkFileName ) {
-		if (TestUtils.isSet(
-				sdkDir)) {
+		if (TestUtils.isSet(sdkDir)) {
 			this.sdkDir = new File(
 					sdkDir);
 		}
@@ -75,8 +76,7 @@ public class BigtableEmulator
 		this.fileName = sdkFileName;
 
 		if (!this.sdkDir.exists() && !this.sdkDir.mkdirs()) {
-			LOGGER.warn(
-					"unable to create directory " + this.sdkDir.getAbsolutePath());
+			LOGGER.warn("unable to create directory " + this.sdkDir.getAbsolutePath());
 		}
 	}
 
@@ -89,19 +89,16 @@ public class BigtableEmulator
 				}
 			}
 			catch (IOException e) {
-				LOGGER.error(
-						e.getMessage());
+				LOGGER.error(e.getMessage());
 				return false;
 			}
 		}
 
 		try {
-			startEmulator(
-					emulatorHostPort);
+			startEmulator(emulatorHostPort);
 		}
 		catch (IOException | InterruptedException e) {
-			LOGGER.error(
-					e.getMessage());
+			LOGGER.error(e.getMessage());
 			return false;
 		}
 
@@ -132,18 +129,13 @@ public class BigtableEmulator
 					"UTF-8");
 			scriptWriter = new PrintWriter(
 					w);
-			scriptWriter.println(
-					"#!/bin/bash");
-			scriptWriter.println(
-					"set -ev");
-			scriptWriter.println(
-					KILL_CMD_1);
-			scriptWriter.println(
-					KILL_CMD_2);
+			scriptWriter.println("#!/bin/bash");
+			scriptWriter.println("set -ev");
+			scriptWriter.println(KILL_CMD_1);
+			scriptWriter.println(KILL_CMD_2);
 			scriptWriter.close();
 
-			bashFile.setExecutable(
-					true);
+			bashFile.setExecutable(true);
 		}
 		catch (FileNotFoundException e1) {
 			LOGGER.error(
@@ -163,8 +155,7 @@ public class BigtableEmulator
 		int exitValue = 0;
 
 		try {
-			exitValue = executor.execute(
-					cmdLine);
+			exitValue = executor.execute(cmdLine);
 		}
 		catch (IOException ex) {
 			LOGGER.error(
@@ -172,8 +163,7 @@ public class BigtableEmulator
 					ex);
 		}
 
-		LOGGER.warn(
-				"Bigtable emulator " + (exitValue == 0 ? "stopped" : "failed to stop"));
+		LOGGER.warn("Bigtable emulator " + (exitValue == 0 ? "stopped" : "failed to stop"));
 	}
 
 	private boolean isInstalled() {
@@ -210,24 +200,19 @@ public class BigtableEmulator
 		else if (downloadFile.getName().endsWith(
 				".tar.gz")) {
 			final TarGZipUnArchiver unarchiver = new TarGZipUnArchiver();
-			unarchiver.enableLogging(
-					new ConsoleLogger(
-							Logger.LEVEL_WARN,
-							"Gcloud SDK Unarchive"));
-			unarchiver.setSourceFile(
-					downloadFile);
-			unarchiver.setDestDirectory(
-					sdkDir);
+			unarchiver.enableLogging(new ConsoleLogger(
+					Logger.LEVEL_WARN,
+					"Gcloud SDK Unarchive"));
+			unarchiver.setSourceFile(downloadFile);
+			unarchiver.setDestDirectory(sdkDir);
 			unarchiver.extract();
 		}
 		if (!downloadFile.delete()) {
-			LOGGER.warn(
-					"cannot delete " + downloadFile.getAbsolutePath());
+			LOGGER.warn("cannot delete " + downloadFile.getAbsolutePath());
 		}
 		// Check the install
 		if (!isInstalled()) {
-			LOGGER.error(
-					"Gcloud install failed");
+			LOGGER.error("Gcloud install failed");
 			return false;
 		}
 
@@ -238,17 +223,12 @@ public class BigtableEmulator
 
 		CommandLine cmdLine = new CommandLine(
 				gcloudExe);
-		cmdLine.addArgument(
-				"components");
-		cmdLine.addArgument(
-				"install");
-		cmdLine.addArgument(
-				"beta");
-		cmdLine.addArgument(
-				"--quiet");
+		cmdLine.addArgument("components");
+		cmdLine.addArgument("install");
+		cmdLine.addArgument("beta");
+		cmdLine.addArgument("--quiet");
 		DefaultExecutor executor = new DefaultExecutor();
-		int exitValue = executor.execute(
-				cmdLine);
+		int exitValue = executor.execute(cmdLine);
 
 		return (exitValue == 0);
 	}
@@ -269,20 +249,13 @@ public class BigtableEmulator
 			InterruptedException {
 		CommandLine cmdLine = new CommandLine(
 				sdkDir + "/" + GCLOUD_EXE_DIR + "/gcloud");
-		cmdLine.addArgument(
-				"beta");
-		cmdLine.addArgument(
-				"emulators");
-		cmdLine.addArgument(
-				"bigtable");
-		cmdLine.addArgument(
-				"start");
-		cmdLine.addArgument(
-				"--quiet");
-		cmdLine.addArgument(
-				"--host-port");
-		cmdLine.addArgument(
-				emulatorHostPort);
+		cmdLine.addArgument("beta");
+		cmdLine.addArgument("emulators");
+		cmdLine.addArgument("bigtable");
+		cmdLine.addArgument("start");
+		cmdLine.addArgument("--quiet");
+		cmdLine.addArgument("--host-port");
+		cmdLine.addArgument(emulatorHostPort);
 
 		// Using a result handler makes the emulator run async
 		DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
@@ -291,11 +264,39 @@ public class BigtableEmulator
 		watchdog = new ExecuteWatchdog(
 				ExecuteWatchdog.INFINITE_TIMEOUT);
 		Executor executor = new DefaultExecutor();
-		executor.setWatchdog(
-				watchdog);
+		executor.setWatchdog(watchdog);
+		executor.setStreamHandler(new ExecuteStreamHandler() {
+			
+			@Override
+			public void stop()
+					throws IOException {
+			}
+			
+			@Override
+			public void start()
+					throws IOException {
+			}
+			
+			@Override
+			public void setProcessOutputStream(
+					InputStream is )
+					throws IOException {
+			}
+			
+			@Override
+			public void setProcessInputStream(
+					OutputStream os )
+					throws IOException {
+			}
+			
+			@Override
+			public void setProcessErrorStream(
+					InputStream is )
+					throws IOException {	
+			}
+		});
 
-		LOGGER.warn(
-				"Starting BigTable Emulator: " + cmdLine.toString());
+		LOGGER.warn("Starting BigTable Emulator: " + cmdLine.toString());
 
 		executor.execute(
 				cmdLine,
@@ -303,7 +304,6 @@ public class BigtableEmulator
 
 		// we need to wait here for a bit, in case the emulator needs to update
 		// itself
-		Thread.sleep(
-				EMULATOR_SPINUP_DELAY_MS);
+		Thread.sleep(EMULATOR_SPINUP_DELAY_MS);
 	}
 }

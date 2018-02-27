@@ -34,7 +34,8 @@ public class BigtableStoreTestEnvironment extends
 		return singletonInstance;
 	}
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(BigtableStoreTestEnvironment.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(
+			BigtableStoreTestEnvironment.class);
 
 	protected BigtableEmulator emulator;
 
@@ -48,6 +49,7 @@ public class BigtableStoreTestEnvironment extends
 	// Default download location
 	private String sdkDownloadUrl = "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads";
 	private String sdkFile = "google-cloud-sdk-183.0.0-linux-x86_64.tar.gz";
+	private boolean environmentInitialized = false;
 
 	private BigtableStoreTestEnvironment() {}
 
@@ -67,48 +69,32 @@ public class BigtableStoreTestEnvironment extends
 
 	@Override
 	public void setup() {
-		String internalEmulatorProp = System.getProperty(BigtableEmulator.INTERNAL_PROPERTY);
-		if (TestUtils.isSet(internalEmulatorProp)) {
-			internalEmulator = Boolean.parseBoolean(internalEmulatorProp);
-			LOGGER.warn("Bigtable internal emulator enabled: " + internalEmulator);
-		}
-		else {
-			LOGGER.warn("Bigtable internal emulator disabled by default");
-		}
-
-		String hostPortProp = System.getProperty(BigtableEmulator.HOST_PORT_PROPERTY);
-		if (TestUtils.isSet(hostPortProp)) {
-			emulatorHostPort = hostPortProp;
-			LOGGER.warn("Bigtable emulator will run at: " + emulatorHostPort);
-		}
-		else {
-			LOGGER.warn("Bigtable emulator will run at default location: " + emulatorHostPort);
-		}
-
-		// Set the host:port property in the junit env, even if external gcloud
-		// emulator
-		EnvironmentVariables environmentVariables = new EnvironmentVariables();
-		environmentVariables.set(
-				"BIGTABLE_EMULATOR_HOST",
-				emulatorHostPort);
-
-		if (internalEmulator) {
-			String downloadUrlProp = System.getProperty(BigtableEmulator.DOWNLOAD_URL_PROPERTY);
-			if (TestUtils.isSet(downloadUrlProp)) {
+		initEnv();
+		if (internalEmulator && emulator != null) {
+			String downloadUrlProp = System.getProperty(
+					BigtableEmulator.DOWNLOAD_URL_PROPERTY);
+			if (TestUtils.isSet(
+					downloadUrlProp)) {
 				sdkDownloadUrl = downloadUrlProp;
-				LOGGER.warn("Bigtable SDK download URL: " + sdkDownloadUrl);
+				LOGGER.warn(
+						"Bigtable SDK download URL: " + sdkDownloadUrl);
 			}
 			else {
-				LOGGER.warn("Bigtable SDK download URL (default): " + sdkDownloadUrl);
+				LOGGER.warn(
+						"Bigtable SDK download URL (default): " + sdkDownloadUrl);
 			}
 
-			String downloadFileProp = System.getProperty(BigtableEmulator.DOWNLOAD_FILE_PROPERTY);
-			if (TestUtils.isSet(downloadFileProp)) {
+			String downloadFileProp = System.getProperty(
+					BigtableEmulator.DOWNLOAD_FILE_PROPERTY);
+			if (TestUtils.isSet(
+					downloadFileProp)) {
 				sdkFile = downloadFileProp;
-				LOGGER.warn("Bigtable SDK file: " + sdkFile);
+				LOGGER.warn(
+						"Bigtable SDK file: " + sdkFile);
 			}
 			else {
-				LOGGER.warn("Bigtable SDK file (default): " + sdkFile);
+				LOGGER.warn(
+						"Bigtable SDK file (default): " + sdkFile);
 			}
 
 			if (emulator == null) {
@@ -123,9 +109,50 @@ public class BigtableStoreTestEnvironment extends
 				emulator.stop();
 			}
 
-			if (!emulator.start(emulatorHostPort)) {
-				LOGGER.error("Bigtable emulator startup failed");
+			if (!emulator.start(
+					emulatorHostPort)) {
+				LOGGER.error(
+						"Bigtable emulator startup failed");
 			}
+		}
+	}
+
+	private synchronized void initEnv() {
+		if (!environmentInitialized) {
+			String internalEmulatorProp = System.getProperty(
+					BigtableEmulator.INTERNAL_PROPERTY);
+			if (TestUtils.isSet(
+					internalEmulatorProp)) {
+				internalEmulator = Boolean.parseBoolean(
+						internalEmulatorProp);
+				LOGGER.warn(
+						"Bigtable internal emulator enabled: " + internalEmulator);
+			}
+			else {
+				LOGGER.warn(
+						"Bigtable internal emulator disabled by default");
+			}
+
+			String hostPortProp = System.getProperty(
+					BigtableEmulator.HOST_PORT_PROPERTY);
+			if (TestUtils.isSet(
+					hostPortProp)) {
+				emulatorHostPort = hostPortProp;
+				LOGGER.warn(
+						"Bigtable emulator will run at: " + emulatorHostPort);
+			}
+			else {
+				LOGGER.warn(
+						"Bigtable emulator will run at default location: " + emulatorHostPort);
+			}
+
+			// Set the host:port property in the junit env, even if external
+			// gcloud emulator
+			EnvironmentVariables environmentVariables = new EnvironmentVariables();
+			environmentVariables.set(
+					"BIGTABLE_EMULATOR_HOST",
+					emulatorHostPort);
+			environmentInitialized = true;
 		}
 	}
 
@@ -134,6 +161,7 @@ public class BigtableStoreTestEnvironment extends
 		if (internalEmulator) {
 			if (emulator != null) {
 				emulator.stop();
+				emulator = null;
 			}
 		}
 	}

@@ -34,8 +34,7 @@ public class BigtableStoreTestEnvironment extends
 		return singletonInstance;
 	}
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			BigtableStoreTestEnvironment.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(BigtableStoreTestEnvironment.class);
 
 	protected BigtableEmulator emulator;
 
@@ -70,80 +69,59 @@ public class BigtableStoreTestEnvironment extends
 	@Override
 	public void setup() {
 		initEnv();
-		if (internalEmulator && emulator != null) {
-			String downloadUrlProp = System.getProperty(
-					BigtableEmulator.DOWNLOAD_URL_PROPERTY);
-			if (TestUtils.isSet(
-					downloadUrlProp)) {
+		if (internalEmulator && emulator == null) {
+			String downloadUrlProp = System.getProperty(BigtableEmulator.DOWNLOAD_URL_PROPERTY);
+			if (TestUtils.isSet(downloadUrlProp)) {
 				sdkDownloadUrl = downloadUrlProp;
-				LOGGER.warn(
-						"Bigtable SDK download URL: " + sdkDownloadUrl);
+				LOGGER.warn("Bigtable SDK download URL: " + sdkDownloadUrl);
 			}
 			else {
-				LOGGER.warn(
-						"Bigtable SDK download URL (default): " + sdkDownloadUrl);
+				LOGGER.warn("Bigtable SDK download URL (default): " + sdkDownloadUrl);
 			}
 
-			String downloadFileProp = System.getProperty(
-					BigtableEmulator.DOWNLOAD_FILE_PROPERTY);
-			if (TestUtils.isSet(
-					downloadFileProp)) {
+			String downloadFileProp = System.getProperty(BigtableEmulator.DOWNLOAD_FILE_PROPERTY);
+			if (TestUtils.isSet(downloadFileProp)) {
 				sdkFile = downloadFileProp;
-				LOGGER.warn(
-						"Bigtable SDK file: " + sdkFile);
+				LOGGER.warn("Bigtable SDK file: " + sdkFile);
 			}
 			else {
-				LOGGER.warn(
-						"Bigtable SDK file (default): " + sdkFile);
+				LOGGER.warn("Bigtable SDK file (default): " + sdkFile);
 			}
 
-			if (emulator == null) {
-				emulator = new BigtableEmulator(
-						null, // null uses tmp dir
-						sdkDownloadUrl,
-						sdkFile);
-			}
+			emulator = new BigtableEmulator(
+					null, // null uses tmp dir
+					sdkDownloadUrl,
+					sdkFile);
 
 			// Make sure we clean up any old processes first
 			if (emulator.isRunning()) {
 				emulator.stop();
 			}
 
-			if (!emulator.start(
-					emulatorHostPort)) {
-				LOGGER.error(
-						"Bigtable emulator startup failed");
+			if (!emulator.start(emulatorHostPort)) {
+				LOGGER.error("Bigtable emulator startup failed");
 			}
 		}
 	}
 
-	private synchronized void initEnv() {
+	private void initEnv() {
 		if (!environmentInitialized) {
-			String internalEmulatorProp = System.getProperty(
-					BigtableEmulator.INTERNAL_PROPERTY);
-			if (TestUtils.isSet(
-					internalEmulatorProp)) {
-				internalEmulator = Boolean.parseBoolean(
-						internalEmulatorProp);
-				LOGGER.warn(
-						"Bigtable internal emulator enabled: " + internalEmulator);
+			String internalEmulatorProp = System.getProperty(BigtableEmulator.INTERNAL_PROPERTY);
+			if (TestUtils.isSet(internalEmulatorProp)) {
+				internalEmulator = Boolean.parseBoolean(internalEmulatorProp);
+				LOGGER.warn("Bigtable internal emulator enabled: " + internalEmulator);
 			}
 			else {
-				LOGGER.warn(
-						"Bigtable internal emulator disabled by default");
+				LOGGER.warn("Bigtable internal emulator disabled by default");
 			}
 
-			String hostPortProp = System.getProperty(
-					BigtableEmulator.HOST_PORT_PROPERTY);
-			if (TestUtils.isSet(
-					hostPortProp)) {
+			String hostPortProp = System.getProperty(BigtableEmulator.HOST_PORT_PROPERTY);
+			if (TestUtils.isSet(hostPortProp)) {
 				emulatorHostPort = hostPortProp;
-				LOGGER.warn(
-						"Bigtable emulator will run at: " + emulatorHostPort);
+				LOGGER.warn("Bigtable emulator will run at: " + emulatorHostPort);
 			}
 			else {
-				LOGGER.warn(
-						"Bigtable emulator will run at default location: " + emulatorHostPort);
+				LOGGER.warn("Bigtable emulator will run at default location: " + emulatorHostPort);
 			}
 
 			// Set the host:port property in the junit env, even if external

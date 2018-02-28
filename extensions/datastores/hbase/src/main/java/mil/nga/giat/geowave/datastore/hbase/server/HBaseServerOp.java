@@ -7,7 +7,8 @@ import org.apache.hadoop.hbase.client.Scan;
 
 import mil.nga.giat.geowave.core.index.persist.Persistable;
 
-public interface HBaseServerOp extends Persistable
+public interface HBaseServerOp extends
+		Persistable
 {
 	/**
 	 *

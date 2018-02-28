@@ -18,8 +18,7 @@ import mil.nga.giat.geowave.core.store.operations.Deleter;
 public class HBaseDeleter implements
 		Deleter
 {
-	private static Logger LOGGER = LoggerFactory.getLogger(
-			HBaseDeleter.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(HBaseDeleter.class);
 	private final BufferedMutator deleter;
 	protected Set<ByteArrayId> duplicateRowTracker = new HashSet<>();
 
@@ -47,8 +46,7 @@ public class HBaseDeleter implements
 			final GeoWaveRow row,
 			final DataAdapter<?> adapter ) {
 
-		byte[] rowBytes = GeoWaveKey.getCompositeId(
-				row);
+		byte[] rowBytes = GeoWaveKey.getCompositeId(row);
 		final Delete delete = new Delete(
 				rowBytes);
 		// we use a hashset of row IDs so that we can retain multiple versions
@@ -59,16 +57,13 @@ public class HBaseDeleter implements
 			synchronized (duplicateRowTracker) {
 				final ByteArrayId rowId = new ByteArrayId(
 						rowBytes);
-				if (!duplicateRowTracker.add(
-						rowId)) {
+				if (!duplicateRowTracker.add(rowId)) {
 					deleter.flush();
 					duplicateRowTracker.clear();
-					duplicateRowTracker.add(
-							rowId);
+					duplicateRowTracker.add(rowId);
 				}
 			}
-			deleter.mutate(
-					delete);
+			deleter.mutate(delete);
 		}
 		catch (IOException e) {
 			LOGGER.warn(

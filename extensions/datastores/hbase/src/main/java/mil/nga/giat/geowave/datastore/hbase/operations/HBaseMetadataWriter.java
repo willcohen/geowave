@@ -19,8 +19,7 @@ import mil.nga.giat.geowave.core.store.operations.MetadataWriter;
 public class HBaseMetadataWriter implements
 		MetadataWriter
 {
-	private static final Logger LOGGER = LoggerFactory.getLogger(
-			HBaseMetadataWriter.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(HBaseMetadataWriter.class);
 
 	private final BufferedMutator writer;
 	protected Set<ByteArrayId> duplicateRowTracker = new HashSet<>();
@@ -30,8 +29,7 @@ public class HBaseMetadataWriter implements
 			final BufferedMutator writer,
 			final MetadataType metadataType ) {
 		this.writer = writer;
-		metadataTypeBytes = StringUtils.stringToBinary(
-				metadataType.name());
+		metadataTypeBytes = StringUtils.stringToBinary(metadataType.name());
 	}
 
 	@Override
@@ -66,26 +64,21 @@ public class HBaseMetadataWriter implements
 				metadata.getValue());
 
 		if (metadata.getVisibility() != null) {
-			put.setCellVisibility(
-					new CellVisibility(
-							StringUtils.stringFromBinary(
-									metadata.getVisibility())));
+			put.setCellVisibility(new CellVisibility(
+					StringUtils.stringFromBinary(metadata.getVisibility())));
 		}
 
 		try {
 			synchronized (duplicateRowTracker) {
 				final ByteArrayId primaryId = new ByteArrayId(
 						metadata.getPrimaryId());
-				if (!duplicateRowTracker.add(
-						primaryId)) {
+				if (!duplicateRowTracker.add(primaryId)) {
 					writer.flush();
 					duplicateRowTracker.clear();
-					duplicateRowTracker.add(
-							primaryId);
+					duplicateRowTracker.add(primaryId);
 				}
 			}
-			writer.mutate(
-					put);
+			writer.mutate(put);
 		}
 		catch (final IOException e) {
 			LOGGER.error(

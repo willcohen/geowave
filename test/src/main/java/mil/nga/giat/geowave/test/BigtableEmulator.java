@@ -266,34 +266,29 @@ public class BigtableEmulator
 		Executor executor = new DefaultExecutor();
 		executor.setWatchdog(watchdog);
 		executor.setStreamHandler(new ExecuteStreamHandler() {
-			
+
 			@Override
 			public void stop()
-					throws IOException {
-			}
-			
+					throws IOException {}
+
 			@Override
 			public void start()
-					throws IOException {
-			}
-			
+					throws IOException {}
+
 			@Override
 			public void setProcessOutputStream(
 					InputStream is )
-					throws IOException {
-			}
-			
+					throws IOException {}
+
 			@Override
 			public void setProcessInputStream(
 					OutputStream os )
-					throws IOException {
-			}
-			
+					throws IOException {}
+
 			@Override
 			public void setProcessErrorStream(
 					InputStream is )
-					throws IOException {	
-			}
+					throws IOException {}
 		});
 
 		LOGGER.warn("Starting BigTable Emulator: " + cmdLine.toString());

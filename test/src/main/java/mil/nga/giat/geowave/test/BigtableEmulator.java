@@ -10,11 +10,13 @@
  ******************************************************************************/
 package mil.nga.giat.geowave.test;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -36,6 +38,7 @@ import org.codehaus.plexus.logging.console.ConsoleLogger;
 import org.slf4j.LoggerFactory;
 
 import mil.nga.giat.geowave.adapter.raster.util.ZipUtils;
+import mil.nga.giat.geowave.core.index.StringUtils;
 
 public class BigtableEmulator
 {
@@ -52,9 +55,10 @@ public class BigtableEmulator
 	private String fileName;
 
 	private final static String GCLOUD_EXE_DIR = "google-cloud-sdk/bin";
-
-	private static final long EMULATOR_SPINUP_DELAY_MS = 60000L;
-
+	private final Object STARTUP_LOCK = new Object();
+	private final long MAX_STARTUP_WAIT = 600000L; // if it doesn't start in 10
+													// minutes, just move on and
+													// get it over with
 	private final File sdkDir;
 	private ExecuteWatchdog watchdog;
 
@@ -278,7 +282,25 @@ public class BigtableEmulator
 			@Override
 			public void setProcessOutputStream(
 					InputStream is )
-					throws IOException {}
+					throws IOException {
+				BufferedReader reader = new BufferedReader(
+						new InputStreamReader(
+								is,
+								StringUtils.UTF8_CHAR_SET));
+				String line = reader.readLine();
+				while (line == null || line.contains("running on " + emulatorHostPort)) {
+					try {
+						Thread.sleep(500);
+					}
+					catch (InterruptedException e) {
+						LOGGER.warn(
+								"",
+								e);
+					}
+				}
+				STARTUP_LOCK.notify();
+				LOGGER.error("KAM: BigTable notified");
+			}
 
 			@Override
 			public void setProcessInputStream(
@@ -292,13 +314,11 @@ public class BigtableEmulator
 		});
 
 		LOGGER.warn("Starting BigTable Emulator: " + cmdLine.toString());
-
+		long time = System.currentTimeMillis();
 		executor.execute(
 				cmdLine,
 				resultHandler);
-
-		// we need to wait here for a bit, in case the emulator needs to update
-		// itself
-		Thread.sleep(EMULATOR_SPINUP_DELAY_MS);
+		STARTUP_LOCK.wait(MAX_STARTUP_WAIT);
+		LOGGER.error("KAM: BigTable waited " + (System.currentTimeMillis() - time) + " ms");
 	}
 }

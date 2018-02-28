@@ -97,9 +97,9 @@ public class DynamoDBReader implements
 			}
 		}
 
-		if ((readerParams.getLimit() != null) && (readerParams.getLimit() > 0)) {
+//		if ((readerParams.getLimit() != null) && (readerParams.getLimit() > 0)) {
 			//TODO: we should do something here
-		}
+//		}
 
 		final List<QueryRequest> requests = new ArrayList<>();
 

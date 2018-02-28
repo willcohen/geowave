@@ -47,7 +47,6 @@ public class HBaseStoreTestEnvironment extends
 			.getDataStoreFactory();
 	private static HBaseStoreTestEnvironment singletonInstance = null;
 
-	// TODO: Research the impact of vis setup on the other ITs
 	private static boolean enableVisibility = true;
 
 	public static synchronized HBaseStoreTestEnvironment getInstance() {
@@ -89,126 +88,130 @@ public class HBaseStoreTestEnvironment extends
 
 	@Override
 	public void setup() {
-		PropertyParser propertyParser = null;
+		if (hbaseLocalCluster == null) {
+			PropertyParser propertyParser = null;
 
-		try {
-			propertyParser = new PropertyParser(
-					HBASE_PROPS_FILE);
-			propertyParser.parsePropsFile();
-		}
-		catch (final IOException e) {
-			LOGGER.error(
-					"Unable to load property file: {}" + HBASE_PROPS_FILE,
-					e);
-		}
-
-		if (!TestUtils.isSet(zookeeper)) {
-			zookeeper = System.getProperty(ZookeeperTestEnvironment.ZK_PROPERTY_NAME);
+			try {
+				propertyParser = new PropertyParser(
+						HBASE_PROPS_FILE);
+				propertyParser.parsePropsFile();
+			}
+			catch (final IOException e) {
+				LOGGER.error(
+						"Unable to load property file: {}" + HBASE_PROPS_FILE,
+						e);
+			}
 
 			if (!TestUtils.isSet(zookeeper)) {
-				zookeeper = ZookeeperTestEnvironment.getInstance().getZookeeper();
-				LOGGER.debug("Using local zookeeper URL: " + zookeeper);
+				zookeeper = System.getProperty(ZookeeperTestEnvironment.ZK_PROPERTY_NAME);
+
+				if (!TestUtils.isSet(zookeeper)) {
+					zookeeper = ZookeeperTestEnvironment.getInstance().getZookeeper();
+					LOGGER.debug("Using local zookeeper URL: " + zookeeper);
+				}
 			}
-		}
 
-		if (!TestUtils.isSet(System.getProperty(ZookeeperTestEnvironment.ZK_PROPERTY_NAME))) {
-			try {
-				final Configuration conf = new Configuration();
-				conf.set(
-						"hbase.online.schema.update.enable",
-						"true");
-
-				if (enableVisibility) {
+			if (!TestUtils.isSet(System.getProperty(ZookeeperTestEnvironment.ZK_PROPERTY_NAME))) {
+				try {
+					final Configuration conf = new Configuration();
 					conf.set(
-							"hbase.superuser",
-							"admin");
+							"hbase.online.schema.update.enable",
+							"true");
 
-					conf.setBoolean(
-							"hbase.security.authorization",
-							true);
+					if (enableVisibility) {
+						conf.set(
+								"hbase.superuser",
+								"admin");
 
-					conf.setBoolean(
-							"hbase.security.visibility.mutations.checkauths",
-							true);
+						conf.setBoolean(
+								"hbase.security.authorization",
+								true);
 
-					// setup vis IT configuration
-					conf.setClass(
-							VisibilityUtils.VISIBILITY_LABEL_GENERATOR_CLASS,
-							SimpleScanLabelGenerator.class,
-							ScanLabelGenerator.class);
+						conf.setBoolean(
+								"hbase.security.visibility.mutations.checkauths",
+								true);
 
-					conf.setClass(
-							VisibilityLabelServiceManager.VISIBILITY_LABEL_SERVICE_CLASS,
-							// DefaultVisibilityLabelServiceImpl.class,
-							HBaseTestVisibilityLabelServiceImpl.class,
-							VisibilityLabelService.class);
+						// setup vis IT configuration
+						conf.setClass(
+								VisibilityUtils.VISIBILITY_LABEL_GENERATOR_CLASS,
+								SimpleScanLabelGenerator.class,
+								ScanLabelGenerator.class);
 
-					// Install the VisibilityController as a system processor
-					VisibilityTestUtil.enableVisiblityLabels(conf);
-				}
+						conf.setClass(
+								VisibilityLabelServiceManager.VISIBILITY_LABEL_SERVICE_CLASS,
+								// DefaultVisibilityLabelServiceImpl.class,
+								HBaseTestVisibilityLabelServiceImpl.class,
+								VisibilityLabelService.class);
 
-				// Start the cluster
-				hbaseLocalCluster = new HbaseLocalCluster.Builder()
-						.setHbaseMasterPort(
-								Integer.parseInt(propertyParser.getProperty(ConfigVars.HBASE_MASTER_PORT_KEY)))
-						.setHbaseMasterInfoPort(
-								Integer.parseInt(propertyParser.getProperty(ConfigVars.HBASE_MASTER_INFO_PORT_KEY)))
-						.setNumRegionServers(
-								Integer.parseInt(propertyParser.getProperty(ConfigVars.HBASE_NUM_REGION_SERVERS_KEY)))
-						.setHbaseRootDir(
-								propertyParser.getProperty(ConfigVars.HBASE_ROOT_DIR_KEY))
-						.setZookeeperPort(
-								Integer.parseInt(propertyParser.getProperty(ConfigVars.ZOOKEEPER_PORT_KEY)))
-						.setZookeeperConnectionString(
-								propertyParser.getProperty(ConfigVars.ZOOKEEPER_CONNECTION_STRING_KEY))
-						.setZookeeperZnodeParent(
-								propertyParser.getProperty(ConfigVars.HBASE_ZNODE_PARENT_KEY))
-						.setHbaseWalReplicationEnabled(
-								Boolean.parseBoolean(propertyParser
-										.getProperty(ConfigVars.HBASE_WAL_REPLICATION_ENABLED_KEY)))
-						.setHbaseConfiguration(
-								conf)
-						.build();
-				hbaseLocalCluster.start();
-
-				if (enableVisibility) {
-
-					// Set valid visibilities for the vis IT
-					final Connection conn = ConnectionPool.getInstance().getConnection(
-							zookeeper);
-					try {
-						SUPERUSER = User.createUserForTesting(
-								conf,
-								"admin",
-								new String[] {
-									"supergroup"
-								});
-
-						// Set up valid visibilities for the user
-						addLabels(
-								conn.getConfiguration(),
-								auths,
-								User.getCurrent().getName());
-
-						// Verify hfile version
-						final String hfileVersionStr = conn.getAdmin().getConfiguration().get(
-								"hfile.format.version");
-						Assert.assertTrue(
-								"HFile version is incorrect",
-								hfileVersionStr.equals("3"));
+						// Install the VisibilityController as a system
+						// processor
+						VisibilityTestUtil.enableVisiblityLabels(conf);
 					}
-					catch (final Throwable e) {
-						LOGGER.error(
-								"Error creating test user",
-								e);
+
+					// Start the cluster
+					hbaseLocalCluster = new HbaseLocalCluster.Builder()
+							.setHbaseMasterPort(
+									Integer.parseInt(propertyParser.getProperty(ConfigVars.HBASE_MASTER_PORT_KEY)))
+							.setHbaseMasterInfoPort(
+									Integer.parseInt(propertyParser.getProperty(ConfigVars.HBASE_MASTER_INFO_PORT_KEY)))
+							.setNumRegionServers(
+									Integer.parseInt(propertyParser
+											.getProperty(ConfigVars.HBASE_NUM_REGION_SERVERS_KEY)))
+							.setHbaseRootDir(
+									propertyParser.getProperty(ConfigVars.HBASE_ROOT_DIR_KEY))
+							.setZookeeperPort(
+									Integer.parseInt(propertyParser.getProperty(ConfigVars.ZOOKEEPER_PORT_KEY)))
+							.setZookeeperConnectionString(
+									propertyParser.getProperty(ConfigVars.ZOOKEEPER_CONNECTION_STRING_KEY))
+							.setZookeeperZnodeParent(
+									propertyParser.getProperty(ConfigVars.HBASE_ZNODE_PARENT_KEY))
+							.setHbaseWalReplicationEnabled(
+									Boolean.parseBoolean(propertyParser
+											.getProperty(ConfigVars.HBASE_WAL_REPLICATION_ENABLED_KEY)))
+							.setHbaseConfiguration(
+									conf)
+							.build();
+					hbaseLocalCluster.start();
+
+					if (enableVisibility) {
+
+						// Set valid visibilities for the vis IT
+						final Connection conn = ConnectionPool.getInstance().getConnection(
+								zookeeper);
+						try {
+							SUPERUSER = User.createUserForTesting(
+									conf,
+									"admin",
+									new String[] {
+										"supergroup"
+									});
+
+							// Set up valid visibilities for the user
+							addLabels(
+									conn.getConfiguration(),
+									auths,
+									User.getCurrent().getName());
+
+							// Verify hfile version
+							final String hfileVersionStr = conn.getAdmin().getConfiguration().get(
+									"hfile.format.version");
+							Assert.assertTrue(
+									"HFile version is incorrect",
+									hfileVersionStr.equals("3"));
+						}
+						catch (final Throwable e) {
+							LOGGER.error(
+									"Error creating test user",
+									e);
+						}
 					}
 				}
-			}
-			catch (final Exception e) {
-				LOGGER.error(
-						"Exception starting hbaseLocalCluster",
-						e);
-				Assert.fail();
+				catch (final Exception e) {
+					LOGGER.error(
+							"Exception starting hbaseLocalCluster",
+							e);
+					Assert.fail();
+				}
 			}
 		}
 	}
@@ -247,6 +250,7 @@ public class HBaseStoreTestEnvironment extends
 	public void tearDown() {
 		try {
 			hbaseLocalCluster.stop(true);
+			hbaseLocalCluster = null;
 		}
 		catch (final Exception e) {
 			LOGGER.warn(

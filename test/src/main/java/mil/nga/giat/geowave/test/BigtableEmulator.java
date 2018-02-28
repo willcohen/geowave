@@ -288,8 +288,9 @@ public class BigtableEmulator
 								is,
 								StringUtils.UTF8_CHAR_SET));
 				String line = reader.readLine();
+				LOGGER.error("KAM: BigTable waiting");
 				while (line == null || line.contains("running on " + emulatorHostPort)) {
-					try {
+					try {	LOGGER.error("KAM: BigTable iterating");
 						Thread.sleep(500);
 					}
 					catch (InterruptedException e) {

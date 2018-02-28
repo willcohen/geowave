@@ -6,20 +6,20 @@ env:
   matrix:
     # The first line of the matrix just builds docs (only on master) and runs unit tests
     # The rest skip the unit tests and run ITs only
-    - NAME='UT and Publish Docs with Latest ASF Versions' MAVEN_PROFILES='""' BUILD_DOCS=true   IT_ONLY=false
-    - NAME='Accumulo Client IT on Latest ASF Versions' MAVEN_PROFILES='accumulo-it-client' BUILD_DOCS=false  IT_ONLY=true
-    - NAME='Accumulo Server IT on Latest ASF Versions' MAVEN_PROFILES='accumulo-it-server' BUILD_DOCS=false  IT_ONLY=true
-    - NAME='HBase Client IT on Latest ASF Versions' MAVEN_PROFILES='hbase-it-client' BUILD_DOCS=false  IT_ONLY=true
-    - NAME='HBase Server IT on Latest ASF Versions' MAVEN_PROFILES='hbase-it-server' BUILD_DOCS=false  IT_ONLY=true
+    #- NAME='UT and Publish Docs with Latest ASF Versions' MAVEN_PROFILES='""' BUILD_DOCS=true   IT_ONLY=false
+    #- NAME='Accumulo Client IT on Latest ASF Versions' MAVEN_PROFILES='accumulo-it-client' BUILD_DOCS=false  IT_ONLY=true
+    #- NAME='Accumulo Server IT on Latest ASF Versions' MAVEN_PROFILES='accumulo-it-server' BUILD_DOCS=false  IT_ONLY=true
+    #- NAME='HBase Client IT on Latest ASF Versions' MAVEN_PROFILES='hbase-it-client' BUILD_DOCS=false  IT_ONLY=true
+    #- NAME='HBase Server IT on Latest ASF Versions' MAVEN_PROFILES='hbase-it-server' BUILD_DOCS=false  IT_ONLY=true
     #- NAME='Cassandra IT on Latest ASF Versions' MAVEN_PROFILES='cassandra-it' BUILD_DOCS=false  IT_ONLY=true
     #- NAME='DynamoDB IT on Latest ASF Versions' MAVEN_PROFILES='dynamodb-it' BUILD_DOCS=false  IT_ONLY=true
     - NAME='Bigtable IT on Latest ASF Versions' MAVEN_PROFILES='bigtable-it' BUILD_DOCS=false  IT_ONLY=true
-    - NAME='Accumulo Client IT on Older ASF and GeoTools Versions' MAVEN_PROFILES='accumulo-it-client,compatibility' BUILD_DOCS=false  IT_ONLY=true
-    - NAME='HBase Server IT on Older ASF and GeoTools Versions' MAVEN_PROFILES='hbase-it-server,compatibility' BUILD_DOCS=false  IT_ONLY=true	
-    - NAME='Accumulo Server IT on Latest CDH Versions' MAVEN_PROFILES='accumulo-it-server,cloudera' BUILD_DOCS=false  IT_ONLY=true
-    - NAME='Accumulo Server IT on Latest HDP Versions' MAVEN_PROFILES='accumulo-it-server,hortonworks' BUILD_DOCS=false  IT_ONLY=true 
-    - NAME='HBase Server IT on Latest CDH Versions'  MAVEN_PROFILES='hbase-it-server,cloudera' BUILD_DOCS=false  IT_ONLY=true
-    - NAME='HBase Server IT on Latest HDP Versions'  MAVEN_PROFILES='hbase-it-server,hortonworks' BUILD_DOCS=false  IT_ONLY=true
+    #- NAME='Accumulo Client IT on Older ASF and GeoTools Versions' MAVEN_PROFILES='accumulo-it-client,compatibility' BUILD_DOCS=false  IT_ONLY=true
+    #- NAME='HBase Server IT on Older ASF and GeoTools Versions' MAVEN_PROFILES='hbase-it-server,compatibility' BUILD_DOCS=false  IT_ONLY=true	
+    #- NAME='Accumulo Server IT on Latest CDH Versions' MAVEN_PROFILES='accumulo-it-server,cloudera' BUILD_DOCS=false  IT_ONLY=true
+    #- NAME='Accumulo Server IT on Latest HDP Versions' MAVEN_PROFILES='accumulo-it-server,hortonworks' BUILD_DOCS=false  IT_ONLY=true 
+    #- NAME='HBase Server IT on Latest CDH Versions'  MAVEN_PROFILES='hbase-it-server,cloudera' BUILD_DOCS=false  IT_ONLY=true
+    #- NAME='HBase Server IT on Latest HDP Versions'  MAVEN_PROFILES='hbase-it-server,hortonworks' BUILD_DOCS=false  IT_ONLY=true
   global:
     - secure: C3gdJmFavZxvsRVqCLpRUAaisNV3MhWbSYf4Wjs2SBLC/AIEwN0vDWHOuYiUExuXR1kApBVdNffuCX7bt/5siewHgmiVUGyY1xytxDdv+PAKZihlfYZRGattyg3XUbEFwyjr7c74639Y1w45NPUoBMUT4SKHZkfqD+FDU47OHIM=
 

@@ -273,45 +273,33 @@ public class BigtableEmulator
 
 			@Override
 			public void stop()
-					throws IOException {}
+					throws IOException {
+				System.err.println("stop");}
 
 			@Override
 			public void start()
-					throws IOException {}
+					throws IOException {
+				System.err.println("start");
+			}
 
 			@Override
 			public void setProcessOutputStream(
 					InputStream is )
 					throws IOException {
-				BufferedReader reader = new BufferedReader(
-						new InputStreamReader(
-								is,
-								StringUtils.UTF8_CHAR_SET));
-				String line = reader.readLine();
-				LOGGER.error("KAM: BigTable waiting");
-				while (line == null || line.contains("running on " + emulatorHostPort)) {
-					try {	LOGGER.error("KAM: BigTable iterating");
-						Thread.sleep(500);
-					}
-					catch (InterruptedException e) {
-						LOGGER.warn(
-								"",
-								e);
-					}
-				}
-				STARTUP_LOCK.notify();
-				LOGGER.error("KAM: BigTable notified");
+				System.err.println("setProcessOutputStream");
 			}
 
 			@Override
 			public void setProcessInputStream(
 					OutputStream os )
-					throws IOException {}
+					throws IOException {
+				System.err.println("setProcessInputStream");}
 
 			@Override
 			public void setProcessErrorStream(
 					InputStream is )
-					throws IOException {}
+					throws IOException {
+				System.err.println("setProcessErrorStream");}
 		});
 
 		LOGGER.warn("Starting BigTable Emulator: " + cmdLine.toString());
@@ -319,7 +307,9 @@ public class BigtableEmulator
 		executor.execute(
 				cmdLine,
 				resultHandler);
-		STARTUP_LOCK.wait(MAX_STARTUP_WAIT);
+		LOGGER.error("KAM: BigTable waiting " + (System.currentTimeMillis() - time) + " ms");
+		Thread.sleep(120000);
+//		STARTUP_LOCK.wait(MAX_STARTUP_WAIT);
 		LOGGER.error("KAM: BigTable waited " + (System.currentTimeMillis() - time) + " ms");
 	}
 }

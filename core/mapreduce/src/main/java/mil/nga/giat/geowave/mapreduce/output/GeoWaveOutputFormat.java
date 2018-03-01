@@ -74,7 +74,7 @@ public class GeoWaveOutputFormat extends
 			}
 
 			final IndexStore persistentIndexStore = GeoWaveStoreFinder.createIndexStore(configOptions);
-			final Index[] indices = JobContextIndexStore.getIndices(context);
+			final Index<?,?>[] indices = JobContextIndexStore.getIndices(context);
 			if (LOGGER.isDebugEnabled()) {
 				final StringBuilder sbDebug = new StringBuilder();
 
@@ -101,7 +101,7 @@ public class GeoWaveOutputFormat extends
 				LOGGER.debug(sbDebug.toString());
 			}
 
-			for (final Index i : indices) {
+			for (final Index<?,?> i : indices) {
 				if (!persistentIndexStore.indexExists(i.getId())) {
 					persistentIndexStore.addIndex(i);
 				}
@@ -260,7 +260,7 @@ public class GeoWaveOutputFormat extends
 	protected static class GeoWaveRecordWriter extends
 			RecordWriter<GeoWaveOutputKey<Object>, Object>
 	{
-		private final Map<ByteArrayId, IndexWriter> adapterIdToIndexWriterCache = new HashMap<ByteArrayId, IndexWriter>();
+		private final Map<ByteArrayId, IndexWriter<?>> adapterIdToIndexWriterCache = new HashMap<>();
 		private final AdapterStore adapterStore;
 		private final IndexStore indexStore;
 		private final DataStore dataStore;
@@ -329,11 +329,11 @@ public class GeoWaveOutputFormat extends
 			}
 		}
 
-		private synchronized IndexWriter getIndexWriter(
+		private synchronized IndexWriter<?> getIndexWriter(
 				final WritableDataAdapter<?> adapter,
 				final Collection<ByteArrayId> indexIds )
 				throws MismatchedIndexToAdapterMapping {
-			IndexWriter writer = adapterIdToIndexWriterCache.get(adapter.getAdapterId());
+			IndexWriter<?> writer = adapterIdToIndexWriterCache.get(adapter.getAdapterId());
 			if (writer == null) {
 				final List<PrimaryIndex> indices = new ArrayList<PrimaryIndex>();
 				for (final ByteArrayId indexId : indexIds) {
@@ -363,7 +363,7 @@ public class GeoWaveOutputFormat extends
 				final TaskAttemptContext attempt )
 				throws IOException,
 				InterruptedException {
-			for (final IndexWriter indexWriter : adapterIdToIndexWriterCache.values()) {
+			for (final IndexWriter<?> indexWriter : adapterIdToIndexWriterCache.values()) {
 				indexWriter.close();
 			}
 		}

@@ -32,6 +32,7 @@ import mil.nga.giat.geowave.core.store.query.QueryOptions;
 import mil.nga.giat.geowave.analytic.spark.sparksql.SimpleFeatureDataFrame;
 import mil.nga.giat.geowave.analytic.spark.sparksql.udf.GeomFunctionRegistry;
 import mil.nga.giat.geowave.analytic.spark.sparksql.udf.GeomIntersects;
+import mil.nga.giat.geowave.analytic.spark.sparksql.udf.GeomWithinDistance;
 import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.sfc.tiered.TieredSFCIndexStrategy;
@@ -122,6 +123,7 @@ public class GeoWaveSparkSpatialJoinIT extends
 		ByteArrayId hail_adapter = new ByteArrayId("hail");
 		ByteArrayId tornado_adapter = new ByteArrayId("tornado_tracks");
 		GeomIntersects intersectsPredicate = new GeomIntersects();
+		GeomWithinDistance distancePredicate = new GeomWithinDistance(0.02);
 		
 		DataAdapter<?> hailAdapter = dataStore.createAdapterStore().getAdapter(hail_adapter);
 		DataAdapter<?> tornadoAdapter = dataStore.createAdapterStore().getAdapter(tornado_adapter);
@@ -154,9 +156,9 @@ public class GeoWaveSparkSpatialJoinIT extends
 
 		LOGGER.warn("------------ Running indexed spatial join. ----------");
 		mark = System.currentTimeMillis();
-		tieredJoin.join(session, hailRDD, tornadoRDD, intersectsPredicate, strategy);
-		hailIndexedCount = tieredJoin.leftJoined.count();
-		tornadoIndexedCount = tieredJoin.rightJoined.count();
+		tieredJoin.join(session, hailRDD, tornadoRDD, distancePredicate, strategy);
+		hailIndexedCount = tieredJoin.getLeftJoined().count();
+		tornadoIndexedCount = tieredJoin.getRightJoined().count();
 		long indexJoinDur = (System.currentTimeMillis() - mark);
 
 		
@@ -177,13 +179,14 @@ public class GeoWaveSparkSpatialJoinIT extends
 		hailFrame.init(dataStore, hail_adapter);
 		hailFrame.getDataFrame(hailRDD).createOrReplaceTempView("hail");
 		
-		hailBruteResults = session.sql("select hail.* from hail, tornado where geomIntersects(hail.geom,tornado.geom)");
+		//hailBruteResults = session.sql("select hail.* from hail, tornado where geomIntersects(hail.geom,tornado.geom)");
+		hailBruteResults = session.sql("select hail.* from hail, tornado where geomWithinD(hail.geom,tornado.geom, cast(0.02 as double))");
 		hailBruteResults = hailBruteResults.dropDuplicates();
 		hailBruteCount = hailBruteResults.count();
 		
-		tornadoBruteResults = session.sql("select tornado.* from hail, tornado where geomIntersects(hail.geom,tornado.geom)");
-		tornadoBruteResults = tornadoBruteResults.dropDuplicates();
-		tornadoBruteCount = tornadoBruteResults.count();
+		//tornadoBruteResults = session.sql("select tornado.* from hail, tornado where geomIntersects(hail.geom,tornado.geom)");
+		//tornadoBruteResults = tornadoBruteResults.dropDuplicates();
+		//tornadoBruteCount = tornadoBruteResults.count();
 		dur = (System.currentTimeMillis() - mark);
 		
 		LOGGER.warn("Indexed tornado join count= " + tornadoIndexedCount );

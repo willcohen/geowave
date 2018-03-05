@@ -22,6 +22,8 @@ public class GeomFunctionRegistry implements
 	private static GeomCovers geomCoversInstance = new GeomCovers();
 	private static GeomDisjoint geomDisjointInstance = new GeomDisjoint();
 	private static GeomOverlaps geomOverlapsInstance = new GeomOverlaps();
+	private static GeomDistance geomDistanceInstance = new GeomDistance();
+	private static GeomWithinD geomWithinDInstance = new GeomWithinD(); 
 
 	public static void registerGeometryFunctions(
 			SparkSession spark ) {
@@ -29,6 +31,16 @@ public class GeomFunctionRegistry implements
 		spark.udf().register(
 				"geomEquals",
 				geomEqualsInstance,
+				DataTypes.BooleanType);
+		
+		spark.udf().register(
+				"geomDistance",
+				geomDistanceInstance,
+				DataTypes.DoubleType);
+		
+		spark.udf().register(
+				"geomWithinD",
+				geomWithinDInstance,
 				DataTypes.BooleanType);
 
 		spark.udf().register(

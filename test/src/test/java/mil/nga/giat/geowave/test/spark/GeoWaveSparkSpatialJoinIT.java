@@ -34,6 +34,7 @@ import mil.nga.giat.geowave.analytic.spark.sparksql.udf.GeomFunctionRegistry;
 import mil.nga.giat.geowave.analytic.spark.sparksql.udf.GeomIntersects;
 import mil.nga.giat.geowave.analytic.spark.sparksql.udf.GeomWithinDistance;
 import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider.SpatialIndexBuilder;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.sfc.tiered.TieredSFCIndexStrategy;
 import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputKey;
@@ -115,8 +116,8 @@ public class GeoWaveSparkSpatialJoinIT extends
 		
 
 
-		SpatialDimensionalityTypeProvider provider = new SpatialDimensionalityTypeProvider();
-		PrimaryIndex index = provider.createPrimaryIndex();
+		SpatialIndexBuilder indexProvider = new SpatialIndexBuilder();
+		PrimaryIndex index = indexProvider.createIndex();
 		TieredSFCIndexStrategy strategy = (TieredSFCIndexStrategy) index.getIndexStrategy();
 		
 		TieredSpatialJoin tieredJoin = new TieredSpatialJoin();

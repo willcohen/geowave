@@ -22,6 +22,7 @@ import com.vividsolutions.jts.geom.Geometry;
 
 import mil.nga.giat.geowave.analytic.spark.sparksql.util.GeomWriter;
 import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider.SpatialIndexBuilder;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.sfc.data.BasicNumericDataset;
 import mil.nga.giat.geowave.core.index.sfc.data.NumericData;
@@ -51,8 +52,8 @@ public class TieredIndexMapper extends IndexMapper
 	public Iterator<CommonIndexType> call(
 			Tuple2<GeoWaveInputKey, SimpleFeature> t )
 			throws Exception {
-		SpatialDimensionalityTypeProvider provider = new SpatialDimensionalityTypeProvider();
-		PrimaryIndex index = provider.createPrimaryIndex();
+		SpatialIndexBuilder indexProvider = new SpatialIndexBuilder();
+		PrimaryIndex index = indexProvider.createIndex();
 		TieredSFCIndexStrategy strategy = (TieredSFCIndexStrategy) index.getIndexStrategy();
 		
 		//Flattened output array.

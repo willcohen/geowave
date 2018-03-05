@@ -86,13 +86,6 @@ public class SparkIngestDriver implements
 
 		final Properties configProperties = ConfigOptions.loadProperties(configFile);
 
-	public boolean runOperation(
-			File configFile,
-			Properties configProperties,
-			LocalInputCommandLineOptions localInput, String inputStoreName,
-			String indexList, VisibilityOptions ingestOptions,
-			SparkCommandLineOptions sparkOptions, String basePath)
-			throws IOException {
 		JavaSparkContext jsc = null;
 		SparkSession session = null;
 		int numExecutors;

@@ -164,13 +164,8 @@ public class SpatialDimensionalityTypeProvider implements
 		}
 
 		return new CustomIdIndex(
-<<<<<<< HEAD
-				XZHierarchicalIndexFactory.createFullIncrementalTieredStrategy(
-						dimensions,
-=======
 				TieredSFCIndexFactory.createFullIncrementalTieredStrategy(
-						SPATIAL_DIMENSIONS,
->>>>>>> Switching to tiered index and adding initial test harness
+						dimensions,
 						new int[] {
 							// TODO this is only valid for 2D coordinate
 							// systems, again consider the possibility of being

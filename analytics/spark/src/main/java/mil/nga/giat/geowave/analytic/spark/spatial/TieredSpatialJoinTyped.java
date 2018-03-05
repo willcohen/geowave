@@ -23,6 +23,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import mil.nga.giat.geowave.analytic.spark.sparksql.udf.GeomFunction;
 import mil.nga.giat.geowave.analytic.spark.sparksql.util.GeomReader;
 import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider.SpatialIndexBuilder;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.NumericIndexStrategy;
 import mil.nga.giat.geowave.core.index.HierarchicalNumericIndexStrategy.SubStrategy;
@@ -61,8 +62,8 @@ public class TieredSpatialJoinTyped implements SpatialJoin {
 			NumericIndexStrategy indexStrategy) {
 		
 		SparkContext sc = spark.sparkContext();
-		SpatialDimensionalityTypeProvider provider = new SpatialDimensionalityTypeProvider();
-		PrimaryIndex index = provider.createPrimaryIndex();
+		SpatialIndexBuilder indexProvider = new SpatialIndexBuilder();
+		PrimaryIndex index = indexProvider.createIndex();
 		TieredSFCIndexStrategy strategy = (TieredSFCIndexStrategy) index.getIndexStrategy();
 		
 		ClassTag<TieredSFCIndexStrategy> tieredClassTag = scala.reflect.ClassTag$.MODULE$.apply(TieredSFCIndexStrategy.class);
@@ -177,9 +178,9 @@ public class TieredSpatialJoinTyped implements SpatialJoin {
 					throws Exception {
 				
 				List<CommonIndexType> reprojected = new ArrayList<>();
-				
-				SpatialDimensionalityTypeProvider provider = new SpatialDimensionalityTypeProvider();
-				PrimaryIndex index = provider.createPrimaryIndex();
+
+				SpatialIndexBuilder indexProvider = new SpatialIndexBuilder();
+				PrimaryIndex index = indexProvider.createIndex();
 				TieredSFCIndexStrategy strategy = (TieredSFCIndexStrategy) index.getIndexStrategy();
 
 				SubStrategy[] strats = strategy.getSubStrategies();

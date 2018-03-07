@@ -14,6 +14,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -23,6 +24,11 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Scanner;
 
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecuteResultHandler;
@@ -31,17 +37,20 @@ import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.exec.ExecuteStreamHandler;
 import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.exec.Executor;
+import org.apache.commons.exec.PumpStreamHandler;
 import org.apache.commons.io.IOUtils;
 import org.codehaus.plexus.archiver.tar.TarGZipUnArchiver;
 import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.logging.console.ConsoleLogger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.io.ByteStreams;
+
+import it.unimi.dsi.fastutil.Arrays;
 import mil.nga.giat.geowave.adapter.raster.util.ZipUtils;
 import mil.nga.giat.geowave.core.index.StringUtils;
 
-public class BigtableEmulator
-{
+public class BigtableEmulator {
 	private final static org.slf4j.Logger LOGGER = LoggerFactory.getLogger(BigtableEmulator.class);
 
 	// Property names
@@ -56,24 +65,17 @@ public class BigtableEmulator
 
 	private final static String GCLOUD_EXE_DIR = "google-cloud-sdk/bin";
 	private final Object STARTUP_LOCK = new Object();
-	private final long MAX_STARTUP_WAIT = 600000L; // if it doesn't start in 10
-													// minutes, just move on and
+	private final long MAX_STARTUP_WAIT = 60000L; // if it doesn't start in 1
+													// minute, just move on and
 													// get it over with
 	private final File sdkDir;
 	private ExecuteWatchdog watchdog;
 
-	public BigtableEmulator(
-			String sdkDir,
-			String sdkDownloadUrl,
-			String sdkFileName ) {
+	public BigtableEmulator(String sdkDir, String sdkDownloadUrl, String sdkFileName) {
 		if (TestUtils.isSet(sdkDir)) {
-			this.sdkDir = new File(
-					sdkDir);
-		}
-		else {
-			this.sdkDir = new File(
-					TestUtils.TEMP_DIR,
-					"gcloud");
+			this.sdkDir = new File(sdkDir);
+		} else {
+			this.sdkDir = new File(TestUtils.TEMP_DIR, "gcloud");
 		}
 
 		this.downloadUrl = sdkDownloadUrl;
@@ -84,15 +86,13 @@ public class BigtableEmulator
 		}
 	}
 
-	public boolean start(
-			final String emulatorHostPort ) {
+	public boolean start(final String emulatorHostPort) {
 		if (!isInstalled()) {
 			try {
 				if (!install()) {
 					return false;
 				}
-			}
-			catch (IOException e) {
+			} catch (IOException e) {
 				LOGGER.error(e.getMessage());
 				return false;
 			}
@@ -100,8 +100,7 @@ public class BigtableEmulator
 
 		try {
 			startEmulator(emulatorHostPort);
-		}
-		catch (IOException | InterruptedException e) {
+		} catch (IOException | InterruptedException e) {
 			LOGGER.error(e.getMessage());
 			return false;
 		}
@@ -121,18 +120,12 @@ public class BigtableEmulator
 		final String KILL_CMD_1 = "for i in $(ps -ef | grep -i \"[b]eta emulators bigtable\" | awk '{print $2}'); do kill -9 $i; done";
 		final String KILL_CMD_2 = "for i in $(ps -ef | grep -i \"[c]btemulator\" | awk '{print $2}'); do kill -9 $i; done";
 
-		File bashFile = new File(
-				TestUtils.TEMP_DIR,
-				"kill-bigtable.sh");
+		File bashFile = new File(TestUtils.TEMP_DIR, "kill-bigtable.sh");
 
 		PrintWriter scriptWriter;
 		try {
-			Writer w = new OutputStreamWriter(
-					new FileOutputStream(
-							bashFile),
-					"UTF-8");
-			scriptWriter = new PrintWriter(
-					w);
+			Writer w = new OutputStreamWriter(new FileOutputStream(bashFile), "UTF-8");
+			scriptWriter = new PrintWriter(w);
 			scriptWriter.println("#!/bin/bash");
 			scriptWriter.println("set -ev");
 			scriptWriter.println(KILL_CMD_1);
@@ -140,73 +133,47 @@ public class BigtableEmulator
 			scriptWriter.close();
 
 			bashFile.setExecutable(true);
-		}
-		catch (FileNotFoundException e1) {
-			LOGGER.error(
-					"Unable to create bigtable emulator kill script",
-					e1);
+		} catch (FileNotFoundException e1) {
+			LOGGER.error("Unable to create bigtable emulator kill script", e1);
 			return;
-		}
-		catch (UnsupportedEncodingException e) {
-			LOGGER.error(
-					"Unable to create bigtable emulator kill script",
-					e);
+		} catch (UnsupportedEncodingException e) {
+			LOGGER.error("Unable to create bigtable emulator kill script", e);
 		}
 
-		CommandLine cmdLine = new CommandLine(
-				bashFile.getAbsolutePath());
+		CommandLine cmdLine = new CommandLine(bashFile.getAbsolutePath());
 		DefaultExecutor executor = new DefaultExecutor();
 		int exitValue = 0;
 
 		try {
 			exitValue = executor.execute(cmdLine);
-		}
-		catch (IOException ex) {
-			LOGGER.error(
-					"Unable to execute bigtable emulator kill script",
-					ex);
+		} catch (IOException ex) {
+			LOGGER.error("Unable to execute bigtable emulator kill script", ex);
 		}
 
 		LOGGER.warn("Bigtable emulator " + (exitValue == 0 ? "stopped" : "failed to stop"));
 	}
 
 	private boolean isInstalled() {
-		final File gcloudExe = new File(
-				sdkDir,
-				GCLOUD_EXE_DIR + "/gcloud");
+		final File gcloudExe = new File(sdkDir, GCLOUD_EXE_DIR + "/gcloud");
 
 		return (gcloudExe.canExecute());
 	}
 
-	protected boolean install()
-			throws IOException {
-		URL url = new URL(
-				downloadUrl + "/" + fileName);
+	protected boolean install() throws IOException {
+		URL url = new URL(downloadUrl + "/" + fileName);
 
-		final File downloadFile = new File(
-				sdkDir.getParentFile(),
-				fileName);
+		final File downloadFile = new File(sdkDir.getParentFile(), fileName);
 		if (!downloadFile.exists()) {
-			try (FileOutputStream fos = new FileOutputStream(
-					downloadFile)) {
-				IOUtils.copyLarge(
-						url.openStream(),
-						fos);
+			try (FileOutputStream fos = new FileOutputStream(downloadFile)) {
+				IOUtils.copyLarge(url.openStream(), fos);
 				fos.flush();
 			}
 		}
-		if (downloadFile.getName().endsWith(
-				".zip")) {
-			ZipUtils.unZipFile(
-					downloadFile,
-					sdkDir.getAbsolutePath());
-		}
-		else if (downloadFile.getName().endsWith(
-				".tar.gz")) {
+		if (downloadFile.getName().endsWith(".zip")) {
+			ZipUtils.unZipFile(downloadFile, sdkDir.getAbsolutePath());
+		} else if (downloadFile.getName().endsWith(".tar.gz")) {
 			final TarGZipUnArchiver unarchiver = new TarGZipUnArchiver();
-			unarchiver.enableLogging(new ConsoleLogger(
-					Logger.LEVEL_WARN,
-					"Gcloud SDK Unarchive"));
+			unarchiver.enableLogging(new ConsoleLogger(Logger.LEVEL_WARN, "Gcloud SDK Unarchive"));
 			unarchiver.setSourceFile(downloadFile);
 			unarchiver.setDestDirectory(sdkDir);
 			unarchiver.extract();
@@ -221,12 +188,9 @@ public class BigtableEmulator
 		}
 
 		// Install the beta components
-		final File gcloudExe = new File(
-				sdkDir,
-				GCLOUD_EXE_DIR + "/gcloud");
+		final File gcloudExe = new File(sdkDir, GCLOUD_EXE_DIR + "/gcloud");
 
-		CommandLine cmdLine = new CommandLine(
-				gcloudExe);
+		CommandLine cmdLine = new CommandLine(gcloudExe);
 		cmdLine.addArgument("components");
 		cmdLine.addArgument("install");
 		cmdLine.addArgument("beta");
@@ -246,13 +210,9 @@ public class BigtableEmulator
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	private void startEmulator(
-			final String emulatorHostPort )
-			throws ExecuteException,
-			IOException,
-			InterruptedException {
-		CommandLine cmdLine = new CommandLine(
-				sdkDir + "/" + GCLOUD_EXE_DIR + "/gcloud");
+	private void startEmulator(final String emulatorHostPort)
+			throws ExecuteException, IOException, InterruptedException {
+		CommandLine cmdLine = new CommandLine(sdkDir + "/" + GCLOUD_EXE_DIR + "/gcloud");
 		cmdLine.addArgument("beta");
 		cmdLine.addArgument("emulators");
 		cmdLine.addArgument("bigtable");
@@ -265,51 +225,174 @@ public class BigtableEmulator
 		DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
 
 		// watchdog shuts down the emulator, later
-		watchdog = new ExecuteWatchdog(
-				ExecuteWatchdog.INFINITE_TIMEOUT);
+		watchdog = new ExecuteWatchdog(ExecuteWatchdog.INFINITE_TIMEOUT);
 		Executor executor = new DefaultExecutor();
 		executor.setWatchdog(watchdog);
-		executor.setStreamHandler(new ExecuteStreamHandler() {
+		executor.setStreamHandler(
+				new PumpStreamHandler(ByteStreams.nullOutputStream(), ByteStreams.nullOutputStream(), null) {
+					protected Thread createPump(final InputStream is, final OutputStream os,
+							final boolean closeWhenExhausted) {
+						FilterInputStream fis = new FilterInputStream(is) {
+							byte[] startupBytes = ("running on " + emulatorHostPort).getBytes(StringUtils.UTF8_CHAR_SET);
+							Queue<Integer> queue = new LinkedList<>();
+							boolean matchFound = false;
 
-			@Override
-			public void stop()
-					throws IOException {
-				System.err.println("stop");}
+							private boolean isStartupFound() {
+								Integer[] array = queue.toArray(new Integer[] {});
+								byte[] ba = new byte[array.length];
+								for (int i =0; i < ba.length; i++) {
+									ba[i] = (byte)array[i].byteValue();
+								}
+								System.err.println(StringUtils.stringFromBinary(ba));
+								Iterator<Integer> iterator = queue.iterator();
 
-			@Override
-			public void start()
-					throws IOException {
-				System.err.println("start");
-			}
+								for (byte b : startupBytes) {
+									if (!iterator.hasNext() || b != iterator.next()) {
+										return false;
+									}
+								}
+								return true;
+							}
 
-			@Override
-			public void setProcessOutputStream(
-					InputStream is )
-					throws IOException {
-				System.err.println("setProcessOutputStream");
-			}
+							private void readAhead() throws IOException {
+								// Work up some look-ahead.
+								while (queue.size() < startupBytes.length) {
+									int next = super.read();
+									queue.offer(next);
 
-			@Override
-			public void setProcessInputStream(
-					OutputStream os )
-					throws IOException {
-				System.err.println("setProcessInputStream");}
+									if (next == -1) {
+										break;
+									}
+								}
+							}
 
-			@Override
-			public void setProcessErrorStream(
-					InputStream is )
-					throws IOException {
-				System.err.println("setProcessErrorStream");}
-		});
+							@Override
+							public int read() throws IOException {
+								if (matchFound) {
+									super.read();
+								}
+
+									readAhead();
+
+									if (isStartupFound()) {
+										synchronized (STARTUP_LOCK) {
+
+										STARTUP_LOCK.notifyAll();
+									}
+										matchFound = true;
+									}
+
+								return queue.remove();
+							}
+
+							@Override
+							public int read(byte b[]) throws IOException {
+								if (matchFound) {
+									super.read(b);
+								}
+								return read(b, 0, b.length);
+							}
+
+							// copied straight from InputStream implementation, just need to use `read()`
+							// from this class
+							@Override
+							public int read(byte b[], int off, int len) throws IOException {
+								if (matchFound) {
+									super.read(b, off, len);
+								}
+								if (b == null) {
+									throw new NullPointerException();
+								} else if (off < 0 || len < 0 || len > b.length - off) {
+									throw new IndexOutOfBoundsException();
+								} else if (len == 0) {
+									return 0;
+								}
+
+								int c = read();
+								if (c == -1) {
+									return -1;
+								}
+								b[off] = (byte) c;
+
+								int i = 1;
+								try {
+									for (; i < len; i++) {
+										c = read();
+										if (c == -1) {
+											break;
+										}
+										b[off + i] = (byte) c;
+									}
+								} catch (IOException ee) {
+								}
+								return i;
+							}
+						};
+						return super.createPump(fis, os, closeWhenExhausted);
+					}
+				});
+		// new ExecuteStreamHandler() {
+		//
+		// @Override
+		// public void stop()
+		// throws IOException {
+		// System.err.println("stop");
+		// }
+		//
+		// @Override
+		// public void start()
+		// throws IOException {
+		// System.err.println("start");
+		// }
+		//
+		// @Override
+		// public void setProcessOutputStream(
+		// InputStream is )
+		// throws IOException {
+		// BufferedReader reader = new BufferedReader(
+		// new InputStreamReader(
+		// is,
+		// StringUtils.UTF8_CHAR_SET));
+		// String line = reader.readLine();
+		// while (line == null || line.contains("running on " + emulatorHostPort)) {
+		// try {
+		// Thread.sleep(500);
+		// }
+		// catch (InterruptedException e) {
+		// LOGGER.warn(
+		// "",
+		// e);
+		// }
+		// }
+		// STARTUP_LOCK.notify();
+		// LOGGER.error("KAM: BigTable notified");
+		// System.err.println("setProcessOutputStream");
+		// }
+		//
+		// @Override
+		// public void setProcessInputStream(
+		// OutputStream os )
+		// throws IOException {
+		// System.err.println("setProcessInputStream");
+		// }
+		//
+		// @Override
+		// public void setProcessErrorStream(
+		// InputStream is )
+		// throws IOException {
+		// System.err.println("setProcessErrorStream");
+		// }
+		// });
 
 		LOGGER.warn("Starting BigTable Emulator: " + cmdLine.toString());
 		long time = System.currentTimeMillis();
-		executor.execute(
-				cmdLine,
-				resultHandler);
-		LOGGER.error("KAM: BigTable waiting " + (System.currentTimeMillis() - time) + " ms");
-		Thread.sleep(120000);
-//		STARTUP_LOCK.wait(MAX_STARTUP_WAIT);
+		synchronized (STARTUP_LOCK) {
+			executor.execute(cmdLine, resultHandler);
+			LOGGER.error("KAM: BigTable waiting " + (System.currentTimeMillis() - time) + " ms");
+			// Thread.sleep(30000);
+
+			STARTUP_LOCK.wait(MAX_STARTUP_WAIT);
+		}
 		LOGGER.error("KAM: BigTable waited " + (System.currentTimeMillis() - time) + " ms");
 	}
 }

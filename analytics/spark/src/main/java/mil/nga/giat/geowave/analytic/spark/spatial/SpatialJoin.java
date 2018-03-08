@@ -2,6 +2,7 @@ package mil.nga.giat.geowave.analytic.spark.spatial;
 
 
 import java.io.Serializable;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.sql.SparkSession;
@@ -17,5 +18,5 @@ public interface SpatialJoin extends Serializable {
 			JavaPairRDD<GeoWaveInputKey, SimpleFeature> leftRDD,
 			JavaPairRDD<GeoWaveInputKey, SimpleFeature> rightRDD,
 			GeomFunction predicate,
-			NumericIndexStrategy indexStrategy );
+			NumericIndexStrategy indexStrategy ) throws InterruptedException, ExecutionException;
 }

@@ -12,15 +12,11 @@ public class GeomWithinDistance extends GeomFunction {
 	
 	@Override
 	public Boolean call(
-			byte[] t1,
-			byte[] t2 )
+			Geometry geom1,
+			Geometry geom2 )
 			throws Exception {
-		Geometry leftGeom = parseGeom(t1);
-		Geometry rightGeom = parseGeom(t2);
-		if(leftGeom != null && rightGeom != null) {
-			return (leftGeom.distance(rightGeom) <= this.radius);
-		}
-		return false;
+
+			return geom1.distance(geom2) <= radius;
 	}
 	
 	public double getRadius() { return radius; }

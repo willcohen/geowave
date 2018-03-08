@@ -11,20 +11,5 @@ import mil.nga.giat.geowave.analytic.spark.sparksql.util.GeomReader;
 
 @SuppressFBWarnings
 public abstract class GeomFunction implements
-		UDF2<byte[], byte[], Boolean>
-{
-	private final static Logger LOGGER = LoggerFactory.getLogger(GeomFunction.class);
-	protected final GeomReader geomReader = new GeomReader();
-
-	protected Geometry parseGeom(
-			byte[] geomBinary ) {
-		try {
-			return geomReader.read(geomBinary);
-		}
-		catch (Exception e) {
-			LOGGER.error(e.getMessage());
-		}
-
-		return null;
-	}
-}
+		UDF2<Geometry, Geometry, Boolean>
+{ }

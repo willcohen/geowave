@@ -7,16 +7,10 @@ public class GeomCrosses extends
 {
 	@Override
 	public Boolean call(
-			byte[] geomStr1,
-			byte[] geomStr2 )
+			Geometry geom1,
+			Geometry geom2 )
 			throws Exception {
-		Geometry geom1 = parseGeom(geomStr1);
-		Geometry geom2 = parseGeom(geomStr2);
 
-		if (geom1 != null && geom2 != null) {
 			return geom1.crosses(geom2);
-		}
-
-		return false;
 	}
 }

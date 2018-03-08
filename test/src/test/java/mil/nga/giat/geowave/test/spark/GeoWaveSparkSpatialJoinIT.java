@@ -1,6 +1,7 @@
 package mil.nga.giat.geowave.test.spark;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
@@ -157,7 +158,17 @@ public class GeoWaveSparkSpatialJoinIT extends
 
 		LOGGER.warn("------------ Running indexed spatial join. ----------");
 		mark = System.currentTimeMillis();
-		tieredJoin.join(session, hailRDD, tornadoRDD, distancePredicate, strategy);
+		try {
+			tieredJoin.join(session, hailRDD, tornadoRDD, distancePredicate, strategy);
+		}
+		catch (InterruptedException e) {
+			LOGGER.error("Async error in join");
+			e.printStackTrace();
+		}
+		catch (ExecutionException e) {
+			LOGGER.error("Async error in join");
+			e.printStackTrace();
+		}
 		hailIndexedCount = tieredJoin.getLeftJoined().count();
 		tornadoIndexedCount = tieredJoin.getRightJoined().count();
 		long indexJoinDur = (System.currentTimeMillis() - mark);

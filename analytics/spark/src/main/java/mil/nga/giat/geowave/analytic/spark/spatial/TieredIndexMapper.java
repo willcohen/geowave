@@ -39,13 +39,6 @@ public class TieredIndexMapper extends IndexMapper
 
 	public TieredIndexMapper() {
 		super();
-		/*StructField[] fields = {
-			new StructField("tier", DataTypes.ByteType, false, Metadata.empty()),
-			new StructField("id", DataTypes.BinaryType, false, Metadata.empty()),
-			new StructField("geom", DataTypes.StringType, false, Metadata.empty()),
-			new StructField("gwKey", DataTypes.BinaryType, false, Metadata.empty())
-		};
-		this.schema = new StructType(fields);*/
 	}
 
 	@Override
@@ -99,7 +92,7 @@ public class TieredIndexMapper extends IndexMapper
 			//byte tier = fullId[0];
 
 			//Object[] fields = new Serializable[] { tier, id.getBytes(), geomString, t._1().getDataId().getBytes() };
-			result.add(new CommonIndexType(id.getBytes(), t._1(), geomString) );
+			result.add(new CommonIndexType(id.getBytes(), t._1(), geom) );
 		}
 		
 		return result.iterator();

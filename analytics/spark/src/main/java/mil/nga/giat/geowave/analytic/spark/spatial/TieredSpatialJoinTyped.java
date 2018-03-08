@@ -13,6 +13,7 @@ import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.RelationalGroupedDataset;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.opengis.feature.simple.SimpleFeature;
 import org.slf4j.Logger;
@@ -79,6 +80,9 @@ public class TieredSpatialJoinTyped implements SpatialJoin {
 		//leftFrame.cache();
 		//rightFrame.cache();
 		
+		//Dataset<Byte> leftTiers = leftFrame.select(leftFrame.col("insertionId")).map,Encoders.BYTE());
+		
+		
 		//This function creates a list of tiers that actually contain data for each set.
 		this.collectDataTiersTyped(leftFrame, rightFrame, strategy);
 		
@@ -122,7 +126,7 @@ public class TieredSpatialJoinTyped implements SpatialJoin {
 		this.joinResults.cache();
 	
 		//Remove duplicates
-		this.joinResults = this.joinResults.dropDuplicates(new String[] {"adapterId","dataId"});
+		this.joinResults = this.joinResults.dropDuplicates("dataId");
 		//this.leftJoined = this.joinResults.join(leftRDD).mapToPair( t -> new Tuple2<GeoWaveInputKey,SimpleFeature>(t._1(),t._2._2()) );
 		//this.rightJoined = this.joinResults.join(rightRDD).mapToPair( t -> new Tuple2<GeoWaveInputKey,SimpleFeature>(t._1(),t._2._2()) );
 
@@ -201,9 +205,7 @@ public class TieredSpatialJoinTyped implements SpatialJoin {
 				}
 				
 				//Parse geom from string
-				GeomReader reader = new GeomReader();
-				byte[] geomString = t.getGeom();
-				Geometry geom = reader.read(geomString);
+				Geometry geom = t.getGeom();
 				
 				NumericRange xRange = new NumericRange(geom.getEnvelopeInternal().getMinX(), geom.getEnvelopeInternal().getMaxX());
 				NumericRange yRange = new NumericRange(geom.getEnvelopeInternal().getMinY(), geom.getEnvelopeInternal().getMaxY());
@@ -222,7 +224,7 @@ public class TieredSpatialJoinTyped implements SpatialJoin {
 					//Id decomposes to byte array of Tier, Bin, SFC (Hilbert in this case) id)
 					//There may be value in decomposing the id and storing tier + sfcIndex as a tuple key of new RDD
 					
-					reprojected.add(new CommonIndexType(id.getBytes(), t.getAdapterId(), t.getDataId(), geomString));
+					reprojected.add(new CommonIndexType(id.getBytes(), t.getDataId(), geom));
 				}
 				
 				return reprojected.iterator();
@@ -261,8 +263,8 @@ public class TieredSpatialJoinTyped implements SpatialJoin {
 					return resultPairs.iterator();
 				}
 				
-				byte[] leftGeom = leftFeature.getGeom();
-				byte[] rightGeom = rightFeature.getGeom();
+				Geometry leftGeom = leftFeature.getGeom();
+				Geometry rightGeom = rightFeature.getGeom();
 				if(predicate.call(leftGeom, rightGeom)) {
 					resultPairs.add(leftFeature);
 					resultPairs.add(rightFeature);
@@ -272,7 +274,8 @@ public class TieredSpatialJoinTyped implements SpatialJoin {
 			} }, Encoders.bean(CommonIndexType.class));
 
 		//Remove duplicates from previous step
-		//finalMatches = finalMatches.reduceByKey((s1,s2) -> s1);		
+		//finalMatches = finalMatches.reduceByKey((s1,s2) -> s1);
+		finalMatches = finalMatches.dropDuplicates("dataId");
 		
 		return finalMatches;
 	}

@@ -261,10 +261,10 @@ public class TieredSpatialJoin implements SpatialJoin {
 		return leftIndex.filter(v1 -> tierIds.contains(v1._1().getBytes()[0]));
 	}
 	
-	private JavaPairRDD<ByteArrayId, Tuple2<GeoWaveInputKey, Geometry>> reprojectToTier(JavaPairRDD<ByteArrayId, Tuple2<GeoWaveInputKey, Geometry>> leftTier, 
+	private JavaPairRDD<ByteArrayId, Tuple2<GeoWaveInputKey, Geometry>> reprojectToTier(JavaPairRDD<ByteArrayId, Tuple2<GeoWaveInputKey, Geometry>> reprojectTier, 
 			byte targetTierId,
 			Broadcast<TieredSFCIndexStrategy> broadcastStrategy) {
-		return leftTier.flatMapToPair(new PairFlatMapFunction<Tuple2<ByteArrayId,Tuple2<GeoWaveInputKey,Geometry>>,ByteArrayId,Tuple2<GeoWaveInputKey, Geometry>>() {
+		return reprojectTier.flatMapToPair(new PairFlatMapFunction<Tuple2<ByteArrayId,Tuple2<GeoWaveInputKey,Geometry>>,ByteArrayId,Tuple2<GeoWaveInputKey, Geometry>>() {
 
 			@Override
 			public Iterator<Tuple2<ByteArrayId, Tuple2<GeoWaveInputKey, Geometry>>> call(
@@ -273,31 +273,7 @@ public class TieredSpatialJoin implements SpatialJoin {
 				
 				List<Tuple2<ByteArrayId, Tuple2<GeoWaveInputKey, Geometry>>> reprojected = new ArrayList<>();
 				
-				SubStrategy[] strats = broadcastStrategy.value().getSubStrategies();
-				
-				int stratCount = strats.length;
-				SingleTierSubStrategy targetStrategy = null;
-				for(int i = 0; i < stratCount; i++) {
-					SingleTierSubStrategy tierStrategy = (SingleTierSubStrategy) strats[i].getIndexStrategy();
-					if(tierStrategy.tier == targetTierId) {
-						targetStrategy = tierStrategy;
-						break;
-					}
-				}
-				
-				//List<ByteArrayId> insertIds = broadcastStrategy.value().reprojectToCoarserTier(t._1(), targetTierId);
-				Geometry geom = t._2._2;
-				
-				NumericRange xRange = new NumericRange(geom.getEnvelopeInternal().getMinX(), geom.getEnvelopeInternal().getMaxX());
-				NumericRange yRange = new NumericRange(geom.getEnvelopeInternal().getMinY(), geom.getEnvelopeInternal().getMaxY());
-				NumericData[] boundsRange = {
-					xRange,
-					yRange	
-				};
-				
-				//Convert the data to how the api expects and index using strategy above
-				BasicNumericDataset convertedBounds = new BasicNumericDataset(boundsRange);
-				List<ByteArrayId> insertIds = targetStrategy.getInsertionIds(convertedBounds);
+				List<ByteArrayId> insertIds = broadcastStrategy.value().reprojectToCoarserTier(t._1(), targetTierId);
 				
 				//When we span more than one row each individual get added as a separate output pair
 				for(Iterator<ByteArrayId> iter = insertIds.iterator(); iter.hasNext();) {
@@ -348,7 +324,6 @@ public class TieredSpatialJoin implements SpatialJoin {
 			}});
 		
 		finalMatches = finalMatches.reduceByKey((idLeft, idRight) -> idLeft);
-		
 		finalMatches.cache();
 		
 		return finalMatches;

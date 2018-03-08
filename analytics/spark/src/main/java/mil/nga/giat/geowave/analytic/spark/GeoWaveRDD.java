@@ -106,6 +106,18 @@ public class GeoWaveRDD
 			GeoWaveInputFormat.setMaximumSplitCount(
 					conf,
 					maxSplits);
+		} else {
+			int defaultSplitsSpark = sc.getConf().getInt("spark.default.parallelism", -1);
+			//Attempt to grab default partition count for spark and split data along that.
+			//Otherwise just fallback to default according to index strategy
+			if(defaultSplitsSpark != -1) {
+				GeoWaveInputFormat.setMinimumSplitCount(
+						conf,
+						defaultSplitsSpark);
+				GeoWaveInputFormat.setMaximumSplitCount(
+						conf,
+						defaultSplitsSpark);
+			}
 		}
 
 		RDD<Tuple2<GeoWaveInputKey, SimpleFeature>> rdd = sc.newAPIHadoopRDD(

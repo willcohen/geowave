@@ -65,6 +65,7 @@ public class BigtableEmulator {
 
 	private final static String GCLOUD_EXE_DIR = "google-cloud-sdk/bin";
 	private final Object STARTUP_LOCK = new Object();
+	private boolean matchFound = false;
 	private final long MAX_STARTUP_WAIT = 60000L; // if it doesn't start in 1
 													// minute, just move on and
 													// get it over with
@@ -200,7 +201,6 @@ public class BigtableEmulator {
 
 		return (exitValue == 0);
 	}
-
 	/**
 	 * Using apache commons exec for cmd line execution
 	 * 
@@ -235,7 +235,7 @@ public class BigtableEmulator {
 						FilterInputStream fis = new FilterInputStream(is) {
 							byte[] startupBytes = ("running on " + emulatorHostPort).getBytes(StringUtils.UTF8_CHAR_SET);
 							Queue<Integer> queue = new LinkedList<>();
-							boolean matchFound = false;
+							
 
 							private boolean isStartupFound() {
 								Integer[] array = queue.toArray(new Integer[] {});
@@ -243,7 +243,6 @@ public class BigtableEmulator {
 								for (int i =0; i < ba.length; i++) {
 									ba[i] = (byte)array[i].byteValue();
 								}
-								System.err.println(StringUtils.stringFromBinary(ba));
 								Iterator<Integer> iterator = queue.iterator();
 
 								for (byte b : startupBytes) {

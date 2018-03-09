@@ -13,8 +13,6 @@ package mil.nga.giat.geowave.datastore.hbase;
 import mil.nga.giat.geowave.core.store.BaseDataStoreFamily;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.GenericStoreFactory;
-import mil.nga.giat.geowave.core.store.index.SecondaryIndexDataStore;
-import mil.nga.giat.geowave.datastore.hbase.index.secondary.HBaseSecondaryIndexDataStoreFactory;
 
 public class HBaseStoreFactoryFamily extends
 		BaseDataStoreFamily
@@ -36,13 +34,4 @@ public class HBaseStoreFactoryFamily extends
 				DESCRIPTION,
 				new HBaseFactoryHelper());
 	}
-
-	@Override
-	public GenericStoreFactory<SecondaryIndexDataStore> getSecondaryIndexDataStore() {
-		return new HBaseSecondaryIndexDataStoreFactory(
-				TYPE,
-				DESCRIPTION,
-				new HBaseFactoryHelper());
-	}
-
 }

@@ -111,19 +111,56 @@ public class HBaseSplitsProvider extends
 			return splits;
 		}
 
-		if (ranges == null) { // full range w/o stats for min/max
-			binFullRange(
-					binnedRanges,
-					regionLocator);
-		}
-		else {
-			while (!ranges.isEmpty()) {
-				ranges = binRanges(
-						ranges,
-						binnedRanges,
-						regionLocator);
-			}
-		}
+		RowRangeHistogramStatistics<?> stats = getHistStats(
+				index,
+				adapters,
+				adapterStore,
+				statsStore,
+				statsCache,
+				authorizations);
+		
+		if (ranges == null) { // get partition ranges from stats
+            if (stats != null) {
+                ranges = new ArrayList();
+
+                ByteArrayId prevKey = new ByteArrayId(
+                        HConstants.EMPTY_BYTE_ARRAY);
+
+                for (ByteArrayId partitionKey : stats.getPartitionKeys()) {
+                    ByteArrayRange range = new ByteArrayRange(
+                            prevKey,
+                            partitionKey);
+
+                    ranges.add(range);
+
+                    prevKey = partitionKey;
+                }
+
+                ranges.add(new ByteArrayRange(
+                        prevKey,
+                        new ByteArrayId(
+                                HConstants.EMPTY_BYTE_ARRAY)));
+
+                binRanges(
+                        ranges,
+                        binnedRanges,
+                        regionLocator);
+            }
+            else {
+                binFullRange(
+                        binnedRanges,
+                        regionLocator);
+            }
+
+        }
+        else {
+            while (!ranges.isEmpty()) {
+                ranges = binRanges(
+                        ranges,
+                        binnedRanges,
+                        regionLocator);
+            }
+        }
 
 		for (final Entry<HRegionLocation, Map<HRegionInfo, List<ByteArrayRange>>> locationEntry : binnedRanges
 				.entrySet()) {

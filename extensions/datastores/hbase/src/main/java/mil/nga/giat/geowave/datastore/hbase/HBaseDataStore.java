@@ -3,14 +3,6 @@
  */
 package mil.nga.giat.geowave.datastore.hbase;
 
-import java.io.IOException;
-import java.util.List;
-
-import org.apache.hadoop.mapreduce.InputSplit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import mil.nga.giat.geowave.core.store.StoreFactoryOptions;
 import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
@@ -18,31 +10,26 @@ import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
+import mil.nga.giat.geowave.core.store.index.SecondaryIndexDataStore;
 import mil.nga.giat.geowave.core.store.metadata.AdapterIndexMappingStoreImpl;
 import mil.nga.giat.geowave.core.store.metadata.AdapterStoreImpl;
 import mil.nga.giat.geowave.core.store.metadata.DataStatisticsStoreImpl;
 import mil.nga.giat.geowave.core.store.metadata.IndexStoreImpl;
-import mil.nga.giat.geowave.core.store.query.DistributableQuery;
-import mil.nga.giat.geowave.core.store.query.QueryOptions;
+import mil.nga.giat.geowave.core.store.metadata.SecondaryIndexStoreImpl;
 import mil.nga.giat.geowave.core.store.server.ServerOpHelper;
 import mil.nga.giat.geowave.core.store.server.ServerSideOperations;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseOptions;
-import mil.nga.giat.geowave.datastore.hbase.index.secondary.HBaseSecondaryIndexDataStore;
 import mil.nga.giat.geowave.datastore.hbase.mapreduce.HBaseSplitsProvider;
 import mil.nga.giat.geowave.datastore.hbase.operations.HBaseOperations;
 import mil.nga.giat.geowave.datastore.hbase.server.RowMergingServerOp;
 import mil.nga.giat.geowave.datastore.hbase.server.RowMergingVisibilityServerOp;
 import mil.nga.giat.geowave.mapreduce.BaseMapReduceDataStore;
+import mil.nga.giat.geowave.mapreduce.splits.SplitsProvider;
 
 public class HBaseDataStore extends
 		BaseMapReduceDataStore
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(HBaseDataStore.class);
-
-	private final HBaseSplitsProvider splitsProvider;
-
 	public HBaseDataStore(
-			final HBaseSplitsProvider splitsProvider,
 			final HBaseOperations operations,
 			final HBaseOptions options ) {
 		this(
@@ -58,10 +45,7 @@ public class HBaseDataStore extends
 				new AdapterIndexMappingStoreImpl(
 						operations,
 						options),
-				new HBaseSecondaryIndexDataStore(
-						operations,
-						options),
-				splitsProvider,
+				new SecondaryIndexStoreImpl(),
 				operations,
 				options);
 	}
@@ -71,8 +55,7 @@ public class HBaseDataStore extends
 			final AdapterStore adapterStore,
 			final DataStatisticsStore statisticsStore,
 			final AdapterIndexMappingStore indexMappingStore,
-			final HBaseSecondaryIndexDataStore secondaryIndexDataStore,
-			final HBaseSplitsProvider splitsProvider,
+			final SecondaryIndexDataStore secondaryIndexDataStore,
 			final HBaseOperations operations,
 			final HBaseOptions options ) {
 		super(
@@ -84,9 +67,8 @@ public class HBaseDataStore extends
 				operations,
 				options);
 
-		secondaryIndexDataStore.setDataStore(this);
-
-		this.splitsProvider = splitsProvider;
+		secondaryIndexDataStore.setDataStore(
+				this);
 	}
 
 	@Override
@@ -107,7 +89,8 @@ public class HBaseDataStore extends
 							adapter.getAdapterId());
 				}
 				if (baseOptions.isServerSideLibraryEnabled()) {
-					((HBaseOperations) baseOperations).ensureServerSideOperationsObserverAttached(index.getId());
+					((HBaseOperations) baseOperations).ensureServerSideOperationsObserverAttached(
+							index.getId());
 					ServerOpHelper.addServerSideRowMerging(
 							((RowMergingDataAdapter<?, ?>) adapter),
 							(ServerSideOperations) baseOperations,
@@ -127,26 +110,7 @@ public class HBaseDataStore extends
 	}
 
 	@Override
-	public List<InputSplit> getSplits(
-			final DistributableQuery query,
-			final QueryOptions queryOptions,
-			final AdapterStore adapterStore,
-			final AdapterIndexMappingStore aimStore,
-			final DataStatisticsStore statsStore,
-			final IndexStore indexStore,
-			final Integer minSplits,
-			final Integer maxSplits )
-			throws IOException,
-			InterruptedException {
-		return splitsProvider.getSplits(
-				baseOperations,
-				query,
-				queryOptions,
-				adapterStore,
-				statsStore,
-				indexStore,
-				aimStore,
-				minSplits,
-				maxSplits);
+	protected SplitsProvider createSplitsProvider() {
+		return new HBaseSplitsProvider();
 	}
 }

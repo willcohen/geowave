@@ -29,7 +29,7 @@ public class HBaseFactoryHelper implements
 		}
 		catch (IOException e) {
 			LOGGER.error(
-					"Unable to create Accumulo operations from config options",
+					"Unable to create HBase operations from config options",
 					e);
 			return null;
 		}

@@ -17,11 +17,13 @@ import mil.nga.giat.geowave.datastore.cassandra.CassandraRow.CassandraField;
 
 public class RowRead
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(RowRead.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(
+			RowRead.class);
 	private final CassandraOperations operations;
 	private final PreparedStatement preparedRead;
 	private byte[] adapterId;
-	private byte[] row;
+	private byte[] partitionKey;
+	private byte[] sortKey;
 
 	protected RowRead(
 			final PreparedStatement preparedRead,
@@ -30,50 +32,44 @@ public class RowRead
 				preparedRead,
 				operations,
 				null,
+				null,
 				null);
 	}
 
 	protected RowRead(
 			final PreparedStatement preparedRead,
 			final CassandraOperations operations,
-			final byte[] row,
+			final byte[] partitionKey,
+			final byte[] sortKey,
 			final byte[] adapterId ) {
 		this.preparedRead = preparedRead;
 		this.operations = operations;
-		this.row = row;
-		this.adapterId = adapterId;
-	}
-
-	public void setRow(
-			final byte[] row,
-			final byte[] adapterId ) {
-		this.row = row;
+		this.partitionKey = partitionKey;
+		this.sortKey = sortKey;
 		this.adapterId = adapterId;
 	}
 
 	public CassandraRow result() {
-		if (row != null) {
-			final Statement[] statements = new Statement[CassandraDataStore.PARTITIONS];
-			for (int p = 0; p < CassandraDataStore.PARTITIONS; p++) {
+		if (partitionKey != null && sortKey != null) {
 				final BoundStatement boundRead = new BoundStatement(
 						preparedRead);
 				boundRead.set(
-						CassandraField.GW_IDX_KEY.getBindMarkerName(),
-						ByteBuffer.wrap(row),
+						CassandraField.GW_SORT_KEY.getBindMarkerName(),
+						ByteBuffer.wrap(
+								sortKey),
 						ByteBuffer.class);
 				boundRead.set(
 						CassandraField.GW_ADAPTER_ID_KEY.getBindMarkerName(),
-						ByteBuffer.wrap(adapterId),
+						ByteBuffer.wrap(
+								adapterId),
 						ByteBuffer.class);
 				boundRead.set(
 						CassandraField.GW_PARTITION_ID_KEY.getBindMarkerName(),
-						ByteBuffer.wrap(new byte[] {
-							(byte) p
-						}),
+						ByteBuffer.wrap(
+								partitionKey),
 						ByteBuffer.class);
-				statements[p] = boundRead;
-			}
-			try (CloseableIterator<CassandraRow> it = operations.executeQuery(statements)) {
+			try (CloseableIterator<CassandraRow> it = operations.executeQuery(
+					boundRead)) {
 				if (it.hasNext()) {
 					// there should only be one entry with this index
 					return it.next();

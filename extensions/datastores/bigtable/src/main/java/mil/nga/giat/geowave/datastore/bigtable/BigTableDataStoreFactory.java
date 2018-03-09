@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -15,7 +15,6 @@ import mil.nga.giat.geowave.core.store.DataStoreFactory;
 import mil.nga.giat.geowave.core.store.StoreFactoryHelper;
 import mil.nga.giat.geowave.core.store.StoreFactoryOptions;
 import mil.nga.giat.geowave.core.store.operations.DataStoreOperations;
-import mil.nga.giat.geowave.datastore.bigtable.mapreduce.BigTableSplitsProvider;
 import mil.nga.giat.geowave.datastore.bigtable.operations.BigTableOperations;
 import mil.nga.giat.geowave.datastore.bigtable.operations.config.BigTableOptions;
 import mil.nga.giat.geowave.datastore.hbase.HBaseDataStore;
@@ -24,9 +23,9 @@ public class BigTableDataStoreFactory extends
 		DataStoreFactory
 {
 	public BigTableDataStoreFactory(
-			String typeName,
-			String description,
-			StoreFactoryHelper helper ) {
+			final String typeName,
+			final String description,
+			final StoreFactoryHelper helper ) {
 		super(
 				typeName,
 				description,
@@ -41,10 +40,10 @@ public class BigTableDataStoreFactory extends
 					"Expected " + BigTableOptions.class.getSimpleName());
 		}
 
-		final DataStoreOperations bigtableOperations = helper.createOperations(options);
+		final DataStoreOperations bigtableOperations = helper.createOperations(
+				options);
 
 		return new HBaseDataStore(
-				new BigTableSplitsProvider(),
 				(BigTableOperations) bigtableOperations,
 				((BigTableOptions) options).getHBaseOptions());
 	}

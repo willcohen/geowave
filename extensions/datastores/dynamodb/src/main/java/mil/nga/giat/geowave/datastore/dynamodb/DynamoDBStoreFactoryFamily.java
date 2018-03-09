@@ -4,7 +4,6 @@ import mil.nga.giat.geowave.core.store.BaseDataStoreFamily;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.GenericStoreFactory;
 import mil.nga.giat.geowave.core.store.index.SecondaryIndexDataStore;
-import mil.nga.giat.geowave.datastore.dynamodb.index.secondary.DynamoDBSecondaryIndexDataStoreFactory;
 
 public class DynamoDBStoreFactoryFamily extends
 		BaseDataStoreFamily
@@ -26,13 +25,4 @@ public class DynamoDBStoreFactoryFamily extends
 				DESCRIPTION,
 				new DynamoDBFactoryHelper());
 	}
-
-	@Override
-	public GenericStoreFactory<SecondaryIndexDataStore> getSecondaryIndexDataStore() {
-		return new DynamoDBSecondaryIndexDataStoreFactory(
-				TYPE,
-				DESCRIPTION,
-				new DynamoDBFactoryHelper());
-	}
-
 }

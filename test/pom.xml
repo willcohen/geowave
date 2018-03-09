@@ -68,6 +68,11 @@
 		</dependency>
 		<dependency>
 			<groupId>mil.nga.giat</groupId>
+			<artifactId>geowave-datastore-cassandra</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>mil.nga.giat</groupId>
 			<artifactId>geowave-datastore-bigtable</artifactId>
 			<version>${project.version}</version>
 		</dependency>
@@ -110,9 +115,17 @@
 			<artifactId>junit</artifactId>
 			<version>${junit.version}</version>
 		</dependency>
-		<!--<dependency> <groupId>org.codehaus.mojo</groupId> <artifactId>cassandra-maven-plugin</artifactId> 
-			<version>3.5</version> <exclusions> <exclusion> <groupId>org.slf4j</groupId> 
-			<artifactId>log4j-over-slf4j</artifactId> </exclusion> </exclusions> </dependency> -->
+		<dependency>
+			<groupId>org.codehaus.mojo</groupId>
+			<artifactId>cassandra-maven-plugin</artifactId>
+			<version>3.5</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>log4j-over-slf4j</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-exec</artifactId>
@@ -206,22 +219,10 @@
 					</arguments>
 				</configuration>
 			</plugin>
-			<!-- <plugin>
-				<groupId>com.google.cloud.bigtable</groupId>
-				<artifactId>bigtable-emulator-maven-plugin</artifactId>
-				<version>1.0.0</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>start</goal>
-							<goal>stop</goal>
-						</goals>
-						<configuration>
-							<propertyName>bigtable.emulator.endpoint</propertyName>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin> -->
+			<!-- <plugin> <groupId>com.google.cloud.bigtable</groupId> <artifactId>bigtable-emulator-maven-plugin</artifactId> 
+				<version>1.0.0</version> <executions> <execution> <goals> <goal>start</goal> 
+				<goal>stop</goal> </goals> <configuration> <propertyName>bigtable.emulator.endpoint</propertyName> 
+				</configuration> </execution> </executions> </plugin> -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>

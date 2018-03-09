@@ -7,12 +7,15 @@ import java.util.List;
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.TypeCodec;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
+import mil.nga.giat.geowave.core.index.QueryRanges;
+import mil.nga.giat.geowave.core.index.SinglePartitionQueryRanges;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
-import mil.nga.giat.geowave.datastore.cassandra.CassandraDataStore;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.datastore.cassandra.CassandraRow;
 import mil.nga.giat.geowave.datastore.cassandra.CassandraRow.CassandraField;
 import mil.nga.giat.geowave.datastore.cassandra.operations.CassandraOperations.ByteArrayIdToByteBuffer;
@@ -21,56 +24,41 @@ public class BatchedRangeRead
 {
 	private final CassandraOperations operations;
 	private final PreparedStatement preparedRead;
-	private final List<ByteArrayRange> ranges;
+	private final QueryRanges ranges;
 	private final List<ByteArrayId> adapterIds;
-
-	protected BatchedRangeRead(
-			final PreparedStatement preparedRead,
-			final List<ByteArrayId> adapterIds,
-			final CassandraOperations operations ) {
-		this(
-				preparedRead,
-				operations,
-				adapterIds,
-				new ArrayList<>());
-	}
 
 	protected BatchedRangeRead(
 			final PreparedStatement preparedRead,
 			final CassandraOperations operations,
 			final List<ByteArrayId> adapterIds,
-			final List<ByteArrayRange> ranges ) {
+			final QueryRanges ranges ) {
 		this.preparedRead = preparedRead;
 		this.operations = operations;
 		this.adapterIds = adapterIds;
 		this.ranges = ranges;
 	}
 
-	public void addQueryRange(
-			final ByteArrayRange range ) {
-		ranges.add(range);
-	}
-
-	public CloseableIterator<CassandraRow> results() {
+	public CloseableIterator<GeoWaveRow> results() {
 		final List<BoundStatement> statements = new ArrayList<>();
-		for (int p = 0; p < CassandraDataStore.PARTITIONS; p++) {
-			for (final ByteArrayRange range : ranges) {
+		for (final SinglePartitionQueryRanges r : ranges.getPartitionQueryRanges()) {
+			for (final ByteArrayRange range : r.getSortKeyRanges()) {
 				final BoundStatement boundRead = new BoundStatement(
 						preparedRead);
 				boundRead.set(
-						CassandraField.GW_IDX_KEY.getLowerBoundBindMarkerName(),
-						ByteBuffer.wrap(range.getStart().getBytes()),
+						CassandraField.GW_SORT_KEY.getLowerBoundBindMarkerName(),
+						ByteBuffer.wrap(
+								range.getStart().getBytes()),
 						ByteBuffer.class);
 
 				boundRead.set(
-						CassandraField.GW_IDX_KEY.getUpperBoundBindMarkerName(),
-						ByteBuffer.wrap(range.getEndAsNextPrefix().getBytes()),
+						CassandraField.GW_SORT_KEY.getUpperBoundBindMarkerName(),
+						ByteBuffer.wrap(
+								range.getEndAsNextPrefix().getBytes()),
 						ByteBuffer.class);
 				boundRead.set(
 						CassandraField.GW_PARTITION_ID_KEY.getBindMarkerName(),
-						ByteBuffer.wrap(new byte[] {
-							(byte) p
-						}),
+						ByteBuffer.wrap(
+								r.getPartitionKey().getBytes()),
 						ByteBuffer.class);
 
 				boundRead.set(
@@ -78,11 +66,15 @@ public class BatchedRangeRead
 						Lists.transform(
 								adapterIds,
 								new ByteArrayIdToByteBuffer()),
-						TypeCodec.list(TypeCodec.blob()));
-				statements.add(boundRead);
+						TypeCodec.list(
+								TypeCodec.blob()));
+				statements.add(
+						boundRead);
 			}
 
 		}
-		return operations.executeQueryAsync(statements.toArray(new BoundStatement[] {}));
+		return operations.executeQueryAsync(
+				statements.toArray(
+						new BoundStatement[] {})); 
 	}
 }

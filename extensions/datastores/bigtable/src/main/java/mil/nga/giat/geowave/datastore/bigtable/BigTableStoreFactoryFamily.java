@@ -13,14 +13,12 @@ package mil.nga.giat.geowave.datastore.bigtable;
 import mil.nga.giat.geowave.core.store.BaseDataStoreFamily;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.GenericStoreFactory;
-import mil.nga.giat.geowave.core.store.index.SecondaryIndexDataStore;
-import mil.nga.giat.geowave.datastore.bigtable.index.secondary.BigTableSecondaryIndexDataStoreFactory;
 
 public class BigTableStoreFactoryFamily extends
 		BaseDataStoreFamily
 {
 	public final static String TYPE = "bigtable";
-	private static final String DESCRIPTION = "A GeoWave store backed by tables in Apache HBase";
+	private static final String DESCRIPTION = "A GeoWave store backed by tables in Google BigTable";
 
 	public BigTableStoreFactoryFamily() {
 		super(
@@ -36,13 +34,4 @@ public class BigTableStoreFactoryFamily extends
 				DESCRIPTION,
 				new BigTableFactoryHelper());
 	}
-
-	@Override
-	public GenericStoreFactory<SecondaryIndexDataStore> getSecondaryIndexDataStore() {
-		return new BigTableSecondaryIndexDataStoreFactory(
-				TYPE,
-				DESCRIPTION,
-				new BigTableFactoryHelper());
-	}
-
 }

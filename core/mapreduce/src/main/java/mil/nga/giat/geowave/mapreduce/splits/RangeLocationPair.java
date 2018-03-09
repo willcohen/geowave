@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -26,6 +26,15 @@ public class RangeLocationPair
 	private double cardinality;
 
 	protected RangeLocationPair() {}
+
+	public RangeLocationPair(
+			final GeoWaveRowRange range,
+			final double cardinality ) {
+		this(
+				range,
+				"",
+				cardinality);
+	}
 
 	public RangeLocationPair(
 			final GeoWaveRowRange range,
@@ -75,7 +84,8 @@ public class RangeLocationPair
 				return false;
 			}
 		}
-		else if (!location.equals(other.location)) {
+		else if (!location.equals(
+				other.location)) {
 			return false;
 		}
 		if (range == null) {
@@ -83,7 +93,8 @@ public class RangeLocationPair
 				return false;
 			}
 		}
-		else if (!range.equals(other.range)) {
+		else if (!range.equals(
+				other.range)) {
 			return false;
 		}
 		return true;
@@ -100,7 +111,8 @@ public class RangeLocationPair
 		}
 		else {
 			range = new GeoWaveRowRange();
-			range.readFields(in);
+			range.readFields(
+					in);
 		}
 		location = in.readUTF();
 		cardinality = in.readDouble();
@@ -109,11 +121,15 @@ public class RangeLocationPair
 	public void write(
 			final DataOutput out )
 			throws IOException {
-		out.writeBoolean(range == null);
+		out.writeBoolean(
+				range == null);
 		if (range != null) {
-			range.write(out);
+			range.write(
+					out);
 		}
-		out.writeUTF(location);
-		out.writeDouble(cardinality);
+		out.writeUTF(
+				location);
+		out.writeDouble(
+				cardinality);
 	}
 }

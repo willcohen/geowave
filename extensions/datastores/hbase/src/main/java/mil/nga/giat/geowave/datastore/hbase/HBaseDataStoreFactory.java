@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2013-2017 Contributors to the Eclipse Foundation
- * 
+ *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
  * All rights reserved. This program and the accompanying materials
@@ -17,7 +17,6 @@ import mil.nga.giat.geowave.core.store.StoreFactoryOptions;
 import mil.nga.giat.geowave.core.store.operations.DataStoreOperations;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseOptions;
 import mil.nga.giat.geowave.datastore.hbase.cli.config.HBaseRequiredOptions;
-import mil.nga.giat.geowave.datastore.hbase.mapreduce.HBaseSplitsProvider;
 import mil.nga.giat.geowave.datastore.hbase.operations.HBaseOperations;
 
 public class HBaseDataStoreFactory extends
@@ -48,9 +47,7 @@ public class HBaseDataStoreFactory extends
 		final DataStoreOperations hbaseOperations = helper.createOperations(opts);
 
 		return new HBaseDataStore(
-				new HBaseSplitsProvider(),
 				(HBaseOperations) hbaseOperations,
 				(HBaseOptions) opts.getStoreOptions());
-
 	}
 }

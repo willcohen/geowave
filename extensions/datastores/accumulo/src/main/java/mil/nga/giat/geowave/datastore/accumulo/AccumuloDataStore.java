@@ -10,17 +10,12 @@
  ******************************************************************************/
 package mil.nga.giat.geowave.datastore.accumulo;
 
-import java.io.IOException;
-import java.util.List;
-
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.TableNotFoundException;
-import org.apache.hadoop.mapreduce.InputSplit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import mil.nga.giat.geowave.core.store.StoreFactoryOptions;
 import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
@@ -32,8 +27,6 @@ import mil.nga.giat.geowave.core.store.metadata.AdapterIndexMappingStoreImpl;
 import mil.nga.giat.geowave.core.store.metadata.AdapterStoreImpl;
 import mil.nga.giat.geowave.core.store.metadata.DataStatisticsStoreImpl;
 import mil.nga.giat.geowave.core.store.metadata.IndexStoreImpl;
-import mil.nga.giat.geowave.core.store.query.DistributableQuery;
-import mil.nga.giat.geowave.core.store.query.QueryOptions;
 import mil.nga.giat.geowave.core.store.server.ServerOpHelper;
 import mil.nga.giat.geowave.core.store.server.ServerSideOperations;
 import mil.nga.giat.geowave.datastore.accumulo.cli.config.AccumuloOptions;
@@ -41,6 +34,7 @@ import mil.nga.giat.geowave.datastore.accumulo.index.secondary.AccumuloSecondary
 import mil.nga.giat.geowave.datastore.accumulo.mapreduce.AccumuloSplitsProvider;
 import mil.nga.giat.geowave.datastore.accumulo.operations.AccumuloOperations;
 import mil.nga.giat.geowave.mapreduce.BaseMapReduceDataStore;
+import mil.nga.giat.geowave.mapreduce.splits.SplitsProvider;
 
 /**
  * This is the Accumulo implementation of the data store. It requires an
@@ -56,9 +50,8 @@ import mil.nga.giat.geowave.mapreduce.BaseMapReduceDataStore;
 public class AccumuloDataStore extends
 		BaseMapReduceDataStore
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(AccumuloDataStore.class);
-
-	private final AccumuloSplitsProvider splitsProvider = new AccumuloSplitsProvider();
+	private final static Logger LOGGER = LoggerFactory.getLogger(
+			AccumuloDataStore.class);
 
 	public AccumuloDataStore(
 			final AccumuloOperations accumuloOperations,
@@ -117,7 +110,13 @@ public class AccumuloDataStore extends
 				accumuloOperations,
 				accumuloOptions);
 
-		secondaryIndexDataStore.setDataStore(this);
+		secondaryIndexDataStore.setDataStore(
+				this);
+	}
+
+	@Override
+	protected SplitsProvider createSplitsProvider() {
+		return new AccumuloSplitsProvider();
 	}
 
 	@Override
@@ -174,29 +173,5 @@ public class AccumuloDataStore extends
 					e);
 		}
 
-	}
-
-	@Override
-	public List<InputSplit> getSplits(
-			final DistributableQuery query,
-			final QueryOptions queryOptions,
-			final AdapterStore adapterStore,
-			final AdapterIndexMappingStore aimStore,
-			final DataStatisticsStore statsStore,
-			final IndexStore indexStore,
-			final Integer minSplits,
-			final Integer maxSplits )
-			throws IOException,
-			InterruptedException {
-		return splitsProvider.getSplits(
-				baseOperations,
-				query,
-				queryOptions,
-				adapterStore,
-				statsStore,
-				indexStore,
-				aimStore,
-				minSplits,
-				maxSplits);
 	}
 }

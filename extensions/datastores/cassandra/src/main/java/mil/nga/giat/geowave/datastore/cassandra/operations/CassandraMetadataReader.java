@@ -10,7 +10,6 @@ import com.datastax.driver.core.querybuilder.Select.Where;
 import com.google.common.collect.Iterators;
 
 import mil.nga.giat.geowave.core.store.CloseableIterator;
-import mil.nga.giat.geowave.core.store.DataStoreOptions;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveMetadata;
 import mil.nga.giat.geowave.core.store.operations.MetadataQuery;
 import mil.nga.giat.geowave.core.store.operations.MetadataReader;
@@ -20,15 +19,12 @@ public class CassandraMetadataReader implements
 		MetadataReader
 {
 	private final CassandraOperations operations;
-	private final DataStoreOptions options;
 	private final MetadataType metadataType;
 
 	public CassandraMetadataReader(
 			final CassandraOperations operations,
-			final DataStoreOptions options,
 			final MetadataType metadataType ) {
 		this.operations = operations;
-		this.options = options;
 		this.metadataType = metadataType;
 	}
 
@@ -37,11 +33,12 @@ public class CassandraMetadataReader implements
 			final MetadataQuery query ) {
 		final String tableName = operations.getMetadataTableName(
 				metadataType);
-		//TODO need to merge stats
+		// TODO need to merge stats
+		final Select select = operations.getSelect(
+				tableName,
+				getSelectedColumns(
+						query));
 		if (query.hasPrimaryId()) {
-			final Select select = operations.getSelect(
-					tableName,
-					CassandraMetadataWriter.VALUE_KEY);
 			final Where where = select.where(
 					QueryBuilder.eq(
 							CassandraMetadataWriter.PRIMARY_ID_KEY,
@@ -54,27 +51,77 @@ public class CassandraMetadataReader implements
 								ByteBuffer.wrap(
 										query.getSecondaryId())));
 			}
-			final ResultSet rs = operations.getSession().execute(
-					select);
-			return new CloseableIterator.Wrapper<>(
-					Iterators.transform(
-							rs.iterator(),
-							new com.google.common.base.Function<Row, GeoWaveMetadata>() {
-								@Override
-								public GeoWaveMetadata apply(
-										final Row result ) {
-
-									return new GeoWaveMetadata(
-											query.getPrimaryId(),
-											query.getSecondaryId(),
-											null,
-											result.get(
-													CassandraMetadataWriter.VALUE_KEY,
-													ByteBuffer.class).array());
-								}
-							}));
 		}
-		//should be a full scan
-		return null;
+		else if (query.hasSecondaryId()) {
+			select.allowFiltering().where(
+					QueryBuilder.eq(
+							CassandraMetadataWriter.SECONDARY_ID_KEY,
+							ByteBuffer.wrap(
+									query.getSecondaryId())));
+		}
+		final ResultSet rs = operations.getSession().execute(
+				select);
+		final CloseableIterator<GeoWaveMetadata> retVal = new CloseableIterator.Wrapper<>(
+				Iterators.transform(
+						rs.iterator(),
+						new com.google.common.base.Function<Row, GeoWaveMetadata>() {
+							@Override
+							public GeoWaveMetadata apply(
+									final Row result ) {
+								return new GeoWaveMetadata(
+										query.hasPrimaryId() ? query.getPrimaryId() : result.get(
+												CassandraMetadataWriter.PRIMARY_ID_KEY,
+												ByteBuffer.class).array(),
+										useSecondaryId(
+												query) ? query.getSecondaryId()
+														: result.get(
+																CassandraMetadataWriter.SECONDARY_ID_KEY,
+																ByteBuffer.class).array(),
+										null,
+										result.get(
+												CassandraMetadataWriter.VALUE_KEY,
+												ByteBuffer.class).array());
+							}
+						}));
+		return MetadataType.STATS.equals(
+				metadataType)
+						? new CassandraStatisticsIterator(
+								retVal)
+						: retVal;
+	}
+
+	private String[] getSelectedColumns(
+			final MetadataQuery query ) {
+		if (query.hasPrimaryId()) {
+			if (useSecondaryId(
+					query)) {
+				return new String[] {
+					CassandraMetadataWriter.VALUE_KEY
+				};
+			}
+
+			return new String[] {
+				CassandraMetadataWriter.SECONDARY_ID_KEY,
+				CassandraMetadataWriter.VALUE_KEY
+			};
+		}
+		if (useSecondaryId(
+				query)) {
+			return new String[] {
+				CassandraMetadataWriter.PRIMARY_ID_KEY,
+				CassandraMetadataWriter.VALUE_KEY
+			};
+		}
+		return new String[] {
+			CassandraMetadataWriter.PRIMARY_ID_KEY,
+			CassandraMetadataWriter.SECONDARY_ID_KEY,
+			CassandraMetadataWriter.VALUE_KEY
+		};
+	}
+
+	private boolean useSecondaryId(
+			final MetadataQuery query ) {
+		return !MetadataType.STATS.equals(
+				metadataType) || query.hasSecondaryId();
 	}
 }

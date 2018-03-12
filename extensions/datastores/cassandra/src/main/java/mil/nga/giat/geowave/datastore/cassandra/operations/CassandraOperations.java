@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -43,7 +44,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.spotify.futures.CompletableFuturesExtra;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
-import mil.nga.giat.geowave.core.index.QueryRanges;
+import mil.nga.giat.geowave.core.index.SinglePartitionQueryRanges;
 import mil.nga.giat.geowave.core.store.BaseDataStoreOptions;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
@@ -51,7 +52,6 @@ import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
-import mil.nga.giat.geowave.core.store.memory.MemoryAdapterStore;
 import mil.nga.giat.geowave.core.store.metadata.AbstractGeoWavePersistence;
 import mil.nga.giat.geowave.core.store.operations.Deleter;
 import mil.nga.giat.geowave.core.store.operations.MetadataDeleter;
@@ -207,7 +207,7 @@ public class CassandraOperations implements
 	public BatchedRangeRead getBatchedRangeRead(
 			final String tableName,
 			final List<ByteArrayId> adapterIds,
-			final QueryRanges ranges ) {
+			final Collection<SinglePartitionQueryRanges> ranges ) {
 		PreparedStatement preparedRead;
 		synchronized (state.preparedRangeReadsPerTable) {
 			preparedRead = state.preparedRangeReadsPerTable.get(
@@ -340,9 +340,9 @@ public class CassandraOperations implements
 				results);
 	}
 
-	public CloseableIterator<CassandraRow> executeQuery(
+	public CloseableIterator<GeoWaveRow> executeQuery(
 			final Statement... statements ) {
-		final List<CassandraRow> rows = new ArrayList<>();
+		final List<GeoWaveRow> rows = new ArrayList<>();
 		for (final Statement s : statements) {
 			final ResultSet r = session.execute(
 					s);
@@ -352,7 +352,7 @@ public class CassandraOperations implements
 								row));
 			}
 		}
-		return new CloseableIterator.Wrapper<CassandraRow>(
+		return new CloseableIterator.Wrapper<GeoWaveRow>(
 				rows.iterator());
 	}
 
@@ -408,7 +408,7 @@ public class CassandraOperations implements
 		return true;
 	}
 
-	public CloseableIterator<CassandraRow> getRows(
+	public CloseableIterator<GeoWaveRow> getRows(
 			final String tableName,
 			final byte[][] dataIds,
 			final byte[] adapterId,
@@ -422,19 +422,19 @@ public class CassandraOperations implements
 					new ByteArrayId(
 							dataIds[i]));
 		}
-		final CloseableIterator<CassandraRow> everything = executeQuery(
+		final CloseableIterator<GeoWaveRow> everything = executeQuery(
 				QueryBuilder.select().from(
 						gwNamespace,
 						tableName).allowFiltering());
-		return new CloseableIteratorWrapper<CassandraRow>(
+		return new CloseableIteratorWrapper<GeoWaveRow>(
 				everything,
 				Iterators.filter(
 						everything,
-						new Predicate<CassandraRow>() {
+						new Predicate<GeoWaveRow>() {
 
 							@Override
 							public boolean apply(
-									final CassandraRow input ) {
+									final GeoWaveRow input ) {
 								return dataIdsSet.contains(
 										new ByteArrayId(
 												input.getDataId()))
@@ -604,10 +604,11 @@ public class CassandraOperations implements
 	@Override
 	public MetadataWriter createMetadataWriter(
 			final MetadataType metadataType ) {
+		final String tableName = getMetadataTableName(
+				metadataType);
 		if (options.isCreateTable()) {
 			// this checks for existence prior to create
 			synchronized (CREATE_TABLE_MUTEX) {
-				final String tableName = AbstractGeoWavePersistence.METADATA_TABLE + "_" + metadataType;
 				try {
 					if (!indexExists(
 							new ByteArrayId(
@@ -642,14 +643,17 @@ public class CassandraOperations implements
 				}
 			}
 		}
-		return null;
+		return new CassandraMetadataWriter(
+				this,
+				tableName);
 	}
 
 	@Override
 	public MetadataReader createMetadataReader(
 			final MetadataType metadataType ) {
-		// TODO Auto-generated method stub
-		return null;
+		return new CassandraMetadataReader(
+				this,
+				metadataType);
 	}
 
 	@Override
@@ -662,7 +666,9 @@ public class CassandraOperations implements
 	@Override
 	public Reader createReader(
 			final ReaderParams readerParams ) {
-		return null;
+		return new CassandraReader(
+				readerParams,
+				this);
 	}
 
 	@Override
@@ -685,21 +691,20 @@ public class CassandraOperations implements
 
 	@Override
 	public Reader createReader(
-			final RecordReaderParams readerParams ) {
-		// TODO Auto-generated method stub
-		return null;
+			final RecordReaderParams recordReaderParams ) {
+		return new CassandraReader(
+				recordReaderParams,
+				this);
 	}
 
 	@Override
 	public boolean metadataExists(
-			final MetadataType type )
+			final MetadataType metadataType )
 			throws IOException {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	public AdapterStore getAdapterStore() {
-		return new MemoryAdapterStore();
+		return indexExists(
+				new ByteArrayId(
+						getMetadataTableName(
+								metadataType)));
 	}
 
 	public String getMetadataTableName(

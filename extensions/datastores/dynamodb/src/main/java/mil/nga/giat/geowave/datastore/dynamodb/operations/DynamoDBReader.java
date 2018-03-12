@@ -89,14 +89,6 @@ public class DynamoDBReader implements
 		final String tableName = operations.getQualifiedTableName(
 				readerParams.getIndex().getId().getString());
 
-		final ArrayList<ByteArrayId> adapterIds = new ArrayList<>();
-		if ((readerParams.getAdapterIds() != null) && !readerParams.getAdapterIds().isEmpty()) {
-			for (final ByteArrayId adapterId : readerParams.getAdapterIds()) {
-				adapterIds.add(
-						adapterId);
-			}
-		}
-
 //		if ((readerParams.getLimit() != null) && (readerParams.getLimit() > 0)) {
 			//TODO: we should do something here
 //		}
@@ -111,7 +103,7 @@ public class DynamoDBReader implements
 							addQueryRanges(
 									tableName,
 									queryRequest,
-									adapterIds,
+									readerParams.getAdapterIds(),
 									operations.getAdapterStore()))));
 
 		}
@@ -283,7 +275,7 @@ public class DynamoDBReader implements
 		final ByteArrayId partitionKey = r.getPartitionKey();
 		final byte[] partitionId = ((partitionKey == null) || (partitionKey.getBytes().length == 0))
 				? DynamoDBWriter.EMPTY_PARTITION_KEY : partitionKey.getBytes();
-		if (adapterIds.isEmpty() && (adapterStore != null)) {
+		if ((adapterIds == null || adapterIds.isEmpty()) && (adapterStore != null)) {
 			final CloseableIterator<DataAdapter<?>> adapters = adapterStore.getAdapters();
 			final List<ByteArrayId> adapterIDList = new ArrayList<ByteArrayId>();
 			adapters.forEachRemaining(

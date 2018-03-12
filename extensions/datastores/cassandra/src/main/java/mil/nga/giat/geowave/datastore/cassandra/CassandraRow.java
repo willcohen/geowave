@@ -1,19 +1,16 @@
 package mil.nga.giat.geowave.datastore.cassandra;
 
-import java.nio.ByteBuffer;
 import java.util.function.BiConsumer;
 
 import org.apache.log4j.Logger;
 
-import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.schemabuilder.Create;
 
-import mil.nga.giat.geowave.core.store.entities.GeoWaveKeyImpl;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveValue;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveValueImpl;
 
 public class CassandraRow implements
 		GeoWaveRow
@@ -40,7 +37,7 @@ public class CassandraRow implements
 						final String f ) -> c.addColumn(
 								f,
 								DataType.blob()));
-		
+
 		private BiConsumer<Create, String> createFunction;
 
 		private ColumnType(
@@ -74,7 +71,7 @@ public class CassandraRow implements
 		GW_NUM_DUPLICATES_KEY(
 				"num_duplicates",
 				ColumnType.OTHER_COLUMN);
-		
+
 		private final String fieldName;
 		private ColumnType columnType;
 
@@ -109,44 +106,58 @@ public class CassandraRow implements
 		}
 	}
 
-	private byte[] partitionId;
+	private final Row row;
+	private GeoWaveValue[] cachedFieldValues = null;
 
 	public CassandraRow(
 			final Row row ) {
-		
-		
-		partitionId = row.getBytes(
-				CassandraField.GW_PARTITION_ID_KEY.getFieldName()).array();
+		this.row = row;
 	}
-
 
 	@Override
 	public byte[] getDataId() {
-		return null;
+		return row.getBytes(
+				CassandraField.GW_DATA_ID_KEY.getFieldName()).array();
 	}
 
 	@Override
 	public byte[] getAdapterId() {
-		return null;
+		return row.getBytes(
+				CassandraField.GW_ADAPTER_ID_KEY.getFieldName()).array();
 	}
 
 	@Override
 	public byte[] getSortKey() {
-		return null;
+		return row.getBytes(
+				CassandraField.GW_SORT_KEY.getFieldName()).array();
 	}
 
 	@Override
 	public byte[] getPartitionKey() {
-		return null;
+		return row.getBytes(
+				CassandraField.GW_PARTITION_ID_KEY.getFieldName()).array();
 	}
 
 	@Override
 	public int getNumberOfDuplicates() {
-		return 0;
+		return row.getBytes(
+				CassandraField.GW_NUM_DUPLICATES_KEY.getFieldName()).array()[0];
 	}
 
 	@Override
 	public GeoWaveValue[] getFieldValues() {
-		return new GeoWaveValue[0];
+		if (cachedFieldValues == null) {
+			final byte[] fieldMask = row.getBytes(
+					CassandraField.GW_FIELD_MASK_KEY.getFieldName()).array();
+			final byte[] value = row.getBytes(
+					CassandraField.GW_VALUE_KEY.getFieldName()).array();
+
+			cachedFieldValues = new GeoWaveValueImpl[1];
+			cachedFieldValues[0] = new GeoWaveValueImpl(
+					fieldMask,
+					null,
+					value);
+		}
+		return cachedFieldValues;
 	}
 }

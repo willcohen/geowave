@@ -2,12 +2,12 @@ package mil.nga.giat.geowave.datastore.cassandra.operations;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.TypeCodec;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
@@ -16,7 +16,6 @@ import mil.nga.giat.geowave.core.index.QueryRanges;
 import mil.nga.giat.geowave.core.index.SinglePartitionQueryRanges;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
-import mil.nga.giat.geowave.datastore.cassandra.CassandraRow;
 import mil.nga.giat.geowave.datastore.cassandra.CassandraRow.CassandraField;
 import mil.nga.giat.geowave.datastore.cassandra.operations.CassandraOperations.ByteArrayIdToByteBuffer;
 
@@ -24,14 +23,14 @@ public class BatchedRangeRead
 {
 	private final CassandraOperations operations;
 	private final PreparedStatement preparedRead;
-	private final QueryRanges ranges;
+	private final Collection<SinglePartitionQueryRanges> ranges;
 	private final List<ByteArrayId> adapterIds;
 
 	protected BatchedRangeRead(
 			final PreparedStatement preparedRead,
 			final CassandraOperations operations,
 			final List<ByteArrayId> adapterIds,
-			final QueryRanges ranges ) {
+			final Collection<SinglePartitionQueryRanges> ranges ) {
 		this.preparedRead = preparedRead;
 		this.operations = operations;
 		this.adapterIds = adapterIds;
@@ -40,7 +39,7 @@ public class BatchedRangeRead
 
 	public CloseableIterator<GeoWaveRow> results() {
 		final List<BoundStatement> statements = new ArrayList<>();
-		for (final SinglePartitionQueryRanges r : ranges.getPartitionQueryRanges()) {
+		for (final SinglePartitionQueryRanges r : ranges) {
 			for (final ByteArrayRange range : r.getSortKeyRanges()) {
 				final BoundStatement boundRead = new BoundStatement(
 						preparedRead);

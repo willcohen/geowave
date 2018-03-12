@@ -19,18 +19,6 @@ import org.codehaus.mojo.cassandra.StartCassandraClusterMojo;
 import org.codehaus.mojo.cassandra.StartCassandraMojo;
 import org.codehaus.mojo.cassandra.StopCassandraClusterMojo;
 import org.codehaus.mojo.cassandra.StopCassandraMojo;
-//import org.apache.maven.artifact.DefaultArtifact;
-//import org.apache.maven.artifact.handler.DefaultArtifactHandler;
-//import org.apache.maven.artifact.versioning.InvalidVersionSpecificationException;
-//import org.apache.maven.artifact.versioning.VersionRange;
-//import org.apache.maven.plugin.MojoExecutionException;
-//import org.apache.maven.plugin.MojoFailureException;
-//import org.apache.maven.project.MavenProject;
-//import org.codehaus.mojo.cassandra.AbstractCassandraMojo;
-//import org.codehaus.mojo.cassandra.StartCassandraClusterMojo;
-//import org.codehaus.mojo.cassandra.StartCassandraMojo;
-//import org.codehaus.mojo.cassandra.StopCassandraClusterMojo;
-//import org.codehaus.mojo.cassandra.StopCassandraMojo;
 import org.codehaus.plexus.util.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,8 +28,7 @@ import mil.nga.giat.geowave.core.store.GenericStoreFactory;
 import mil.nga.giat.geowave.core.store.StoreFactoryOptions;
 import mil.nga.giat.geowave.core.store.util.ClasspathUtils;
 import mil.nga.giat.geowave.datastore.cassandra.CassandraStoreFactoryFamily;
-//import mil.nga.giat.geowave.datastore.cassandra.CassandraDataStoreFactory;
-//import mil.nga.giat.geowave.datastore.cassandra.operations.config.CassandraRequiredOptions;
+import mil.nga.giat.geowave.datastore.cassandra.operations.config.CassandraRequiredOptions;
 import mil.nga.giat.geowave.test.annotation.GeoWaveTestStore.GeoWaveStoreType;
 
 public class CassandraStoreTestEnvironment extends
@@ -82,6 +69,7 @@ public class CassandraStoreTestEnvironment extends
 			cassandraDir = new File(
 					TEMP_DIR,
 					NODE_DIRECTORY_PREFIX);
+			logLevel= "ERROR";
 			project = new MavenProject();
 			project.setFile(
 					cassandraDir);
@@ -241,6 +229,7 @@ public class CassandraStoreTestEnvironment extends
 			stopKey = "cassandra-maven-plugin";
 			maxMemory = 512;
 			cassandraDir = TEMP_DIR;
+			logLevel= "ERROR";
 			project = new MavenProject();
 			project.setFile(
 					cassandraDir);
@@ -362,9 +351,9 @@ public class CassandraStoreTestEnvironment extends
 	@Override
 	protected void initOptions(
 			final StoreFactoryOptions options ) {
-		// final CassandraRequiredOptions cassandraOpts =
-		// (CassandraRequiredOptions) options;
-		// cassandraOpts.setContactPoint("127.0.0.1");
+		 final CassandraRequiredOptions cassandraOpts =
+		 (CassandraRequiredOptions) options;
+		 cassandraOpts.setContactPoint("127.0.0.1");
 	}
 
 	@Override
@@ -383,10 +372,10 @@ public class CassandraStoreTestEnvironment extends
 						"Unable to create temporary cassandra directory");
 			}
 			if (CLUSTERED_MODE) {
-				// new StartGeoWaveCluster().start();
+				 new StartGeoWaveCluster().start();
 			}
 			else {
-				// new StartGeoWaveStandalone().start();
+				 new StartGeoWaveStandalone().start();
 			}
 			running = true;
 		}
@@ -396,10 +385,10 @@ public class CassandraStoreTestEnvironment extends
 	public void tearDown() {
 		if (running) {
 			if (CLUSTERED_MODE) {
-				// new StopGeoWaveCluster().stop();
+				 new StopGeoWaveCluster().stop();
 			}
 			else {
-				// new StopGeoWaveStandalone().stop();
+				 new StopGeoWaveStandalone().stop();
 			}
 			running = false;
 		}
@@ -407,7 +396,7 @@ public class CassandraStoreTestEnvironment extends
 			// it seems sometimes one of the nodes processes is still holding
 			// onto a file, so wait a short time to be able to reliably clean up
 			Thread.sleep(
-					1000);
+					1500);
 		}
 		catch (final InterruptedException e) {
 			LOGGER.warn(

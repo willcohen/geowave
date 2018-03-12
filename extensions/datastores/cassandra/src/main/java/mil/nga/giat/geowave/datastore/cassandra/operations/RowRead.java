@@ -11,6 +11,7 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Statement;
 
 import mil.nga.giat.geowave.core.store.CloseableIterator;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.datastore.cassandra.CassandraDataStore;
 import mil.nga.giat.geowave.datastore.cassandra.CassandraRow;
 import mil.nga.giat.geowave.datastore.cassandra.CassandraRow.CassandraField;
@@ -49,7 +50,7 @@ public class RowRead
 		this.adapterId = adapterId;
 	}
 
-	public CassandraRow result() {
+	public GeoWaveRow result() {
 		if (partitionKey != null && sortKey != null) {
 				final BoundStatement boundRead = new BoundStatement(
 						preparedRead);
@@ -68,7 +69,7 @@ public class RowRead
 						ByteBuffer.wrap(
 								partitionKey),
 						ByteBuffer.class);
-			try (CloseableIterator<CassandraRow> it = operations.executeQuery(
+			try (CloseableIterator<GeoWaveRow> it = operations.executeQuery(
 					boundRead)) {
 				if (it.hasNext()) {
 					// there should only be one entry with this index

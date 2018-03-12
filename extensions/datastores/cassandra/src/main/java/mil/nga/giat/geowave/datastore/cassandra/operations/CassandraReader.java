@@ -22,11 +22,14 @@ import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.operations.Reader;
 import mil.nga.giat.geowave.core.store.operations.ReaderParams;
+import mil.nga.giat.geowave.datastore.cassandra.CassandraRow.CassandraField;
 import mil.nga.giat.geowave.mapreduce.splits.RecordReaderParams;
 
-public class CassandraReader implements Reader
+public class CassandraReader implements
+		Reader
 {
-	private final static Logger LOGGER = Logger.getLogger(CassandraReader.class);
+	private final static Logger LOGGER = Logger.getLogger(
+			CassandraReader.class);
 	private static final boolean ASYNC = false;
 	private final ReaderParams readerParams;
 	private final RecordReaderParams recordReaderParams;
@@ -66,15 +69,18 @@ public class CassandraReader implements Reader
 	}
 
 	protected void initScanner() {
+		final Collection<SinglePartitionQueryRanges> ranges = readerParams.getQueryRanges().getPartitionQueryRanges();
 
-		final ArrayList<ByteArrayId> adapterIds = new ArrayList<>();
-		if ((readerParams.getAdapterIds() != null) && !readerParams.getAdapterIds().isEmpty()) {
-			for (final ByteArrayId adapterId : readerParams.getAdapterIds()) {
-				adapterIds.add(
-						adapterId);
-			}
-		}
-		iterator = operations.getBatchedRangeRead(readerParams.getIndex().getId().getString(), adapterIds, readerParams.getQueryRanges()).results();
+	if ((ranges != null) && !ranges.isEmpty()) {
+		iterator = operations.getBatchedRangeRead(readerParams.getIndex().getId().getString(), readerParams.getAdapterIds(), ranges).results();
+	}
+	else{
+		//TODO figure out the query select by adapter IDs here
+		operations.executeQuery(
+				operations
+						.getSelect(
+								readerParams.getIndex().getId().getString()));
+	}
 //		else if ((adapterIds != null) && !adapterIds.isEmpty()) {
 //			//TODO this isn't going to work because there aren't partition keys being passed along
 //			requests.addAll(
@@ -85,8 +91,7 @@ public class CassandraReader implements Reader
 
 	}
 
-	protected void initRecordScanner() {
-	}
+	protected void initRecordScanner() {}
 
 	@Override
 	public void close()

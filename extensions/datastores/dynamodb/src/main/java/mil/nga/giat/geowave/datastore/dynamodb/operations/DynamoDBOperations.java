@@ -340,6 +340,11 @@ public class DynamoDBOperations implements
 		return false;
 	}
 
+	public AdapterStore getAdapterStore() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	@Override
 	public boolean metadataExists(
 			MetadataType type )
